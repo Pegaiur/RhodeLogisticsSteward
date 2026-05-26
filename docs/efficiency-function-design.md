@@ -80,15 +80,17 @@ graph TD
 | 常数 | `k` | ~555 | `manu_prod_spd[000]` efficiency=15 |
 | 线性爬升 | `min(k₀ + r·t, ceiling)` | 7 | "首小时+15%, 此后+1%/h, 上限+20%" |
 | 心情门控 | `k₁ 或 k₂`（阈值切换） | ~15 | mood<12→人间烟火+15, mood>12→感知信息+10 |
-| 条件触发 | `0 或 k`（配对/阵营） | ~150 | "当与温米在同一制造站时+15%" |
+| 条件触发 | `0 或 k`（配对/阵营联动） | ~150 | "当与推进之王在同一贸易站时+35%" |
 
-> 心情对效率的唯一影响是 `mood=0` 时的注意力涣散——此时所有技能的 `e(t)` 归零。不发生连续衰减，见 §2.3。
+条件触发与前三种形态有本质区别：其条件不是单干员自身状态（时间/心情），而是**同房间其他干员的存在性**。例如"格拉斯哥帮每有 1 名成员 +20%"需要跨干员计数，其 e(t) 不能由单个干员独立求出。此类技能归入**体系联动**（§3.3 `synergy_efficiency`），以全房间干员列表为输入。
+
+> 除极少数技能外，心情对效率的影响集中在 `mood=0` 时的注意力涣散——此时所有技能的 `e(t)` 归零。不发生连续衰减，见 §2.3。
 
 ### 2.3 心情与效率
 
-游戏内唯一的心情-效率边界是 `mood = 0` 时的**注意力涣散**状态（此时"后勤技能和基础效率在内的大部分加成会失效"）。
+游戏内心情-效率的主要边界是 `mood = 0` 时的**注意力涣散**状态（此时"后勤技能和基础效率在内的大部分加成会失效"）。极少数制造站技能（1 条）在 mood > 0 阶段存在额外的心情梯级衰减，见本节末尾。
 
-设工作干员净心情消耗率为 `burn`（含中枢减免），则 `mood(t) = 24 - burn·t`。效率函数仅在 mood 归零时截断：
+设工作干员净心情消耗率为 `burn`（含中枢减免），则 `mood(t) = 24 - burn·t`。对于绝大多数技能，效率函数仅在 mood 归零时截断：
 
 ```
 e(t) = e_raw(t) × 1[mood(t) > 0]
@@ -96,7 +98,18 @@ e(t) = e_raw(t) × 1[mood(t) > 0]
 截断点: t_red = 24 / burn  — 注意力涣散，效率归零
 ```
 
-这意味着 e(t) 在时间轴上最多切分为 **2 段**（满效率 → 归零），退化为最简单的分段常数。心情衰减不产生连续的效率降低——只有阈值跳变。
+这意味着此类 e(t) 在时间轴上切分为 **2 段**（满效率 → 归零），退化为最简单的分段常数。心情衰减不产生连续的效率降低——只有阈值跳变。
+
+#### 梯级衰减：心情对生产力的缩进
+
+`manu_prod_spd_reduce[000]`（"模糊视线"，持有者铅踝）是唯一直接产生 mood→e(t) 连续衰减的制造站技能：描述为"生产力+30%，每4点心情落差→生产力-5%"。数学表达：
+
+```
+e(t) = 30 - 5 × ⌊(24 - mood(t)) / 4⌋   for mood(t) > 0
+     = 0                                    for mood(t) = 0（注意力涣散）
+```
+
+mood 从 24 降至 0 过程中依次在 20、16、12、8、4 五个断点处各扣 5%，最终归零。`to_segments()` 根据 `burn` 在 `t ∈ [0, t_red)` 区间内切出至多 5 个中间截断段——属于 `constant_efficiency` 的变体参数（标记 mood 梯级衰减步长），不引入新形态。
 
 #### mood(0)=24 的前提与多班次验证
 
@@ -157,8 +170,8 @@ graph LR
 |----------|-----------------|
 | 常数 k | `a=k, b=0` |
 | 线性爬升 k₀ + r·t | `a=k₀, b=r`（到 ceiling 截断） |
-| 心情门控 | 段内为常数 `a=k₁, b=0` |
-| 条件触发 | `a=0, b=0` 或 `a=k, b=0`（取决于段内条件是否命中） |
+| 心情门控 | 段内为常数 `a=k₁, b=0`（以 mood 阈值为界切段） |
+| 体系联动 | `a=Σk, b=0`——房间级聚合后输出常数段 |
 | 注意力涣散 (mood=0) | `a=0, b=0`（段内效率归零） |
 
 所有最终需要积分的表达式均为 `∫(a + b·t) dt`，闭式解为 `a·Δt + b·(t₁² - t₀²)/2`。**无需数值积分库，无需 scipy。**
@@ -184,13 +197,15 @@ class LinearSegment:
 
 ### 3.3 主要构造器
 
-| 构造器 | 输入 | 输出 | 用途 |
+| 构造器 | 粒度 | 输入 | 用途 |
 |--------|------|------|------|
-| `constant_efficiency(value, mood_burn)` | 技能值 + 心情消耗率 | `list[LinearSegment]` | 所有 A 类简单技能。mood_burn∈(0,∞)：生成 1~2 段（常数→归零）；mood_burn=0：单段无限长 |
-| `ramping_efficiency(initial, gain, ceiling, mood_burn)` | 起始/增量/上限 | `list[LinearSegment]` | 7 条时变技能，mood_burn 在 ramp 饱和后附加截断段 |
-| `conditional_efficiency(value, condition_fn)` | 技能值 + 条件判定函数 | `list[LinearSegment]` | 配对/阵营联动（B/C 类） |
+| `constant_efficiency(value, mood_burn)` | per-operator | 技能值 + 心情消耗率 | 常数技能。mood_burn>0 时在 t_red 截断为两段 |
+| `ramping_efficiency(initial, gain, ceiling, mood_burn)` | per-operator | 起始/增量/上限 | 7 条时变技能，饱和后由 mood_burn 附加截断段 |
+| `synergy_efficiency(operators, room_type, product)` | per-room | 全房间干员列表 | ~150 条配对/阵营联动，跨干员判定后输出聚合常数段 |
 
-`mood_burn` 是可选参数：不传（或传 0）时产生无限时常数段；传入正数时在 `t_red = 24/burn` 处截断为两段。
+> `mood_burn`：不传（或传 0）→ 无限时常数段；传入正数 → 在 `t_red = 24/burn` 处截断为两段。
+>
+> `synergy_efficiency` 内部按体系拆分为独立函数（如 `_glasgow_synergy`、`_witch_combo` 等），由注册表 dispatch。各体系并行计算后线性叠加——游戏内体系效果本即加法，利用 `∫ Σ = Σ ∫` 分别积分后求和。
 
 ### 3.4 求解器集成
 
@@ -297,23 +312,15 @@ def _key_values(seg: list[LinearSegment], T: float) -> tuple[float, float]:
 
 ## 4. 架构影响
 
-### 4.1 模块合并
+### 4.1 模块职责
 
-```
-当前:
-  steward_core/
-  ├── production.py  (253 行) ─ 产出计算
-  ├── mood.py        (169 行) ─ 心情计算
-  └── models.py      (169 行) ─ 数据模型
-
-方案:
-  steward_core/
-  ├── efficiency_fn.py  (~150 行) ─ 统一 e(t) 模型 + 积分
-  ├── production.py     (~50 行)  ─ 薄适配层（base_rate × ∫P(t)）
-  └── models.py         (保持)    ─ 数据模型
+```text
+efficiency_fn.py   — 统一 e(t) 模型：LinearSegment、三种构造器、积分、支配偏序
+production.py      — 薄适配层：base_rate × ∫P(t) dt → 日产数值
+models.py          — 数据模型：Operator、Skill、EfficiencyMap（不耦合 e(t) 实现）
 ```
 
-`mood.py` 不再需要独立存在——心情的阈值效应（注意力涣散）直接通过 e(t) 的截断点 `t_red` 表达。旧 `MoodReport` 的全部诊断字段等价于 e(t) 的分段信息：红脸 = `e(t) = 0` after `t_red`，蓝脸 = 无实际游戏效果（仅 UI 提示）。唯一不参与积分的是 `remaining_after_shift`（班后剩余心情），但它在固定排班下无决策价值——那是轮换场景才需要的信息。
+`mood.py` 的逻辑被 e(t) 吸收——心情的阈值效应（注意力涣散）通过 `mood_burn` 参数表达的 `t_red` 截断自然处理。`MoodReport` 全部诊断字段等价于 e(t) 的分段信息：红脸 = `e(t)=0` after `t_red`，蓝脸无实际游戏效果。班后剩余心情在固定排班下无决策价值，不纳入 e(t) 模型。
 
 ### 4.2 与求解器接口
 
@@ -326,35 +333,49 @@ def evaluate_shift(plan: ShiftPlan, operators: list[Operator],
 
     # 2. 每个工作房间: 构造 e(t) → 积分 → 产出
     for room in plan.work_rooms:
-        op_segments = [op.efficiency_fn(room.product, global_burn) for op in room]
-        productivity = room_productivity_integral(op_segments, shift_hours)
+        op_segments = [op.to_segments(room.product, global_burn) for op in room]
+        synergy_segments = synergy_efficiency(room.operators, room.room_type, room.product)
+        productivity = room_productivity_integral(op_segments + synergy_segments, shift_hours)
         output = room.base_rate * productivity
 
     # 3. 赤金供需平衡（保持现有逻辑）
 ```
 
-### 4.3 与现有模型的关系
+### 4.3 数据模型扩展
 
-`EfficiencyMap`（当前的效率值容器）保留不变，`Skill` 增加一个方法：
+`Skill` 提供 per-operator 的 e(t) 入口：
 
 ```python
 class Skill:
-    # ... 现有字段不变 ...
+    buff_id: str
+    buff_name: str
+    skill_icon: str
+    room_type: str
+    efficient: EfficiencyMap
+    phase: int
 
     def to_segments(self, mood_burn: float = 0.0) -> list[LinearSegment]:
         """将技能效率值转换为 e(t) 分段序列"""
 ```
 
-`Operator` 增加一个方法，聚合所有技能：
+`Operator` 聚合自身全部技能，并附带身份元数据供体系联动判定：
 
 ```python
 class Operator:
-    # ... 现有字段不变 ...
+    char_id: str
+    name: str
+    rarity: int
+    skills: list[Skill]
+    group_id: str | None       # 阵营/组织 ID（如 "glasgow", "rhine"）
+    nation_id: str | None      # 势力 ID（如 "sargon", "rim"）
+    team_id: str | None        # 队伍 ID（如 "action4"）
 
-    def efficiency_segments(self, room_type: str, product: str,
-                            mood_burn: float = 0.0) -> list[LinearSegment]:
-        """该干员在指定设施/产物下的 e(t) 分段序列"""
+    def to_segments(self, room_type: str, product: str,
+                    mood_burn: float = 0.0) -> list[LinearSegment]:
+        """该干员独立技能的 e(t)，不含体系联动"""
 ```
+
+`EfficiencyMap` 保持不变——原始效率值容器仅做查表，不参与 e(t) 构造。
 
 ## 5. 覆盖度验证
 
@@ -368,7 +389,8 @@ class Operator:
 | 时变制造效率 (首小时+15%,+2%/h) | ✅ | `ramping_efficiency(15, 2, 25, burn)` |
 | 时变发电站效率 (首小时+10%,+1%/h) | ✅ | `ramping_efficiency(10, 1, 15)` |
 | 心情门控 (mood<12→+15, mood>12→+10) | ✅ | 两段 constant，以 mood=12 为界切换 |
-| 同设施配对 (巫恋+龙舌兰+卡夫卡) | ✅ | 分组模型预处理为常数效率组 |
+| 同设施配对 (巫恋+龙舌兰+卡夫卡) | ✅ | `synergy_efficiency` 识别房间成员，组合条件满足时输出聚合常数段 |
+| 阵营计数 (每名格拉斯哥帮+20%) | ✅ | `synergy_efficiency` 内部跨干员计数后计算加成 |
 | 跨设施 buff (中枢→心情恢复) | ✅ | 两层计算：先算 global_burn，再传入房间 e(t) |
 | 自动化 (其他干员效率归零) | ✅ | 仅 `e_auto(t)` 非零，其他干员 `e(t)=0` |
 
@@ -380,8 +402,8 @@ class Operator:
 分组模型（选谁）             效率函数模型（产多少）
 ─────────────────────      ─────────────────────
 ProductionGroup             效率 = ∫₀ᵀ e_group(t) dt
-  ├── slots: [Trade×3]     e_group(t) = Σ op.efficiency_segments(t)
-  ├── operators: [...]      其中条件技能在组内自动满足 → k>0
+  ├── slots: [Trade×3]     e_group(t) = Σ op.to_segments(t)
+  ├── operators: [...]           + synergy_efficiency(operators, …)
   └── full_efficiency: N    N 是 e_group(t) 在 T 内的积分结果
 ```
 
@@ -389,7 +411,8 @@ ProductionGroup             效率 = ∫₀ᵀ e_group(t) dt
 
 | 交互点 | 分组模型提供 | 效率函数模型提供 |
 |--------|-------------|-----------------|
-| 组合效率 | 组内干员列表 | 积分计算实际产出（含注意力涣散截断） |
+| 独立效率 | 组内干员列表 | per-operator `to_segments()` 积分（含注意力涣散截断） |
+| 体系联动 | 组内干员列表 | `synergy_efficiency(operators)` → 配对/阵营聚合产出 |
 | 降级链 | 缺人时的替代组合 | 降级组合的积分产出 |
 | 跨设施组 | 全局恢复参数 | mood_burn 的改变量 |
 

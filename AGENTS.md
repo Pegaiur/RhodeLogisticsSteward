@@ -23,7 +23,7 @@
 | 图像识别 | MAA 内置 (OpenCV + PaddleOCR + onnxruntime) | 不直接调用，由 MAA OperBox/Infrast 任务间接使用 |
 | 数据处理 | 标准库 json + pathlib | 解析 building_data.json / infrast.json |
 | 求解算法 | 贪心 + 可选联动校验 | 见 `docs/strategy-brief.md` |
-| 输出格式 | MAA 基建排班协议 JSON | 见 `docs/maa-integration.md` §4 |
+| 输出格式 | MAA 基建排班协议 JSON | 见 [MAA 基建排班协议](https://docs.maa.plus/zh-cn/protocol/base-scheduling-schema.html) |
 
 **版本锁**：
 
@@ -43,10 +43,9 @@ RhodeLogisticsSteward/
 ├── scan_operators.py             # 干员扫描工具
 ├── steward_core/                 # 排班核心库（待开发）
 ├── docs/
-│   ├── ROADMAP.md                # 验证路线图
-│   ├── maa-integration.md        # MAA 集成方案与数据采集文档
 │   ├── constraints-and-data-baseline.md  # 约束体系与数据基线（含溯源核验）
-│   └── strategy-brief.md         # 精简策略概要（编码上下文用）
+│   ├── strategy-brief.md         # 精简策略概要（编码上下文用）
+│   └── efficiency-function-design.md  # 效率函数统一建模（草案）
 └── output/                       # 生成的排班文件（不入库）
     └── custom_infrast/
 ```
@@ -67,20 +66,19 @@ RhodeLogisticsSteward/
 
 1. **读取 AGENTS.md**（本文件）→ 理解项目定位、技术栈、规则
 2. **读取 `docs/strategy-brief.md`** → 理解当前策略与算法骨架
-3. **读取 `docs/ROADMAP.md`** → 了解当前验证阶段与下一步任务
-4. **按需读取**：
-   - 需要完整策略细节 → `docs/scheduling-strategy.md`
-   - 需要 MAA API 调用方式 → `docs/maa-integration.md`
-   - 实现排班求解器 → 关注 `steward_core/` 目录（待建立）
+3. **按需读取**：
+   - 需要约束体系与数据基线 → `docs/constraints-and-data-baseline.md`
+   - 需要效率函数建模方案 → `docs/efficiency-function-design.md`
+   - 实现排班求解器 → 关注 `steward_core/` 目录
 
 **关键文件名索引**：
 
 | 关键词 | 目标文件 |
 |--------|----------|
 | 排班策略/算法 | `docs/strategy-brief.md` |
-| MAA 连接/回调/OperBox | `docs/maa-integration.md` |
-| 数据源/覆盖度/效率值 | `docs/scheduling-strategy.md` 附录 A |
-| 验证/基准/里程碑 | `docs/ROADMAP.md` |
+| 约束/设施/联动 | `docs/constraints-and-data-baseline.md` |
+| 数据源/覆盖度/效率值 | `docs/constraints-and-data-baseline.md` 附录 A |
+| 效率函数/e(t) | `docs/efficiency-function-design.md` |
 | 设施容量/约束/多班次 | `docs/strategy-brief.md` §设施容量/§约束/§策略 |
 
 ## 技能 (Skills)
@@ -158,7 +156,7 @@ v1.0.0  → M4: 全验证通过
 | 语言 | **中文**，技术术语可保留英文 |
 | 格式 | Markdown（.md），代码使用 ` ``` ` 块标语言 |
 | 图表 | Mermaid，使用 `mermaid-charting` 技能规范 |
-| 命名 | `lower-kebab-case.md`（如 `maa-integration.md`） |
+| 命名 | `lower-kebab-case.md`（如 `strategy-brief.md`） |
 | 位置 | 全部放在 `docs/` 目录下 |
 | 行宽 | 代码块无限制，正文建议 ≤120 字符 |
 | 引用 | MAA 文档链接使用 `https://docs.maa.plus/...` |

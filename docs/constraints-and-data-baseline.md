@@ -357,5 +357,3 @@ flowchart TD
 
 - 策略概要（编码上下文）: [strategy-brief.md](./strategy-brief.md)
 - 效率函数统一建模: [efficiency-function-design.md](./efficiency-function-design.md)
-- 验证路线图: [ROADMAP.md](./ROADMAP.md)
-- MAA 集成方案: [maa-integration.md](./maa-integration.md)
