@@ -14,6 +14,7 @@ from pathlib import Path
 
 from steward_core.data_loader import load_operators
 from steward_core.models import LayoutConfig
+from steward_core.mood import calculate as calculate_mood
 from steward_core.output import compare_with_baseline, save_json
 from steward_core.production import calculate as calculate_production
 from steward_core.solver import solve_single_shift
@@ -126,6 +127,11 @@ def main():
     for room in production.trade_rooms:
         print(f"  {room}")
     print(f"\n{production.summary()}")
+
+    # 心情消耗分析
+    print("\n[心情] 单班次消耗分析 (24h):")
+    mood = calculate_mood(result.plans[0], all_operators)
+    print(mood.summary())
 
     # 保存
     output_path = (
