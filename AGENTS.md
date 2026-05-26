@@ -82,6 +82,7 @@ RhodeLogisticsSteward/
 | 效率函数/e(t) | `docs/efficiency-function-design.md` |
 | 联动/体系建模 | `docs/synergy-systems.md` |
 | 设施容量/约束/多班次 | `docs/strategy-brief.md` §设施容量/§约束/§策略 |
+| 干员/buff 数据查询 | `scripts/query_data.py` (通过 `data-query` skill) |
 
 ## 技能 (Skills)
 
@@ -95,6 +96,7 @@ RhodeLogisticsSteward/
 | **mermaid-charting** | Mermaid 图表渲染（flowchart/sequence/er/pie/mindmap 等 13 种） | 需要可视化流程、架构、数据关系时 |
 | **tdd-workflow** | TDD 红-绿-重构循环，3A 测试模板 | 编写求解器单元测试时 |
 | **TRAE-debugger** | HTTP 日志收集 + 假设→插桩→复现→分析 科学调试 | 排班结果异常需运行时诊断时 |
+| **data-query** | 对数据源执行常见查询，替代每次写临时脚本 | 需要查询干员数据、分析 buff 或统计信息时 |
 
 ### 技能约定
 
