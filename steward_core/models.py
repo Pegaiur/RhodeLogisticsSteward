@@ -5,6 +5,27 @@ from typing import Optional
 
 
 @dataclass
+class LinearSegment:
+    """e(t) 的一个线性片段: e(t) = a + b·t, t ∈ [t_start, t_start + dt]
+
+    所有技能效率统一归约为此数据结构。
+    积分闭式解: ∫(a + b·t) dt = a·dt + b·(t1² - t0²)/2
+    """
+    a: float       # 截距（百分值，如 30 表示 +30%）
+    b: float       # 斜率（百分值/h，如 -2.5 表示 -2.5%/h）
+    t_start: float # 起始时间 (h)
+    dt: float      # 持续时间 (h)
+
+    def integrate(self) -> float:
+        """∫(a + b·t) dt over [t_start, t_start+dt]"""
+        if self.dt <= 0:
+            return 0.0
+        t0 = self.t_start
+        t1 = self.t_start + self.dt
+        return self.a * self.dt + self.b * (t1**2 - t0**2) / 2.0
+
+
+@dataclass
 class EfficiencyMap:
     """技能在不同产物下的效率值
 
@@ -65,14 +86,18 @@ class Skill:
 class Operator:
     """干员
 
-    char_id / name 来自 building_data.json 的 chars{} → key/name
+    char_id / name 来自 character_identity.json
     rarity 预留，后续 Step 4 练度过滤时可能需要
     skills 为该干员的所有基建技能（已解析效率值）
+    group_id/nation_id/team_id 用于体系联动判定（阵营/势力/队伍）
     """
     char_id: str
     name: str
     rarity: int = 0
     skills: list[Skill] = field(default_factory=list)
+    group_id: Optional[str] = None
+    nation_id: Optional[str] = None
+    team_id: Optional[str] = None
 
     def best_efficiency(self, room_type: str, product: Optional[str] = None) -> float:
         """获取该干员在指定设施和产物下的最高效率值"""
