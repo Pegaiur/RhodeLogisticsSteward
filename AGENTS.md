@@ -46,7 +46,8 @@ RhodeLogisticsSteward/
 │   ├── constraints-and-data-baseline.md  # 约束体系与数据基线（含溯源核验）
 │   ├── strategy-brief.md         # 精简策略概要（编码上下文用）
 │   ├── efficiency-function-design.md  # 效率函数统一建模（草案）
-│   └── synergy-systems.md        # 联动体系建模（16个独立函数清单）
+│   ├── synergy-systems.md        # 联动体系建模（16个独立函数清单）
+│   └── roadmap.md                # 开发路线图（MV0-MV5）
 └── output/                       # 生成的排班文件（不入库）
     └── custom_infrast/
 ```
