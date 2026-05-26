@@ -38,12 +38,17 @@ def _load_json(path: Path) -> dict:
 def _determine_product(description: str) -> Optional[str]:
     """根据 buff description 文本判定产物类型
 
-    返回 'CombatRecord', 'PureGold', 或 None (通用技能)。
+    返回 'CombatRecord', 'PureGold', 'OriginStone', 或 None (通用技能)。
+    注意：源石类配方（F_DIAMOND）与贵金属/作战记录互斥，必须单独排除，
+    否则会被误判为通用技能导致跨产物生效。
     """
     desc = description
     has_record = "作战记录" in desc
     has_gold = "贵金属" in desc or "赤金" in desc
+    has_originium = "源石" in desc
 
+    if has_originium:
+        return "OriginStone"
     if has_record and not has_gold:
         return "CombatRecord"
     if has_gold and not has_record:
@@ -64,6 +69,8 @@ def _build_efficiency_map(efficiency: float, product: Optional[str]) -> Efficien
         return EfficiencyMap(raw={"CombatRecord": efficiency})
     elif product == "PureGold":
         return EfficiencyMap(raw={"PureGold": efficiency})
+    elif product == "OriginStone":
+        return EfficiencyMap(raw={"OriginStone": efficiency})
     else:
         return EfficiencyMap(raw={"all": efficiency})
 
