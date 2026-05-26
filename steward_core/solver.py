@@ -13,6 +13,7 @@ from steward_core.models import LayoutConfig, Operator, RoomAssignment, RoomConf
 from steward_core.efficiency_fn import constant_efficiency, integrate_segments, rank_by_dominance
 from steward_core.synergy import (
     synergy_pair, synergy_skill_count, synergy_skill_alias, synergy_automation,
+    _skill_class,
 )
 
 T = 12.0
@@ -24,14 +25,6 @@ ANCHOR_NAMES = {
     "森蚺", "温蒂", "掠风", "异客",
     "阿兰娜", "Miss.Christine", "怒潮凛冬",
 }
-SKILL_CLASS_KEYWORDS = {"标准化", "莱茵科技", "金属工艺", "红松骑士团"}
-
-
-def _skill_class(buff_name: str) -> Optional[str]:
-    for kw in SKILL_CLASS_KEYWORDS:
-        if kw in buff_name:
-            return kw
-    return None
 
 
 # ─── 角色分类 ───────────────────────────────────────────────────
@@ -115,17 +108,19 @@ def _evaluate_room_combo(
 
     total = 0.0
 
+    alias = synergy_skill_alias(operators)
+    total += integrate_segments(synergy_pair(operators, room_type, product), T)
+    total += integrate_segments(synergy_skill_count(operators, room_type, alias), T)
+    auto_segs, zero_set = synergy_automation(operators, room_type, power_count)
+    total += integrate_segments(auto_segs, T)
+
     for op in operators:
+        if op.name in zero_set:
+            continue
         eff = op.best_efficiency(room_type, product)
         if eff > 0:
             seg = constant_efficiency(eff, mood_burn=0.0, T=T)
             total += integrate_segments(seg, T)
-
-    alias = synergy_skill_alias(operators)
-    total += integrate_segments(synergy_pair(operators, room_type, product), T)
-    total += integrate_segments(synergy_skill_count(operators, room_type, alias), T)
-    auto_segs, _zero_set = synergy_automation(operators, room_type, power_count)
-    total += integrate_segments(auto_segs, T)
 
     return total
 

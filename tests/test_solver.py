@@ -241,6 +241,38 @@ class TestRoomEvaluation:
         # Assert: 联动版 > 无联动版
         assert score_with > score_without
 
+    def test_自动化房间_非自动化干员归零(self):
+        """温蒂自动化 → 其他2人效率归零，仅计温蒂的发电站加成"""
+        from steward_core.solver import _evaluate_room_combo
+
+        # Arrange: 温蒂(自动化15%/站) + 2个高效干员
+        wenti = _mk_op("温蒂")
+        high_eff_a = _mk_op("地灵", [_mk_mfg_skill("高效生产", 35.0, "a")])
+        high_eff_b = _mk_op("炎熔", [_mk_mfg_skill("高效生产", 35.0, "b")])
+
+        # Act
+        score = _evaluate_room_combo([wenti, high_eff_a, high_eff_b], "Mfg", "CombatRecord", power_count=3)
+
+        # Assert: 温蒂个体效率为0(无制造技能)，地灵和炎熔归零
+        # 仅自动化加成: 3×15×12 = 540
+        assert score == pytest.approx(540.0, rel=0.01)
+
+    def test_自动化房间_自动化干员自身不被归零(self):
+        """森蚺+温蒂共存 → 两者都不在 zero_set 中"""
+        from steward_core.solver import _evaluate_room_combo
+
+        # Arrange: 森蚺(5%/站) + 温蒂(15%/站) + 填位
+        senia = _mk_op("森蚺")
+        wenti = _mk_op("温蒂")
+        filler = _mk_op("填位", [_mk_mfg_skill("高效生产", 30.0, "f")])
+
+        # Act
+        score = _evaluate_room_combo([senia, wenti, filler], "Mfg", "CombatRecord", power_count=3)
+
+        # Assert: filler归零，取最高等级自动化=温蒂15%/站×3=45
+        # 积分 = 45×12 = 540
+        assert score == pytest.approx(540.0, rel=0.01)
+
 
 # ─── 跨间贪心分配 ──────────────────────────────────────────────
 
