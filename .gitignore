@@ -23,7 +23,6 @@ env/
 building_data.json
 character_table.json
 operators_data.json
-buffs_non_production.json
 
 # ===== 输出产物 =====
 output/

@@ -45,7 +45,7 @@ RhodeLogisticsSteward/
 ├── docs/
 │   ├── ROADMAP.md                # 验证路线图
 │   ├── maa-integration.md        # MAA 集成方案与数据采集文档
-│   ├── scheduling-strategy.md    # 完整约束体系与求解策略（含基线溯源）
+│   ├── constraints-and-data-baseline.md  # 约束体系与数据基线（含溯源核验）
 │   └── strategy-brief.md         # 精简策略概要（编码上下文用）
 └── output/                       # 生成的排班文件（不入库）
     └── custom_infrast/

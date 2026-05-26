@@ -1,0 +1,2946 @@
+{
+  "workshop_proc_probability[000]": {
+    "buffName": "专注·α",
+    "roomType": "WORKSHOP",
+    "description": "进驻加工站加工<@cc.kw>任意类材料</>时，副产品的产出概率提升<@cc.vup>40%</>",
+    "efficiency": 40,
+    "targetGroupSortId": 0,
+    "targets": [
+      "F_BUILDING",
+      "F_EVOLVE",
+      "F_SKILL",
+      "F_ASC"
+    ],
+    "charId": [
+      "char_208_melan",
+      "char_237_gravel"
+    ]
+  },
+  "workshop_proc_probability[020]": {
+    "buffName": "专注·β",
+    "roomType": "WORKSHOP",
+    "description": "进驻加工站加工<@cc.kw>任意类材料</>时，副产品的产出概率提升<@cc.vup>60%</>",
+    "efficiency": 60,
+    "targetGroupSortId": 0,
+    "targets": [
+      "F_BUILDING",
+      "F_EVOLVE",
+      "F_SKILL",
+      "F_ASC"
+    ],
+    "charId": [
+      "char_110_deepcl",
+      "char_127_estell"
+    ]
+  },
+  "workshop_proc_probability[010]": {
+    "buffName": "能工巧匠",
+    "roomType": "WORKSHOP",
+    "description": "进驻加工站加工<@cc.kw>任意类材料</>时，副产品的产出概率提升<@cc.vup>50%</>",
+    "efficiency": 50,
+    "targetGroupSortId": 0,
+    "targets": [
+      "F_BUILDING",
+      "F_EVOLVE",
+      "F_SKILL",
+      "F_ASC"
+    ],
+    "charId": [
+      "char_211_adnach",
+      "char_226_hmau",
+      "char_253_greyy",
+      "char_284_spot"
+    ]
+  },
+  "workshop_proc_probability[011]": {
+    "buffName": "多功能测绘仪",
+    "roomType": "WORKSHOP",
+    "description": "进驻加工站加工<@cc.kw>任意类材料</>时，副产品的产出概率提升<@cc.vup>50%</>",
+    "efficiency": 50,
+    "targetGroupSortId": 0,
+    "targets": [
+      "F_BUILDING",
+      "F_EVOLVE",
+      "F_SKILL",
+      "F_ASC"
+    ],
+    "charId": [
+      "char_248_mgllan"
+    ]
+  },
+  "workshop_proc_probability[012]": {
+    "buffName": "“炼金术”",
+    "roomType": "WORKSHOP",
+    "description": "进驻加工站加工<@cc.kw>任意类材料</>时，副产品的产出概率提升<@cc.vup>50%</>",
+    "efficiency": 50,
+    "targetGroupSortId": 0,
+    "targets": [
+      "F_BUILDING",
+      "F_EVOLVE",
+      "F_SKILL",
+      "F_ASC"
+    ],
+    "charId": [
+      "char_293_thorns"
+    ]
+  },
+  "workshop_proc_probability[013]": {
+    "buffName": "修修还能用",
+    "roomType": "WORKSHOP",
+    "description": "进驻加工站加工<@cc.kw>任意类材料</>时，副产品的产出概率提升<@cc.vup>50%</>",
+    "efficiency": 50,
+    "targetGroupSortId": 0,
+    "targets": [
+      "F_BUILDING",
+      "F_EVOLVE",
+      "F_SKILL",
+      "F_ASC"
+    ],
+    "charId": [
+      "char_491_humus"
+    ]
+  },
+  "workshop_proc_probability[021]": {
+    "buffName": "老当益壮",
+    "roomType": "WORKSHOP",
+    "description": "进驻加工站加工<@cc.kw>任意类材料</>时，副产品的产出概率提升<@cc.vup>60%</>",
+    "efficiency": 60,
+    "targetGroupSortId": 0,
+    "targets": [
+      "F_BUILDING",
+      "F_EVOLVE",
+      "F_SKILL",
+      "F_ASC"
+    ],
+    "charId": [
+      "char_503_rang"
+    ]
+  },
+  "workshop_proc_probability[030]": {
+    "buffName": "咪波·加工型",
+    "roomType": "WORKSHOP",
+    "description": "进驻加工站加工<@cc.kw>任意类材料</>时，副产品的产出概率提升<@cc.vup>65%</>",
+    "efficiency": 65,
+    "targetGroupSortId": 0,
+    "targets": [
+      "F_BUILDING",
+      "F_EVOLVE",
+      "F_SKILL",
+      "F_ASC"
+    ],
+    "charId": [
+      "char_242_otter"
+    ]
+  },
+  "workshop_proc_probability[031]": {
+    "buffName": "舍弃的赘余",
+    "roomType": "WORKSHOP",
+    "description": "进驻加工站加工<@cc.kw>任意类材料</>时，副产品的产出概率提升<@cc.vup>65%</>",
+    "efficiency": 65,
+    "targetGroupSortId": 0,
+    "targets": [
+      "F_BUILDING",
+      "F_EVOLVE",
+      "F_SKILL",
+      "F_ASC"
+    ],
+    "charId": [
+      "char_4040_rockr"
+    ]
+  },
+  "workshop_proc_probability[032]": {
+    "buffName": "天师府工艺",
+    "roomType": "WORKSHOP",
+    "description": "进驻加工站加工<@cc.kw>任意类材料</>时，副产品的产出概率提升<@cc.vup>65%</>",
+    "efficiency": 65,
+    "targetGroupSortId": 0,
+    "targets": [
+      "F_BUILDING",
+      "F_EVOLVE",
+      "F_SKILL",
+      "F_ASC"
+    ],
+    "charId": [
+      "char_4119_wanqin"
+    ]
+  },
+  "workshop_proc_probability[033]": {
+    "buffName": "蓝卡坞多面手",
+    "roomType": "WORKSHOP",
+    "description": "进驻加工站加工<@cc.kw>任意类材料</>时，副产品的产出概率提升<@cc.vup>65%</>",
+    "efficiency": 65,
+    "targetGroupSortId": 0,
+    "targets": [
+      "F_BUILDING",
+      "F_EVOLVE",
+      "F_SKILL",
+      "F_ASC"
+    ],
+    "charId": [
+      "char_4191_tippi"
+    ]
+  },
+  "workshop_proc_probability[040]": {
+    "buffName": "未知技术",
+    "roomType": "WORKSHOP",
+    "description": "进驻加工站加工<@cc.kw>任意类材料</>时，副产品的产出概率提升<@cc.vup>70%</>",
+    "efficiency": 70,
+    "targetGroupSortId": 0,
+    "targets": [
+      "F_BUILDING",
+      "F_EVOLVE",
+      "F_SKILL",
+      "F_ASC"
+    ],
+    "charId": [
+      "char_003_kalts"
+    ]
+  },
+  "workshop_proc_probability[041]": {
+    "buffName": "技术阐明",
+    "roomType": "WORKSHOP",
+    "description": "进驻加工站加工<@cc.kw>任意类材料</>时，副产品的产出概率提升<@cc.vup>70%</>",
+    "efficiency": 70,
+    "targetGroupSortId": 0,
+    "targets": [
+      "F_BUILDING",
+      "F_EVOLVE",
+      "F_SKILL",
+      "F_ASC"
+    ],
+    "charId": [
+      "char_1052_kalts2"
+    ]
+  },
+  "workshop_proc_probability[050]": {
+    "buffName": "理论革新",
+    "roomType": "WORKSHOP",
+    "description": "进驻加工站加工<@cc.kw>任意类材料</>时，副产品的产出概率提升<@cc.vup>80%</>",
+    "efficiency": 80,
+    "targetGroupSortId": 0,
+    "targets": [
+      "F_BUILDING",
+      "F_EVOLVE",
+      "F_SKILL",
+      "F_ASC"
+    ],
+    "charId": [
+      "char_1052_kalts2"
+    ]
+  },
+  "workshop_proc_cost[000]": {
+    "buffName": "御灵之力·金",
+    "roomType": "WORKSHOP",
+    "description": "进驻加工站加工原始心情消耗为<@cc.kw>8</>的<@cc.kw>任意类材料</>时，副产品的产出概率提升<@cc.vup>50%</>",
+    "efficiency": 0,
+    "targetGroupSortId": 0,
+    "targets": [
+      "F_BUILDING",
+      "F_EVOLVE",
+      "F_SKILL",
+      "F_ASC"
+    ],
+    "charId": [
+      "char_4067_lolxh"
+    ]
+  },
+  "workshop_formula_lolxh[000]": {
+    "buffName": "化猫",
+    "roomType": "WORKSHOP",
+    "description": "进驻加工站加工<@cc.kw>任意类材料</>时，心情消耗为<@cc.kw>4</>以上的配方全部除以<@cc.vup>4</>心情消耗",
+    "efficiency": 0,
+    "targetGroupSortId": 0,
+    "targets": [
+      "F_BUILDING",
+      "F_EVOLVE",
+      "F_SKILL",
+      "F_ASC"
+    ],
+    "charId": [
+      "char_4067_lolxh"
+    ]
+  },
+  "workshop_proc_probability&ext[000]": {
+    "buffName": "工效模范·α",
+    "roomType": "WORKSHOP",
+    "description": "进驻加工站加工<@cc.kw>任意类材料</>时，副产品的产出概率提升<@cc.vup>50%</>",
+    "efficiency": 50,
+    "targetGroupSortId": 0,
+    "targets": [
+      "F_BUILDING",
+      "F_EVOLVE",
+      "F_SKILL",
+      "F_ASC"
+    ],
+    "charId": [
+      "char_4162_cathy"
+    ]
+  },
+  "workshop_proc_probability&ext[001]": {
+    "buffName": "工效模范·β",
+    "roomType": "WORKSHOP",
+    "description": "进驻加工站加工<@cc.kw>任意类材料</>时，副产品的产出概率提升<@cc.vup>50%</>；如果<@cc.kw>白铁</>进驻在宿舍，则额外提升<@cc.vup>10%</>",
+    "efficiency": 50,
+    "targetGroupSortId": 0,
+    "targets": [
+      "F_BUILDING",
+      "F_EVOLVE",
+      "F_SKILL",
+      "F_ASC"
+    ],
+    "charId": [
+      "char_4162_cathy"
+    ]
+  },
+  "workshop_formula_bonus1[000]": {
+    "buffName": "因果",
+    "roomType": "WORKSHOP",
+    "description": "进驻加工站时，累积<@cc.kw>40</>点<$cc.w.ncdeer1><@cc.rem>因果</></>必定产出一次副产品",
+    "efficiency": 0,
+    "targetGroupSortId": 0,
+    "targets": [
+      "F_BUILDING",
+      "F_EVOLVE",
+      "F_SKILL",
+      "F_ASC"
+    ],
+    "charId": [
+      "char_4019_ncdeer"
+    ]
+  },
+  "workshop_formula_bonus2[000]": {
+    "buffName": "业报",
+    "roomType": "WORKSHOP",
+    "description": "进驻加工站时，累积<@cc.kw>80</>点<$cc.w.ncdeer2><@cc.rem>业报</></>必定产出一次副产品",
+    "efficiency": 0,
+    "targetGroupSortId": 0,
+    "targets": [
+      "F_BUILDING",
+      "F_EVOLVE",
+      "F_SKILL",
+      "F_ASC"
+    ],
+    "charId": [
+      "char_4019_ncdeer"
+    ]
+  },
+  "workshop_formula_cost[000]": {
+    "buffName": "龙腾式无人机",
+    "roomType": "WORKSHOP",
+    "description": "进驻加工站加工<@cc.kw>任意类材料</>时，心情消耗为<@cc.kw>4</>以上的配方全部<@cc.vup>-2</>心情消耗",
+    "efficiency": 0,
+    "targetGroupSortId": 0,
+    "targets": [
+      "F_BUILDING",
+      "F_EVOLVE",
+      "F_SKILL",
+      "F_ASC"
+    ],
+    "charId": [
+      "char_248_mgllan"
+    ]
+  },
+  "workshop_formula_cost[001]": {
+    "buffName": "自动化流水线",
+    "roomType": "WORKSHOP",
+    "description": "进驻加工站加工<@cc.kw>任意类材料</>时，心情消耗为<@cc.kw>4</>以上的配方全部<@cc.vup>-2</>心情消耗",
+    "efficiency": 0,
+    "targetGroupSortId": 0,
+    "targets": [
+      "F_BUILDING",
+      "F_EVOLVE",
+      "F_SKILL",
+      "F_ASC"
+    ],
+    "charId": [
+      "char_4162_cathy"
+    ]
+  },
+  "workshop_formula_cost3[400]": {
+    "buffName": "勤学不倦",
+    "roomType": "WORKSHOP",
+    "description": "进驻加工站加工<@cc.kw>任意类材料</>时，心情消耗为<@cc.kw>4</>的配方全部<@cc.vup>-1</>心情消耗",
+    "efficiency": 0,
+    "targetGroupSortId": 0,
+    "targets": [
+      "F_BUILDING",
+      "F_EVOLVE",
+      "F_SKILL",
+      "F_ASC"
+    ],
+    "charId": [
+      "char_4119_wanqin"
+    ]
+  },
+  "workshop_formula_cost3[500]": {
+    "buffName": "拍摄日愉快",
+    "roomType": "WORKSHOP",
+    "description": "进驻加工站加工<@cc.kw>任意类材料</>时，心情消耗为<@cc.kw>2</>的配方全部<@cc.vup>-1</>心情消耗",
+    "efficiency": 0,
+    "targetGroupSortId": 0,
+    "targets": [
+      "F_BUILDING",
+      "F_EVOLVE",
+      "F_SKILL",
+      "F_ASC"
+    ],
+    "charId": [
+      "char_4191_tippi"
+    ]
+  },
+  "workshop_formula_recovery[000]": {
+    "buffName": "“爆炸艺术”",
+    "roomType": "WORKSHOP",
+    "description": "进驻加工站加工<@cc.kw>任意类材料</>时，每<@cc.vup>2</>次加工没有产出副产品，则<@cc.kw>恢复自身一次心情</>，恢复量为<@cc.kw>对应配方所需消耗的心情</>（加工结束后统一结算）",
+    "efficiency": 0,
+    "targetGroupSortId": 0,
+    "targets": [
+      "F_BUILDING",
+      "F_EVOLVE",
+      "F_SKILL",
+      "F_ASC"
+    ],
+    "charId": [
+      "char_293_thorns"
+    ]
+  },
+  "workshop_formula_frost[000]": {
+    "buffName": "机械工程",
+    "roomType": "WORKSHOP",
+    "description": "进驻加工站加工<@cc.kw>任意类材料</>时，副产品的产出概率提升<@cc.vup>50%</>，每<@cc.vup>1</>点<$cc.bd_ash><@cc.rem>情报储备</></>额外提升<@cc.vup>5%</>；如果<$cc.bd_tachanka><@cc.rem>乌萨斯特饮</></>达到<@cc.vup>4</>瓶，则额外提升<@cc.vup>15%</>",
+    "efficiency": 50,
+    "targetGroupSortId": 0,
+    "targets": [
+      "F_BUILDING",
+      "F_EVOLVE",
+      "F_SKILL",
+      "F_ASC"
+    ],
+    "charId": [
+      "char_458_rfrost"
+    ]
+  },
+  "workshop_formula_cost4[000]": {
+    "buffName": "执著",
+    "roomType": "WORKSHOP",
+    "description": "进驻加工站加工<@cc.kw>精英材料</>时，相应配方的心情消耗恒定为<@cc.vup>2</>",
+    "efficiency": 0,
+    "targetGroupSortId": 2,
+    "targets": [
+      "F_EVOLVE"
+    ],
+    "charId": [
+      "char_311_mudrok"
+    ]
+  },
+  "workshop_formula_cost2[000]": {
+    "buffName": "热心修补匠",
+    "roomType": "WORKSHOP",
+    "description": "进驻加工站加工<@cc.kw>精英材料</>时，副产品的产出概率提升<@cc.vup>40%</>，同时心情消耗为<@cc.kw>8</>以上的配方全部<@cc.vup>-4</>心情消耗",
+    "efficiency": 40,
+    "targetGroupSortId": 2,
+    "targets": [
+      "F_EVOLVE"
+    ],
+    "charId": [
+      "char_423_blemsh"
+    ]
+  },
+  "workshop_formula_cost2[110]": {
+    "buffName": "大匠之心·α",
+    "roomType": "WORKSHOP",
+    "description": "进驻加工站加工<@cc.kw>精英材料</>时，副产品的产出概率提升<@cc.vup>60%</>，同时心情消耗为<@cc.kw>8</>以上的配方全部<@cc.vup>-2</>心情消耗",
+    "efficiency": 60,
+    "targetGroupSortId": 2,
+    "targets": [
+      "F_EVOLVE"
+    ],
+    "charId": [
+      "char_4221_ju"
+    ]
+  },
+  "workshop_formula_cost2[111]": {
+    "buffName": "大匠之心·β",
+    "roomType": "WORKSHOP",
+    "description": "进驻加工站加工<@cc.kw>精英材料</>时，副产品的产出概率提升<@cc.vup>80%</>，同时心情消耗为<@cc.kw>4</>以上的配方全部<@cc.vup>-2</>心情消耗",
+    "efficiency": 80,
+    "targetGroupSortId": 2,
+    "targets": [
+      "F_EVOLVE"
+    ],
+    "charId": [
+      "char_4221_ju"
+    ]
+  },
+  "workshop_formula_cost[010]": {
+    "buffName": "肆无忌惮",
+    "roomType": "WORKSHOP",
+    "description": "进驻加工站加工<@cc.kw>精英材料</>时，相应配方全部<@cc.vdown>+2</>心情消耗",
+    "efficiency": 0,
+    "targetGroupSortId": 2,
+    "targets": [
+      "F_EVOLVE"
+    ],
+    "charId": [
+      "char_2014_nian"
+    ]
+  },
+  "workshop_formula_cost3[100]": {
+    "buffName": "一丝不苟",
+    "roomType": "WORKSHOP",
+    "description": "进驻加工站加工<@cc.kw>精英材料</>时，心情消耗为<@cc.kw>2</>的配方全部<@cc.vup>-1</>心情消耗",
+    "efficiency": 0,
+    "targetGroupSortId": 2,
+    "targets": [
+      "F_EVOLVE"
+    ],
+    "charId": [
+      "char_345_folnic",
+      "char_4130_luton"
+    ]
+  },
+  "workshop_formula_cost3[110]": {
+    "buffName": "灵感",
+    "roomType": "WORKSHOP",
+    "description": "进驻加工站加工<@cc.kw>精英材料</>时，心情消耗为<@cc.kw>4</>的配方全部<@cc.vup>-1</>心情消耗",
+    "efficiency": 0,
+    "targetGroupSortId": 2,
+    "targets": [
+      "F_EVOLVE"
+    ],
+    "charId": [
+      "char_346_aosta",
+      "char_349_chiave"
+    ]
+  },
+  "workshop_formula_cost3[111]": {
+    "buffName": "熔铸",
+    "roomType": "WORKSHOP",
+    "description": "进驻加工站加工<@cc.kw>精英材料</>时，心情消耗为<@cc.kw>4</>的配方全部<@cc.vup>-1</>心情消耗",
+    "efficiency": 0,
+    "targetGroupSortId": 2,
+    "targets": [
+      "F_EVOLVE"
+    ],
+    "charId": [
+      "char_363_toddi"
+    ]
+  },
+  "workshop_formula_cost3[112]": {
+    "buffName": "军事工程学",
+    "roomType": "WORKSHOP",
+    "description": "进驻加工站加工<@cc.kw>精英材料</>时，心情消耗为<@cc.kw>4</>的配方全部<@cc.vup>-1</>心情消耗",
+    "efficiency": 0,
+    "targetGroupSortId": 2,
+    "targets": [
+      "F_EVOLVE"
+    ],
+    "charId": [
+      "char_4039_horn"
+    ]
+  },
+  "workshop_formula_cost3[120]": {
+    "buffName": "极简实用主义",
+    "roomType": "WORKSHOP",
+    "description": "进驻加工站加工<@cc.kw>精英材料</>时，心情消耗为<@cc.kw>4</>的配方全部<@cc.vup>-2</>心情消耗",
+    "efficiency": 0,
+    "targetGroupSortId": 2,
+    "targets": [
+      "F_EVOLVE"
+    ],
+    "charId": [
+      "char_379_sesa"
+    ]
+  },
+  "workshop_formula_cost3[102]": {
+    "buffName": "长生的余裕",
+    "roomType": "WORKSHOP",
+    "description": "进驻加工站加工<@cc.kw>精英材料</>时，心情消耗为<@cc.kw>2</>的配方全部<@cc.vup>-1</>心情消耗",
+    "efficiency": 0,
+    "targetGroupSortId": 2,
+    "targets": [
+      "F_EVOLVE"
+    ],
+    "charId": [
+      "char_4173_nowell"
+    ]
+  },
+  "workshop_formula_cost3[600]": {
+    "buffName": "与历史对话",
+    "roomType": "WORKSHOP",
+    "description": "进驻加工站加工<@cc.kw>精英材料</>时，心情消耗为<@cc.kw>8</>的配方全部<@cc.vup>-4</>心情消耗",
+    "efficiency": 0,
+    "targetGroupSortId": 2,
+    "targets": [
+      "F_EVOLVE"
+    ],
+    "charId": [
+      "char_4056_titi"
+    ]
+  },
+  "workshop_formula_cost3[220]": {
+    "buffName": "选矿学",
+    "roomType": "WORKSHOP",
+    "description": "进驻加工站加工<@cc.kw>基建材料</>时，心情消耗为<@cc.kw>4</>的配方全部<@cc.vup>-2</>心情消耗",
+    "efficiency": 0,
+    "targetGroupSortId": 1,
+    "targets": [
+      "F_BUILDING"
+    ],
+    "charId": [
+      "char_373_lionhd"
+    ]
+  },
+  "workshop_formula_cost3[221]": {
+    "buffName": "不倒霉的一天",
+    "roomType": "WORKSHOP",
+    "description": "进驻加工站加工<@cc.kw>基建材料</>时，心情消耗为<@cc.kw>4</>的配方全部<@cc.vup>-2</>心情消耗",
+    "efficiency": 0,
+    "targetGroupSortId": 1,
+    "targets": [
+      "F_BUILDING"
+    ],
+    "charId": [
+      "char_488_buildr"
+    ]
+  },
+  "workshop_formula_cost3[200]": {
+    "buffName": "便携蓄电池",
+    "roomType": "WORKSHOP",
+    "description": "进驻加工站加工<@cc.kw>基建材料</>时，心情消耗为<@cc.kw>2</>的配方全部<@cc.vup>-1</>心情消耗",
+    "efficiency": 0,
+    "targetGroupSortId": 1,
+    "targets": [
+      "F_BUILDING"
+    ],
+    "charId": [
+      "char_440_pinecn"
+    ]
+  },
+  "workshop_formula_cost3[300]": {
+    "buffName": "淡泊",
+    "roomType": "WORKSHOP",
+    "description": "进驻加工站加工<@cc.kw>芯片</>时，心情消耗为<@cc.kw>2</>的配方全部<@cc.vup>-1</>心情消耗",
+    "efficiency": 0,
+    "targetGroupSortId": 4,
+    "targets": [
+      "F_ASC"
+    ],
+    "charId": [
+      "char_301_cutter"
+    ]
+  },
+  "workshop_formula_cost3[000]": {
+    "buffName": "放空",
+    "roomType": "WORKSHOP",
+    "description": "进驻加工站加工<@cc.kw>技巧概要</>时，心情消耗为<@cc.kw>2</>的配方全部<@cc.vup>-1</>心情消耗",
+    "efficiency": 0,
+    "targetGroupSortId": 3,
+    "targets": [
+      "F_SKILL"
+    ],
+    "charId": [
+      "char_421_crow"
+    ]
+  },
+  "workshop_formula_cost3[001]": {
+    "buffName": "宣传阵线",
+    "roomType": "WORKSHOP",
+    "description": "进驻加工站加工<@cc.kw>技巧概要</>时，心情消耗为<@cc.kw>2</>的配方全部<@cc.vup>-1</>心情消耗",
+    "efficiency": 0,
+    "targetGroupSortId": 3,
+    "targets": [
+      "F_SKILL"
+    ],
+    "charId": [
+      "char_4223_botany"
+    ]
+  },
+  "workshop_formula_cost3[101]": {
+    "buffName": "谨慎加工",
+    "roomType": "WORKSHOP",
+    "description": "进驻加工站加工<@cc.kw>精英材料</>时，心情消耗为<@cc.kw>2</>的配方全部<@cc.vup>-1</>心情消耗",
+    "efficiency": 0,
+    "targetGroupSortId": 2,
+    "targets": [
+      "F_EVOLVE"
+    ],
+    "charId": [
+      "char_4107_vrdant"
+    ]
+  },
+  "workshop_formula_cost4[010]": {
+    "buffName": "苦修之律",
+    "roomType": "WORKSHOP",
+    "description": "进驻加工站加工<@cc.kw>精英材料</>时，相应配方的心情消耗恒定为<@cc.vup>4</>",
+    "efficiency": 0,
+    "targetGroupSortId": 2,
+    "targets": [
+      "F_EVOLVE"
+    ],
+    "charId": [
+      "char_4011_lessng"
+    ]
+  },
+  "workshop_formula_cost4[011]": {
+    "buffName": "虔修之律",
+    "roomType": "WORKSHOP",
+    "description": "进驻加工站加工<@cc.kw>精英材料</>时，相应配方的心情消耗恒定为<@cc.vup>3</>",
+    "efficiency": 0,
+    "targetGroupSortId": 2,
+    "targets": [
+      "F_EVOLVE"
+    ],
+    "charId": [
+      "char_4011_lessng"
+    ]
+  },
+  "workshop_formula_cost5[100]": {
+    "buffName": "铁匠天赋",
+    "roomType": "WORKSHOP",
+    "description": "进驻加工站加工<@cc.kw>异铁组</>材料时，心情消耗为<@cc.kw>2</>的配方全部<@cc.vup>-1</>心情消耗",
+    "efficiency": 0,
+    "targetGroupSortId": 2,
+    "targets": [
+      "F_EVOLVE"
+    ],
+    "charId": [
+      "char_4207_branch"
+    ]
+  },
+  "workshop_formula_cost5[000]": {
+    "buffName": "熟极而流",
+    "roomType": "WORKSHOP",
+    "description": "进驻加工站加工<@cc.kw>晶体类材料</>时，全部心情消耗<@cc.vup>-1</>",
+    "efficiency": 0,
+    "targetGroupSortId": 2,
+    "targets": [
+      "F_EVOLVE"
+    ],
+    "charId": [
+      "char_4164_tecno"
+    ]
+  },
+  "workshop_formula_cost&dorm[000]": {
+    "buffName": "心相连",
+    "roomType": "WORKSHOP",
+    "description": "进驻加工站加工<@cc.kw>精英材料</>时，宿舍内每有<@cc.kw>10</>名心情<@cc.vup>12</>以下的干员时，心情消耗为<@cc.kw>4</>的配方心情消耗全部<@cc.vup>-1</>",
+    "efficiency": 0,
+    "targetGroupSortId": 2,
+    "targets": [
+      "F_EVOLVE"
+    ],
+    "charId": [
+      "char_4072_ironmn"
+    ]
+  },
+  "workshop_formula_probability[000]": {
+    "buffName": "技巧理论",
+    "roomType": "WORKSHOP",
+    "description": "进驻加工站加工<@cc.kw>技巧概要</>时，副产品的产出概率提升<@cc.vup>70%</>",
+    "efficiency": 70,
+    "targetGroupSortId": 3,
+    "targets": [
+      "F_SKILL"
+    ],
+    "charId": [
+      "char_131_flameb",
+      "char_230_savage",
+      "char_289_gyuki"
+    ]
+  },
+  "workshop_formula_probability[010]": {
+    "buffName": "兵者诡道",
+    "roomType": "WORKSHOP",
+    "description": "进驻加工站加工<@cc.kw>技巧概要</>时，副产品的产出概率提升<@cc.vup>80%</>",
+    "efficiency": 80,
+    "targetGroupSortId": 3,
+    "targets": [
+      "F_SKILL"
+    ],
+    "charId": [
+      "char_188_helage"
+    ]
+  },
+  "workshop_formula_probability[011]": {
+    "buffName": "荒野生存",
+    "roomType": "WORKSHOP",
+    "description": "进驻加工站加工<@cc.kw>技巧概要</>时，副产品的产出概率提升<@cc.vup>80%</>",
+    "efficiency": 80,
+    "targetGroupSortId": 3,
+    "targets": [
+      "F_SKILL"
+    ],
+    "charId": [
+      "char_4014_lunacu"
+    ]
+  },
+  "workshop_formula_probability[020]": {
+    "buffName": "登峰造极",
+    "roomType": "WORKSHOP",
+    "description": "进驻加工站加工<@cc.kw>技巧概要</>时，副产品的产出概率提升<@cc.vup>80%</>",
+    "efficiency": 80,
+    "targetGroupSortId": 3,
+    "targets": [
+      "F_SKILL"
+    ],
+    "charId": [
+      "char_131_flameb"
+    ]
+  },
+  "workshop_formula_probability[021]": {
+    "buffName": "克己严修",
+    "roomType": "WORKSHOP",
+    "description": "进驻加工站加工<@cc.kw>技巧概要</>时，副产品的产出概率提升<@cc.vup>80%</>",
+    "efficiency": 80,
+    "targetGroupSortId": 3,
+    "targets": [
+      "F_SKILL"
+    ],
+    "charId": [
+      "char_1043_leizi2"
+    ]
+  },
+  "workshop_formula_probability[030]": {
+    "buffName": "适应力",
+    "roomType": "WORKSHOP",
+    "description": "进驻加工站加工<@cc.kw>技巧概要</>时，副产品的产出概率提升<@cc.vup>75%</>",
+    "efficiency": 75,
+    "targetGroupSortId": 3,
+    "targets": [
+      "F_SKILL"
+    ],
+    "charId": [
+      "char_421_crow"
+    ]
+  },
+  "workshop_formula_probability[031]": {
+    "buffName": "獠牙的技艺",
+    "roomType": "WORKSHOP",
+    "description": "进驻加工站加工<@cc.kw>技巧概要</>时，副产品的产出概率提升<@cc.vup>75%</>",
+    "efficiency": 75,
+    "targetGroupSortId": 3,
+    "targets": [
+      "F_SKILL"
+    ],
+    "charId": [
+      "char_1502_crosly"
+    ]
+  },
+  "workshop_formula_probability[032]": {
+    "buffName": "灵感改装",
+    "roomType": "WORKSHOP",
+    "description": "进驻加工站加工<@cc.kw>技巧概要</>时，副产品的产出概率提升<@cc.vup>75%</>",
+    "efficiency": 75,
+    "targetGroupSortId": 3,
+    "targets": [
+      "F_SKILL"
+    ],
+    "charId": [
+      "char_4223_botany"
+    ]
+  },
+  "workshop_formula_probability[100]": {
+    "buffName": "营养学",
+    "roomType": "WORKSHOP",
+    "description": "进驻加工站加工<@cc.kw>精英材料</>时，副产品的产出概率提升<@cc.vup>70%</>",
+    "efficiency": 70,
+    "targetGroupSortId": 2,
+    "targets": [
+      "F_EVOLVE"
+    ],
+    "charId": [
+      "char_120_hibisc"
+    ]
+  },
+  "workshop_formula_probability[101]": {
+    "buffName": "高效回收",
+    "roomType": "WORKSHOP",
+    "description": "进驻加工站加工<@cc.kw>精英材料</>时，副产品的产出概率提升<@cc.vup>70%</>",
+    "efficiency": 70,
+    "targetGroupSortId": 2,
+    "targets": [
+      "F_EVOLVE"
+    ],
+    "charId": [
+      "char_4130_luton"
+    ]
+  },
+  "workshop_formula_probability[102]": {
+    "buffName": "气流传动",
+    "roomType": "WORKSHOP",
+    "description": "进驻加工站加工<@cc.kw>精英材料</>时，副产品的产出概率提升<@cc.vup>70%</>",
+    "efficiency": 70,
+    "targetGroupSortId": 2,
+    "targets": [
+      "F_EVOLVE"
+    ],
+    "charId": [
+      "char_4165_ctrail"
+    ]
+  },
+  "workshop_formula_probability[115]": {
+    "buffName": "必修课程",
+    "roomType": "WORKSHOP",
+    "description": "进驻加工站加工<@cc.kw>精英材料</>时，副产品的产出概率提升<@cc.vup>75%</>",
+    "efficiency": 75,
+    "targetGroupSortId": 2,
+    "targets": [
+      "F_EVOLVE"
+    ],
+    "charId": [
+      "char_433_windft"
+    ]
+  },
+  "workshop_formula_probability[119]": {
+    "buffName": "工业设计",
+    "roomType": "WORKSHOP",
+    "description": "进驻加工站加工<@cc.kw>精英材料</>时，副产品的产出概率提升<@cc.vup>75%</>",
+    "efficiency": 75,
+    "targetGroupSortId": 2,
+    "targets": [
+      "F_EVOLVE"
+    ],
+    "charId": [
+      "char_379_sesa"
+    ]
+  },
+  "workshop_formula_probability[1110]": {
+    "buffName": "过度发挥",
+    "roomType": "WORKSHOP",
+    "description": "进驻加工站加工<@cc.kw>精英材料</>时，副产品的产出概率提升<@cc.vup>75%</>",
+    "efficiency": 75,
+    "targetGroupSortId": 2,
+    "targets": [
+      "F_EVOLVE"
+    ],
+    "charId": [
+      "char_4213_skybx"
+    ]
+  },
+  "workshop_formula_probability[129]": {
+    "buffName": "学者",
+    "roomType": "WORKSHOP",
+    "description": "进驻加工站加工<@cc.kw>精英材料</>时，副产品的产出概率提升<@cc.vup>80%</>",
+    "efficiency": 80,
+    "targetGroupSortId": 2,
+    "targets": [
+      "F_EVOLVE"
+    ],
+    "charId": [
+      "char_348_ceylon"
+    ]
+  },
+  "workshop_formula_probability[139]": {
+    "buffName": "巫妖学识",
+    "roomType": "WORKSHOP",
+    "description": "进驻加工站加工<@cc.kw>精英材料</>时，副产品的产出概率提升<@cc.vup>80%</>",
+    "efficiency": 80,
+    "targetGroupSortId": 2,
+    "targets": [
+      "F_EVOLVE"
+    ],
+    "charId": [
+      "char_4011_lessng"
+    ]
+  },
+  "workshop_formula_probability[113]": {
+    "buffName": "腐蚀科学·α",
+    "roomType": "WORKSHOP",
+    "description": "进驻加工站加工<@cc.kw>精英材料</>时，副产品的产出概率提升<@cc.vup>75%</>",
+    "efficiency": 75,
+    "targetGroupSortId": 2,
+    "targets": [
+      "F_EVOLVE"
+    ],
+    "charId": [
+      "char_489_serum"
+    ]
+  },
+  "workshop_formula_probability[123]": {
+    "buffName": "腐蚀科学·β",
+    "roomType": "WORKSHOP",
+    "description": "进驻加工站加工<@cc.kw>精英材料</>时，副产品的产出概率提升<@cc.vup>80%</>",
+    "efficiency": 80,
+    "targetGroupSortId": 2,
+    "targets": [
+      "F_EVOLVE"
+    ],
+    "charId": [
+      "char_489_serum"
+    ]
+  },
+  "workshop_formula_probability[110]": {
+    "buffName": "药理学·α",
+    "roomType": "WORKSHOP",
+    "description": "进驻加工站加工<@cc.kw>精英材料</>时，副产品的产出概率提升<@cc.vup>75%</>",
+    "efficiency": 75,
+    "targetGroupSortId": 2,
+    "targets": [
+      "F_EVOLVE"
+    ],
+    "charId": [
+      "char_117_myrrh",
+      "char_181_flower",
+      "char_187_ccheal",
+      "char_212_ansel"
+    ]
+  },
+  "workshop_formula_probability[120]": {
+    "buffName": "药理学·β",
+    "roomType": "WORKSHOP",
+    "description": "进驻加工站加工<@cc.kw>精英材料</>时，副产品的产出概率提升<@cc.vup>80%</>",
+    "efficiency": 80,
+    "targetGroupSortId": 2,
+    "targets": [
+      "F_EVOLVE"
+    ],
+    "charId": [
+      "char_298_susuro"
+    ]
+  },
+  "workshop_formula_probability[111]": {
+    "buffName": "毒理学·α",
+    "roomType": "WORKSHOP",
+    "description": "进驻加工站加工<@cc.kw>精英材料</>时，副产品的产出概率提升<@cc.vup>75%</>",
+    "efficiency": 75,
+    "targetGroupSortId": 2,
+    "targets": [
+      "F_EVOLVE"
+    ],
+    "charId": [
+      "char_129_bluep",
+      "char_345_folnic"
+    ]
+  },
+  "workshop_formula_probability[121]": {
+    "buffName": "毒理学·β",
+    "roomType": "WORKSHOP",
+    "description": "进驻加工站加工<@cc.kw>精英材料</>时，副产品的产出概率提升<@cc.vup>80%</>",
+    "efficiency": 80,
+    "targetGroupSortId": 2,
+    "targets": [
+      "F_EVOLVE"
+    ],
+    "charId": [
+      "char_129_bluep"
+    ]
+  },
+  "workshop_formula_probability[112]": {
+    "buffName": "爆破材料学·α",
+    "roomType": "WORKSHOP",
+    "description": "进驻加工站加工<@cc.kw>精英材料</>时，副产品的产出概率提升<@cc.vup>75%</>",
+    "efficiency": 75,
+    "targetGroupSortId": 2,
+    "targets": [
+      "F_EVOLVE"
+    ],
+    "charId": [
+      "char_219_meteo"
+    ]
+  },
+  "workshop_formula_probability[122]": {
+    "buffName": "爆破材料学·β",
+    "roomType": "WORKSHOP",
+    "description": "进驻加工站加工<@cc.kw>精英材料</>时，副产品的产出概率提升<@cc.vup>80%</>",
+    "efficiency": 80,
+    "targetGroupSortId": 2,
+    "targets": [
+      "F_EVOLVE"
+    ],
+    "charId": [
+      "char_219_meteo",
+      "char_282_catap"
+    ]
+  },
+  "workshop_formula_probability[114]": {
+    "buffName": "草药学·α",
+    "roomType": "WORKSHOP",
+    "description": "进驻加工站加工<@cc.kw>精英材料</>时，副产品的产出概率提升<@cc.vup>75%</>",
+    "efficiency": 75,
+    "targetGroupSortId": 2,
+    "targets": [
+      "F_EVOLVE"
+    ],
+    "charId": [
+      "char_449_glider"
+    ]
+  },
+  "workshop_formula_probability[124]": {
+    "buffName": "草药学·β",
+    "roomType": "WORKSHOP",
+    "description": "进驻加工站加工<@cc.kw>精英材料</>时，副产品的产出概率提升<@cc.vup>80%</>",
+    "efficiency": 80,
+    "targetGroupSortId": 2,
+    "targets": [
+      "F_EVOLVE"
+    ],
+    "charId": [
+      "char_449_glider"
+    ]
+  },
+  "workshop_formula_probability[160]": {
+    "buffName": "稀有金属辨识",
+    "roomType": "WORKSHOP",
+    "description": "进驻加工站加工<@cc.kw>精英材料</>时，副产品的产出概率提升<@cc.vup>100%</>",
+    "efficiency": 100,
+    "targetGroupSortId": 2,
+    "targets": [
+      "F_EVOLVE"
+    ],
+    "charId": [
+      "char_2014_nian"
+    ]
+  },
+  "workshop_formula_probability[221]": {
+    "buffName": "突发好运",
+    "roomType": "WORKSHOP",
+    "description": "进驻加工站加工<@cc.kw>基建材料</>时，副产品的产出概率提升<@cc.vup>75%</>",
+    "efficiency": 75,
+    "targetGroupSortId": 1,
+    "targets": [
+      "F_BUILDING"
+    ],
+    "charId": [
+      "char_488_buildr"
+    ]
+  },
+  "workshop_formula_probability[116]": {
+    "buffName": "探井人·α",
+    "roomType": "WORKSHOP",
+    "description": "进驻加工站加工<@cc.kw>精英材料</>时，副产品的产出概率提升<@cc.vup>75%</>",
+    "efficiency": 75,
+    "targetGroupSortId": 2,
+    "targets": [
+      "F_EVOLVE"
+    ],
+    "charId": [
+      "char_4117_ray"
+    ]
+  },
+  "workshop_formula_probability[126]": {
+    "buffName": "探井人·β",
+    "roomType": "WORKSHOP",
+    "description": "进驻加工站加工<@cc.kw>精英材料</>时，副产品的产出概率提升<@cc.vup>80%</>",
+    "efficiency": 80,
+    "targetGroupSortId": 2,
+    "targets": [
+      "F_EVOLVE"
+    ],
+    "charId": [
+      "char_4117_ray"
+    ]
+  },
+  "workshop_formula_probability[117]": {
+    "buffName": "熟手的尊严",
+    "roomType": "WORKSHOP",
+    "description": "进驻加工站加工<@cc.kw>精英材料</>时，副产品的产出概率提升<@cc.vup>75%</>",
+    "efficiency": 75,
+    "targetGroupSortId": 2,
+    "targets": [
+      "F_EVOLVE"
+    ],
+    "charId": [
+      "char_4173_nowell"
+    ]
+  },
+  "workshop_formula_probability[118]": {
+    "buffName": "修旧如旧·α",
+    "roomType": "WORKSHOP",
+    "description": "进驻加工站加工<@cc.kw>精英材料</>时，副产品的产出概率提升<@cc.vup>75%</>",
+    "efficiency": 75,
+    "targetGroupSortId": 2,
+    "targets": [
+      "F_EVOLVE"
+    ],
+    "charId": [
+      "char_4056_titi"
+    ]
+  },
+  "workshop_formula_probability[128]": {
+    "buffName": "修旧如旧·β",
+    "roomType": "WORKSHOP",
+    "description": "进驻加工站加工<@cc.kw>精英材料</>时，副产品的产出概率提升<@cc.vup>80%</>",
+    "efficiency": 80,
+    "targetGroupSortId": 2,
+    "targets": [
+      "F_EVOLVE"
+    ],
+    "charId": [
+      "char_4056_titi"
+    ]
+  },
+  "workshop_formula_dorm[000]": {
+    "buffName": "“物尽其用”",
+    "roomType": "WORKSHOP",
+    "description": "进驻加工站加工<@cc.kw>精英材料</>时，宿舍内每有<@cc.kw>1</>名心情<@cc.vup>4</>以下的干员，副产品的产出概率提升<@cc.vup>5%</>",
+    "efficiency": 0,
+    "targetGroupSortId": 2,
+    "targets": [
+      "F_EVOLVE"
+    ],
+    "charId": [
+      "char_271_spikes"
+    ]
+  },
+  "workshop_formula_dorm[001]": {
+    "buffName": "“人善其事”",
+    "roomType": "WORKSHOP",
+    "description": "进驻加工站加工<@cc.kw>精英材料</>时，宿舍内每有<@cc.kw>1</>名心情<@cc.vup>20</>以下的干员，副产品的产出概率提升<@cc.vup>5%</>",
+    "efficiency": 0,
+    "targetGroupSortId": 2,
+    "targets": [
+      "F_EVOLVE"
+    ],
+    "charId": [
+      "char_271_spikes"
+    ]
+  },
+  "workshop_formula_dorm[002]": {
+    "buffName": "意相通",
+    "roomType": "WORKSHOP",
+    "description": "进驻加工站加工<@cc.kw>精英材料</>时，宿舍内每有<@cc.kw>1</>名心情<@cc.vup>12</>以下的干员，副产品的产出概率提升<@cc.vup>5%</>",
+    "efficiency": 0,
+    "targetGroupSortId": 2,
+    "targets": [
+      "F_EVOLVE"
+    ],
+    "charId": [
+      "char_4072_ironmn"
+    ]
+  },
+  "workshop_formula_drop[020]": {
+    "buffName": "无用的赠予",
+    "roomType": "WORKSHOP",
+    "description": "进驻加工站加工<@cc.kw>精英材料</>产出<@cc.kw>T3</>品质的副产品时，副产品必定为<@cc.kw>聚酸酯组</>",
+    "efficiency": 0,
+    "targetGroupSortId": 2,
+    "targets": [
+      "F_EVOLVE"
+    ],
+    "charId": [
+      "char_4040_rockr"
+    ]
+  },
+  "workshop_formula_drop[030]": {
+    "buffName": "缓蚀技术",
+    "roomType": "WORKSHOP",
+    "description": "进驻加工站加工<@cc.kw>精英材料</>产出<@cc.kw>T3</>品质的副产品时，副产品必定为<@cc.kw>异铁组</>",
+    "efficiency": 0,
+    "targetGroupSortId": 2,
+    "targets": [
+      "F_EVOLVE"
+    ],
+    "charId": [
+      "char_489_serum"
+    ]
+  },
+  "workshop_formula_drop[040]": {
+    "buffName": "岩体锚固",
+    "roomType": "WORKSHOP",
+    "description": "进驻加工站加工<@cc.kw>精英材料</>产出<@cc.kw>T3</>品质的副产品时，副产品必定为<@cc.kw>固源岩组</>",
+    "efficiency": 0,
+    "targetGroupSortId": 2,
+    "targets": [
+      "F_EVOLVE"
+    ],
+    "charId": [
+      "char_4117_ray"
+    ]
+  },
+  "workshop_formula_free[000]": {
+    "buffName": "精打细算",
+    "roomType": "WORKSHOP",
+    "description": "进驻加工站加工<@cc.kw>精英材料</>时，减免龙门币消耗",
+    "efficiency": 0,
+    "targetGroupSortId": 2,
+    "targets": [
+      "F_EVOLVE"
+    ],
+    "charId": [
+      "char_423_blemsh"
+    ]
+  },
+  "workshop_formula_probability[200]": {
+    "buffName": "工程学",
+    "roomType": "WORKSHOP",
+    "description": "进驻加工站加工<@cc.kw>基建材料</>时，副产品的产出概率提升<@cc.vup>70%</>",
+    "efficiency": 70,
+    "targetGroupSortId": 1,
+    "targets": [
+      "F_BUILDING"
+    ],
+    "charId": [
+      "char_277_sqrrel",
+      "char_440_pinecn",
+      "char_484_robrta"
+    ]
+  },
+  "workshop_formula_probability[210]": {
+    "buffName": "斩铁裂钢",
+    "roomType": "WORKSHOP",
+    "description": "进驻加工站加工<@cc.kw>基建材料</>时，副产品的产出概率提升<@cc.vup>80%</>",
+    "efficiency": 80,
+    "targetGroupSortId": 1,
+    "targets": [
+      "F_BUILDING"
+    ],
+    "charId": [
+      "char_017_huang"
+    ]
+  },
+  "workshop_formula_probability[220]": {
+    "buffName": "结构力学",
+    "roomType": "WORKSHOP",
+    "description": "进驻加工站加工<@cc.kw>基建材料</>时，副产品的产出概率提升<@cc.vup>75%</>",
+    "efficiency": 75,
+    "targetGroupSortId": 1,
+    "targets": [
+      "F_BUILDING"
+    ],
+    "charId": [
+      "char_373_lionhd"
+    ]
+  },
+  "workshop_formula_probability[300]": {
+    "buffName": "特训记录",
+    "roomType": "WORKSHOP",
+    "description": "进驻加工站加工<@cc.kw>芯片</>时，副产品的产出概率提升<@cc.vup>70%</>",
+    "efficiency": 70,
+    "targetGroupSortId": 4,
+    "targets": [
+      "F_ASC"
+    ],
+    "charId": [
+      "char_009_12fce",
+      "char_137_brownb",
+      "char_301_cutter"
+    ]
+  },
+  "workshop_formula_probability[310]": {
+    "buffName": "训练有素",
+    "roomType": "WORKSHOP",
+    "description": "进驻加工站加工<@cc.kw>芯片</>时，副产品的产出概率提升<@cc.vup>80%</>",
+    "efficiency": 80,
+    "targetGroupSortId": 4,
+    "targets": [
+      "F_ASC"
+    ],
+    "charId": [
+      "char_222_bpipe"
+    ]
+  },
+  "workshop_formula_device[000]": {
+    "buffName": "DIY·装置",
+    "roomType": "WORKSHOP",
+    "description": "进驻加工站加工<@cc.kw>装置</>类材料时，副产品的产出概率提升<@cc.vup>90%</>",
+    "efficiency": 0,
+    "targetGroupSortId": 2,
+    "targets": [
+      "F_EVOLVE"
+    ],
+    "charId": [
+      "char_349_chiave"
+    ]
+  },
+  "workshop_formula_device[020]": {
+    "buffName": "DIY·异铁",
+    "roomType": "WORKSHOP",
+    "description": "进驻加工站加工<@cc.kw>异铁</>类材料时，副产品的产出概率提升<@cc.vup>90%</>",
+    "efficiency": 0,
+    "targetGroupSortId": 2,
+    "targets": [
+      "F_EVOLVE"
+    ],
+    "charId": [
+      "char_363_toddi"
+    ]
+  },
+  "workshop_formula_device[021]": {
+    "buffName": "余料利用",
+    "roomType": "WORKSHOP",
+    "description": "进驻加工站加工<@cc.kw>异铁组</>材料时，副产品的产出概率提升<@cc.vup>90%</>",
+    "efficiency": 0,
+    "targetGroupSortId": 2,
+    "targets": [
+      "F_EVOLVE"
+    ],
+    "charId": [
+      "char_4207_branch"
+    ]
+  },
+  "workshop_formula_device[030]": {
+    "buffName": "DIY·聚酸酯",
+    "roomType": "WORKSHOP",
+    "description": "进驻加工站加工<@cc.kw>聚酸酯</>类材料时，副产品的产出概率提升<@cc.vup>90%</>",
+    "efficiency": 0,
+    "targetGroupSortId": 2,
+    "targets": [
+      "F_EVOLVE"
+    ],
+    "charId": [
+      "char_346_aosta"
+    ]
+  },
+  "workshop_formula_device[050]": {
+    "buffName": "DIY·源岩",
+    "roomType": "WORKSHOP",
+    "description": "进驻加工站加工<@cc.kw>源岩</>类材料时，副产品的产出概率提升<@cc.vup>90%</>",
+    "efficiency": 0,
+    "targetGroupSortId": 2,
+    "targets": [
+      "F_EVOLVE"
+    ],
+    "charId": [
+      "char_311_mudrok"
+    ]
+  },
+  "workshop_formula_device[111]": {
+    "buffName": "DIY·炽合金",
+    "roomType": "WORKSHOP",
+    "description": "进驻加工站加工<@cc.kw>炽合金块</>材料时，副产品的产出概率提升<@cc.vup>100%</>",
+    "efficiency": 0,
+    "targetGroupSortId": 2,
+    "targets": [
+      "F_EVOLVE"
+    ],
+    "charId": [
+      "char_4039_horn"
+    ]
+  },
+  "workshop_formula_device[060]": {
+    "buffName": "DIY·酮凝集·α",
+    "roomType": "WORKSHOP",
+    "description": "进驻加工站加工<@cc.kw>酮凝集</>类材料时，副产品的产出概率提升<@cc.vup>80%</>",
+    "efficiency": 0,
+    "targetGroupSortId": 2,
+    "targets": [
+      "F_EVOLVE"
+    ],
+    "charId": [
+      "char_4107_vrdant"
+    ]
+  },
+  "workshop_formula_device[070]": {
+    "buffName": "DIY·晶体",
+    "roomType": "WORKSHOP",
+    "description": "进驻加工站加工<@cc.kw>晶体</>类材料时，副产品的产出概率提升<@cc.vup>80%</>",
+    "efficiency": 0,
+    "targetGroupSortId": 2,
+    "targets": [
+      "F_EVOLVE"
+    ],
+    "charId": [
+      "char_4164_tecno"
+    ]
+  },
+  "workshop_formula_rub[000]": {
+    "buffName": "省省能更多",
+    "roomType": "WORKSHOP",
+    "description": "进驻加工站加工原始心情消耗为<@cc.kw>2</>的<@cc.kw>精英材料</>时，副产品的产出概率额外提升<@cc.vup>40%</>",
+    "efficiency": 0,
+    "targetGroupSortId": 2,
+    "targets": [
+      "F_EVOLVE"
+    ],
+    "charId": [
+      "char_491_humus"
+    ]
+  },
+  "train_spd[001]": {
+    "buffName": "学无不精·α",
+    "roomType": "TRAINING",
+    "description": "进驻训练室协助位时，干员的专精技能训练速度<@cc.vup>+25%</>",
+    "efficiency": 25,
+    "targetGroupSortId": 0,
+    "targets": [
+      "PIONEER",
+      "WARRIOR",
+      "TANK",
+      "SNIPER",
+      "CASTER",
+      "MEDIC",
+      "SUPPORT",
+      "SPECIAL"
+    ],
+    "charId": [
+      "char_4121_zuole"
+    ]
+  },
+  "train_spd[002]": {
+    "buffName": "学无不精·α",
+    "roomType": "TRAINING",
+    "description": "进驻训练室协助位时，干员的专精技能训练速度<@cc.vup>+25%</>",
+    "efficiency": 25,
+    "targetGroupSortId": 0,
+    "targets": [
+      "PIONEER",
+      "WARRIOR",
+      "TANK",
+      "SNIPER",
+      "CASTER",
+      "MEDIC",
+      "SUPPORT",
+      "SPECIAL"
+    ],
+    "charId": [
+      "char_4196_reckpr"
+    ]
+  },
+  "train_spd[000]": {
+    "buffName": "教官",
+    "roomType": "TRAINING",
+    "description": "进驻训练室协助位时，干员的专精技能训练速度<@cc.vup>+25%</>",
+    "efficiency": 25,
+    "targetGroupSortId": 0,
+    "targets": [
+      "PIONEER",
+      "WARRIOR",
+      "TANK",
+      "SNIPER",
+      "CASTER",
+      "MEDIC",
+      "SUPPORT",
+      "SPECIAL"
+    ],
+    "charId": [
+      "char_130_doberm",
+      "char_308_swire"
+    ]
+  },
+  "train_spd[0000]": {
+    "buffName": "教官",
+    "roomType": "TRAINING",
+    "description": "进驻训练室协助位时，干员的专精技能训练速度<@cc.vup>+25%</>",
+    "efficiency": 25,
+    "targetGroupSortId": 0,
+    "targets": [
+      "PIONEER",
+      "WARRIOR",
+      "TANK",
+      "SNIPER",
+      "CASTER",
+      "MEDIC",
+      "SUPPORT",
+      "SPECIAL"
+    ],
+    "charId": [
+      "char_265_sophia"
+    ]
+  },
+  "train_spd_bd[000]": {
+    "buffName": "与人乐",
+    "roomType": "TRAINING",
+    "description": "进驻训练室协助位时，心情每小时消耗<@cc.vdown>+1</>，每<@cc.vup>1</>点<$cc.bd_b1><@cc.rem>人间烟火</></><@cc.vup>+1%</>专精技能训练速度",
+    "efficiency": 0,
+    "targetGroupSortId": 0,
+    "targets": [
+      "PIONEER",
+      "WARRIOR",
+      "TANK",
+      "SNIPER",
+      "CASTER",
+      "MEDIC",
+      "SUPPORT",
+      "SPECIAL"
+    ],
+    "charId": [
+      "char_2026_yu"
+    ]
+  },
+  "train_spd_power[000]": {
+    "buffName": "雪祀候补",
+    "roomType": "TRAINING",
+    "description": "进驻训练室协助位时，基建内（不包含副手及活动室使用者）每名<$cc.g.sm><@cc.kw>萨米</></>干员为当前干员的专精技能训练速度<@cc.vup>+10%</>（最多生效<@cc.kw>3</>名）",
+    "efficiency": 0,
+    "targetGroupSortId": 0,
+    "targets": [
+      "PIONEER",
+      "WARRIOR",
+      "TANK",
+      "SNIPER",
+      "CASTER",
+      "MEDIC",
+      "SUPPORT",
+      "SPECIAL"
+    ],
+    "charId": [
+      "char_341_sntlla"
+    ]
+  },
+  "train_spd_tag[000]": {
+    "buffName": "骑士训练",
+    "roomType": "TRAINING",
+    "description": "进驻训练室协助位时，基建内（不包含副手及活动室使用者）每名<$cc.tag.knight><@cc.kw>骑士</></>干员为当前干员的专精技能训练速度<@cc.vup>+5%</>（最多生效<@cc.kw>5</>名）",
+    "efficiency": 0,
+    "targetGroupSortId": 0,
+    "targets": [
+      "PIONEER",
+      "WARRIOR",
+      "TANK",
+      "SNIPER",
+      "CASTER",
+      "MEDIC",
+      "SUPPORT",
+      "SPECIAL"
+    ],
+    "charId": [
+      "char_1014_nearl2"
+    ]
+  },
+  "train_spd_tag[010]": {
+    "buffName": "崇高准则",
+    "roomType": "TRAINING",
+    "description": "进驻训练室协助位时，基建内（不包含副手及活动室使用者）每名<$cc.tag.knight><@cc.kw>骑士</></>干员为当前干员的专精技能训练速度<@cc.vup>+5%</>（最多生效<@cc.kw>8</>名）",
+    "efficiency": 0,
+    "targetGroupSortId": 0,
+    "targets": [
+      "PIONEER",
+      "WARRIOR",
+      "TANK",
+      "SNIPER",
+      "CASTER",
+      "MEDIC",
+      "SUPPORT",
+      "SPECIAL"
+    ],
+    "charId": [
+      "char_1014_nearl2"
+    ]
+  },
+  "train_spd_tag[020]": {
+    "buffName": "战术指导·防守",
+    "roomType": "TRAINING",
+    "description": "进驻训练室协助位时，基建内（不包含副手及活动室使用者）每名<$cc.g.Defence><@cc.kw>防守方</></>干员为当前干员的专精技能训练速度<@cc.vup>+10%</>（最多生效<@cc.kw>4</>名）",
+    "efficiency": 0,
+    "targetGroupSortId": 0,
+    "targets": [
+      "PIONEER",
+      "WARRIOR",
+      "TANK",
+      "SNIPER",
+      "CASTER",
+      "MEDIC",
+      "SUPPORT",
+      "SPECIAL"
+    ],
+    "charId": [
+      "char_4123_ela"
+    ]
+  },
+  "train_spd_tag[1020]": {
+    "buffName": "战术指导·防守",
+    "roomType": "TRAINING",
+    "description": "进驻训练室协助位时，基建内（不包含副手及活动室使用者）每名<$cc.g.Defence><@cc.kw>防守方</></>干员为当前干员的专精技能训练速度<@cc.vup>+10%</>（最多生效<@cc.kw>4</>名）",
+    "efficiency": 0,
+    "targetGroupSortId": 0,
+    "targets": [
+      "PIONEER",
+      "WARRIOR",
+      "TANK",
+      "SNIPER",
+      "CASTER",
+      "MEDIC",
+      "SUPPORT",
+      "SPECIAL"
+    ],
+    "charId": [
+      "char_4125_rdoc"
+    ]
+  },
+  "train_spd_tag[030]": {
+    "buffName": "战术指导·进攻",
+    "roomType": "TRAINING",
+    "description": "进驻训练室协助位时，基建内（不包含副手及活动室使用者）每名<$cc.g.Attack><@cc.kw>进攻方</></>干员为当前干员的专精技能训练速度<@cc.vup>+10%</>（最多生效<@cc.kw>4</>名）",
+    "efficiency": 0,
+    "targetGroupSortId": 0,
+    "targets": [
+      "PIONEER",
+      "WARRIOR",
+      "TANK",
+      "SNIPER",
+      "CASTER",
+      "MEDIC",
+      "SUPPORT",
+      "SPECIAL"
+    ],
+    "charId": [
+      "char_4124_iana"
+    ]
+  },
+  "train_spd_tag[1030]": {
+    "buffName": "战术指导·进攻",
+    "roomType": "TRAINING",
+    "description": "进驻训练室协助位时，基建内（不包含副手及活动室使用者）每名<$cc.g.Attack><@cc.kw>进攻方</></>干员为当前干员的专精技能训练速度<@cc.vup>+10%</>（最多生效<@cc.kw>4</>名）",
+    "efficiency": 0,
+    "targetGroupSortId": 0,
+    "targets": [
+      "PIONEER",
+      "WARRIOR",
+      "TANK",
+      "SNIPER",
+      "CASTER",
+      "MEDIC",
+      "SUPPORT",
+      "SPECIAL"
+    ],
+    "charId": [
+      "char_4126_fuze"
+    ]
+  },
+  "train_spd_tag[040]": {
+    "buffName": "叙拉古狂欢",
+    "roomType": "TRAINING",
+    "description": "进驻训练室协助位时，基建内（不包含副手及活动室使用者）每名<$cc.g.siracusa><@cc.kw>叙拉古</></>干员为当前干员的专精技能训练速度<@cc.vup>+5%</>（最多生效<@cc.kw>7</>名）",
+    "efficiency": 0,
+    "targetGroupSortId": 0,
+    "targets": [
+      "PIONEER",
+      "WARRIOR",
+      "TANK",
+      "SNIPER",
+      "CASTER",
+      "MEDIC",
+      "SUPPORT",
+      "SPECIAL"
+    ],
+    "charId": [
+      "char_1038_whitw2"
+    ]
+  },
+  "train_spd&level[000]": {
+    "buffName": "苦心孤诣",
+    "roomType": "TRAINING",
+    "description": "进驻训练室协助位时，如果本次训练专精技能至<@cc.vup>3</>级，专精技能训练速度<@cc.vup>+70%</>",
+    "efficiency": 0,
+    "targetGroupSortId": 0,
+    "targets": [
+      "PIONEER",
+      "WARRIOR",
+      "TANK",
+      "SNIPER",
+      "CASTER",
+      "MEDIC",
+      "SUPPORT",
+      "SPECIAL"
+    ],
+    "charId": [
+      "char_2027_wang"
+    ]
+  },
+  "train_spd_power_down[000]": {
+    "buffName": "“手段应当有效”",
+    "roomType": "TRAINING",
+    "description": "进驻训练室协助位时，心情每小时消耗<@cc.vdown>+1</>，基建内（不包含副手及活动室使用者）每名<$cc.g.abyssal><@cc.kw>深海猎人</></>干员为当前干员的专精技能训练速度<@cc.vup>+10%</>（最多生效<@cc.kw>5</>名）",
+    "efficiency": 0,
+    "targetGroupSortId": 0,
+    "targets": [
+      "PIONEER",
+      "WARRIOR",
+      "TANK",
+      "SNIPER",
+      "CASTER",
+      "MEDIC",
+      "SUPPORT",
+      "SPECIAL"
+    ],
+    "charId": [
+      "char_4145_ulpia"
+    ]
+  },
+  "train_spd_doubleProf[000]": {
+    "buffName": "剑与手炮",
+    "roomType": "TRAINING",
+    "description": "进驻训练室协助位时，<@cc.kw>近卫</>与<@cc.kw>狙击</>干员的专精技能训练速度<@cc.vup>+30%</>",
+    "efficiency": 30,
+    "targetGroupSortId": 2,
+    "targets": [
+      "WARRIOR",
+      "SNIPER"
+    ],
+    "charId": [
+      "char_4009_irene"
+    ]
+  },
+  "train_spd_doubleProf[100]": {
+    "buffName": "红龙之血",
+    "roomType": "TRAINING",
+    "description": "进驻训练室协助位时，<@cc.kw>术师</>与<@cc.kw>医疗</>干员的专精技能训练速度<@cc.vup>+30%</>",
+    "efficiency": 30,
+    "targetGroupSortId": 5,
+    "targets": [
+      "CASTER",
+      "MEDIC"
+    ],
+    "charId": [
+      "char_1020_reed2"
+    ]
+  },
+  "train_spd_doubleProf[200]": {
+    "buffName": "女妖之力",
+    "roomType": "TRAINING",
+    "description": "进驻训练室协助位时，<@cc.kw>术师</>与<@cc.kw>辅助</>干员的专精技能训练速度<@cc.vup>+30%</>",
+    "efficiency": 30,
+    "targetGroupSortId": 5,
+    "targets": [
+      "CASTER",
+      "SUPPORT"
+    ],
+    "charId": [
+      "char_4133_logos"
+    ]
+  },
+  "train_spd_doubleProf[201]": {
+    "buffName": "“问题应当准确”",
+    "roomType": "TRAINING",
+    "description": "进驻训练室协助位时，<@cc.kw>近卫</>与<@cc.kw>辅助</>干员的专精技能训练速度<@cc.vup>+30%</>",
+    "efficiency": 30,
+    "targetGroupSortId": 2,
+    "targets": [
+      "WARRIOR",
+      "SUPPORT"
+    ],
+    "charId": [
+      "char_4145_ulpia"
+    ]
+  },
+  "train_spd_doubleProf[300]": {
+    "buffName": "恣意英杰",
+    "roomType": "TRAINING",
+    "description": "进驻训练室协助位时，<@cc.kw>术师</>与<@cc.kw>近卫</>干员的专精技能训练速度<@cc.vup>+30%</>",
+    "efficiency": 30,
+    "targetGroupSortId": 2,
+    "targets": [
+      "CASTER",
+      "WARRIOR"
+    ],
+    "charId": [
+      "char_1038_whitw2"
+    ]
+  },
+  "train_spd_doubleProf[301]": {
+    "buffName": "“我不懂啊”",
+    "roomType": "TRAINING",
+    "description": "进驻训练室协助位时，<@cc.kw>术师</>与<@cc.kw>近卫</>干员的专精技能训练速度<@cc.vup>+30%</>",
+    "efficiency": 30,
+    "targetGroupSortId": 2,
+    "targets": [
+      "CASTER",
+      "WARRIOR"
+    ],
+    "charId": [
+      "char_4226_veen"
+    ]
+  },
+  "train_spd_doubleProf[310]": {
+    "buffName": "“触类旁通”",
+    "roomType": "TRAINING",
+    "description": "进驻训练室协助位时，<@cc.kw>术师</>与<@cc.kw>近卫</>干员的专精技能训练速度<@cc.vup>+45%</>",
+    "efficiency": 45,
+    "targetGroupSortId": 2,
+    "targets": [
+      "CASTER",
+      "WARRIOR"
+    ],
+    "charId": [
+      "char_4226_veen"
+    ]
+  },
+  "train_spd_doubleProf[110]": {
+    "buffName": "红龙之血",
+    "roomType": "TRAINING",
+    "description": "进驻训练室协助位时，<@cc.kw>术师</>与<@cc.kw>医疗</>干员的专精技能训练速度<@cc.vup>+45%</>",
+    "efficiency": 45,
+    "targetGroupSortId": 5,
+    "targets": [
+      "CASTER",
+      "MEDIC"
+    ],
+    "charId": [
+      "char_1020_reed2"
+    ]
+  },
+  "train_spd_doubleProf2[001]": {
+    "buffName": "沉默为剑",
+    "roomType": "TRAINING",
+    "description": "进驻训练室协助位时，<@cc.kw>特种</>与<@cc.kw>先锋</>干员的专精技能训练速度<@cc.vup>+30%</>",
+    "efficiency": 30,
+    "targetGroupSortId": 1,
+    "targets": [
+      "SPECIAL",
+      "PIONEER"
+    ],
+    "charId": [
+      "char_1028_texas2"
+    ]
+  },
+  "train_spd_doubleProf2[000]": {
+    "buffName": "破斩桎梏",
+    "roomType": "TRAINING",
+    "description": "进驻训练室协助位时，<@cc.kw>特种</>与<@cc.kw>先锋</>干员的专精技能训练速度<@cc.vup>+30%</>，如果本次训练专精技能至<@cc.vup>2</>级，则训练速度额外<@cc.vup>+50%</>",
+    "efficiency": 30,
+    "targetGroupSortId": 1,
+    "targets": [
+      "SPECIAL",
+      "PIONEER"
+    ],
+    "charId": [
+      "char_1028_texas2"
+    ]
+  },
+  "train_spd_reduceTime[000]": {
+    "buffName": "精神锻炼",
+    "roomType": "TRAINING",
+    "description": "进驻训练室单次协助一名干员训练时长达<@cc.vup>5</>小时，则该名干员下次训练所需时间<@cc.vup>-50%</>（任意一方离开训练室时，效果消失）",
+    "efficiency": 0,
+    "targetGroupSortId": 0,
+    "targets": [
+      "PIONEER",
+      "WARRIOR",
+      "TANK",
+      "SNIPER",
+      "CASTER",
+      "MEDIC",
+      "SUPPORT",
+      "SPECIAL"
+    ],
+    "charId": [
+      "char_4009_irene"
+    ]
+  },
+  "train_spd_reduceTime[001]": {
+    "buffName": "言语之义",
+    "roomType": "TRAINING",
+    "description": "进驻训练室单次协助一名干员训练时长达<@cc.vup>5</>小时，则该名干员下次训练所需时间<@cc.vup>-50%</>（任意一方离开训练室时，效果消失）",
+    "efficiency": 0,
+    "targetGroupSortId": 0,
+    "targets": [
+      "PIONEER",
+      "WARRIOR",
+      "TANK",
+      "SNIPER",
+      "CASTER",
+      "MEDIC",
+      "SUPPORT",
+      "SPECIAL"
+    ],
+    "charId": [
+      "char_4133_logos"
+    ]
+  },
+  "train_spd_bd&reduceTime[000]": {
+    "buffName": "思而后行",
+    "roomType": "TRAINING",
+    "description": "进驻训练室协助位时，每完整协助完成1次专精训练，累计一定<$cc.t.accmuguard1><@cc.rem>武道</></>。<$cc.t.accmuguard1><@cc.rem>武道</></>达到上限时，下一次开始协助<@cc.kw>近卫</>干员训练专精技能至<@cc.kw>1</>级将立即完成，并消耗已有<$cc.t.accmuguard1><@cc.rem>武道</></>",
+    "efficiency": 0,
+    "targetGroupSortId": 2,
+    "targets": [
+      "WARRIOR"
+    ],
+    "charId": [
+      "char_4121_zuole"
+    ]
+  },
+  "train_spd&profession[010]": {
+    "buffName": "先锋专精·α",
+    "roomType": "TRAINING",
+    "description": "进驻训练室协助位时，<@cc.kw>先锋</>干员的专精技能训练速度<@cc.vup>+30%</>",
+    "efficiency": 30,
+    "targetGroupSortId": 1,
+    "targets": [
+      "PIONEER"
+    ],
+    "charId": [
+      "char_192_falco",
+      "char_220_grani",
+      "char_362_saga"
+    ]
+  },
+  "train_spd&profession2[010]": {
+    "buffName": "先锋专精·α",
+    "roomType": "TRAINING",
+    "description": "进驻训练室协助位时，<@cc.kw>先锋</>干员的专精技能训练速度<@cc.vup>+30%</>",
+    "efficiency": 30,
+    "targetGroupSortId": 1,
+    "targets": [
+      "PIONEER"
+    ],
+    "charId": [
+      "char_476_blkngt"
+    ]
+  },
+  "train_spd&profession[011]": {
+    "buffName": "先锋专精·β",
+    "roomType": "TRAINING",
+    "description": "进驻训练室协助位时，<@cc.kw>先锋</>干员的专精技能训练速度<@cc.vup>+50%</>",
+    "efficiency": 50,
+    "targetGroupSortId": 1,
+    "targets": [
+      "PIONEER"
+    ],
+    "charId": [
+      "char_220_grani",
+      "char_290_vigna"
+    ]
+  },
+  "train_spd&profession[020]": {
+    "buffName": "近卫专精·α",
+    "roomType": "TRAINING",
+    "description": "进驻训练室协助位时，<@cc.kw>近卫</>干员的专精技能训练速度<@cc.vup>+30%</>",
+    "efficiency": 30,
+    "targetGroupSortId": 2,
+    "targets": [
+      "WARRIOR"
+    ],
+    "charId": [
+      "char_106_franka",
+      "char_137_brownb",
+      "char_194_leto",
+      "char_265_sophia",
+      "char_350_surtr",
+      "char_356_broca"
+    ]
+  },
+  "train_spd&profession[1020]": {
+    "buffName": "近卫专精·α",
+    "roomType": "TRAINING",
+    "description": "进驻训练室协助位时，<@cc.kw>近卫</>干员的专精技能训练速度<@cc.vup>+30%</>",
+    "efficiency": 30,
+    "targetGroupSortId": 2,
+    "targets": [
+      "WARRIOR"
+    ],
+    "charId": [
+      "char_4187_graceb"
+    ]
+  },
+  "train_spd&profession2[020]": {
+    "buffName": "近卫专精·α",
+    "roomType": "TRAINING",
+    "description": "进驻训练室协助位时，<@cc.kw>近卫</>干员的专精技能训练速度<@cc.vup>+30%</>",
+    "efficiency": 30,
+    "targetGroupSortId": 2,
+    "targets": [
+      "WARRIOR"
+    ],
+    "charId": [
+      "char_1026_gvial2",
+      "char_333_sidero",
+      "char_415_flint",
+      "char_475_akafyu"
+    ]
+  },
+  "train_spd&profession[021]": {
+    "buffName": "近卫专精·β",
+    "roomType": "TRAINING",
+    "description": "进驻训练室协助位时，<@cc.kw>近卫</>干员的专精技能训练速度<@cc.vup>+50%</>",
+    "efficiency": 50,
+    "targetGroupSortId": 2,
+    "targets": [
+      "WARRIOR"
+    ],
+    "charId": [
+      "char_106_franka",
+      "char_356_broca"
+    ]
+  },
+  "train_spd&profession[030]": {
+    "buffName": "重装专精·α",
+    "roomType": "TRAINING",
+    "description": "进驻训练室协助位时，<@cc.kw>重装</>干员的专精技能训练速度<@cc.vup>+30%</>",
+    "efficiency": 30,
+    "targetGroupSortId": 3,
+    "targets": [
+      "TANK"
+    ],
+    "charId": [
+      "char_136_hsguma",
+      "char_260_durnar"
+    ]
+  },
+  "train_spd&profession2[030]": {
+    "buffName": "重装专精·α",
+    "roomType": "TRAINING",
+    "description": "进驻训练室协助位时，<@cc.kw>重装</>干员的专精技能训练速度<@cc.vup>+30%</>",
+    "efficiency": 30,
+    "targetGroupSortId": 3,
+    "targets": [
+      "TANK"
+    ],
+    "charId": [
+      "char_304_zebra",
+      "char_422_aurora"
+    ]
+  },
+  "train_spd&profession[031]": {
+    "buffName": "重装专精·β",
+    "roomType": "TRAINING",
+    "description": "进驻训练室协助位时，<@cc.kw>重装</>干员的专精技能训练速度<@cc.vup>+50%</>",
+    "efficiency": 50,
+    "targetGroupSortId": 3,
+    "targets": [
+      "TANK"
+    ],
+    "charId": [
+      "char_199_yak"
+    ]
+  },
+  "train_spd&profession[040]": {
+    "buffName": "狙击专精·α",
+    "roomType": "TRAINING",
+    "description": "进驻训练室协助位时，<@cc.kw>狙击</>干员的专精技能训练速度<@cc.vup>+30%</>",
+    "efficiency": 30,
+    "targetGroupSortId": 4,
+    "targets": [
+      "SNIPER"
+    ],
+    "charId": [
+      "char_204_platnm",
+      "char_279_excu"
+    ]
+  },
+  "train_spd&profession2[040]": {
+    "buffName": "狙击专精·α",
+    "roomType": "TRAINING",
+    "description": "进驻训练室协助位时，<@cc.kw>狙击</>干员的专精技能训练速度<@cc.vup>+30%</>",
+    "efficiency": 30,
+    "targetGroupSortId": 4,
+    "targets": [
+      "SNIPER"
+    ],
+    "charId": [
+      "char_1013_chen2",
+      "char_113_cqbw",
+      "char_4006_melnte",
+      "char_4043_erato"
+    ]
+  },
+  "train_spd&profession[041]": {
+    "buffName": "狙击专精·β",
+    "roomType": "TRAINING",
+    "description": "进驻训练室协助位时，<@cc.kw>狙击</>干员的专精技能训练速度<@cc.vup>+50%</>",
+    "efficiency": 50,
+    "targetGroupSortId": 4,
+    "targets": [
+      "SNIPER"
+    ],
+    "charId": [
+      "char_204_platnm"
+    ]
+  },
+  "train_spd&profession[050]": {
+    "buffName": "术师专精·α",
+    "roomType": "TRAINING",
+    "description": "进驻训练室协助位时，<@cc.kw>术师</>干员的专精技能训练速度<@cc.vup>+30%</>",
+    "efficiency": 30,
+    "targetGroupSortId": 5,
+    "targets": [
+      "CASTER"
+    ],
+    "charId": [
+      "char_164_nightm",
+      "char_166_skfire",
+      "char_344_beewax",
+      "char_426_billro"
+    ]
+  },
+  "train_spd&profession2[050]": {
+    "buffName": "术师专精·α",
+    "roomType": "TRAINING",
+    "description": "进驻训练室协助位时，<@cc.kw>术师</>干员的专精技能训练速度<@cc.vup>+30%</>",
+    "efficiency": 30,
+    "targetGroupSortId": 5,
+    "targets": [
+      "CASTER"
+    ],
+    "charId": [
+      "char_388_mint"
+    ]
+  },
+  "train_spd&profession[051]": {
+    "buffName": "术师专精·β",
+    "roomType": "TRAINING",
+    "description": "进驻训练室协助位时，<@cc.kw>术师</>干员的专精技能训练速度<@cc.vup>+50%</>",
+    "efficiency": 50,
+    "targetGroupSortId": 5,
+    "targets": [
+      "CASTER"
+    ],
+    "charId": [
+      "char_166_skfire",
+      "char_344_beewax"
+    ]
+  },
+  "train_spd&profession2[052]": {
+    "buffName": "术师专精·α",
+    "roomType": "TRAINING",
+    "description": "进驻训练室协助位时，<@cc.kw>术师</>干员的专精技能训练速度<@cc.vup>+30%</>",
+    "efficiency": 30,
+    "targetGroupSortId": 5,
+    "targets": [
+      "CASTER"
+    ],
+    "charId": [
+      "char_450_necras"
+    ]
+  },
+  "train_spd&profession[060]": {
+    "buffName": "辅助专精·α",
+    "roomType": "TRAINING",
+    "description": "进驻训练室协助位时，<@cc.kw>辅助</>干员的专精技能训练速度<@cc.vup>+30%</>",
+    "efficiency": 30,
+    "targetGroupSortId": 7,
+    "targets": [
+      "SUPPORT"
+    ],
+    "charId": [
+      "char_195_glassb",
+      "char_358_lisa"
+    ]
+  },
+  "train_spd&profession2[060]": {
+    "buffName": "辅助专精·α",
+    "roomType": "TRAINING",
+    "description": "进驻训练室协助位时，<@cc.kw>辅助</>干员的专精技能训练速度<@cc.vup>+30%</>",
+    "efficiency": 30,
+    "targetGroupSortId": 7,
+    "targets": [
+      "SUPPORT"
+    ],
+    "charId": [
+      "char_1012_skadi2"
+    ]
+  },
+  "train_spd&profession[061]": {
+    "buffName": "辅助专精·β",
+    "roomType": "TRAINING",
+    "description": "进驻训练室协助位时，<@cc.kw>辅助</>干员的专精技能训练速度<@cc.vup>+50%</>",
+    "efficiency": 50,
+    "targetGroupSortId": 7,
+    "targets": [
+      "SUPPORT"
+    ],
+    "charId": [
+      "char_174_slbell"
+    ]
+  },
+  "train_spd&profession[070]": {
+    "buffName": "医疗专精·α",
+    "roomType": "TRAINING",
+    "description": "进驻训练室协助位时，<@cc.kw>医疗</>干员的专精技能训练速度<@cc.vup>+30%</>",
+    "efficiency": 30,
+    "targetGroupSortId": 6,
+    "targets": [
+      "MEDIC"
+    ],
+    "charId": [
+      "char_171_bldsk",
+      "char_187_ccheal",
+      "char_298_susuro"
+    ]
+  },
+  "train_spd&profession[071]": {
+    "buffName": "医疗专精·β",
+    "roomType": "TRAINING",
+    "description": "进驻训练室协助位时，<@cc.kw>医疗</>干员的专精技能训练速度<@cc.vup>+50%</>",
+    "efficiency": 50,
+    "targetGroupSortId": 6,
+    "targets": [
+      "MEDIC"
+    ],
+    "charId": [
+      "char_171_bldsk"
+    ]
+  },
+  "train_spd&profession[080]": {
+    "buffName": "特种专精·α",
+    "roomType": "TRAINING",
+    "description": "进驻训练室协助位时，<@cc.kw>特种</>干员的专精技能训练速度<@cc.vup>+30%</>",
+    "efficiency": 30,
+    "targetGroupSortId": 8,
+    "targets": [
+      "SPECIAL"
+    ],
+    "charId": [
+      "char_215_mantic",
+      "char_250_phatom"
+    ]
+  },
+  "train_spd&profession2[080]": {
+    "buffName": "特种专精·α",
+    "roomType": "TRAINING",
+    "description": "进驻训练室协助位时，<@cc.kw>特种</>干员的专精技能训练速度<@cc.vup>+30%</>",
+    "efficiency": 30,
+    "targetGroupSortId": 8,
+    "targets": [
+      "SPECIAL"
+    ],
+    "charId": [
+      "char_1023_ghost2",
+      "char_451_robin"
+    ]
+  },
+  "train_spd&profession[081]": {
+    "buffName": "特种专精·β",
+    "roomType": "TRAINING",
+    "description": "进驻训练室协助位时，<@cc.kw>特种</>干员的专精技能训练速度<@cc.vup>+50%</>",
+    "efficiency": 50,
+    "targetGroupSortId": 8,
+    "targets": [
+      "SPECIAL"
+    ],
+    "charId": [
+      "char_215_mantic"
+    ]
+  },
+  "train_spd&profession[1081]": {
+    "buffName": "特种专精·β",
+    "roomType": "TRAINING",
+    "description": "进驻训练室协助位时，<@cc.kw>特种</>干员的专精技能训练速度<@cc.vup>+50%</>",
+    "efficiency": 50,
+    "targetGroupSortId": 8,
+    "targets": [
+      "SPECIAL"
+    ],
+    "charId": [
+      "char_4165_ctrail"
+    ]
+  },
+  "train_spd&profession[110]": {
+    "buffName": "入世",
+    "roomType": "TRAINING",
+    "description": "进驻训练室协助位时，<@cc.kw>先锋</>干员的专精技能训练速度<@cc.vup>+60%</>",
+    "efficiency": 60,
+    "targetGroupSortId": 1,
+    "targets": [
+      "PIONEER"
+    ],
+    "charId": [
+      "char_362_saga"
+    ]
+  },
+  "train_spd&profession[120]": {
+    "buffName": "剑术记忆",
+    "roomType": "TRAINING",
+    "description": "进驻训练室协助位时，<@cc.kw>近卫</>干员的专精技能训练速度<@cc.vup>+60%</>",
+    "efficiency": 60,
+    "targetGroupSortId": 2,
+    "targets": [
+      "WARRIOR"
+    ],
+    "charId": [
+      "char_350_surtr"
+    ]
+  },
+  "train_spd&profession[130]": {
+    "buffName": "般若",
+    "roomType": "TRAINING",
+    "description": "进驻训练室协助位时，<@cc.kw>重装</>干员的专精技能训练速度<@cc.vup>+60%</>",
+    "efficiency": 60,
+    "targetGroupSortId": 3,
+    "targets": [
+      "TANK"
+    ],
+    "charId": [
+      "char_136_hsguma"
+    ]
+  },
+  "train_spd&profession[140]": {
+    "buffName": "黑矢",
+    "roomType": "TRAINING",
+    "description": "进驻训练室协助位时，<@cc.kw>狙击</>干员的专精技能训练速度<@cc.vup>+60%</>",
+    "efficiency": 60,
+    "targetGroupSortId": 4,
+    "targets": [
+      "SNIPER"
+    ],
+    "charId": [
+      "char_340_shwaz"
+    ]
+  },
+  "train_spd&profession[150]": {
+    "buffName": "尽在掌握",
+    "roomType": "TRAINING",
+    "description": "进驻训练室协助位时，<@cc.kw>术师</>干员的专精技能训练速度<@cc.vup>+60%</>",
+    "efficiency": 60,
+    "targetGroupSortId": 5,
+    "targets": [
+      "CASTER"
+    ],
+    "charId": [
+      "char_426_billro"
+    ]
+  },
+  "train_spd&profession[160]": {
+    "buffName": "共鸣",
+    "roomType": "TRAINING",
+    "description": "进驻训练室协助位时，<@cc.kw>辅助</>干员的专精技能训练速度<@cc.vup>+60%</>",
+    "efficiency": 60,
+    "targetGroupSortId": 7,
+    "targets": [
+      "SUPPORT"
+    ],
+    "charId": [
+      "char_358_lisa"
+    ]
+  },
+  "train_spd&profession[170]": {
+    "buffName": "精准手术",
+    "roomType": "TRAINING",
+    "description": "进驻训练室协助位时，<@cc.kw>医疗</>干员的专精技能训练速度<@cc.vup>+60%</>",
+    "efficiency": 60,
+    "targetGroupSortId": 6,
+    "targets": [
+      "MEDIC"
+    ],
+    "charId": [
+      "char_225_haak"
+    ]
+  },
+  "train_spd&profession[180]": {
+    "buffName": "假面魅影",
+    "roomType": "TRAINING",
+    "description": "进驻训练室协助位时，<@cc.kw>特种</>干员的专精技能训练速度<@cc.vup>+60%</>",
+    "efficiency": 60,
+    "targetGroupSortId": 8,
+    "targets": [
+      "SPECIAL"
+    ],
+    "charId": [
+      "char_250_phatom"
+    ]
+  },
+  "train_spd&profession3[130]": {
+    "buffName": "重装专精·α",
+    "roomType": "TRAINING",
+    "description": "进驻训练室协助位时，<@cc.kw>重装</>干员的专精技能训练速度<@cc.vup>+30%</>",
+    "efficiency": 30,
+    "targetGroupSortId": 3,
+    "targets": [
+      "TANK"
+    ],
+    "charId": [
+      "char_4025_aprot2"
+    ]
+  },
+  "train_spd&profession3[131]": {
+    "buffName": "实战技巧：驭法铁卫",
+    "roomType": "TRAINING",
+    "description": "进驻训练室协助位时，<@cc.kw>重装</>干员的专精技能训练速度<@cc.vup>+30%</>，如果训练位干员分支为<@cc.kw>驭法铁卫</>，则训练速度额外<@cc.vup>+45%</>",
+    "efficiency": 30,
+    "targetGroupSortId": 3,
+    "targets": [
+      "TANK"
+    ],
+    "charId": [
+      "char_4025_aprot2"
+    ]
+  },
+  "train_spd&profession3[140]": {
+    "buffName": "实战技巧：速射",
+    "roomType": "TRAINING",
+    "description": "进驻训练室协助位时，<@cc.kw>狙击</>干员的专精技能训练速度<@cc.vup>+30%</>，如果训练位干员分支为<@cc.kw>速射手</>，则训练速度额外<@cc.vup>+45%</>",
+    "efficiency": 30,
+    "targetGroupSortId": 4,
+    "targets": [
+      "SNIPER"
+    ],
+    "charId": [
+      "char_1021_kroos2"
+    ]
+  },
+  "train_spd&profession3[150]": {
+    "buffName": "近卫专精·α",
+    "roomType": "TRAINING",
+    "description": "进驻训练室协助位时，<@cc.kw>近卫</>干员的专精技能训练速度<@cc.vup>+30%</>",
+    "efficiency": 30,
+    "targetGroupSortId": 2,
+    "targets": [
+      "WARRIOR"
+    ],
+    "charId": [
+      "char_157_dagda"
+    ]
+  },
+  "train_spd&profession3[151]": {
+    "buffName": "实战技巧：斗士",
+    "roomType": "TRAINING",
+    "description": "进驻训练室协助位时，<@cc.kw>近卫</>干员的专精技能训练速度<@cc.vup>+30%</>，如果训练位干员分支为<@cc.kw>斗士</>，则训练速度额外<@cc.vup>+45%</>",
+    "efficiency": 30,
+    "targetGroupSortId": 2,
+    "targets": [
+      "WARRIOR"
+    ],
+    "charId": [
+      "char_157_dagda"
+    ]
+  },
+  "train_spd&profession3[160]": {
+    "buffName": "近卫专精·α",
+    "roomType": "TRAINING",
+    "description": "进驻训练室协助位时，<@cc.kw>近卫</>干员的专精技能训练速度<@cc.vup>+30%</>",
+    "efficiency": 30,
+    "targetGroupSortId": 2,
+    "targets": [
+      "WARRIOR"
+    ],
+    "charId": [
+      "char_4082_qiubai"
+    ]
+  },
+  "train_spd&profession3[161]": {
+    "buffName": "实战技巧：领主",
+    "roomType": "TRAINING",
+    "description": "进驻训练室协助位时，<@cc.kw>近卫</>干员的专精技能训练速度<@cc.vup>+30%</>，如果训练位干员分支为<@cc.kw>领主</>，则训练速度额外<@cc.vup>+45%</>",
+    "efficiency": 30,
+    "targetGroupSortId": 2,
+    "targets": [
+      "WARRIOR"
+    ],
+    "charId": [
+      "char_4082_qiubai"
+    ]
+  },
+  "train_spd&profession3[170]": {
+    "buffName": "实战技巧：攻城手",
+    "roomType": "TRAINING",
+    "description": "进驻训练室协助位时，<@cc.kw>狙击</>干员的专精技能训练速度<@cc.vup>+30%</>，如果训练位干员分支为<@cc.kw>攻城手</>，则训练速度额外<@cc.vup>+45%</>",
+    "efficiency": 30,
+    "targetGroupSortId": 4,
+    "targets": [
+      "SNIPER"
+    ],
+    "charId": [
+      "char_2012_typhon"
+    ]
+  },
+  "train_spd&profession3[180]": {
+    "buffName": "医疗专精·α",
+    "roomType": "TRAINING",
+    "description": "进驻训练室协助位时，<@cc.kw>医疗</>干员的专精技能训练速度<@cc.vup>+30%</>",
+    "efficiency": 30,
+    "targetGroupSortId": 6,
+    "targets": [
+      "MEDIC"
+    ],
+    "charId": [
+      "char_1016_agoat2"
+    ]
+  },
+  "train_spd&profession2[321]": {
+    "buffName": "近卫专精·α",
+    "roomType": "TRAINING",
+    "description": "进驻训练室协助位时，<@cc.kw>近卫</>干员的专精技能训练速度<@cc.vup>+30%</>",
+    "efficiency": 30,
+    "targetGroupSortId": 2,
+    "targets": [
+      "WARRIOR"
+    ],
+    "charId": [
+      "char_394_hadiya"
+    ]
+  },
+  "train_spd&profession2[322]": {
+    "buffName": "勇气传承",
+    "roomType": "TRAINING",
+    "description": "进驻训练室协助位时，<@cc.kw>近卫</>干员的专精技能训练速度<@cc.vup>+30%</>，如果本次训练专精技能至<@cc.vup>3</>级，则训练速度额外<@cc.vup>+45%</>",
+    "efficiency": 30,
+    "targetGroupSortId": 2,
+    "targets": [
+      "WARRIOR"
+    ],
+    "charId": [
+      "char_394_hadiya"
+    ]
+  },
+  "train_spd&profession3[181]": {
+    "buffName": "实战技巧：行医",
+    "roomType": "TRAINING",
+    "description": "进驻训练室协助位时，<@cc.kw>医疗</>干员的专精技能训练速度<@cc.vup>+30%</>，如果训练位干员分支为<@cc.kw>行医</>，则训练速度额外<@cc.vup>+45%</>",
+    "efficiency": 30,
+    "targetGroupSortId": 6,
+    "targets": [
+      "MEDIC"
+    ],
+    "charId": [
+      "char_1016_agoat2"
+    ]
+  },
+  "train_spd&profession3[182]": {
+    "buffName": "医疗专精·α",
+    "roomType": "TRAINING",
+    "description": "进驻训练室协助位时，<@cc.kw>医疗</>干员的专精技能训练速度<@cc.vup>+30%</>",
+    "efficiency": 30,
+    "targetGroupSortId": 6,
+    "targets": [
+      "MEDIC"
+    ],
+    "charId": [
+      "char_4139_papyrs"
+    ]
+  },
+  "train_spd&profession3[183]": {
+    "buffName": "实战技巧：链愈师",
+    "roomType": "TRAINING",
+    "description": "进驻训练室协助位时，<@cc.kw>医疗</>干员的专精技能训练速度<@cc.vup>+30%</>，如果训练位干员分支为<@cc.kw>链愈师</>，则训练速度额外<@cc.vup>+45%</>",
+    "efficiency": 30,
+    "targetGroupSortId": 6,
+    "targets": [
+      "MEDIC"
+    ],
+    "charId": [
+      "char_4139_papyrs"
+    ]
+  },
+  "train_spd&profession3[184]": {
+    "buffName": "医疗专精·α",
+    "roomType": "TRAINING",
+    "description": "进驻训练室协助位时，<@cc.kw>医疗</>干员的专精技能训练速度<@cc.vup>+30%</>",
+    "efficiency": 30,
+    "targetGroupSortId": 6,
+    "targets": [
+      "MEDIC"
+    ],
+    "charId": [
+      "char_4196_reckpr"
+    ]
+  },
+  "train_spd&profession2[110]": {
+    "buffName": "战术研习",
+    "roomType": "TRAINING",
+    "description": "进驻训练室协助位时，<@cc.kw>先锋</>干员的专精技能训练速度<@cc.vup>+30%</>，如果本次训练专精技能至<@cc.vup>1</>级，则训练速度额外<@cc.vup>+45%</>",
+    "efficiency": 30,
+    "targetGroupSortId": 1,
+    "targets": [
+      "PIONEER"
+    ],
+    "charId": [
+      "char_476_blkngt"
+    ]
+  },
+  "train_spd&profession2[120]": {
+    "buffName": "信影流",
+    "roomType": "TRAINING",
+    "description": "进驻训练室协助位时，<@cc.kw>近卫</>干员的专精技能训练速度<@cc.vup>+30%</>，如果本次训练专精技能至<@cc.vup>1</>级，则训练速度额外<@cc.vup>+45%</>",
+    "efficiency": 30,
+    "targetGroupSortId": 2,
+    "targets": [
+      "WARRIOR"
+    ],
+    "charId": [
+      "char_475_akafyu"
+    ]
+  },
+  "train_spd&profession2[130]": {
+    "buffName": "极地生存",
+    "roomType": "TRAINING",
+    "description": "进驻训练室协助位时，<@cc.kw>重装</>干员的专精技能训练速度<@cc.vup>+30%</>，如果本次训练专精技能至<@cc.vup>1</>级，则训练速度额外<@cc.vup>+45%</>",
+    "efficiency": 30,
+    "targetGroupSortId": 3,
+    "targets": [
+      "TANK"
+    ],
+    "charId": [
+      "char_422_aurora"
+    ]
+  },
+  "train_spd&profession2[440]": {
+    "buffName": "以身作则",
+    "roomType": "TRAINING",
+    "description": "进驻训练室协助位时，<@cc.kw>狙击</>干员的专精技能训练速度<@cc.vup>+30%</>，如果本次训练专精技能至<@cc.vup>1</>级，则训练速度额外<@cc.vup>+65%</>",
+    "efficiency": 30,
+    "targetGroupSortId": 4,
+    "targets": [
+      "SNIPER"
+    ],
+    "charId": [
+      "char_1013_chen2"
+    ]
+  },
+  "train_spd&profession2[150]": {
+    "buffName": "一知半解",
+    "roomType": "TRAINING",
+    "description": "进驻训练室协助位时，<@cc.kw>术师</>干员的专精技能训练速度<@cc.vup>+30%</>，如果本次训练专精技能至<@cc.vup>1</>级，则训练速度额外<@cc.vup>+45%</>",
+    "efficiency": 30,
+    "targetGroupSortId": 5,
+    "targets": [
+      "CASTER"
+    ],
+    "charId": [
+      "char_411_tomimi"
+    ]
+  },
+  "train_spd&profession2[111]": {
+    "buffName": "先锋专精·α",
+    "roomType": "TRAINING",
+    "description": "进驻训练室协助位时，<@cc.kw>先锋</>干员的专精技能训练速度<@cc.vup>+30%</>",
+    "efficiency": 30,
+    "targetGroupSortId": 1,
+    "targets": [
+      "PIONEER"
+    ],
+    "charId": [
+      "char_1045_svash2"
+    ]
+  },
+  "train_spd&profession2[112]": {
+    "buffName": "先驱者共识",
+    "roomType": "TRAINING",
+    "description": "进驻训练室协助位时，<@cc.kw>先锋</>干员的专精技能训练速度<@cc.vup>+30%</>，如果本次训练专精技能至<@cc.vup>3</>级，则训练速度额外<@cc.vup>+50%</>",
+    "efficiency": 30,
+    "targetGroupSortId": 1,
+    "targets": [
+      "PIONEER"
+    ],
+    "charId": [
+      "char_1045_svash2"
+    ]
+  },
+  "train_spd&profession2[180]": {
+    "buffName": "陷阱对焦",
+    "roomType": "TRAINING",
+    "description": "进驻训练室协助位时，<@cc.kw>特种</>干员的专精技能训练速度<@cc.vup>+30%</>，如果本次训练专精技能至<@cc.vup>1</>级，则训练速度额外<@cc.vup>+45%</>",
+    "efficiency": 30,
+    "targetGroupSortId": 8,
+    "targets": [
+      "SPECIAL"
+    ],
+    "charId": [
+      "char_451_robin"
+    ]
+  },
+  "train_spd&profession2[220]": {
+    "buffName": "苦行",
+    "roomType": "TRAINING",
+    "description": "进驻训练室协助位时，<@cc.kw>近卫</>干员的专精技能训练速度<@cc.vup>+30%</>，如果本次训练专精技能至<@cc.vup>2</>级，则训练速度额外<@cc.vup>+45%</>",
+    "efficiency": 30,
+    "targetGroupSortId": 2,
+    "targets": [
+      "WARRIOR"
+    ],
+    "charId": [
+      "char_415_flint"
+    ]
+  },
+  "train_spd&profession2[230]": {
+    "buffName": "阵地经验",
+    "roomType": "TRAINING",
+    "description": "进驻训练室协助位时，<@cc.kw>重装</>干员的专精技能训练速度<@cc.vup>+30%</>，如果本次训练专精技能至<@cc.vup>2</>级，则训练速度额外<@cc.vup>+45%</>",
+    "efficiency": 30,
+    "targetGroupSortId": 3,
+    "targets": [
+      "TANK"
+    ],
+    "charId": [
+      "char_304_zebra"
+    ]
+  },
+  "train_spd&profession2[240]": {
+    "buffName": "拂弦",
+    "roomType": "TRAINING",
+    "description": "进驻训练室协助位时，<@cc.kw>狙击</>干员的专精技能训练速度<@cc.vup>+30%</>，如果本次训练专精技能至<@cc.vup>2</>级，则训练速度额外<@cc.vup>+45%</>",
+    "efficiency": 30,
+    "targetGroupSortId": 4,
+    "targets": [
+      "SNIPER"
+    ],
+    "charId": [
+      "char_4043_erato"
+    ]
+  },
+  "train_spd&profession2[250]": {
+    "buffName": "博览群书",
+    "roomType": "TRAINING",
+    "description": "进驻训练室协助位时，<@cc.kw>术师</>干员的专精技能训练速度<@cc.vup>+30%</>，如果本次训练专精技能至<@cc.vup>2</>级，则训练速度额外<@cc.vup>+45%</>",
+    "efficiency": 30,
+    "targetGroupSortId": 5,
+    "targets": [
+      "CASTER"
+    ],
+    "charId": [
+      "char_388_mint"
+    ]
+  },
+  "train_spd&profession2[270]": {
+    "buffName": "护理专精",
+    "roomType": "TRAINING",
+    "description": "进驻训练室协助位时，<@cc.kw>医疗</>干员的专精技能训练速度<@cc.vup>+30%</>，如果本次训练专精技能至<@cc.vup>2</>级，则训练速度额外<@cc.vup>+45%</>",
+    "efficiency": 30,
+    "targetGroupSortId": 6,
+    "targets": [
+      "MEDIC"
+    ],
+    "charId": [
+      "char_1024_hbisc2"
+    ]
+  },
+  "train_spd&profession2[320]": {
+    "buffName": "尽心尽力",
+    "roomType": "TRAINING",
+    "description": "进驻训练室协助位时，<@cc.kw>近卫</>干员的专精技能训练速度<@cc.vup>+30%</>，如果本次训练专精技能至<@cc.vup>3</>级，则训练速度额外<@cc.vup>+45%</>",
+    "efficiency": 30,
+    "targetGroupSortId": 2,
+    "targets": [
+      "WARRIOR"
+    ],
+    "charId": [
+      "char_333_sidero"
+    ]
+  },
+  "train_spd&profession2[620]": {
+    "buffName": "实战指导",
+    "roomType": "TRAINING",
+    "description": "进驻训练室协助位时，<@cc.kw>近卫</>干员的专精技能训练速度<@cc.vup>+30%</>，如果本次训练专精技能至<@cc.vup>3</>级，则训练速度额外<@cc.vup>+65%</>",
+    "efficiency": 30,
+    "targetGroupSortId": 2,
+    "targets": [
+      "WARRIOR"
+    ],
+    "charId": [
+      "char_1026_gvial2"
+    ]
+  },
+  "train_spd&profession2[630]": {
+    "buffName": "最终调试",
+    "roomType": "TRAINING",
+    "description": "进驻训练室协助位时，<@cc.kw>狙击</>干员的专精技能训练速度<@cc.vup>+30%</>，如果本次训练专精技能至<@cc.vup>3</>级，则训练速度额外<@cc.vup>+45%</>",
+    "efficiency": 30,
+    "targetGroupSortId": 4,
+    "targets": [
+      "SNIPER"
+    ],
+    "charId": [
+      "char_4006_melnte"
+    ]
+  },
+  "train_spd&profession2[640]": {
+    "buffName": "伺机而动",
+    "roomType": "TRAINING",
+    "description": "进驻训练室协助位时，<@cc.kw>狙击</>干员的专精技能训练速度<@cc.vup>+30%</>，如果本次训练专精技能至<@cc.vup>3</>级，则训练速度额外<@cc.vup>+65%</>",
+    "efficiency": 30,
+    "targetGroupSortId": 4,
+    "targets": [
+      "SNIPER"
+    ],
+    "charId": [
+      "char_113_cqbw"
+    ]
+  },
+  "train_spd&profession2[650]": {
+    "buffName": "死焰指引",
+    "roomType": "TRAINING",
+    "description": "进驻训练室协助位时，<@cc.kw>术师</>干员的专精技能训练速度<@cc.vup>+30%</>，如果本次训练专精技能至<@cc.vup>3</>级，则训练速度额外<@cc.vup>+65%</>",
+    "efficiency": 30,
+    "targetGroupSortId": 5,
+    "targets": [
+      "CASTER"
+    ],
+    "charId": [
+      "char_450_necras"
+    ]
+  },
+  "train_spd&profession2[660]": {
+    "buffName": "同化",
+    "roomType": "TRAINING",
+    "description": "进驻训练室协助位时，<@cc.kw>辅助</>干员的专精技能训练速度<@cc.vup>+30%</>，如果本次训练专精技能至<@cc.vup>3</>级，则训练速度额外<@cc.vup>+65%</>",
+    "efficiency": 30,
+    "targetGroupSortId": 7,
+    "targets": [
+      "SUPPORT"
+    ],
+    "charId": [
+      "char_1012_skadi2"
+    ]
+  },
+  "train_spd&profession2[680]": {
+    "buffName": "阿戈尔战术",
+    "roomType": "TRAINING",
+    "description": "进驻训练室协助位时，<@cc.kw>特种</>干员的专精技能训练速度<@cc.vup>+30%</>，如果本次训练专精技能至<@cc.vup>3</>级，则训练速度额外<@cc.vup>+65%</>",
+    "efficiency": 30,
+    "targetGroupSortId": 8,
+    "targets": [
+      "SPECIAL"
+    ],
+    "charId": [
+      "char_1023_ghost2"
+    ]
+  },
+  "train_cost&profession[140]": {
+    "buffName": "工作狂",
+    "roomType": "TRAINING",
+    "description": "进驻训练室协助<@cc.kw>狙击</>干员训练专精技能至<@cc.vup>1</>级时，心情每小时消耗<@cc.vdown>+1</>",
+    "efficiency": 0,
+    "targetGroupSortId": 4,
+    "targets": [
+      "SNIPER"
+    ],
+    "charId": [
+      "char_1013_chen2"
+    ]
+  },
+  "train_cost&profession[320]": {
+    "buffName": "过量训练",
+    "roomType": "TRAINING",
+    "description": "进驻训练室协助<@cc.kw>近卫</>干员训练专精技能至<@cc.vup>3</>级时，心情每小时消耗<@cc.vdown>+1</>",
+    "efficiency": 0,
+    "targetGroupSortId": 2,
+    "targets": [
+      "WARRIOR"
+    ],
+    "charId": [
+      "char_1026_gvial2"
+    ]
+  },
+  "train_cost&profession[340]": {
+    "buffName": "索然无味",
+    "roomType": "TRAINING",
+    "description": "进驻训练室协助<@cc.kw>狙击</>干员训练专精技能至<@cc.vup>3</>级时，心情每小时消耗<@cc.vdown>+1</>",
+    "efficiency": 0,
+    "targetGroupSortId": 4,
+    "targets": [
+      "SNIPER"
+    ],
+    "charId": [
+      "char_113_cqbw"
+    ]
+  },
+  "train_cost&profession[350]": {
+    "buffName": "何须解脱",
+    "roomType": "TRAINING",
+    "description": "进驻训练室协助<@cc.kw>术师</>干员训练专精技能至<@cc.vup>3</>级时，心情每小时消耗<@cc.vdown>+1</>",
+    "efficiency": 0,
+    "targetGroupSortId": 5,
+    "targets": [
+      "CASTER"
+    ],
+    "charId": [
+      "char_450_necras"
+    ]
+  },
+  "train_cost&profession[360]": {
+    "buffName": "变异",
+    "roomType": "TRAINING",
+    "description": "进驻训练室协助<@cc.kw>辅助</>干员训练专精技能至<@cc.vup>3</>级时，心情每小时消耗<@cc.vdown>+1</>",
+    "efficiency": 0,
+    "targetGroupSortId": 7,
+    "targets": [
+      "SUPPORT"
+    ],
+    "charId": [
+      "char_1012_skadi2"
+    ]
+  },
+  "train_cost&profession[380]": {
+    "buffName": "斗争渴望",
+    "roomType": "TRAINING",
+    "description": "进驻训练室协助<@cc.kw>特种</>干员训练专精技能至<@cc.vup>3</>级时，心情每小时消耗<@cc.vdown>+1</>",
+    "efficiency": 0,
+    "targetGroupSortId": 8,
+    "targets": [
+      "SPECIAL"
+    ],
+    "charId": [
+      "char_1023_ghost2"
+    ]
+  }
+}

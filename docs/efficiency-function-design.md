@@ -397,8 +397,8 @@ ProductionGroup             效率 = ∫₀ᵀ e_group(t) dt
 
 ## 7. 参考
 
-- [scheduling-strategy.md](./scheduling-strategy.md) §4.5 — 效率排序策略
-- [scheduling-strategy.md](./scheduling-strategy.md) §2.3.3 — 宿舍与中枢恢复链（mood_burn 的全局参数来源）
+- [constraints-and-data-baseline.md](./constraints-and-data-baseline.md) §2.3.3 — 宿舍与中枢恢复链（mood_burn 的全局参数来源）
+- [constraints-and-data-baseline.md](./constraints-and-data-baseline.md) 附录 A — 数据溯源基线
 - [strategy-brief.md](./strategy-brief.md) §策略 — 贪心求解框架
 - [PRTS Wiki / 制造站](https://prts.wiki/w/%E7%BD%97%E5%BE%B7%E5%B2%9B%E5%9F%BA%E5%BB%BA/%E5%88%B6%E9%80%A0%E7%AB%99) — 生产力公式
 - [PRTS Wiki / 控制中枢](https://prts.wiki/w/%E7%BD%97%E5%BE%B7%E5%B2%9B%E5%9F%BA%E5%BB%BA/%E6%8E%A7%E5%88%B6%E4%B8%AD%E6%9E%A2) — 心情恢复机制

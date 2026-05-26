@@ -113,6 +113,6 @@ flowchart TD
 
 ## 参考
 
-- 完整评估: `docs/scheduling-strategy.md`
+- 约束体系与数据基线: `docs/constraints-and-data-baseline.md`
 - MAA API: https://docs.maa.plus/zh-cn/protocol/integration.html
 - 排班协议: https://docs.maa.plus/zh-cn/protocol/base-scheduling-schema.html
