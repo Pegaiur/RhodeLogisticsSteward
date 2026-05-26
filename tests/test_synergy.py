@@ -426,6 +426,79 @@ class TestControlGlobalBonus:
         assert bonus.mfg_bonus == 2.0
 
 
+# ─── B2 工程机器人 / B3 思维链环 / B4 魔物料理 / B5 无声共鸣 ──
+
+class TestBLayer:
+    """B2/B3/B4/B5: 跨设施体系消费函数"""
+
+    def test_b3_思维链环_迷迭香_感知转制造(self):
+        """perception=10 → 10链环 → 迷迭香 +10% Mfg(β:1链环=1%)"""
+        from steward_core.synergy import synergy_buff_pool_consumer, BuffPool
+
+        miluoxiang = _mk_op("迷迭香")
+        pool = BuffPool(perception=10, thought_chains=10)
+
+        segs = synergy_buff_pool_consumer([miluoxiang], "Mfg", "PureGold", pool)
+        assert len(segs) == 1
+        assert segs[0].a == 10.0
+
+    def test_b5_无声共鸣_黑键_贸易加成(self):
+        """silent_resonance=15 → 黑键 β: 每2共鸣=+1% → +7% Trade"""
+        from steward_core.synergy import synergy_buff_pool_consumer, BuffPool
+
+        heijian = _mk_op("黑键")
+        pool = BuffPool(silent_resonance=15)
+
+        segs = synergy_buff_pool_consumer([heijian], "Trade", "Money", pool)
+        assert len(segs) == 1
+        assert segs[0].a == 7.0  # 15//2 = 7
+
+    def test_b2_工程机器人_至简消费(self):
+        """至简在 Mfg，42 robots(14设施×Lv3) → β: 每8机器人+5% → +25%"""
+        from steward_core.synergy import synergy_buff_pool_consumer, BuffPool
+
+        zhijian = _mk_op("至简")
+        pool = BuffPool(engineering_robots=42)
+
+        segs = synergy_buff_pool_consumer([zhijian], "Mfg", "PureGold", pool)
+        assert len(segs) == 1
+        assert segs[0].a == 25.0  # 42//8*5 = 25
+
+    def test_b4_魔物料理_玛露西尔消费(self):
+        """玛露西尔在 Mfg，cuisine=3 → +3%"""
+        from steward_core.synergy import synergy_buff_pool_consumer, BuffPool
+
+        maluxier = _mk_op("玛露西尔")
+        pool = BuffPool(monster_cuisine=3)
+
+        segs = synergy_buff_pool_consumer([maluxier], "Mfg", "PureGold", pool)
+        assert len(segs) == 1
+        assert segs[0].a == 3.0
+
+    def test_compute_buff_pool_含b3b5(self):
+        """compute_buff_pool 现在包含 thought_chains + silent_resonance"""
+        from steward_core.synergy import compute_buff_pool
+
+        control = [_mk_op("令"), _mk_op("重岳"), _mk_op("夕")]
+        pool = compute_buff_pool(control, suich_count=5)
+
+        assert pool.yanhuo == 40
+        assert pool.perception == 10
+        assert pool.thought_chains == 10  # 1:1
+        assert pool.wushu_crystal == 8   # 40//5
+
+    def test_c2_global_burn_固定中枢(self):
+        """C2: 3人工位 burn = 0.75 - 中枢减免(5×0.05) - 重岳孤光共照(0.05)"""
+        from steward_core.synergy import compute_global_burn, compute_buff_pool
+
+        control = [_mk_op("令"), _mk_op("重岳"), _mk_op("夕"), _mk_op("凯尔希"), _mk_op("焰尾")]
+        buff_pool = compute_buff_pool(control, suich_count=5)
+        burn = compute_global_burn(control, buff_pool, worker_count=3)
+
+        assert burn < 0.75  # 中枢减免生效
+        assert burn >= 0    # 不低于 0
+
+
 # ─── B1 人间烟火 ─────────────────────────────────────────────────
 
 class TestBuffPool:

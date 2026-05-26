@@ -290,9 +290,13 @@ def compute_control_global_bonus(
 @dataclass
 class BuffPool:
     """全局 buff 点数池"""
-    yanhuo: int = 0        # 人间烟火
-    perception: int = 0    # 感知信息
-    wushu_crystal: int = 0 # 巫术结晶
+    yanhuo: int = 0            # 人间烟火
+    perception: int = 0        # 感知信息
+    wushu_crystal: int = 0     # 巫术结晶
+    thought_chains: int = 0    # 思维链环 (B3)
+    silent_resonance: int = 0  # 无声共鸣 (B5)
+    engineering_robots: int = 0  # 工程机器人 (B2)
+    monster_cuisine: int = 0     # 魔物料理 (B4)
 
 
 def compute_buff_pool(
@@ -325,16 +329,29 @@ def compute_buff_pool(
 
     # 12h 班次 mood 不衰减（令杯莫停消除岁干员消耗）
     wushu_crystal = yanhuo // 5  # 烟火→巫术结晶（截云消费）
-    return BuffPool(yanhuo=yanhuo, perception=perception, wushu_crystal=wushu_crystal)
+    thought_chains = perception  # B3: 感知信息→思维链环（1:1，迷迭香消费）
+    return BuffPool(
+        yanhuo=yanhuo, perception=perception,
+        wushu_crystal=wushu_crystal, thought_chains=thought_chains,
+    )
 
 
-# 烟火消费者表: {干员名: (设施类型, 转化比例, 消费单位, 每单位加成%)}
-_B1_CONSUMER_TABLE: dict[str, tuple[str, str, int, float]] = {
+# B 层 buff 池消费者表: {干员名: (设施类型, pool_key, 每单位, 每单位加成%)}
+_B_LAYER_CONSUMER_TABLE: dict[str, tuple[str, str, int, float]] = {
+    # B1 烟火消费者
     "黍": ("Mfg", "yanhuo", 3, 1.0),
     "桑葚": ("Mfg", "yanhuo", 3, 1.0),
     "乌有": ("Trade", "yanhuo", 1, 1.0),
-    "截云": ("Mfg", "wushu_crystal", 1, 2.0),   # β: 每巫术结晶 +2%
-    "铎铃": ("Trade", "yanhuo", 10, 0.0),        # 仅影响心情消耗，不影响效率
+    "截云": ("Mfg", "wushu_crystal", 1, 2.0),
+    "铎铃": ("Trade", "yanhuo", 10, 0.0),
+    # B2 工程机器人消费者
+    "至简": ("Mfg", "engineering_robots", 8, 5.0),  # β: 每8机器人+5%
+    # B3 思维链环消费者
+    "迷迭香": ("Mfg", "thought_chains", 1, 1.0),      # β: 每1链环+1%
+    # B4 魔物料理消费者
+    "玛露西尔": ("Mfg", "monster_cuisine", 1, 1.0),
+    # B5 无声共鸣消费者
+    "黑键": ("Trade", "silent_resonance", 2, 1.0),    # β: 每2共鸣+1%
 }
 
 
@@ -344,14 +361,17 @@ def synergy_buff_pool_consumer(
     product: str,
     buff_pool: BuffPool,
 ) -> list[LinearSegment]:
-    """烟火消费者：将 BuffPool 中的点数转化为房间效率加成"""
+    """B 层消费者：将 BuffPool 中的点数转化为房间效率加成
+
+    覆盖 B1(烟火/巫术结晶)/B2(工程机器人)/B3(思维链环)/B4(魔物料理)/B5(无声共鸣)。
+    """
     names = {op.name for op in operators}
     segments = []
 
     for name in names:
-        if name not in _B1_CONSUMER_TABLE:
+        if name not in _B_LAYER_CONSUMER_TABLE:
             continue
-        target_room, pool_key, per_unit, bonus_per = _B1_CONSUMER_TABLE[name]
+        target_room, pool_key, per_unit, bonus_per = _B_LAYER_CONSUMER_TABLE[name]
         if room_type != target_room:
             continue
         if bonus_per <= 0:  # 铎铃影响心情而非效率
@@ -367,3 +387,30 @@ def synergy_buff_pool_consumer(
             segments.append(LinearSegment(a=bonus, b=0.0, t_start=0.0, dt=T))
 
     return segments
+
+
+# ─── C2 中枢全局恢复 ─────────────────────────────────────────────
+
+_BASE_BURN_3 = 0.75
+
+
+def compute_global_burn(
+    control_operators: list[Operator],
+    buff_pool: "BuffPool",
+    worker_count: int = 3,
+) -> float:
+    """计算工作干员的心情消耗率净值 (mood_burn)
+
+    基础值 0.75/h（3人工位），中枢每名干员提供 +0.05/h 恢复。
+    重岳孤光共照：+0.05/h，每 20 烟火额外 +0.05。
+    """
+    control_count = len(control_operators)
+    recovery = control_count * 0.05
+
+    names = {op.name for op in control_operators}
+    if "重岳" in names:
+        recovery += 0.05
+        recovery += (buff_pool.yanhuo // 20) * 0.05
+
+    burn = max(0.0, _BASE_BURN_3 - recovery)
+    return burn

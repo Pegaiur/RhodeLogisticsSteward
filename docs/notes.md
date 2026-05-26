@@ -165,3 +165,31 @@
 - **根因**: 条件型 buff 干员的原始效率为 0，依赖 synergy 函数补充，但 solver 的过滤/剪枝阶段只看原始效率
 - **状态**: B1 函数正确实现且测试通过，积分链路完整。要在排班中生效需修正 solver 的过滤策略（将 B1 消费者纳入候选池）
 
+---
+
+## MV5 Phase 5c/5e (B2/B3/B4/B5 + C2) — 2026-05-26
+
+### 实现范围
+- BuffPool 扩展：thought_chains(B3)、silent_resonance(B5)、engineering_robots(B2)、monster_cuisine(B4)
+- compute_buff_pool 新增 B3 转化(perception→thought_chains 1:1)
+- _B1_CONSUMER_TABLE 扩展为通用 B 层消费者表：至简(B2)、迷迭香(B3)、玛露西尔(B4)、黑键(B5)
+- C2: compute_global_burn() 函数
+- 6 个单元测试（TDD）
+
+### 决策 10: B 层消费者统一为一个表
+- 原 _B1_CONSUMER_TABLE 重命名为通用表，融入 B2/B3/B4/B5 消费者
+- 所有 B 层体系通过 `getattr(buff_pool, pool_key, 0)` 统一读取
+- **权衡**: 不同体系语义不同但数据结构相同，统一表减少重复代码
+
+### 效果
+- B2: 至简不在固定中枢 → engineering_robots=0 → 无消费（无影响）
+- B3: perception=10 → thought_chains=10 → 迷迭香可获 +10% Mfg
+- B4: 森西不在宿舍(未建模) → monster_cuisine=0 → 无影响
+- B5: silent_resonance=0(未建模) → 无影响
+- C2: 固定中枢下 burn=0.75-5×0.05-0.05-40//20×0.05=0.35，12h 不触发截断 → 无影响
+
+### 后续任务
+- A7 订单机制：但书违约/诗怀雅/雪雉/孑/赤金生产线，Trade 端最重要的待实现体系
+- B6 全局阵营计数 + B7 跨房间配对：需全设施分配，与 Phase 5 精确验证同步
+- D 层会客室/办公室：非产能，低优先级
+
