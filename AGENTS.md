@@ -22,7 +22,7 @@
 | MAA 绑定 | `maafw` (pip) | MAA Python API，通过 ctypes 调用 MaaCore.dll |
 | 图像识别 | MAA 内置 (OpenCV + PaddleOCR + onnxruntime) | 不直接调用，由 MAA OperBox/Infrast 任务间接使用 |
 | 数据处理 | 标准库 json + pathlib | 解析 building_data.json / infrast.json |
-| 求解算法 | 贪心 + 可选联动校验 | 见 `docs/strategy-brief.md` |
+| 求解算法 | 制造站穷举(含联动) + 剪枝 + 贪心 | 见 `docs/strategy-brief.md` |
 | 输出格式 | MAA 基建排班协议 JSON | 见 [MAA 基建排班协议](https://docs.maa.plus/zh-cn/protocol/base-scheduling-schema.html) |
 
 **版本锁**：
@@ -45,7 +45,8 @@ RhodeLogisticsSteward/
 ├── docs/
 │   ├── constraints-and-data-baseline.md  # 约束体系与数据基线（含溯源核验）
 │   ├── strategy-brief.md         # 精简策略概要（编码上下文用）
-│   └── efficiency-function-design.md  # 效率函数统一建模（草案）
+│   ├── efficiency-function-design.md  # 效率函数统一建模（草案）
+│   └── synergy-systems.md        # 联动体系建模（16个独立函数清单）
 └── output/                       # 生成的排班文件（不入库）
     └── custom_infrast/
 ```
@@ -79,6 +80,7 @@ RhodeLogisticsSteward/
 | 约束/设施/联动 | `docs/constraints-and-data-baseline.md` |
 | 数据源/覆盖度/效率值 | `docs/constraints-and-data-baseline.md` 附录 A |
 | 效率函数/e(t) | `docs/efficiency-function-design.md` |
+| 联动/体系建模 | `docs/synergy-systems.md` |
 | 设施容量/约束/多班次 | `docs/strategy-brief.md` §设施容量/§约束/§策略 |
 
 ## 技能 (Skills)
