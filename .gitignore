@@ -1,0 +1,33 @@
+# ===== Python =====
+__pycache__/
+*.py[cod]
+*.so
+*.egg-info/
+dist/
+build/
+*.egg
+
+# ===== 虚拟环境 =====
+venv/
+.venv/
+env/
+
+# ===== IDE =====
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# ===== 外部数据文件（体积大/频繁更新/含个人数据） =====
+building_data.json
+operators_data.json
+
+# ===== 输出产物 =====
+output/
+custom_infrast/
+*.log
+
+# ===== OS =====
+.DS_Store
+Thumbs.db
