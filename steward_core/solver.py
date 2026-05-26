@@ -1,104 +1,289 @@
 """排班求解器
 
-核心算法：单班次贪心求解。
-
-设计原则：
-- 求解器只依赖 Operator + LayoutConfig，不绑定具体数据源
-- 通过可注入的 OpFilter 协议支持后续扩展（Phase 过滤、box 过滤等）
-- 求解器本身不处理联动，联动作为后校验由外部模块完成
+MV3: 制造站穷举(含联动) + 剪枝 + 贪心分配。
+剩余设施（Trade/Power/Reception/Office）用支配偏序贪心。
+Control 固定为社区最优方案。
 """
 
-from typing import Optional, Protocol
+import itertools
+from dataclasses import dataclass, field
+from typing import Optional
 
-from steward_core.models import (
-    LayoutConfig,
-    Operator,
-    RoomAssignment,
-    RoomConfig,
-    ShiftPlan,
-    SolveResult,
+from steward_core.models import LayoutConfig, Operator, RoomAssignment, RoomConfig, ShiftPlan, SolveResult
+from steward_core.efficiency_fn import constant_efficiency, integrate_segments, rank_by_dominance
+from steward_core.synergy import (
+    synergy_pair, synergy_skill_count, synergy_skill_alias, synergy_automation,
 )
 
+T = 12.0
+POWER_COUNT = 3
+FIXED_CONTROL = ["令", "重岳", "夕", "凯尔希", "焰尾"]
 
-class OpFilter(Protocol):
-    """干员过滤器协议
-
-    后续 Step 2-4 可通过实现此协议注入不同的过滤逻辑：
-    - Step 2: 心情/已使用班次过滤
-    - Step 3: box 抽样过滤
-    - Step 4: 练度（phase）过滤
-    """
-
-    def __call__(self, operator: Operator, room: RoomConfig) -> bool: ...
-
-
-def _always_pass(operator: Operator, room: RoomConfig) -> bool:
-    """默认过滤器：不过滤任何干员"""
-    return True
+ANCHOR_NAMES = {
+    "水月", "多萝西", "苍苔", "海沫",
+    "森蚺", "温蒂", "掠风", "异客",
+    "阿兰娜", "Miss.Christine", "怒潮凛冬",
+}
+SKILL_CLASS_KEYWORDS = {"标准化", "莱茵科技", "金属工艺", "红松骑士团"}
 
 
-def solve_single_shift(
+def _skill_class(buff_name: str) -> Optional[str]:
+    for kw in SKILL_CLASS_KEYWORDS:
+        if kw in buff_name:
+            return kw
+    return None
+
+
+# ─── 角色分类 ───────────────────────────────────────────────────
+
+@dataclass
+class MfgClassification:
+    pure_efficiency: list[Operator] = field(default_factory=list)
+    anchors: list[Operator] = field(default_factory=list)
+    providers: list[Operator] = field(default_factory=list)
+
+
+def _classify_mfg_operators(
+    operators: list[Operator], product: str,
+) -> MfgClassification:
+    """将制造站干员分类为 纯效率/联动锚点/技能提供者"""
+    result = MfgClassification()
+    for op in operators:
+        is_anchor = op.name in ANCHOR_NAMES
+
+        has_skill_label = False
+        for sk in op.skills:
+            if sk.room_type != "Mfg":
+                continue
+            if _skill_class(sk.buff_name):
+                has_skill_label = True
+                break
+
+        if is_anchor:
+            result.anchors.append(op)
+        elif has_skill_label:
+            result.providers.append(op)
+        else:
+            result.pure_efficiency.append(op)
+
+    return result
+
+
+def _prune_equivalent(pure_ops: list[Operator], top_k: int = 3) -> list[Operator]:
+    """规则1: 等价类合并 — 纯效率只保留 top_k 名"""
+    sorted_ops = sorted(pure_ops, key=lambda op: -op.best_efficiency("Mfg"))
+    return sorted_ops[:top_k]
+
+
+def _build_candidate_pool(
+    all_ops: list[Operator], classification: MfgClassification,
+) -> list[Operator]:
+    """规则2: 锚点池筛选 — anchors + providers + top_k 纯效率"""
+    seen = {op.char_id for op in classification.anchors}
+    pool = list(classification.anchors)
+
+    for op in classification.providers:
+        if op.char_id not in seen:
+            seen.add(op.char_id)
+            pool.append(op)
+
+    top_pure = _prune_equivalent(classification.pure_efficiency, top_k=5)
+    for op in top_pure:
+        if op.char_id not in seen:
+            seen.add(op.char_id)
+            pool.append(op)
+
+    return pool
+
+
+def _upper_bound_ok(total_eff: float, best_known: float, threshold: float = 0.95) -> bool:
+    """规则3: 上界预判 — 总效率不低于 best_known × threshold"""
+    return total_eff >= best_known * threshold
+
+
+# ─── 房间评估 ───────────────────────────────────────────────────
+
+def _evaluate_room_combo(
     operators: list[Operator],
-    layout: LayoutConfig,
-    shift_name: str = "单班次",
-    filter_op: Optional[OpFilter] = None,
-) -> SolveResult:
-    """单班次贪心求解
+    room_type: str,
+    product: str,
+    power_count: int = POWER_COUNT,
+) -> float:
+    """评估一个房间组合的 12h 总积分（含联动）"""
+    if not operators:
+        return 0.0
 
-    按 layout.rooms 的顺序逐个设施分配，每个设施取 candidate 池中效率最高的 N 人。
-    先到先得——已被分配的干员后续设施不能再使用。
+    total = 0.0
 
-    Args:
-        operators: 全量干员池
-        layout: 设施布局配置（含求解优先级顺序）
-        shift_name: 班次名称
-        filter_op: 可选的干员过滤器，用于注入额外约束
+    for op in operators:
+        eff = op.best_efficiency(room_type, product)
+        if eff > 0:
+            seg = constant_efficiency(eff, mood_burn=0.0, T=T)
+            total += integrate_segments(seg, T)
 
-    Returns:
-        SolveResult，含一个 ShiftPlan
-    """
-    if filter_op is None:
-        filter_op = _always_pass
+    alias = synergy_skill_alias(operators)
+    total += integrate_segments(synergy_pair(operators, room_type, product), T)
+    total += integrate_segments(synergy_skill_count(operators, room_type, alias), T)
+    auto_segs, _zero_set = synergy_automation(operators, room_type, power_count)
+    total += integrate_segments(auto_segs, T)
 
-    assigned_ids: set[str] = set()
-    results: list[RoomAssignment] = []
-    autofill_count: int = 0
+    return total
 
-    for room in layout.rooms:
-        # 1. 过滤候选：有该设施技能 + 产物匹配 + 未被占用 + 通过额外过滤器
-        candidates: list[tuple[float, Operator]] = []
+
+def _generate_combos(pool: list[Operator], k: int = 3) -> list[list[Operator]]:
+    """生成 k 人组合"""
+    if len(pool) < k:
+        return [list(pool)]
+    return [list(combo) for combo in itertools.combinations(pool, k)]
+
+
+# ─── 跨间贪心分配 ──────────────────────────────────────────────
+
+def _greedy_allocate(
+    evaluated: list[tuple[float, list[str]]],
+    room_count: int,
+) -> list[list[str]]:
+    """从排序组合中贪心取无冲突的 N 间"""
+    assigned = set()
+    result = []
+    for _score, names in evaluated:
+        if any(n in assigned for n in names):
+            continue
+        result.append(names)
+        assigned.update(names)
+        if len(result) >= room_count:
+            break
+    return result
+
+
+# ─── 剩余设施贪心 ──────────────────────────────────────────────
+
+_LAYOUT_243 = LayoutConfig.layout_243()
+
+
+def _greedy_remaining(
+    assigned_ids: set[str],
+    operators: list[Operator],
+) -> list[RoomAssignment]:
+    """剩余设施（Trade/Power/Reception/Office）支配偏序贪心"""
+    results = []
+    for room in _LAYOUT_243.rooms:
+        if room.room_type in ("Mfg", "Control"):
+            continue
+
+        candidates = []
         for op in operators:
             if op.char_id in assigned_ids:
                 continue
             if not op.has_skill_for(room.room_type, room.product):
                 continue
-            if not filter_op(op, room):
-                continue
             eff = op.best_efficiency(room.room_type, room.product)
-            candidates.append((eff, op))
+            if eff <= 0:
+                continue
+            seg = constant_efficiency(eff, mood_burn=0.0, T=T)
+            candidates.append((seg, op))
 
-        # 2. 按效率降序排列
-        candidates.sort(key=lambda x: x[0], reverse=True)
+        if not candidates:
+            results.append(RoomAssignment(
+                room_type=room.room_type, room_index=room.room_index,
+                operators=[], product=room.product, autofill=True,
+            ))
+            continue
 
-        # 3. 填槽
-        taken_names: list[str] = []
-        for i in range(room.slots):
-            if i < len(candidates):
-                _, op = candidates[i]
-                taken_names.append(op.name)
-                assigned_ids.add(op.char_id)
-            else:
-                autofill_count += room.slots - i
+        ranked = rank_by_dominance(candidates, T)
+        taken = []
+        for op in ranked:
+            if len(taken) >= room.slots:
                 break
+            if op.char_id not in assigned_ids:
+                taken.append(op.name)
+                assigned_ids.add(op.char_id)
 
-        assignment = RoomAssignment(
-            room_type=room.room_type,
-            room_index=room.room_index,
-            operators=taken_names,
-            product=room.product,
-            autofill=len(taken_names) < room.slots,
-        )
-        results.append(assignment)
+        results.append(RoomAssignment(
+            room_type=room.room_type, room_index=room.room_index,
+            operators=taken, product=room.product,
+            autofill=len(taken) < room.slots,
+        ))
 
-    plan = ShiftPlan(name=shift_name, assignments=results)
+    return results
+
+
+# ─── 主入口 ─────────────────────────────────────────────────────
+
+def solve_mvp(operators: list[Operator]) -> SolveResult:
+    """MVP 完整求解：制造站穷举 + 剩余设施贪心
+
+    返回 SolveResult，含一个 12h ShiftPlan。
+    """
+    assigned_ids: set[str] = set()
+    assignments: list[RoomAssignment] = []
+    autofill_count = 0
+
+    # Phase 2: 制造站穷举（CR 2间 + PG 2间）
+    for product, count in [("CombatRecord", 2), ("PureGold", 2)]:
+        mfg_ops = [op for op in operators if op.has_skill_for("Mfg", product)]
+        if not mfg_ops:
+            for i in range(count):
+                assignments.append(RoomAssignment(
+                    room_type="Mfg", room_index=len(assignments),
+                    operators=[], product=product, autofill=True,
+                ))
+                autofill_count += 1
+            continue
+
+        classification = _classify_mfg_operators(mfg_ops, product)
+        pool = _build_candidate_pool(mfg_ops, classification)
+        combos = _generate_combos(pool, 3)
+
+        # 评估所有组合
+        evaluated = []
+        for combo_ops in combos:
+            score = _evaluate_room_combo(combo_ops, "Mfg", product, POWER_COUNT)
+            evaluated.append((score, [op.name for op in combo_ops]))
+        evaluated.sort(key=lambda x: -x[0])
+
+        # 贪心分配
+        allocated = _greedy_allocate(evaluated, room_count=count)
+        for names in allocated:
+            for op in pool:
+                if op.name in names:
+                    assigned_ids.add(op.char_id)
+            assignments.append(RoomAssignment(
+                room_type="Mfg",
+                room_index=len([a for a in assignments if a.room_type == "Mfg"]),
+                operators=names, product=product,
+            ))
+
+        if len(allocated) < count:
+            for _ in range(count - len(allocated)):
+                assignments.append(RoomAssignment(
+                    room_type="Mfg",
+                    room_index=len([a for a in assignments if a.room_type == "Mfg"]),
+                    operators=[], product=product, autofill=True,
+                ))
+                autofill_count += 1
+
+    # Phase 3: Control 固定
+    ctrl_names = []
+    for name in FIXED_CONTROL:
+        for op in operators:
+            if op.name == name:
+                assigned_ids.add(op.char_id)
+                ctrl_names.append(name)
+                break
+    assignments.append(RoomAssignment(
+        room_type="Control", room_index=0, operators=ctrl_names,
+    ))
+
+    # Phase 4: 剩余设施贪心
+    remaining = _greedy_remaining(assigned_ids, operators)
+    assignments.extend(remaining)
+    autofill_count += sum(1 for a in remaining if a.autofill)
+
+    plan = ShiftPlan(
+        name="MVP-12h",
+        assignments=assignments,
+        period_from="00:00",
+        period_to="11:59",
+    )
     return SolveResult(plans=[plan], autofill_count=autofill_count)
