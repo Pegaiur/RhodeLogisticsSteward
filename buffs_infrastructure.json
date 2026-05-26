@@ -5,7 +5,10 @@
     "description": "进驻控制中枢时，所有制造站生产力<@cc.vup>+2%</>（同种效果取最高）",
     "efficiency": 0,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_003_kalts"
+    ]
   },
   "control_prod_spd[1000]": {
     "buffName": "最高权限",
@@ -13,7 +16,10 @@
     "description": "进驻控制中枢时，所有制造站生产力<@cc.vup>+2%</>（同种效果取最高）",
     "efficiency": 0,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_4179_monstr"
+    ]
   },
   "control_prod_fraction[000]": {
     "buffName": "烛骑士微光",
@@ -21,7 +27,10 @@
     "description": "进驻控制中枢时，每个进驻在制造站的<$cc.tag.knight><@cc.kw>骑士</></>干员生产力<@cc.vup>+7%</>",
     "efficiency": 0,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_4098_vvana"
+    ]
   },
   "control_prod_bd_spd[000]": {
     "buffName": "丰富工作经验",
@@ -29,7 +38,10 @@
     "description": "进驻控制中枢时，所有生产<@cc.kw>贵金属</>类配方的制造站生产力<@cc.vup>+0.5%</>，每有<@cc.vup>20</>点<$cc.bd_mujica><@cc.rem>热情值</></>，所有生产<@cc.kw>贵金属</>类配方的制造站生产力<@cc.vup>+0.5%</>",
     "efficiency": 0,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_4182_oblvns"
+    ]
   },
   "control_prod_bd_spd[010]": {
     "buffName": "丰富工作经验",
@@ -37,7 +49,10 @@
     "description": "进驻控制中枢时，所有生产<@cc.kw>贵金属</>类配方的制造站生产力<@cc.vup>+1%</>，每有<@cc.vup>20</>点<$cc.bd_mujica><@cc.rem>热情值</></>，所有生产<@cc.kw>贵金属</>类配方的制造站生产力<@cc.vup>+1%</>",
     "efficiency": 0,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_4182_oblvns"
+    ]
   },
   "control_token_prod_spd[000]": {
     "buffName": "超频",
@@ -45,7 +60,10 @@
     "description": "进驻控制中枢时，如果有<@cc.kw>2</>台以上<$cc.tag.op><@cc.kw>作业平台</></>进驻在<@cc.kw>发电站</>，则所有制造站生产力<@cc.vup>+2%</>（同种效果取最高）",
     "efficiency": 0,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_4004_pudd"
+    ]
   },
   "control_token_prod_spd2[000]": {
     "buffName": "以身作则",
@@ -53,7 +71,10 @@
     "description": "当与<$cc.tag.mh><@cc.kw>怪物猎人小队</></>干员进驻控制中枢一起工作时，所有制造站生产力<@cc.vup>+2%</>（同种效果取最高）",
     "efficiency": 0,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_1029_yato2"
+    ]
   },
   "control_token_prod_spd3[000]": {
     "buffName": "共事情谊",
@@ -61,7 +82,10 @@
     "description": "当与<$cc.g.lgd><@cc.kw>龙门近卫局</></>干员进驻控制中枢一起工作时，所有制造站生产力<@cc.vup>+3%</>（同种效果取最高）",
     "efficiency": 0,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_1044_hsgma2"
+    ]
   },
   "control_token_tra_spd[000]": {
     "buffName": "秘传交涉术",
@@ -69,7 +93,10 @@
     "description": "当与<$cc.tag.mh><@cc.kw>怪物猎人小队</></>干员进驻控制中枢一起工作时，所有贸易站订单效率<@cc.vup>+7%</>（同种效果取最高）",
     "efficiency": 0,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_1030_noirc2"
+    ]
   },
   "control_bd_spd[000]": {
     "buffName": "老友相聚",
@@ -77,7 +104,10 @@
     "description": "进驻控制中枢时，自身心情每小时消耗<@cc.vdown>+0.5</>；每个进驻在制造站的<$cc.g.bs><@cc.kw>黑钢国际</></>干员，生产力<@cc.vup>+5%</>",
     "efficiency": 0,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_1034_jesca2"
+    ]
   },
   "control_pow_bot[000]": {
     "buffName": "我寻思能行",
@@ -85,7 +115,10 @@
     "description": "进驻控制中枢时，如果<@cc.kw>Lancet-2</>进驻在<@cc.kw>发电站</>，<@cc.kw>发电站</>额外<@cc.vup>+2</>（仅影响设施数量）",
     "efficiency": 0,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_416_zumama"
+    ]
   },
   "control_tra_spd[000]": {
     "buffName": "合作协议",
@@ -93,7 +126,10 @@
     "description": "进驻控制中枢时，所有贸易站订单效率<@cc.vup>+7%</>（同种效果取最高）",
     "efficiency": 0,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_002_amiya"
+    ]
   },
   "control_tra_spd[010]": {
     "buffName": "大小姐",
@@ -101,7 +137,10 @@
     "description": "进驻控制中枢时，所有贸易站订单效率<@cc.vup>+7%</>（同种效果取最高）",
     "efficiency": 0,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_308_swire"
+    ]
   },
   "control_tra_spd[020]": {
     "buffName": "朝气蓬勃",
@@ -109,7 +148,10 @@
     "description": "进驻控制中枢时，所有贸易站订单效率<@cc.vup>+7%</>（同种效果取最高）",
     "efficiency": 0,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_4071_peper"
+    ]
   },
   "control_tra_spd[030]": {
     "buffName": "情报主脑",
@@ -117,7 +159,10 @@
     "description": "进驻控制中枢时，所有贸易站订单效率<@cc.vup>+7%</>（同种效果取最高）",
     "efficiency": 0,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_4132_ascln"
+    ]
   },
   "control_tra_limit&spd[000]": {
     "buffName": "精密计算",
@@ -125,7 +170,10 @@
     "description": "进驻控制中枢时，每个进驻在贸易站的<$cc.g.karlan><@cc.kw>谢拉格</></>干员，订单获取效率<@cc.vdown>-15%</>，订单上限<@cc.vup>+6</>",
     "efficiency": 0,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_206_gnosis"
+    ]
   },
   "control_tra_limit&spd2[000]": {
     "buffName": "家族认可",
@@ -133,7 +181,10 @@
     "description": "进驻控制中枢时，每个进驻在贸易站的<$cc.g.siracusa><@cc.kw>叙拉古</></>干员，订单获取效率<@cc.vup>+5%</>",
     "efficiency": 0,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_4186_tmoris"
+    ]
   },
   "control_tra_limit&spd3[000]": {
     "buffName": "商业版图",
@@ -141,7 +192,10 @@
     "description": "进驻控制中枢时，每个存在<@cc.vup>3</>名<$cc.g.karlan><@cc.kw>谢拉格</></>干员的贸易站，订单获取效率<@cc.vup>+10%</>",
     "efficiency": 0,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_1045_svash2"
+    ]
   },
   "control_hire_spd[000]": {
     "buffName": "感染力",
@@ -149,7 +203,10 @@
     "description": "进驻控制中枢时，人力办公室联络速度小于<@cc.vup>30%</>时（其中包含基础联络速度5%），则联络速度额外<@cc.vup>+20%</>（该加成全局效果唯一，不受其它加成影响）",
     "efficiency": 0,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_479_sleach"
+    ]
   },
   "control_upMeetingSpeed[000]": {
     "buffName": "世事洞明",
@@ -157,7 +214,10 @@
     "description": "进驻控制中枢时，会客室线索搜集速度<@cc.vup>+25%</>（同种效果取最高）",
     "efficiency": 0,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_322_lmlee"
+    ]
   },
   "control_upMeetingSpeed[100]": {
     "buffName": "期冀之汇",
@@ -165,7 +225,10 @@
     "description": "进驻控制中枢时，会客室线索搜集速度<@cc.vup>+15%</>（同种效果取最高）",
     "efficiency": 0,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_4134_cetsyr"
+    ]
   },
   "control_meeting&ord[000]": {
     "buffName": "同谋·α",
@@ -173,7 +236,10 @@
     "description": "进驻控制中枢时，当<@cc.kw>伊内丝</>入驻会客室时，会客室线索搜集速度<@cc.vup>+5%</>；当<@cc.kw>赫德雷</>入驻贸易站时，赫德雷所在贸易站订单上限<@cc.vup>+1</>",
     "efficiency": 0,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_1035_wisdel"
+    ]
   },
   "control_meeting&ord[001]": {
     "buffName": "同谋·β",
@@ -181,7 +247,10 @@
     "description": "进驻控制中枢时，当<@cc.kw>伊内丝</>入驻会客室时，会客室线索搜集速度<@cc.vup>+5%</>；当<@cc.kw>赫德雷</>入驻贸易站时，赫德雷所在贸易站订单上限<@cc.vup>+2</>",
     "efficiency": 0,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_1035_wisdel"
+    ]
   },
   "control_meeting&mp_cost[000]": {
     "buffName": "英雄的骄傲·α",
@@ -189,7 +258,10 @@
     "description": "进驻控制中枢时，基建内（不包含副手及活动室使用者）每有1名<$cc.g.minos><@cc.kw>米诺斯</></>干员，会客室线索搜集速度<@cc.vup>+4%</>（最多<@cc.vup>+20%</>，同种效果取最高）；当与<$cc.g.sargon><@cc.kw>萨尔贡</></>干员进驻控制中枢一起工作时，自身心情每小时消耗<@cc.vdown>+0.02</>",
     "efficiency": 0,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_4166_varkis"
+    ]
   },
   "control_meeting&mp_cost[100]": {
     "buffName": "英雄的骄傲·β",
@@ -197,7 +269,10 @@
     "description": "进驻控制中枢时，基建内（不包含副手及活动室使用者）每有1名<$cc.g.minos><@cc.kw>米诺斯</></>干员，会客室线索搜集速度<@cc.vup>+5%</>（最多<@cc.vup>+25%</>，同种效果取最高）；当与<$cc.g.sargon><@cc.kw>萨尔贡</></>干员进驻控制中枢一起工作时，自身心情每小时消耗<@cc.vdown>+0.02</>",
     "efficiency": 0,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_4166_varkis"
+    ]
   },
   "control_meeting_bd[000]": {
     "buffName": "“是，团长！”",
@@ -205,7 +280,10 @@
     "description": "进驻控制中枢时，自身心情每小时消耗<@cc.vdown>+0.5</>，每个进驻在会客室的<$cc.g.ussg><@cc.kw>乌萨斯学生自治团</></>干员，线索搜集速度<@cc.vup>+10%</>",
     "efficiency": 0,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_1051_headb2"
+    ]
   },
   "control_clue_cost[000]": {
     "buffName": "神经质",
@@ -213,7 +291,10 @@
     "description": "进驻控制中枢时，<@cc.kw>提升</>会客室内干员<@cc.kw>所属派系的线索倾向效果</>，但控制中枢内所有干员的心情每小时消耗<@cc.vdown>+1.5</>",
     "efficiency": 0,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_225_haak"
+    ]
   },
   "control_clue_cost[010]": {
     "buffName": "至察",
@@ -221,7 +302,10 @@
     "description": "进驻控制中枢时，<@cc.kw>小幅提升</>会客室内干员<@cc.kw>所属派系的线索倾向效果</>，但控制中枢内所有干员的心情每小时消耗<@cc.vdown>+0.5</>",
     "efficiency": 0,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_306_leizi"
+    ]
   },
   "control_clue_cost[011]": {
     "buffName": "断事如神",
@@ -229,7 +313,10 @@
     "description": "进驻控制中枢时，<@cc.kw>小幅提升</>会客室内干员<@cc.kw>所属派系的线索倾向效果</>",
     "efficiency": 0,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_306_leizi"
+    ]
   },
   "control_clue_faction[070]": {
     "buffName": "“一千封信”",
@@ -237,7 +324,10 @@
     "description": "进驻控制中枢时，会客室更容易获得<@cc.kw>格拉斯哥帮</>线索（工作时长影响概率）",
     "efficiency": 0,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_4045_heidi"
+    ]
   },
   "control_mp_cost[000]": {
     "buffName": "左膀右臂",
@@ -245,7 +335,11 @@
     "description": "进驻控制中枢时，控制中枢内所有干员的心情每小时恢复<@cc.vup>+0.05</>",
     "efficiency": 0,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_130_doberm",
+      "char_148_nearl"
+    ]
   },
   "control_mp_cost[001]": {
     "buffName": "S.W.E.E.P.",
@@ -253,7 +347,11 @@
     "description": "进驻控制中枢时，控制中枢内所有干员的心情每小时恢复<@cc.vup>+0.05</>",
     "efficiency": 0,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_144_red",
+      "char_149_scave"
+    ]
   },
   "control_mp_cost[002]": {
     "buffName": "零食网络",
@@ -261,7 +359,10 @@
     "description": "进驻控制中枢时，控制中枢内所有干员的心情每小时恢复<@cc.vup>+0.05</>",
     "efficiency": 0,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_260_durnar"
+    ]
   },
   "control_mp_cost[003]": {
     "buffName": "清理协议",
@@ -269,7 +370,10 @@
     "description": "进驻控制中枢时，控制中枢内所有干员的心情每小时恢复<@cc.vup>+0.05</>",
     "efficiency": 0,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_279_excu"
+    ]
   },
   "control_mp_cost[004]": {
     "buffName": "替身",
@@ -277,7 +381,10 @@
     "description": "进驻控制中枢时，控制中枢内所有干员的心情每小时恢复<@cc.vup>+0.05</>",
     "efficiency": 0,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_261_sddrag"
+    ]
   },
   "control_mp_cost[005]": {
     "buffName": "必要责任",
@@ -285,7 +392,10 @@
     "description": "进驻控制中枢时，控制中枢内所有干员的心情每小时恢复<@cc.vup>+0.05</>",
     "efficiency": 0,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_367_swllow"
+    ]
   },
   "control_mp_cost[006]": {
     "buffName": "护卫",
@@ -293,7 +403,10 @@
     "description": "进驻控制中枢时，控制中枢内所有干员的心情每小时恢复<@cc.vup>+0.05</>",
     "efficiency": 0,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_304_zebra"
+    ]
   },
   "control_mp_cost[007]": {
     "buffName": "小小的领袖",
@@ -301,7 +414,10 @@
     "description": "进驻控制中枢时，控制中枢内所有干员的心情每小时恢复<@cc.vup>+0.05</>",
     "efficiency": 0,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_420_flamtl"
+    ]
   },
   "control_mp_cost[008]": {
     "buffName": "独善其身",
@@ -309,7 +425,10 @@
     "description": "进驻控制中枢时，控制中枢内所有干员的心情每小时恢复<@cc.vup>+0.05</>",
     "efficiency": 0,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_4064_mlynar"
+    ]
   },
   "control_mp_cost[009]": {
     "buffName": "笑靥如春",
@@ -317,7 +436,10 @@
     "description": "进驻控制中枢时，控制中枢内所有干员的心情每小时恢复<@cc.vup>+0.05</>",
     "efficiency": 0,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_4104_coldst"
+    ]
   },
   "control_mp_cost[010]": {
     "buffName": "金盏花诗会",
@@ -325,7 +447,10 @@
     "description": "进驻控制中枢时，控制中枢内所有干员的心情每小时恢复<@cc.vup>+0.05</>",
     "efficiency": 0,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_4098_vvana"
+    ]
   },
   "control_mp_cost[011]": {
     "buffName": "捍卫之道",
@@ -333,7 +458,10 @@
     "description": "进驻控制中枢时，控制中枢内所有干员的心情每小时恢复<@cc.vup>+0.05</>",
     "efficiency": 0,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_4023_rfalcn"
+    ]
   },
   "control_mp_cost[012]": {
     "buffName": "博识生手",
@@ -341,7 +469,10 @@
     "description": "进驻控制中枢时，控制中枢内所有干员的心情每小时恢复<@cc.vup>+0.05</>",
     "efficiency": 0,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_4179_monstr"
+    ]
   },
   "control_mp_cost[013]": {
     "buffName": "点滴关照",
@@ -349,7 +480,10 @@
     "description": "进驻控制中枢时，控制中枢内所有干员的心情每小时恢复<@cc.vup>+0.05</>",
     "efficiency": 0,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_4195_radian"
+    ]
   },
   "control_mp_cost[014]": {
     "buffName": "总工程师",
@@ -357,7 +491,10 @@
     "description": "进驻控制中枢时，控制中枢内所有干员的心情每小时恢复<@cc.vup>+0.05</>",
     "efficiency": 0,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_4228_closur"
+    ]
   },
   "control_mp_cost_double[000]": {
     "buffName": "魔王传承",
@@ -365,7 +502,10 @@
     "description": "当与<@cc.kw>阿米娅</>一起进驻控制中枢时，自身和<@cc.kw>阿米娅</>心情每小时恢复<@cc.vup>+0.05</>",
     "efficiency": 0,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_4134_cetsyr"
+    ]
   },
   "control_mp_cost_double[001]": {
     "buffName": "“未完的故事”",
@@ -373,7 +513,10 @@
     "description": "当与<@cc.kw>阿米娅</>一起进驻控制中枢时，自身和<@cc.kw>阿米娅</>心情每小时恢复<@cc.vup>+0.1</>",
     "efficiency": 0,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_4134_cetsyr"
+    ]
   },
   "control_allCost_condChar[000]": {
     "buffName": "浮生得闲",
@@ -381,7 +524,10 @@
     "description": "当与<@cc.kw>阿</>进驻控制中枢一起工作时，控制中枢内所有干员心情每小时恢复<@cc.vup>+0.25</>",
     "efficiency": 0,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_322_lmlee"
+    ]
   },
   "control_mp_cost&faction2[000]": {
     "buffName": "坚毅随和",
@@ -389,7 +535,10 @@
     "description": "进驻控制中枢时，控制中枢内每个<$cc.g.lda><@cc.kw>鲤氏侦探事务所</></>干员可使该派系干员<@cc.kw>额外恢复心情</>，同时每人可使控制中枢内所有干员的心情每小时恢复<@cc.vup>+0.2</>",
     "efficiency": 0,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_226_hmau"
+    ]
   },
   "control_mp_cost&faction[000]": {
     "buffName": "德才兼备",
@@ -397,7 +546,10 @@
     "description": "进驻控制中枢时，控制中枢内每个<$cc.g.lgd><@cc.kw>龙门近卫局</></>干员可使控制中枢内所有干员的心情每小时恢复<@cc.vup>+0.05</>",
     "efficiency": 0,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_010_chen"
+    ]
   },
   "control_mp_cost&faction[020]": {
     "buffName": "学生会会长",
@@ -405,7 +557,10 @@
     "description": "进驻控制中枢时，控制中枢内每个<$cc.g.ussg><@cc.kw>乌萨斯学生自治团</></>干员可使控制中枢内所有干员的心情每小时恢复<@cc.vup>+0.05</>",
     "efficiency": 0,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_197_poca"
+    ]
   },
   "control_mp_cost&faction[030]": {
     "buffName": "幕后指挥",
@@ -413,7 +568,10 @@
     "description": "进驻控制中枢时，控制中枢内每个<$cc.g.karlan><@cc.kw>谢拉格</></>干员可使控制中枢内所有干员的心情每小时恢复<@cc.vup>+0.05</>",
     "efficiency": 0,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_206_gnosis"
+    ]
   },
   "control_mp_cost&faction[900]": {
     "buffName": "异格者",
@@ -421,7 +579,12 @@
     "description": "进驻控制中枢时，控制中枢内每个<$cc.g.sp><@cc.kw>异格</></>干员可使控制中枢内所有干员的心情每小时恢复<@cc.vup>+0.05</>",
     "efficiency": 0,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_1011_lava2",
+      "char_1021_kroos2",
+      "char_1024_hbisc2"
+    ]
   },
   "control_mp_cost&faction[990]": {
     "buffName": "彩虹小队",
@@ -429,7 +592,13 @@
     "description": "进驻控制中枢时，控制中枢内每个<$cc.g.R6><@cc.kw>彩虹小队</></>干员可使控制中枢内所有干员的心情每小时恢复<@cc.vup>+0.05</>",
     "efficiency": 0,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_456_ash",
+      "char_457_blitz",
+      "char_458_rfrost",
+      "char_459_tachak"
+    ]
   },
   "control_clue_cost&faction[990]": {
     "buffName": "反抗者",
@@ -437,7 +606,10 @@
     "description": "进驻控制中枢时，更容易获得线索板上尚未拥有的线索，但控制中枢内除自身以外的其余干员心情每小时消耗<@cc.vdown>+0.25</>",
     "efficiency": 0,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_4123_ela"
+    ]
   },
   "control_mp_cost&bd1[000]": {
     "buffName": "\"不以物喜\"",
@@ -445,7 +617,10 @@
     "description": "进驻控制中枢时，控制中枢内所有干员的心情每小时恢复<@cc.vup>+0.05</>；当自身心情处于<@cc.kw>12</>以下时，<$cc.bd_b1><@cc.rem>人间烟火</></><@cc.vup>+15</>",
     "efficiency": 0,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_2015_dusk"
+    ]
   },
   "control_mp_cost&bd2[000]": {
     "buffName": "\"不以己悲\"",
@@ -453,7 +628,10 @@
     "description": "进驻控制中枢时，自身心情每小时消耗<@cc.vdown>+0.5</>；当自身心情大于<@cc.kw>12</>时，<$cc.bd_a1><@cc.rem>感知信息</></><@cc.vup>+10</>",
     "efficiency": 0,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_2015_dusk"
+    ]
   },
   "control_mp_cost&bd3[000]": {
     "buffName": "生活的重压",
@@ -461,7 +639,10 @@
     "description": "进驻控制中枢时，热情值处于<@cc.kw>40</>点及以上时，自身心情每小时消耗<@cc.vdown>+0.05</>",
     "efficiency": 0,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_4182_oblvns"
+    ]
   },
   "control_mp_cost&bd_up[000]": {
     "buffName": "知我为我",
@@ -469,7 +650,10 @@
     "description": "进驻控制中枢时，自身心情每小时消耗<@cc.vdown>+0.5</>；每个<$cc.g.sui><@cc.kw>岁</></>干员进驻在宿舍和活动室以外的设施则<$cc.bd_b1><@cc.rem>人间烟火</></><@cc.vup>+5</>（最多5名）",
     "efficiency": 0,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_2024_chyue"
+    ]
   },
   "control_mp_bd_cost_expand[000]": {
     "buffName": "孤光共照",
@@ -477,7 +661,10 @@
     "description": "进驻控制中枢时，<$cc.c.room2><@cc.kw>其他设施</></>内处于工作状态的干员心情每小时恢复<@cc.vup>+0.05</>；同时每有<@cc.vup>20</>点<$cc.bd_b1><@cc.rem>人间烟火</></>，则额外<@cc.vup>+0.05</>，（与控制中枢加成有<$cc.c.sui2_1><@cc.rem>特殊比较规则</></>）",
     "efficiency": 0,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_2024_chyue"
+    ]
   },
   "control_mp_expand_double[000]": {
     "buffName": "巴别塔之帜",
@@ -485,7 +672,10 @@
     "description": "进驻控制中枢时，<$cc.c.room2><@cc.kw>其他设施</></>内处于工作状态的干员心情每小时恢复<@cc.vup>+0.1</>，当<@cc.kw>魔王</>进驻中枢时额外<@cc.vup>+0.1</>（与控制中枢加成有<$cc.c.sui2_1><@cc.rem>特殊比较规则</></>）",
     "efficiency": 0,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_1035_wisdel"
+    ]
   },
   "control_mp_cost&bd2[010]": {
     "buffName": "耐力回复",
@@ -493,7 +683,10 @@
     "description": "进驻控制中枢时，自身心情每小时消耗<@cc.vdown>+0.5</>，<$cc.bd_felyne><@cc.rem>木天蓼</></><@cc.vup>+8</>",
     "efficiency": 0,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_1029_yato2"
+    ]
   },
   "control_mp_cost_reset[000]": {
     "buffName": "互为半身",
@@ -501,7 +694,10 @@
     "description": "当与<@cc.kw>丰川祥子</>一起进驻控制中枢时，消除自身心情消耗的影响",
     "efficiency": 0,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_4183_mortis"
+    ]
   },
   "control_mp&meet_spd[000]": {
     "buffName": "成效优先",
@@ -509,7 +705,10 @@
     "description": "当与<@cc.kw>丰川祥子</>一起进驻控制中枢时，<@cc.kw>丰川祥子</>心情每小时消耗<@cc.vdown>+0.05</>，会客室线索搜集速度额外提升<@cc.vup>+5%</>（同种效果取最高）",
     "efficiency": 0,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_4185_amoris"
+    ]
   },
   "control_facCostReset[000]": {
     "buffName": "杯莫停",
@@ -517,7 +716,10 @@
     "description": "进驻控制中枢时，<@cc.kw>消除</>当前控制中枢内所有<$cc.g.sui><@cc.kw>岁</></>干员<@cc.kw>自身</>心情消耗的影响",
     "efficiency": 0,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_2023_ling"
+    ]
   },
   "control_costToBD[000]": {
     "buffName": "“山河远阔”",
@@ -525,7 +727,10 @@
     "description": "进驻控制中枢时，当自身心情大于<@cc.kw>12</>时，<$cc.bd_b1><@cc.rem>人间烟火</></><@cc.vup>+15</>；当自身心情处于<@cc.kw>12</>以下时，<$cc.bd_a1><@cc.rem>感知信息</></><@cc.vup>+10</>",
     "efficiency": 0,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_2023_ling"
+    ]
   },
   "control_mp_bd[000]": {
     "buffName": "情报储备",
@@ -533,7 +738,10 @@
     "description": "进驻控制中枢时，控制中枢内每有1名<$cc.g.R6><@cc.kw>彩虹小队</></>干员，则<$cc.bd_ash><@cc.rem>情报储备</></><@cc.vup>+1</>",
     "efficiency": 0,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_456_ash"
+    ]
   },
   "control_mp_bd[010]": {
     "buffName": "乌萨斯特饮",
@@ -541,7 +749,10 @@
     "description": "进驻控制中枢时，控制中枢内每有1名<$cc.g.ussg><@cc.kw>乌萨斯学生自治团</></>干员，则<$cc.bd_tachanka><@cc.rem>乌萨斯特饮</></><@cc.vup>+1</>",
     "efficiency": 0,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_459_tachak"
+    ]
   },
   "control_mp_bd2[000]": {
     "buffName": "团队合作",
@@ -549,7 +760,10 @@
     "description": "进驻控制中枢时，控制中枢内每有1名<$cc.tag.mh><@cc.kw>怪物猎人小队</></>干员，则<$cc.bd_felyne><@cc.rem>木天蓼</></><@cc.vup>+2</>",
     "efficiency": 0,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_1030_noirc2"
+    ]
   },
   "control_mp_aegir1[000]": {
     "buffName": "潮汐守望",
@@ -557,7 +771,10 @@
     "description": "进驻控制中枢时，每有1个<$cc.g.abyssal><@cc.kw>深海猎人</></>干员进驻在宿舍以外的设施，则自身心情每小时消耗<@cc.vdown>+0.5</>；反之则自身心情每小时恢复<@cc.vup>+0.5</>，如果进驻在宿舍内的<$cc.g.abyssal><@cc.kw>深海猎人</></>干员为满心情，则额外<@cc.vup>+0.5</>",
     "efficiency": 0,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_474_glady"
+    ]
   },
   "control_mp_aegir2[000]": {
     "buffName": "集群狩猎·α",
@@ -565,7 +782,10 @@
     "description": "进驻控制中枢时，控制中枢内所有干员的心情每小时恢复<@cc.vup>+0.05</>；基建内（不包含副手及活动室使用者）<$cc.g.abyssal><@cc.kw>深海猎人</></>干员获得<$cc.c.abyssal2_1><@cc.rem>特殊加成</></>（与部分技能有<$cc.c.abyssal2_3><@cc.rem>特殊叠加规则</></>）",
     "efficiency": 0,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_474_glady"
+    ]
   },
   "control_mp_aegir2[010]": {
     "buffName": "集群狩猎·β",
@@ -573,7 +793,10 @@
     "description": "进驻控制中枢时，控制中枢内所有干员的心情每小时恢复<@cc.vup>+0.05</>；基建内（不包含副手及活动室使用者）<$cc.g.abyssal><@cc.kw>深海猎人</></>干员获得<$cc.c.abyssal2_2><@cc.rem>特殊加成</></>（与部分技能有<$cc.c.abyssal2_3><@cc.rem>特殊叠加规则</></>）",
     "efficiency": 0,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_474_glady"
+    ]
   },
   "control_mp_psk[000]": {
     "buffName": "红松的骑士",
@@ -581,7 +804,10 @@
     "description": "进驻控制中枢时，每个进驻在制造站的<$cc.g.psk><@cc.kw>红松骑士团</></>干员，<@cc.kw>作战记录</>类配方的生产力<@cc.vup>+10%</>，<@cc.kw>贵金属</>类配方的生产力<@cc.vdown>-10%</>",
     "efficiency": 0,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_420_flamtl"
+    ]
   },
   "control_mp_lonely[000]": {
     "buffName": "公事公办",
@@ -589,7 +815,10 @@
     "description": "进驻控制中枢时，<$cc.c.room1><@cc.kw>部分设施</></>内处于工作状态的干员心情每小时恢复<@cc.vup>+0.1</>；同时控制中枢内<$cc.c.skill><@cc.kw>部分技能</></>可以为<$cc.c.room2><@cc.kw>其他设施</></>内处于工作状态的干员额外提供心情恢复",
     "efficiency": 0,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_4064_mlynar"
+    ]
   },
   "control_dorm_rec[000]": {
     "buffName": "领袖",
@@ -597,7 +826,10 @@
     "description": "进驻控制中枢时，所有宿舍内所有干员的心情每小时恢复<@cc.vup>+0.05</>（同种效果取最高）",
     "efficiency": 0,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_1020_reed2"
+    ]
   },
   "control_dorm_rec[001]": {
     "buffName": "战纹",
@@ -605,7 +837,10 @@
     "description": "进驻控制中枢时，所有宿舍内所有干员的心情每小时恢复<@cc.vup>+0.05</>（同种效果取最高）",
     "efficiency": 0,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_4023_rfalcn"
+    ]
   },
   "control_dorm_rec[002]": {
     "buffName": "巡心",
@@ -613,7 +848,10 @@
     "description": "进驻控制中枢时，所有宿舍内所有干员的心情每小时恢复<@cc.vup>+0.05</>（同种效果取最高）",
     "efficiency": 0,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_4146_nymph"
+    ]
   },
   "control_dorm_rec_tag[001]": {
     "buffName": "无言的慈爱",
@@ -621,7 +859,10 @@
     "description": "进驻控制中枢时，所有宿舍内<$cc.g.elite><@cc.kw>精英干员</></>的心情每小时恢复<@cc.vup>+0.1</>（同种效果取最高）",
     "efficiency": 0,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_4195_radian"
+    ]
   },
   "control_dorm_rec2[000]": {
     "buffName": "羁绊相生",
@@ -629,7 +870,10 @@
     "description": "进驻控制中枢时，所有宿舍内所有干员的心情每小时恢复<@cc.vup>+0.05</>（同种效果取最高）；当与<@cc.kw>丰川祥子</>一起进驻控制中枢时，<@cc.kw>丰川祥子</>的心情每小时恢复<@cc.vup>+0.1</>",
     "efficiency": 0,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_4184_dolris"
+    ]
   },
   "control_train_spd[010]": {
     "buffName": "S.W.E.E.P.主管",
@@ -637,7 +881,10 @@
     "description": "进驻控制中枢时，如训练室有干员在进行技能专精，则该干员的专精技能训练速度<@cc.vup>+5%</>（同种效果取最高）",
     "efficiency": 0,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_4132_ascln"
+    ]
   },
   "control_train_spd[011]": {
     "buffName": "断金之交",
@@ -645,7 +892,10 @@
     "description": "进驻控制中枢时，如训练室有干员在进行技能专精，则该干员的专精技能训练速度<@cc.vup>+5%</>（同种效果取最高）",
     "efficiency": 0,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_1040_blaze2"
+    ]
   },
   "control_train_spd[012]": {
     "buffName": "下城人脉",
@@ -653,7 +903,10 @@
     "description": "进驻控制中枢时，如训练室有干员在进行技能专精，则该干员的专精技能训练速度<@cc.vup>+5%</>（同种效果取最高）",
     "efficiency": 0,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_1044_hsgma2"
+    ]
   },
   "control_tra_limit&spd[010]": {
     "buffName": "运筹好手",
@@ -661,7 +914,10 @@
     "description": "进驻控制中枢时，同一贸易站中，每有<@cc.vup>1</>名<$cc.g.glasgow><@cc.kw>格拉斯哥帮</></>干员，订单获取效率<@cc.vup>+10%</>",
     "efficiency": 0,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_4110_delphn"
+    ]
   },
   "control_mp_bd&trade[000]": {
     "buffName": "演技的怪物",
@@ -669,7 +925,10 @@
     "description": "进驻控制中枢时，<$cc.bd_mujica><@cc.rem>热情值</></><@cc.vup>+20</>；每有<@cc.vup>8</>点<$cc.bd_mujica><@cc.rem>热情值</></>，自身心情每小时消耗<@cc.vdown>+0.01</>，所有贸易站订单效率<@cc.vup>+1%</>（同种效果取最高）",
     "efficiency": 0,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_4183_mortis"
+    ]
   },
   "control_meeting_spd&bd[000]": {
     "buffName": "勤学苦练",
@@ -677,7 +936,10 @@
     "description": "进驻控制中枢时，<$cc.bd_mujica><@cc.rem>热情值</></><@cc.vup>+10</>；会客室线索搜集速度提升<@cc.vup>+5%</>（同种效果取最高）",
     "efficiency": 0,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_4185_amoris"
+    ]
   },
   "control_dorm_bd[000]": {
     "buffName": "偶像光环",
@@ -685,7 +947,10 @@
     "description": "进驻控制中枢时，宿舍内每有<@cc.vup>1</>名干员，<$cc.bd_mujica><@cc.rem>热情值</></><@cc.vup>+1</>",
     "efficiency": 0,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_4184_dolris"
+    ]
   },
   "control_hire_spd&bd[000]": {
     "buffName": "可靠伙伴",
@@ -693,7 +958,10 @@
     "description": "进驻控制中枢时，<$cc.bd_mujica><@cc.rem>热情值</></><@cc.vup>+10</>；人脉资源的联络速度<@cc.vup>+10%</>（同种效果取最高）",
     "efficiency": 0,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_4186_tmoris"
+    ]
   },
   "control_prod_tra_spd[000]": {
     "buffName": "权变",
@@ -701,7 +969,10 @@
     "description": "进驻控制中枢时，若<$cc.bd_wang_1><@cc.kw>外势</></>大于等于<$cc.bd_wang_2><@cc.kw>实地</></>，所有贸易站订单效率<@cc.vup>+7%</>；若<$cc.bd_wang_2><@cc.kw>实地</></>大于<$cc.bd_wang_1><@cc.kw>外势</></>，所有制造站生产力<@cc.vup>+2%</>（同种效果取最高）",
     "efficiency": 0,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_2027_wang"
+    ]
   },
   "power_rec_spd&cost[000]": {
     "buffName": "热情澎湃",
@@ -709,7 +980,10 @@
     "description": "进驻发电站时，心情每小时消耗<@cc.vup>-0.52</>",
     "efficiency": 0,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_376_therex"
+    ]
   },
   "power_rec_spd&cost[010]": {
     "buffName": "外卖水果挞",
@@ -717,7 +991,10 @@
     "description": "进驻发电站时，心情每小时消耗<@cc.vup>-0.3</>",
     "efficiency": 0,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_4015_spuria"
+    ]
   },
   "power_rec_spd[000]": {
     "buffName": "备用能源",
@@ -725,7 +1002,14 @@
     "description": "进驻发电站时，无人机充能速度<@cc.vup>+10%</>",
     "efficiency": 10,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_285_medic2",
+      "char_286_cast3",
+      "char_376_therex",
+      "char_4000_jnight",
+      "char_4093_frston"
+    ]
   },
   "power_rec_spd[010]": {
     "buffName": "设备维护",
@@ -733,7 +1017,11 @@
     "description": "进驻发电站时，无人机充能速度<@cc.vup>+15%</>",
     "efficiency": 15,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_277_sqrrel",
+      "char_4004_pudd"
+    ]
   },
   "power_rec_spd[011]": {
     "buffName": "清洁能源",
@@ -741,7 +1029,10 @@
     "description": "进驻发电站时，无人机充能速度<@cc.vup>+15%</>",
     "efficiency": 15,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_385_finlpp"
+    ]
   },
   "power_rec_spd[020]": {
     "buffName": "静电场",
@@ -749,7 +1040,10 @@
     "description": "进驻发电站时，无人机充能速度<@cc.vup>+20%</>",
     "efficiency": 20,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_253_greyy"
+    ]
   },
   "power_rec_spd[023]": {
     "buffName": "电荷释放",
@@ -757,7 +1051,10 @@
     "description": "进驻发电站时，无人机充能速度<@cc.vup>+20%</>",
     "efficiency": 20,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_377_gdglow"
+    ]
   },
   "power_rec_spd[001]": {
     "buffName": "热能充能·α",
@@ -765,7 +1062,12 @@
     "description": "进驻发电站时，无人机充能速度<@cc.vup>+10%</>",
     "efficiency": 10,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_017_huang",
+      "char_121_lava",
+      "char_134_ifrit"
+    ]
   },
   "power_rec_spd[022]": {
     "buffName": "热能充能·γ",
@@ -773,7 +1075,10 @@
     "description": "进驻发电站时，无人机充能速度<@cc.vup>+20%</>",
     "efficiency": 20,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_1011_lava2"
+    ]
   },
   "power_rec_spd[1022]": {
     "buffName": "热能充能·γ",
@@ -781,7 +1086,10 @@
     "description": "进驻发电站时，无人机充能速度<@cc.vup>+20%</>",
     "efficiency": 20,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_1040_blaze2"
+    ]
   },
   "power_rec_spd[024]": {
     "buffName": "合法窃电",
@@ -789,7 +1097,10 @@
     "description": "进驻发电站时，无人机充能速度<@cc.vup>+20%</>",
     "efficiency": 20,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_4213_skybx"
+    ]
   },
   "power_rec_spd[013]": {
     "buffName": "高热充能",
@@ -797,7 +1108,10 @@
     "description": "进驻发电站时，无人机充能速度<@cc.vup>+15%</>",
     "efficiency": 15,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_134_ifrit"
+    ]
   },
   "power_rec_spd[014]": {
     "buffName": "脉冲电弧·α",
@@ -805,7 +1119,10 @@
     "description": "进驻发电站时，无人机充能速度<@cc.vup>+15%</>",
     "efficiency": 15,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_107_liskam"
+    ]
   },
   "power_rec_spd[021]": {
     "buffName": "脉冲电弧·β",
@@ -813,7 +1130,10 @@
     "description": "进驻发电站时，无人机充能速度<@cc.vup>+20%</>",
     "efficiency": 20,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_107_liskam"
+    ]
   },
   "power_rec_spd[003]": {
     "buffName": "电磁充能·α",
@@ -821,7 +1141,12 @@
     "description": "进驻发电站时，无人机充能速度<@cc.vup>+10%</>",
     "efficiency": 10,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_326_glacus",
+      "char_377_gdglow",
+      "char_472_pasngr"
+    ]
   },
   "power_rec_spd[015]": {
     "buffName": "电磁充能·β",
@@ -829,7 +1154,10 @@
     "description": "进驻发电站时，无人机充能速度<@cc.vup>+15%</>",
     "efficiency": 15,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_326_glacus"
+    ]
   },
   "power_rec_spd[016]": {
     "buffName": "聚能",
@@ -837,7 +1165,10 @@
     "description": "进驻发电站时，无人机充能速度<@cc.vup>+15%</>",
     "efficiency": 15,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_472_pasngr"
+    ]
   },
   "power_rec_spd[002]": {
     "buffName": "光能充能·α",
@@ -845,7 +1176,10 @@
     "description": "进驻发电站时，无人机充能速度<@cc.vup>+10%</>",
     "efficiency": 10,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_469_indigo"
+    ]
   },
   "power_rec_spd[017]": {
     "buffName": "灯塔供能模块",
@@ -853,7 +1187,10 @@
     "description": "进驻发电站时，无人机充能速度<@cc.vup>+15%</>",
     "efficiency": 15,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_469_indigo"
+    ]
   },
   "power_rec_spd[004]": {
     "buffName": "挽歌充能·α",
@@ -861,7 +1198,10 @@
     "description": "进驻发电站时，无人机充能速度<@cc.vup>+10%</>",
     "efficiency": 10,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_4136_phonor"
+    ]
   },
   "power_rec_spd[025]": {
     "buffName": "穹顶物流管理·α",
@@ -869,7 +1209,10 @@
     "description": "进驻发电站时，无人机充能速度<@cc.vup>+15%</>",
     "efficiency": 15,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_4079_haini"
+    ]
   },
   "power_rec_spd[026]": {
     "buffName": "穹顶物流管理·β",
@@ -877,7 +1220,10 @@
     "description": "进驻发电站时，无人机充能速度<@cc.vup>+20%</>",
     "efficiency": 20,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_4079_haini"
+    ]
   },
   "power_rec_spd[005]": {
     "buffName": "灵河充能·α",
@@ -885,7 +1231,10 @@
     "description": "进驻发电站时，无人机充能速度<@cc.vup>+10%</>",
     "efficiency": 10,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_4148_philae"
+    ]
   },
   "power_rec_spd[006]": {
     "buffName": "充能中",
@@ -893,7 +1242,10 @@
     "description": "进驻发电站时，无人机充能速度<@cc.vup>+10%</>",
     "efficiency": 10,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_4188_confes"
+    ]
   },
   "power_rec_spd[007]": {
     "buffName": "雷法专精",
@@ -901,7 +1253,10 @@
     "description": "进驻发电站时，无人机充能速度<@cc.vup>+10%</>",
     "efficiency": 10,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_1043_leizi2"
+    ]
   },
   "power_rec_spd[008]": {
     "buffName": "澎湃紊流",
@@ -909,7 +1264,10 @@
     "description": "进驻发电站时，无人机充能速度<@cc.vup>+10%</>",
     "efficiency": 10,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_4051_akkord"
+    ]
   },
   "power_rec_spd[009]": {
     "buffName": "澎湃紊流",
@@ -917,7 +1275,10 @@
     "description": "进驻发电站时，无人机充能速度<@cc.vup>+15%</>",
     "efficiency": 15,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_4051_akkord"
+    ]
   },
   "power_rec_drone[000]": {
     "buffName": "巡线框架",
@@ -925,7 +1286,10 @@
     "description": "进驻发电站时，每<@cc.vup>10</>架无人机上限<@cc.vup>+1%</>无人机充能速度（最多<@cc.vup>+25%</>）",
     "efficiency": 0,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_1027_greyy2"
+    ]
   },
   "power_rec_spd[0010]": {
     "buffName": "鸡电工程",
@@ -933,7 +1297,10 @@
     "description": "进驻发电站时，无人机充能速度<@cc.vup>+10%</>",
     "efficiency": 10,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_4227_gallus"
+    ]
   },
   "power_count[000]": {
     "buffName": "晨曦",
@@ -941,7 +1308,10 @@
     "description": "进驻发电站时，如果其他<@cc.kw>发电站</>内没有进驻<$cc.tag.op><@cc.kw>作业平台</></>，则<@cc.kw>发电站</>额外<@cc.vup>+1</>(仅影响设施数量)",
     "efficiency": 0,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_1027_greyy2"
+    ]
   },
   "power_prod_spd_P[000]": {
     "buffName": "“滴滴，启动！”",
@@ -949,7 +1319,10 @@
     "description": "进驻发电站时，<@cc.kw>野鬃</>所在的制造站生产力<@cc.vup>+5%</>",
     "efficiency": 0,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_4000_jnight"
+    ]
   },
   "power_rec_spd_P[000]": {
     "buffName": "“愉快的对谈”",
@@ -957,7 +1330,10 @@
     "description": "进驻发电站时，如果<@cc.kw>凯尔希</>进驻在控制中枢，则无人机充能速度<@cc.vup>+5%</>",
     "efficiency": 0,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_4093_frston"
+    ]
   },
   "power_rec_spd_P[001]": {
     "buffName": "咒文共鸣",
@@ -965,7 +1341,10 @@
     "description": "进驻发电站时，如果<@cc.kw>逻各斯</>进驻在训练室协助位，则无人机充能速度<@cc.vup>+5%</>",
     "efficiency": 0,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_4136_phonor"
+    ]
   },
   "power_rec_spd_ext&faction[000]": {
     "buffName": "维护中",
@@ -973,7 +1352,10 @@
     "description": "进驻发电站时，如果其他<$cc.g.laterano><@cc.kw>拉特兰</></>干员进驻在发电站，则无人机充能速度<@cc.vup>+5%</>",
     "efficiency": 0,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_4188_confes"
+    ]
   },
   "power_rec_spd_ext&tag[000]": {
     "buffName": "鸡励机制",
@@ -981,7 +1363,10 @@
     "description": "进驻发电站时，如果其他<$cc.tag.op><@cc.kw>作业平台</></>进驻在发电站，则无人机充能速度<@cc.vup>+5%</>",
     "efficiency": 0,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_4227_gallus"
+    ]
   },
   "power_rec_rhine[000]": {
     "buffName": "生态科主任",
@@ -989,7 +1374,10 @@
     "description": "进驻发电站时，无人机充能速度<@cc.vup>+10%</>，基建内（不包含副手及活动室使用者）每有1名除自身以外的<$cc.g.rh><@cc.kw>莱茵生命</></>干员（最多<@cc.kw>5</>名），充能速度额外<@cc.vup>+3%</>",
     "efficiency": 10,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_249_mlyss"
+    ]
   },
   "power_rec_spd&addition[000]": {
     "buffName": "技术交流·α",
@@ -997,7 +1385,10 @@
     "description": "进驻发电站时，无人机充能速度首小时<@cc.vup>+10%</>，此后每小时<@cc.vup>+1%</>，最终达到<@cc.vup>+15%</>",
     "efficiency": 10,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_4015_spuria"
+    ]
   },
   "power_rec_spd&addition[001]": {
     "buffName": "技术交流·β",
@@ -1005,7 +1396,10 @@
     "description": "进驻发电站时，无人机充能速度首小时<@cc.vup>+15%</>，此后每小时<@cc.vup>+1%</>，最终达到<@cc.vup>+20%</>",
     "efficiency": 15,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_4015_spuria"
+    ]
   },
   "power_rec_spd&dorm&lv[000]": {
     "buffName": "灵河共鸣",
@@ -1013,7 +1407,10 @@
     "description": "进驻发电站时，每间宿舍每级为充能速度额外<@cc.vup>+0.5%</>",
     "efficiency": 0,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_4148_philae"
+    ]
   },
   "manu_bd_to_bd[000]": {
     "buffName": "古老巫术",
@@ -1021,7 +1418,10 @@
     "description": "进驻制造站时，每<@cc.vup>5</>点<$cc.bd_b1><@cc.rem>人间烟火</></>转化为<@cc.vup>1</>点<$cc.bd_C><@cc.rem>巫术结晶</></>",
     "efficiency": 0,
     "targetGroupSortId": 4,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_4078_bdhkgt"
+    ]
   },
   "manu_prod_spd&power[000]": {
     "buffName": "自动化·α",
@@ -1033,6 +1433,11 @@
       "F_GOLD",
       "F_EXP",
       "F_DIAMOND"
+    ],
+    "charId": [
+      "char_416_zumama",
+      "char_433_windft",
+      "char_472_pasngr"
     ]
   },
   "manu_prod_spd&power[010]": {
@@ -1045,6 +1450,10 @@
       "F_GOLD",
       "F_EXP",
       "F_DIAMOND"
+    ],
+    "charId": [
+      "char_400_weedy",
+      "char_416_zumama"
     ]
   },
   "manu_prod_spd&power[020]": {
@@ -1057,6 +1466,9 @@
       "F_GOLD",
       "F_EXP",
       "F_DIAMOND"
+    ],
+    "charId": [
+      "char_400_weedy"
     ]
   },
   "manu_prod_spd[000]": {
@@ -1069,6 +1481,13 @@
       "F_GOLD",
       "F_EXP",
       "F_DIAMOND"
+    ],
+    "charId": [
+      "char_126_shotst",
+      "char_4041_chnut",
+      "char_4063_quartz",
+      "char_464_cement",
+      "char_502_nblade"
     ]
   },
   "manu_prod_spd[1000]": {
@@ -1081,6 +1500,9 @@
       "F_GOLD",
       "F_EXP",
       "F_DIAMOND"
+    ],
+    "charId": [
+      "char_1036_fang2"
     ]
   },
   "manu_prod_spd[010]": {
@@ -1093,6 +1515,15 @@
       "F_GOLD",
       "F_EXP",
       "F_DIAMOND"
+    ],
+    "charId": [
+      "char_181_flower",
+      "char_210_stward",
+      "char_235_jesica",
+      "char_240_wyvern",
+      "char_4066_highmo",
+      "char_437_mizuki",
+      "char_484_robrta"
     ]
   },
   "manu_prod_spd[001]": {
@@ -1105,6 +1536,11 @@
       "F_GOLD",
       "F_EXP",
       "F_DIAMOND"
+    ],
+    "charId": [
+      "char_108_silent",
+      "char_128_plosis",
+      "char_135_halo"
     ]
   },
   "manu_prod_spd[011]": {
@@ -1117,6 +1553,14 @@
       "F_GOLD",
       "F_EXP",
       "F_DIAMOND"
+    ],
+    "charId": [
+      "char_1047_halo2",
+      "char_108_silent",
+      "char_128_plosis",
+      "char_135_halo",
+      "char_4048_doroth",
+      "char_4212_nasti"
     ]
   },
   "manu_prod_spd[021]": {
@@ -1129,6 +1573,9 @@
       "F_GOLD",
       "F_EXP",
       "F_DIAMOND"
+    ],
+    "charId": [
+      "char_1031_slent2"
     ]
   },
   "manu_prod_spd[002]": {
@@ -1141,6 +1588,11 @@
       "F_GOLD",
       "F_EXP",
       "F_DIAMOND"
+    ],
+    "charId": [
+      "char_430_fartth",
+      "char_431_ashlok",
+      "char_496_wildmn"
     ]
   },
   "manu_prod_spd[012]": {
@@ -1153,6 +1605,11 @@
       "F_GOLD",
       "F_EXP",
       "F_DIAMOND"
+    ],
+    "charId": [
+      "char_430_fartth",
+      "char_431_ashlok",
+      "char_496_wildmn"
     ]
   },
   "manu_prod_spd[003]": {
@@ -1165,6 +1622,9 @@
       "F_GOLD",
       "F_EXP",
       "F_DIAMOND"
+    ],
+    "charId": [
+      "char_452_bstalk"
     ]
   },
   "manu_prod_spd[020]": {
@@ -1177,6 +1637,9 @@
       "F_GOLD",
       "F_EXP",
       "F_DIAMOND"
+    ],
+    "charId": [
+      "char_242_otter"
     ]
   },
   "manu_prod_spd[004]": {
@@ -1189,6 +1652,9 @@
       "F_GOLD",
       "F_EXP",
       "F_DIAMOND"
+    ],
+    "charId": [
+      "char_4141_marcil"
     ]
   },
   "manu_prod_spd[014]": {
@@ -1201,6 +1667,9 @@
       "F_GOLD",
       "F_EXP",
       "F_DIAMOND"
+    ],
+    "charId": [
+      "char_4141_marcil"
     ]
   },
   "manu_skill_spd1[000]": {
@@ -1213,6 +1682,9 @@
       "F_GOLD",
       "F_EXP",
       "F_DIAMOND"
+    ],
+    "charId": [
+      "char_437_mizuki"
     ]
   },
   "manu_skill_spd1[010]": {
@@ -1225,6 +1697,9 @@
       "F_GOLD",
       "F_EXP",
       "F_DIAMOND"
+    ],
+    "charId": [
+      "char_4048_doroth"
     ]
   },
   "manu_skill_spd1[020]": {
@@ -1237,6 +1712,9 @@
       "F_GOLD",
       "F_EXP",
       "F_DIAMOND"
+    ],
+    "charId": [
+      "char_4106_bryota"
     ]
   },
   "manu_skill_change[000]": {
@@ -1245,7 +1723,10 @@
     "description": "进驻制造站时，当前制造站内所有<$cc.sk.manu2><@cc.kw>莱茵科技类</></>、<$cc.sk.manu3><@cc.kw>红松骑士团类</></>技能也全都视作<@cc.kw>标准化类</>技能",
     "efficiency": 0,
     "targetGroupSortId": 4,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_4066_highmo"
+    ]
   },
   "manu_skill_limit[000]": {
     "buffName": "勘探背包",
@@ -1257,6 +1738,9 @@
       "F_GOLD",
       "F_EXP",
       "F_DIAMOND"
+    ],
+    "charId": [
+      "char_1047_halo2"
     ]
   },
   "manu_prod_bd[000]": {
@@ -1269,6 +1753,9 @@
       "F_GOLD",
       "F_EXP",
       "F_DIAMOND"
+    ],
+    "charId": [
+      "char_4126_fuze"
     ]
   },
   "manu_prod_spd_addition[030]": {
@@ -1281,6 +1768,9 @@
       "F_GOLD",
       "F_EXP",
       "F_DIAMOND"
+    ],
+    "charId": [
+      "char_123_fang"
     ]
   },
   "manu_prod_spd_addition[031]": {
@@ -1293,6 +1783,9 @@
       "F_GOLD",
       "F_EXP",
       "F_DIAMOND"
+    ],
+    "charId": [
+      "char_2013_cerber"
     ]
   },
   "manu_prod_spd_addition[040]": {
@@ -1305,6 +1798,9 @@
       "F_GOLD",
       "F_EXP",
       "F_DIAMOND"
+    ],
+    "charId": [
+      "char_124_kroos"
     ]
   },
   "manu_prod_spd_addition[041]": {
@@ -1317,6 +1813,9 @@
       "F_GOLD",
       "F_EXP",
       "F_DIAMOND"
+    ],
+    "charId": [
+      "char_336_folivo"
     ]
   },
   "manu_prod_spd_addition[100]": {
@@ -1329,6 +1828,9 @@
       "F_GOLD",
       "F_EXP",
       "F_DIAMOND"
+    ],
+    "charId": [
+      "char_446_aroma"
     ]
   },
   "manu_prod_spd_reduce[000]": {
@@ -1341,6 +1843,9 @@
       "F_GOLD",
       "F_EXP",
       "F_DIAMOND"
+    ],
+    "charId": [
+      "char_4062_totter"
     ]
   },
   "manu_prod_spd_addition&cost[000]": {
@@ -1353,6 +1858,9 @@
       "F_GOLD",
       "F_EXP",
       "F_DIAMOND"
+    ],
+    "charId": [
+      "char_4062_totter"
     ]
   },
   "manu_prod_spd&limit[000]": {
@@ -1365,6 +1873,10 @@
       "F_GOLD",
       "F_EXP",
       "F_DIAMOND"
+    ],
+    "charId": [
+      "char_122_beagle",
+      "char_209_ardign"
     ]
   },
   "manu_prod_spd&limit[001]": {
@@ -1377,6 +1889,10 @@
       "F_GOLD",
       "F_EXP",
       "F_DIAMOND"
+    ],
+    "charId": [
+      "char_150_snakek",
+      "char_500_noirc"
     ]
   },
   "manu_prod_spd&fraction[000]": {
@@ -1389,6 +1905,9 @@
       "F_GOLD",
       "F_EXP",
       "F_DIAMOND"
+    ],
+    "charId": [
+      "char_1036_fang2"
     ]
   },
   "manu_prod_spd&limit&bd[000]": {
@@ -1401,6 +1920,9 @@
       "F_GOLD",
       "F_EXP",
       "F_DIAMOND"
+    ],
+    "charId": [
+      "char_4077_palico"
     ]
   },
   "manu_prod_limit&cost[000]": {
@@ -1409,7 +1931,10 @@
     "description": "进驻制造站时，仓库容量上限<@cc.vup>+8</>，心情每小时消耗<@cc.vup>-0.25</>",
     "efficiency": 0,
     "targetGroupSortId": 4,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_149_scave"
+    ]
   },
   "manu_prod_limit&cost[0000]": {
     "buffName": "拾荒者",
@@ -1417,7 +1942,10 @@
     "description": "进驻制造站时，仓库容量上限<@cc.vup>+8</>，心情每小时消耗<@cc.vup>-0.25</>",
     "efficiency": 0,
     "targetGroupSortId": 4,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_190_clour"
+    ]
   },
   "manu_prod_limit&cost[001]": {
     "buffName": "磐蟹·阿盘",
@@ -1425,7 +1953,10 @@
     "description": "进驻制造站时，仓库容量上限<@cc.vup>+8</>，心情每小时消耗<@cc.vup>-0.25</>",
     "efficiency": 0,
     "targetGroupSortId": 4,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_452_bstalk"
+    ]
   },
   "manu_prod_limit&cost[002]": {
     "buffName": "“都想要”",
@@ -1433,7 +1964,10 @@
     "description": "进驻制造站时，仓库容量上限<@cc.vup>+8</>，心情每小时消耗<@cc.vup>-0.25</>",
     "efficiency": 0,
     "targetGroupSortId": 4,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_2013_cerber"
+    ]
   },
   "manu_prod_limit&cost[003]": {
     "buffName": "智慧之境",
@@ -1441,7 +1975,10 @@
     "description": "进驻制造站时，仓库容量上限<@cc.vup>+8</>，心情每小时消耗<@cc.vup>-0.25</>",
     "efficiency": 0,
     "targetGroupSortId": 4,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_485_pallas"
+    ]
   },
   "manu_prod_limit&cost[010]": {
     "buffName": "囤积者",
@@ -1449,7 +1986,10 @@
     "description": "进驻制造站时，仓库容量上限<@cc.vup>+10</>，心情每小时消耗<@cc.vup>-0.25</>",
     "efficiency": 0,
     "targetGroupSortId": 4,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_381_bubble"
+    ]
   },
   "manu_prod_limit&cost[011]": {
     "buffName": "无畏豪情",
@@ -1457,7 +1997,10 @@
     "description": "进驻制造站时，仓库容量上限<@cc.vup>+10</>，心情每小时消耗<@cc.vup>-0.25</>",
     "efficiency": 0,
     "targetGroupSortId": 4,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_4138_narant"
+    ]
   },
   "manu_prod_limit&cost[012]": {
     "buffName": "午休好去处",
@@ -1465,7 +2008,10 @@
     "description": "进驻制造站时，仓库容量上限<@cc.vup>+10</>，心情每小时消耗<@cc.vup>-0.25</>",
     "efficiency": 0,
     "targetGroupSortId": 4,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_4198_christ"
+    ]
   },
   "manu_prod_limit&cost[020]": {
     "buffName": "探险者",
@@ -1473,7 +2019,10 @@
     "description": "进驻制造站时，仓库容量上限<@cc.vup>+16</>，心情每小时消耗<@cc.vup>-0.25</>",
     "efficiency": 0,
     "targetGroupSortId": 4,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_378_asbest"
+    ]
   },
   "manu_prod_limit&cost[1020]": {
     "buffName": "收纳达人",
@@ -1481,7 +2030,10 @@
     "description": "进驻制造站时，仓库容量上限<@cc.vup>+16</>，心情每小时消耗<@cc.vup>-0.25</>",
     "efficiency": 0,
     "targetGroupSortId": 4,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_4171_wulfen"
+    ]
   },
   "manu_formula_cost[000]": {
     "buffName": "Vlog",
@@ -1491,6 +2043,9 @@
     "targetGroupSortId": 2,
     "targets": [
       "F_EXP"
+    ],
+    "charId": [
+      "char_328_cammou"
     ]
   },
   "manu_formula_limit[0000]": {
@@ -1501,6 +2056,9 @@
     "targetGroupSortId": 2,
     "targets": [
       "F_EXP"
+    ],
+    "charId": [
+      "char_336_folivo"
     ]
   },
   "manu_formula_limit[010]": {
@@ -1511,6 +2069,9 @@
     "targetGroupSortId": 2,
     "targets": [
       "F_EXP"
+    ],
+    "charId": [
+      "char_328_cammou"
     ]
   },
   "manu_formula_limit[020]": {
@@ -1521,6 +2082,9 @@
     "targetGroupSortId": 2,
     "targets": [
       "F_EXP"
+    ],
+    "charId": [
+      "char_1032_excu2"
     ]
   },
   "manu_prod_spd&limit&cost[000]": {
@@ -1533,6 +2097,9 @@
       "F_GOLD",
       "F_EXP",
       "F_DIAMOND"
+    ],
+    "charId": [
+      "char_163_hpsts"
     ]
   },
   "manu_prod_spd&limit&cost[001]": {
@@ -1545,6 +2112,9 @@
       "F_GOLD",
       "F_EXP",
       "F_DIAMOND"
+    ],
+    "charId": [
+      "char_163_hpsts"
     ]
   },
   "manu_prod_spd&limit&cost[010]": {
@@ -1557,6 +2127,9 @@
       "F_GOLD",
       "F_EXP",
       "F_DIAMOND"
+    ],
+    "charId": [
+      "char_281_popka"
     ]
   },
   "manu_prod_spd&limit&cost[011]": {
@@ -1569,6 +2142,9 @@
       "F_GOLD",
       "F_EXP",
       "F_DIAMOND"
+    ],
+    "charId": [
+      "char_378_asbest"
     ]
   },
   "manu_prod_spd&limit&cost[020]": {
@@ -1581,6 +2157,9 @@
       "F_GOLD",
       "F_EXP",
       "F_DIAMOND"
+    ],
+    "charId": [
+      "char_369_bena"
     ]
   },
   "manu_prod_spd&limit&cost[100]": {
@@ -1593,6 +2172,9 @@
       "F_GOLD",
       "F_EXP",
       "F_DIAMOND"
+    ],
+    "charId": [
+      "char_4155_talr"
     ]
   },
   "manu_prod_spd&limit&cost[101]": {
@@ -1605,6 +2187,9 @@
       "F_GOLD",
       "F_EXP",
       "F_DIAMOND"
+    ],
+    "charId": [
+      "char_4211_snhunt"
     ]
   },
   "manu_prod_spd&limit&cost[110]": {
@@ -1617,6 +2202,9 @@
       "F_GOLD",
       "F_EXP",
       "F_DIAMOND"
+    ],
+    "charId": [
+      "char_4211_snhunt"
     ]
   },
   "manu_prod_spd&limit&cost[200]": {
@@ -1629,6 +2217,9 @@
       "F_GOLD",
       "F_EXP",
       "F_DIAMOND"
+    ],
+    "charId": [
+      "char_4155_talr"
     ]
   },
   "manu_prod_spd&limit&cost[300]": {
@@ -1641,6 +2232,9 @@
       "F_GOLD",
       "F_EXP",
       "F_DIAMOND"
+    ],
+    "charId": [
+      "char_4171_wulfen"
     ]
   },
   "manu_prod_limit&cost[021]": {
@@ -1649,7 +2243,10 @@
     "description": "进驻制造站时，仓库容量上限<@cc.vup>+10</>，心情每小时消耗<@cc.vup>-0.25</>",
     "efficiency": 0,
     "targetGroupSortId": 4,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_464_cement"
+    ]
   },
   "manu_prod_spd_variable[000]": {
     "buffName": "回收利用",
@@ -1661,6 +2258,9 @@
       "F_GOLD",
       "F_EXP",
       "F_DIAMOND"
+    ],
+    "charId": [
+      "char_190_clour"
     ]
   },
   "manu_prod_spd_variable3[000]": {
@@ -1673,6 +2273,9 @@
       "F_GOLD",
       "F_EXP",
       "F_DIAMOND"
+    ],
+    "charId": [
+      "char_381_bubble"
     ]
   },
   "manu_prod_spd_variable2[000]": {
@@ -1685,6 +2288,9 @@
       "F_GOLD",
       "F_EXP",
       "F_DIAMOND"
+    ],
+    "charId": [
+      "char_243_waaifu"
     ]
   },
   "manu_prod_spd_train&lv[000]": {
@@ -1697,6 +2303,9 @@
       "F_GOLD",
       "F_EXP",
       "F_DIAMOND"
+    ],
+    "charId": [
+      "char_4226_veen"
     ]
   },
   "manu_prod_spd_bd_n1[000]": {
@@ -1705,7 +2314,10 @@
     "description": "进驻制造站时，宿舍内每有<@cc.kw>1</>名干员则<$cc.bd_a1><@cc.rem>感知信息</></><@cc.vup>+1</>，同时每<@cc.vup>1</>点<$cc.bd_a1><@cc.rem>感知信息</></>转化为<@cc.vup>1</>点<$cc.bd_A><@cc.rem>思维链环</></>",
     "efficiency": 0,
     "targetGroupSortId": 4,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_391_rosmon"
+    ]
   },
   "manu_constrLv[000]": {
     "buffName": "绘图设计",
@@ -1713,7 +2325,10 @@
     "description": "进驻制造站时，基建内除活动室外每间设施每级<@cc.vup>+1</>个<@cc.kw><$cc.bd_malist>工程机器人</></>，上限<@cc.vup>64</>个",
     "efficiency": 0,
     "targetGroupSortId": 4,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_4054_malist"
+    ]
   },
   "manu_prod_spd_bd[100]": {
     "buffName": "机械辅助·α",
@@ -1725,6 +2340,9 @@
       "F_GOLD",
       "F_EXP",
       "F_DIAMOND"
+    ],
+    "charId": [
+      "char_4054_malist"
     ]
   },
   "manu_prod_spd_bd[110]": {
@@ -1737,6 +2355,9 @@
       "F_GOLD",
       "F_EXP",
       "F_DIAMOND"
+    ],
+    "charId": [
+      "char_4054_malist"
     ]
   },
   "manu_prod_spd_bd[000]": {
@@ -1749,6 +2370,9 @@
       "F_GOLD",
       "F_EXP",
       "F_DIAMOND"
+    ],
+    "charId": [
+      "char_391_rosmon"
     ]
   },
   "manu_prod_spd_bd[010]": {
@@ -1761,6 +2385,9 @@
       "F_GOLD",
       "F_EXP",
       "F_DIAMOND"
+    ],
+    "charId": [
+      "char_391_rosmon"
     ]
   },
   "manu_prod_spd_bd[200]": {
@@ -1773,6 +2400,9 @@
       "F_GOLD",
       "F_EXP",
       "F_DIAMOND"
+    ],
+    "charId": [
+      "char_4078_bdhkgt"
     ]
   },
   "manu_prod_spd_bd[201]": {
@@ -1785,6 +2415,9 @@
       "F_GOLD",
       "F_EXP",
       "F_DIAMOND"
+    ],
+    "charId": [
+      "char_4078_bdhkgt"
     ]
   },
   "manu_prod_spd_bd[300]": {
@@ -1797,6 +2430,9 @@
       "F_GOLD",
       "F_EXP",
       "F_DIAMOND"
+    ],
+    "charId": [
+      "char_2025_shu"
     ]
   },
   "manu_prod_spd_bd[400]": {
@@ -1809,6 +2445,9 @@
       "F_GOLD",
       "F_EXP",
       "F_DIAMOND"
+    ],
+    "charId": [
+      "char_4141_marcil"
     ]
   },
   "manu_prod_spd&manu[000]": {
@@ -1821,6 +2460,9 @@
       "F_GOLD",
       "F_EXP",
       "F_DIAMOND"
+    ],
+    "charId": [
+      "char_4208_wintim"
     ]
   },
   "manu_prod_spd&manu[100]": {
@@ -1833,6 +2475,9 @@
       "F_GOLD",
       "F_EXP",
       "F_DIAMOND"
+    ],
+    "charId": [
+      "char_4208_wintim"
     ]
   },
   "manu_formula_spd[000]": {
@@ -1843,6 +2488,9 @@
     "targetGroupSortId": 2,
     "targets": [
       "F_EXP"
+    ],
+    "charId": [
+      "char_485_pallas"
     ]
   },
   "manu_formula_spd[010]": {
@@ -1853,6 +2501,13 @@
     "targetGroupSortId": 2,
     "targets": [
       "F_EXP"
+    ],
+    "charId": [
+      "char_118_yuki",
+      "char_193_frostl",
+      "char_241_panda",
+      "char_286_cast3",
+      "char_290_vigna"
     ]
   },
   "manu_formula_spd[020]": {
@@ -1863,6 +2518,10 @@
     "targetGroupSortId": 2,
     "targets": [
       "F_EXP"
+    ],
+    "charId": [
+      "char_159_peacok",
+      "char_241_panda"
     ]
   },
   "manu_formula_spd[022]": {
@@ -1873,6 +2532,9 @@
     "targetGroupSortId": 2,
     "targets": [
       "F_EXP"
+    ],
+    "charId": [
+      "char_1502_crosly"
     ]
   },
   "manu_formula_spd[030]": {
@@ -1883,6 +2545,9 @@
     "targetGroupSortId": 2,
     "targets": [
       "F_EXP"
+    ],
+    "charId": [
+      "char_1032_excu2"
     ]
   },
   "manu_formula_spd[031]": {
@@ -1893,6 +2558,9 @@
     "targetGroupSortId": 2,
     "targets": [
       "F_EXP"
+    ],
+    "charId": [
+      "char_1032_excu2"
     ]
   },
   "manu_formula_spd&limit&cost[000]": {
@@ -1903,6 +2571,9 @@
     "targetGroupSortId": 2,
     "targets": [
       "F_EXP"
+    ],
+    "charId": [
+      "char_1042_phatm2"
     ]
   },
   "manu_formula_spd&limit&cost[010]": {
@@ -1913,6 +2584,9 @@
     "targetGroupSortId": 2,
     "targets": [
       "F_EXP"
+    ],
+    "charId": [
+      "char_1042_phatm2"
     ]
   },
   "manu_formula_spd&limit&cost[100]": {
@@ -1923,6 +2597,9 @@
     "targetGroupSortId": 2,
     "targets": [
       "F_EXP"
+    ],
+    "charId": [
+      "char_4225_tanya"
     ]
   },
   "manu_prod_spd&trade[000]": {
@@ -1933,6 +2610,9 @@
     "targetGroupSortId": 1,
     "targets": [
       "F_GOLD"
+    ],
+    "charId": [
+      "char_385_finlpp"
     ]
   },
   "manu_prod_spd&trade[1000]": {
@@ -1943,6 +2623,9 @@
     "targetGroupSortId": 1,
     "targets": [
       "F_GOLD"
+    ],
+    "charId": [
+      "char_1039_thorn2"
     ]
   },
   "manu_formula_spd[100]": {
@@ -1953,6 +2636,11 @@
     "targetGroupSortId": 1,
     "targets": [
       "F_GOLD"
+    ],
+    "charId": [
+      "char_141_nights",
+      "char_284_spot",
+      "char_4106_bryota"
     ]
   },
   "manu_formula_spd[110]": {
@@ -1963,6 +2651,9 @@
     "targetGroupSortId": 1,
     "targets": [
       "F_GOLD"
+    ],
+    "charId": [
+      "char_237_gravel"
     ]
   },
   "manu_formula_spd[101]": {
@@ -1973,6 +2664,9 @@
     "targetGroupSortId": 1,
     "targets": [
       "F_GOLD"
+    ],
+    "charId": [
+      "char_4081_warmy"
     ]
   },
   "manu_formula_spd[102]": {
@@ -1983,6 +2677,9 @@
     "targetGroupSortId": 1,
     "targets": [
       "F_GOLD"
+    ],
+    "charId": [
+      "char_1039_thorn2"
     ]
   },
   "manu_formula_spd&dorm&lv[000]": {
@@ -1993,6 +2690,9 @@
     "targetGroupSortId": 1,
     "targets": [
       "F_GOLD"
+    ],
+    "charId": [
+      "char_4138_narant"
     ]
   },
   "manu_formula_spd&cost[000]": {
@@ -2003,6 +2703,9 @@
     "targetGroupSortId": 1,
     "targets": [
       "F_GOLD"
+    ],
+    "charId": [
+      "char_4105_almond"
     ]
   },
   "manu_formula_spd&cost[001]": {
@@ -2013,6 +2716,9 @@
     "targetGroupSortId": 1,
     "targets": [
       "F_GOLD"
+    ],
+    "charId": [
+      "char_446_aroma"
     ]
   },
   "manu_formula_spd&cost_bd[000]": {
@@ -2023,6 +2729,9 @@
     "targetGroupSortId": 1,
     "targets": [
       "F_GOLD"
+    ],
+    "charId": [
+      "char_4105_almond"
     ]
   },
   "manu_formula_spd&cost_bd[100]": {
@@ -2033,6 +2742,9 @@
     "targetGroupSortId": 1,
     "targets": [
       "F_GOLD"
+    ],
+    "charId": [
+      "char_4212_nasti"
     ]
   },
   "manu_token_prod_spd[000]": {
@@ -2043,6 +2755,9 @@
     "targetGroupSortId": 1,
     "targets": [
       "F_GOLD"
+    ],
+    "charId": [
+      "char_4178_alanna"
     ]
   },
   "manu_token_prod_spd[010]": {
@@ -2053,6 +2768,9 @@
     "targetGroupSortId": 1,
     "targets": [
       "F_GOLD"
+    ],
+    "charId": [
+      "char_4178_alanna"
     ]
   },
   "manu_prod_spd_double[000]": {
@@ -2063,6 +2781,9 @@
     "targetGroupSortId": 1,
     "targets": [
       "F_GOLD"
+    ],
+    "charId": [
+      "char_4178_alanna"
     ]
   },
   "manu_prod_spd_double[100]": {
@@ -2073,6 +2794,9 @@
     "targetGroupSortId": 2,
     "targets": [
       "F_EXP"
+    ],
+    "charId": [
+      "char_4198_christ"
     ]
   },
   "manu_formula_spd[200]": {
@@ -2083,6 +2807,9 @@
     "targetGroupSortId": 3,
     "targets": [
       "F_DIAMOND"
+    ],
+    "charId": [
+      "char_283_midn"
     ]
   },
   "manu_formula_spd[210]": {
@@ -2093,6 +2820,9 @@
     "targetGroupSortId": 3,
     "targets": [
       "F_DIAMOND"
+    ],
+    "charId": [
+      "char_121_lava"
     ]
   },
   "manu_formula_spd[201]": {
@@ -2103,6 +2833,10 @@
     "targetGroupSortId": 3,
     "targets": [
       "F_DIAMOND"
+    ],
+    "charId": [
+      "char_388_mint",
+      "char_4041_chnut"
     ]
   },
   "manu_formula_spd[211]": {
@@ -2113,6 +2847,9 @@
     "targetGroupSortId": 3,
     "targets": [
       "F_DIAMOND"
+    ],
+    "charId": [
+      "char_183_skgoat"
     ]
   },
   "manu_formula_spd[212]": {
@@ -2123,6 +2860,9 @@
     "targetGroupSortId": 3,
     "targets": [
       "F_DIAMOND"
+    ],
+    "charId": [
+      "char_348_ceylon"
     ]
   },
   "manu_formula_spd[213]": {
@@ -2133,6 +2873,9 @@
     "targetGroupSortId": 3,
     "targets": [
       "F_DIAMOND"
+    ],
+    "charId": [
+      "char_180_amgoat"
     ]
   },
   "manu_formula_spd_P[000]": {
@@ -2143,6 +2886,9 @@
     "targetGroupSortId": 2,
     "targets": [
       "F_EXP"
+    ],
+    "charId": [
+      "char_194_leto"
     ]
   },
   "manu_formula_spd&bd[000]": {
@@ -2153,6 +2899,9 @@
     "targetGroupSortId": 2,
     "targets": [
       "F_EXP"
+    ],
+    "charId": [
+      "char_1051_headb2"
     ]
   },
   "manu_formula_spd&bd[001]": {
@@ -2163,6 +2912,9 @@
     "targetGroupSortId": 2,
     "targets": [
       "F_EXP"
+    ],
+    "charId": [
+      "char_1051_headb2"
     ]
   },
   "manu_cost_all[000]": {
@@ -2171,7 +2923,10 @@
     "description": "进驻制造站时，<@cc.kw>消除</>当前制造站内所有干员<@cc.kw>自身</>心情消耗的影响",
     "efficiency": 0,
     "targetGroupSortId": 4,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_243_waaifu"
+    ]
   },
   "manu_cost[000]": {
     "buffName": "春雷响，万物长",
@@ -2179,7 +2934,10 @@
     "description": "进驻制造站时，当前制造站内所有干员心情每小时消耗<@cc.vup>-0.1</>",
     "efficiency": 0,
     "targetGroupSortId": 4,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_2025_shu"
+    ]
   },
   "trade_cost[000]": {
     "buffName": "暖场",
@@ -2187,7 +2945,10 @@
     "description": "进驻贸易站时，贸易站内干员心情每小时消耗<@cc.vup>-0.1</>",
     "efficiency": 0,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_493_firwhl"
+    ]
   },
   "trade_cost&bd2[000]": {
     "buffName": "跋山涉水",
@@ -2195,7 +2956,10 @@
     "description": "进驻贸易站时，贸易站内全体干员每小时心情消耗<@cc.vup>-0.1</>，每有<@cc.vup>10</>点<$cc.bd_b1><@cc.rem>人间烟火</></>，则额外<@cc.vup>-0.01</>",
     "efficiency": 0,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_4083_chimes"
+    ]
   },
   "trade_cost&bd2[001]": {
     "buffName": "万里传书",
@@ -2203,7 +2967,10 @@
     "description": "进驻贸易站时，贸易站内全体干员每小时心情消耗<@cc.vup>-0.1</>，每有<@cc.vup>10</>点<$cc.bd_b1><@cc.rem>人间烟火</></>，则额外<@cc.vup>-0.02</>",
     "efficiency": 0,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_4083_chimes"
+    ]
   },
   "trade_ord_spd[000]": {
     "buffName": "订单分发·α",
@@ -2211,7 +2978,16 @@
     "description": "进驻贸易站时，订单获取效率<@cc.vup>+20%</>",
     "efficiency": 20,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_1033_swire2",
+      "char_110_deepcl",
+      "char_150_snakek",
+      "char_211_adnach",
+      "char_240_wyvern",
+      "char_4045_heidi",
+      "char_4222_taraxa"
+    ]
   },
   "trade_ord_spd[001]": {
     "buffName": "订单分发·β",
@@ -2219,7 +2995,15 @@
     "description": "进驻贸易站时，订单获取效率<@cc.vup>+30%</>",
     "efficiency": 30,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_123_fang",
+      "char_141_nights",
+      "char_185_frncat",
+      "char_289_gyuki",
+      "char_302_glaze",
+      "char_502_nblade"
+    ]
   },
   "trade_ord_spd[010]": {
     "buffName": "企鹅物流·α",
@@ -2227,7 +3011,10 @@
     "description": "进驻贸易站时，订单获取效率<@cc.vup>+20%</>",
     "efficiency": 20,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_103_angel"
+    ]
   },
   "trade_ord_spd[011]": {
     "buffName": "企鹅物流·β",
@@ -2235,7 +3022,10 @@
     "description": "进驻贸易站时，订单获取效率<@cc.vup>+30%</>",
     "efficiency": 30,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_101_sora"
+    ]
   },
   "trade_ord_spd[1001]": {
     "buffName": "订单分发·β",
@@ -2243,7 +3033,10 @@
     "description": "进驻贸易站时，订单获取效率<@cc.vup>+30%</>",
     "efficiency": 30,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_4163_rosesa"
+    ]
   },
   "trade_ord_spd[020]": {
     "buffName": "物流专家",
@@ -2251,7 +3044,10 @@
     "description": "进驻贸易站时，订单获取效率<@cc.vup>+35%</>",
     "efficiency": 35,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_103_angel"
+    ]
   },
   "trade_ord_spd[021]": {
     "buffName": "名流欢会",
@@ -2259,7 +3055,10 @@
     "description": "进驻贸易站时，订单获取效率<@cc.vup>+35%</>",
     "efficiency": 35,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_4045_heidi"
+    ]
   },
   "trade_ord_vodfox[000]": {
     "buffName": "低语",
@@ -2267,7 +3066,10 @@
     "description": "进驻贸易站时，当前贸易站内其他干员提供的订单获取效率<@cc.vdown>全部归零</>，且每人为自身<@cc.vup>+45%</>订单获取效率，同时全体心情每小时消耗<@cc.vdown>+0.25</>",
     "efficiency": 0,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_254_vodfox"
+    ]
   },
   "trade_ord_pepe[000]": {
     "buffName": "慧眼独到",
@@ -2275,7 +3077,10 @@
     "description": "进驻贸易站时，固定获取<$cc.tra.pepe><@cc.kw>特别独占订单</></>（不视作违约订单），且该类订单<@cc.vdown>不受任何订单获取效率的影响</>",
     "efficiency": 0,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_4058_pepe"
+    ]
   },
   "trade_ord_spd_variable[000]": {
     "buffName": "招商引资",
@@ -2283,7 +3088,10 @@
     "description": "进驻贸易站时，当前贸易站内干员提升的每个订单上限，提供<@cc.vup>4%</>订单获取效率",
     "efficiency": 0,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_1033_swire2"
+    ]
   },
   "trade_ord_spd_variable2[000]": {
     "buffName": "天道酬勤·α",
@@ -2291,7 +3099,10 @@
     "description": "进驻贸易站时，当前贸易站内干员提供的每<@cc.vup>5%</>订单获取效率，额外提供<@cc.vup>5%</>效率，最多提供<@cc.vup>25%</>效率",
     "efficiency": 0,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_383_snsant"
+    ]
   },
   "trade_ord_spd_variable2[001]": {
     "buffName": "天道酬勤·β",
@@ -2299,7 +3110,10 @@
     "description": "进驻贸易站时，当前贸易站内干员提供的每<@cc.vup>5%</>订单获取效率，额外提供<@cc.vup>5%</>效率，最多提供<@cc.vup>35%</>效率",
     "efficiency": 0,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_383_snsant"
+    ]
   },
   "trade_ord_spd_variable3[000]": {
     "buffName": "冠军风采",
@@ -2307,7 +3121,10 @@
     "description": "进驻贸易站时，当前贸易站内干员提升的每<@cc.vup>5</>个订单上限，提供<@cc.vup>25%</>订单获取效率，最多提供<@cc.vup>100%</>效率",
     "efficiency": 0,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_4116_blkkgt"
+    ]
   },
   "trade_ord_spd&dorm&lv[000]": {
     "buffName": "虔诚筹款·α",
@@ -2315,7 +3132,10 @@
     "description": "进驻贸易站时，每间宿舍每级<@cc.vup>+1%</>获取效率",
     "efficiency": 0,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_332_archet"
+    ]
   },
   "trade_ord_spd&dorm&lv[010]": {
     "buffName": "虔诚筹款·β",
@@ -2323,7 +3143,10 @@
     "description": "进驻贸易站时，每间宿舍每级<@cc.vup>+2%</>获取效率",
     "efficiency": 0,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_332_archet"
+    ]
   },
   "trade_ord_limit&trade&lv[000]": {
     "buffName": "多面逢源",
@@ -2331,7 +3154,10 @@
     "description": "进驻贸易站时，当前贸易站每级<@cc.vup>+1</>个订单上限",
     "efficiency": 0,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_4058_pepe"
+    ]
   },
   "trade_ord_limit&trade&lv[001]": {
     "buffName": "钱不我待",
@@ -2339,7 +3165,10 @@
     "description": "进驻贸易站时，当前贸易站每级<@cc.vup>+1</>个订单上限",
     "efficiency": 0,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_4163_rosesa"
+    ]
   },
   "trade_ord_spd&meet[000]": {
     "buffName": "新城贸易",
@@ -2347,7 +3176,10 @@
     "description": "进驻贸易站时，订单获取效率<@cc.vup>+25%</>，会客室每级额外提供<@cc.vup>5%</>获取效率，最多提供<@cc.vup>40%</>效率",
     "efficiency": 25,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_427_vigil"
+    ]
   },
   "trade_ord_closure[000]": {
     "buffName": "特别订单",
@@ -2355,7 +3187,10 @@
     "description": "进驻贸易站时，订单获取效率<@cc.vup>+10%</>，固定获取<$cc.tra.closure><@cc.kw>可露希尔特别订单</></>（不视作违约订单）",
     "efficiency": 10,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_4228_closur"
+    ]
   },
   "trade_ord_spd&meet[010]": {
     "buffName": "天生的顾问",
@@ -2363,7 +3198,10 @@
     "description": "进驻贸易站时，订单获取效率<@cc.vup>+15%</>，会客室每级额外提供<@cc.vup>5%</>获取效率，最多提供<@cc.vup>30%</>效率",
     "efficiency": 15,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_4147_mitm"
+    ]
   },
   "trade_ord_spd&formula[000]": {
     "buffName": "精准排期",
@@ -2371,7 +3209,10 @@
     "description": "进驻贸易站时，订单获取效率<@cc.vup>+30%</>，制造站每有<@cc.kw>1</>类配方进行加工，则当前贸易站订单获取效率额外<@cc.vup>+2%</>",
     "efficiency": 30,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_4063_quartz"
+    ]
   },
   "trade_ord_spd&limit[000]": {
     "buffName": "订单管理·α",
@@ -2379,7 +3220,12 @@
     "description": "进驻贸易站时，订单获取效率<@cc.vup>+10%</>，且订单上限<@cc.vup>+2</>",
     "efficiency": 10,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_192_falco",
+      "char_365_aprl",
+      "char_500_noirc"
+    ]
   },
   "trade_ord_spd&limit[001]": {
     "buffName": "订单管理·β",
@@ -2387,7 +3233,11 @@
     "description": "进驻贸易站时，订单获取效率<@cc.vup>+10%</>，且订单上限<@cc.vup>+4</>",
     "efficiency": 10,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_1034_jesca2",
+      "char_365_aprl"
+    ]
   },
   "trade_ord_spd&gold[000]": {
     "buffName": "物流规划·α",
@@ -2395,7 +3245,10 @@
     "description": "进驻贸易站时，订单获取效率<@cc.vup>+5%</>，每有<@cc.kw>4</>条<$cc.t.flow_gold><@cc.kw>赤金生产线</></>，则当前贸易站订单获取效率额外<@cc.vup>+15%</>",
     "efficiency": 5,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_402_tuye"
+    ]
   },
   "trade_ord_spd&gold[010]": {
     "buffName": "物流规划·β",
@@ -2403,7 +3256,10 @@
     "description": "进驻贸易站时，订单获取效率<@cc.vup>+5%</>，每有<@cc.kw>2</>条<$cc.t.flow_gold><@cc.kw>赤金生产线</></>，则当前贸易站订单获取效率额外<@cc.vup>+15%</>",
     "efficiency": 5,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_402_tuye"
+    ]
   },
   "trade_ord_spd&gold[100]": {
     "buffName": "销路宣发",
@@ -2411,7 +3267,10 @@
     "description": "进驻贸易站时，每有<@cc.kw>1</>条<$cc.t.flow_gold><@cc.kw>赤金生产线</></>，则当前贸易站订单获取效率<@cc.vup>+5%</>",
     "efficiency": 0,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_4055_bgsnow"
+    ]
   },
   "trade_ord_line_gold[000]": {
     "buffName": "订单流可视化·α",
@@ -2419,7 +3278,10 @@
     "description": "进驻贸易站时，订单获取效率<@cc.vup>+5%</>，每有<@cc.kw>4</>条<$cc.t.flow_gold><@cc.kw>赤金生产线</></>，则为当前贸易站额外提供<@cc.vup>2</>条<$cc.t.flow_gold><@cc.kw>赤金生产线</></>",
     "efficiency": 5,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_478_kirara"
+    ]
   },
   "trade_ord_line_gold[010]": {
     "buffName": "订单流可视化·β",
@@ -2427,7 +3289,10 @@
     "description": "进驻贸易站时，订单获取效率<@cc.vup>+5%</>，每有<@cc.kw>2</>条<$cc.t.flow_gold><@cc.kw>赤金生产线</></>，则为当前贸易站额外提供<@cc.vup>2</>条<$cc.t.flow_gold><@cc.kw>赤金生产线</></>",
     "efficiency": 5,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_478_kirara"
+    ]
   },
   "trade_ord_line_durin[010]": {
     "buffName": "际崖居民",
@@ -2435,7 +3300,10 @@
     "description": "进驻贸易站时，基建内（不包含副手及活动室使用者）每<@cc.kw>1</>名<$cc.tag.durin><@cc.kw>杜林族</></>干员（最多<@cc.kw>4</>名）为当前贸易站提供<@cc.kw>1</>条<$cc.t.flow_gold><@cc.kw>赤金生产线</></>",
     "efficiency": 0,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_4055_bgsnow"
+    ]
   },
   "trade_ord_spd&limit[010]": {
     "buffName": "供应管理",
@@ -2443,7 +3311,12 @@
     "description": "进驻贸易站时，订单获取效率<@cc.vup>+25%</>，且订单上限<@cc.vup>+1</>",
     "efficiency": 25,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_109_fmout",
+      "char_208_melan",
+      "char_278_orchid"
+    ]
   },
   "trade_ord_spd&limit[020]": {
     "buffName": "喀兰贸易·α",
@@ -2451,7 +3324,12 @@
     "description": "进驻贸易站时，订单获取效率<@cc.vup>+15%</>，且订单上限<@cc.vup>+2</>",
     "efficiency": 15,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_172_svrash",
+      "char_198_blackd",
+      "char_199_yak"
+    ]
   },
   "trade_ord_spd&limit[021]": {
     "buffName": "喀兰贸易·β",
@@ -2459,7 +3337,10 @@
     "description": "进驻贸易站时，订单获取效率<@cc.vup>+15%</>，且订单上限<@cc.vup>+4</>",
     "efficiency": 15,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_173_slchan"
+    ]
   },
   "trade_ord_spd&limit[022]": {
     "buffName": "喀兰之主",
@@ -2467,7 +3348,10 @@
     "description": "进驻贸易站时，订单获取效率<@cc.vup>+20%</>，且订单上限<@cc.vup>+4</>",
     "efficiency": 20,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_172_svrash"
+    ]
   },
   "trade_ord_spd&limit[030]": {
     "buffName": "企鹅物流·α",
@@ -2475,7 +3359,10 @@
     "description": "进驻贸易站时，订单获取效率<@cc.vup>+20%</>",
     "efficiency": 20,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_201_moeshd"
+    ]
   },
   "trade_ord_spd&limit[031]": {
     "buffName": "使命必达",
@@ -2483,7 +3370,10 @@
     "description": "进驻贸易站时，订单获取效率<@cc.vup>+30%</>，且订单上限<@cc.vup>+1</>",
     "efficiency": 30,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_201_moeshd"
+    ]
   },
   "trade_ord_spd&limit[032]": {
     "buffName": "峯驰物流",
@@ -2491,7 +3381,10 @@
     "description": "进驻贸易站时，订单获取效率<@cc.vup>+20%</>",
     "efficiency": 20,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_325_bison"
+    ]
   },
   "trade_ord_spd&limit[033]": {
     "buffName": "少当家",
@@ -2499,7 +3392,10 @@
     "description": "进驻贸易站时，订单获取效率<@cc.vup>+30%</>，且订单上限<@cc.vup>+1</>",
     "efficiency": 30,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_325_bison"
+    ]
   },
   "trade_ord_spd&limit[034]": {
     "buffName": "订单分发·α",
@@ -2507,7 +3403,10 @@
     "description": "进驻贸易站时，订单获取效率<@cc.vup>+20%</>",
     "efficiency": 20,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_4140_lasher"
+    ]
   },
   "trade_ord_spd&limit[035]": {
     "buffName": "大巴扎管理学",
@@ -2515,7 +3414,10 @@
     "description": "进驻贸易站时，订单获取效率<@cc.vup>+30%</>，且订单上限<@cc.vup>+1</>",
     "efficiency": 30,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_4140_lasher"
+    ]
   },
   "trade_ord_spd&limit[036]": {
     "buffName": "半身人公会代表",
@@ -2523,7 +3425,10 @@
     "description": "进驻贸易站时，订单获取效率<@cc.vup>+30%</>，且订单上限<@cc.vup>+1</>",
     "efficiency": 30,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_4144_chilc"
+    ]
   },
   "trade_ord_spd&limit[100]": {
     "buffName": "威压",
@@ -2531,7 +3436,10 @@
     "description": "进驻贸易站时，订单获取效率<@cc.vup>+20%</>，且订单上限<@cc.vdown>-2</>（订单最少为1）",
     "efficiency": 20,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_4116_blkkgt"
+    ]
   },
   "trade_ord_spd&limit[101]": {
     "buffName": "不怒自威",
@@ -2539,7 +3447,10 @@
     "description": "进驻贸易站时，订单获取效率<@cc.vup>+25%</>，且订单上限<@cc.vdown>-6</>（订单最少为1）",
     "efficiency": 25,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_4116_blkkgt"
+    ]
   },
   "trade_ord_spd&cost[000]": {
     "buffName": "交际",
@@ -2547,7 +3458,12 @@
     "description": "进驻贸易站时，订单获取效率<@cc.vup>+30%</>，心情每小时消耗<@cc.vup>-0.25</>",
     "efficiency": 30,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_196_sunbr",
+      "char_282_catap",
+      "char_283_midn"
+    ]
   },
   "trade_ord_spd_bd_n1[000]": {
     "buffName": "乐感",
@@ -2555,7 +3471,10 @@
     "description": "进驻贸易站时，宿舍内每有<@cc.kw>1</>名干员则<$cc.bd_a1><@cc.rem>感知信息</></><@cc.vup>+1</>，同时每<@cc.vup>1</>点<$cc.bd_a1><@cc.rem>感知信息</></>转化为<@cc.vup>1</>点<$cc.bd_B><@cc.rem>无声共鸣</></>",
     "efficiency": 0,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_4046_ebnhlz"
+    ]
   },
   "trade_ord_spd_bd_n2[000]": {
     "buffName": "“愿者上钩”",
@@ -2563,7 +3482,10 @@
     "description": "进驻贸易站时，宿舍内每有<@cc.kw>1</>名干员则<$cc.bd_b1><@cc.rem>人间烟火</></><@cc.vup>+1</>，同时每有<@cc.vup>1</>点<$cc.bd_b1><@cc.rem>人间烟火</></>，则订单获取效率<@cc.vup>+1%</>",
     "efficiency": 0,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_455_nothin"
+    ]
   },
   "trade_ord_spd_bd[000]": {
     "buffName": "徘徊旋律",
@@ -2571,7 +3493,10 @@
     "description": "进驻贸易站时，每<@cc.vup>4</>点<$cc.bd_B><@cc.rem>无声共鸣</></><@cc.vup>+1%</>订单效率",
     "efficiency": 0,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_4046_ebnhlz"
+    ]
   },
   "trade_ord_spd_bd[010]": {
     "buffName": "怅惘和声",
@@ -2579,7 +3504,10 @@
     "description": "进驻贸易站时，每<@cc.vup>2</>点<$cc.bd_B><@cc.rem>无声共鸣</></><@cc.vup>+1%</>订单效率",
     "efficiency": 0,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_4046_ebnhlz"
+    ]
   },
   "trade_ord_spd_bd[100]": {
     "buffName": "熟悉的味道",
@@ -2587,7 +3515,10 @@
     "description": "进驻贸易站时，每<@cc.vup>1</>点<$cc.bd_dungeon><@cc.rem>魔物料理</></><@cc.vup>+1%</>订单效率",
     "efficiency": 0,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_4144_chilc"
+    ]
   },
   "trade_ord_limit&cost[000]": {
     "buffName": "谈判",
@@ -2595,7 +3526,12 @@
     "description": "进驻贸易站时，订单上限<@cc.vup>+5</>，心情每小时消耗<@cc.vup>-0.25</>",
     "efficiency": 0,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_151_myrtle",
+      "char_210_stward",
+      "char_236_rope"
+    ]
   },
   "trade_ord_limit_diff[000]": {
     "buffName": "摊贩经济",
@@ -2603,7 +3539,10 @@
     "description": "进驻贸易站时，当前订单数与订单上限每差<@cc.vup>1</>笔订单，则订单获取效率<@cc.vup>+4%</>",
     "efficiency": 0,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_272_strong"
+    ]
   },
   "trade_ord_limit_count[000]": {
     "buffName": "市井之道",
@@ -2611,7 +3550,10 @@
     "description": "进驻贸易站时，当前贸易站内其他干员提供的每<@cc.vup>10%</>订单获取效率使订单上限<@cc.vdown>-1</>（订单最少为1），同时每有<@cc.vup>1</>笔订单就<@cc.vup>+4%</>订单获取效率（与部分技能有<$cc.t.strong2><@cc.rem>特殊叠加规则</></>）",
     "efficiency": 0,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_272_strong"
+    ]
   },
   "trade_ord_wt&cost[000]": {
     "buffName": "裁缝·α",
@@ -2619,7 +3561,13 @@
     "description": "进驻贸易站时，<@cc.kw>小幅提升</>当前贸易站<@cc.kw>高品质贵金属订单</>的出现概率（工作时长影响概率），心情每小时消耗<@cc.vup>-0.25</>",
     "efficiency": 0,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_252_bibeak",
+      "char_254_vodfox",
+      "char_369_bena",
+      "char_4071_peper"
+    ]
   },
   "trade_ord_wt&cost[010]": {
     "buffName": "裁缝·β",
@@ -2627,7 +3575,11 @@
     "description": "进驻贸易站时，<@cc.kw>提升</>当前贸易站<@cc.kw>高品质贵金属订单</>的出现概率（工作时长影响概率），心情每小时消耗<@cc.vup>-0.25</>",
     "efficiency": 0,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_252_bibeak",
+      "char_4071_peper"
+    ]
   },
   "trade_ord_wt&cost[001]": {
     "buffName": "手工艺品·α",
@@ -2635,7 +3587,10 @@
     "description": "进驻贸易站时，<@cc.kw>小幅提升</>当前贸易站<@cc.kw>高品质贵金属订单</>的出现概率（工作时长影响概率），心情每小时消耗<@cc.vup>-0.25</>",
     "efficiency": 0,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_214_kafka"
+    ]
   },
   "trade_ord_wt&cost[011]": {
     "buffName": "手工艺品·β",
@@ -2643,7 +3598,10 @@
     "description": "进驻贸易站时，<@cc.kw>提升</>当前贸易站<@cc.kw>高品质贵金属订单</>的出现概率（工作时长影响概率），心情每小时消耗<@cc.vup>-0.25</>",
     "efficiency": 0,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_214_kafka"
+    ]
   },
   "trade_ord_wt&cost[002]": {
     "buffName": "鉴定师的眼光",
@@ -2651,7 +3609,10 @@
     "description": "进驻贸易站时，<@cc.kw>小幅提升</>当前贸易站<@cc.kw>高品质贵金属订单</>的出现概率（工作时长影响概率），心情每小时消耗<@cc.vup>-0.25</>",
     "efficiency": 0,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_499_kaitou"
+    ]
   },
   "trade_ord_wt&cost[012]": {
     "buffName": "鉴定师的手段",
@@ -2659,7 +3620,10 @@
     "description": "进驻贸易站时，<@cc.kw>提升</>当前贸易站<@cc.kw>高品质贵金属订单</>的出现概率（工作时长影响概率），心情每小时消耗<@cc.vup>-0.25</>",
     "efficiency": 0,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_499_kaitou"
+    ]
   },
   "trade_ord_wt&cost[003]": {
     "buffName": "懂行",
@@ -2667,7 +3631,10 @@
     "description": "进驻贸易站时，<@cc.kw>小幅提升</>当前贸易站<@cc.kw>高品质贵金属订单</>的出现概率（工作时长影响概率），心情每小时消耗<@cc.vup>-0.25</>",
     "efficiency": 0,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_4147_mitm"
+    ]
   },
   "trade_ord_spd&share[000]": {
     "buffName": "代为说项",
@@ -2675,7 +3642,10 @@
     "description": "进驻贸易站时，贸易站内除自身以外每名处于工作状态的干员<@cc.vup>+15%</>订单获取效率",
     "efficiency": 0,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_493_firwhl"
+    ]
   },
   "trade_ord_spd&share[001]": {
     "buffName": "勤俭经营·α",
@@ -2683,7 +3653,10 @@
     "description": "进驻贸易站时，贸易站内除自身以外每名处于工作状态的干员<@cc.vup>+10%</>订单获取效率",
     "efficiency": 0,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_4203_kichi"
+    ]
   },
   "trade_ord_spd&share[002]": {
     "buffName": "勤俭经营·β",
@@ -2691,7 +3664,10 @@
     "description": "进驻贸易站时，贸易站内除自身以外每名处于工作状态的干员<@cc.vup>+20%</>订单获取效率",
     "efficiency": 0,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_4203_kichi"
+    ]
   },
   "trade_ord_spd&cost_P[000]": {
     "buffName": "恩怨",
@@ -2699,7 +3675,10 @@
     "description": "当与<@cc.kw>拉普兰德</>在同一个贸易站时，心情每小时消耗<@cc.vdown>+0.3</>，订单获取效率<@cc.vup>+65%</>",
     "efficiency": 0,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_102_texas"
+    ]
   },
   "trade_ord_spd&limit&bd[000]": {
     "buffName": "可爱的艾露猫",
@@ -2707,7 +3686,10 @@
     "description": "进驻贸易站时，订单获取效率<@cc.vup>+5%</>，且订单上限<@cc.vup>+2</>，同时每有1个<$cc.bd_felyne><@cc.rem>木天蓼</></>，则订单获取效率<@cc.vup>+3%</>",
     "efficiency": 5,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_4077_palico"
+    ]
   },
   "trade_ord_spd&wt[000]": {
     "buffName": "天真的谈判者",
@@ -2715,7 +3697,10 @@
     "description": "进驻贸易站时，订单获取效率<@cc.vup>+10%</>，当前贸易站<@cc.kw>赤金订单</>的<@cc.kw>赤金</>交付数必定为<@cc.kw>2</>（不视作违约订单）",
     "efficiency": 10,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_4091_ulika"
+    ]
   },
   "trade_ord_limit&cost_P[020]": {
     "buffName": "未偿还的债务",
@@ -2723,7 +3708,10 @@
     "description": "当与<@cc.kw>伺夜</>在同一个贸易站时，心情每小时消耗<@cc.vup>-0.1</>，订单上限<@cc.vup>+2</>",
     "efficiency": 0,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_4037_demetr"
+    ]
   },
   "trade_ord_limit&cost_P[010]": {
     "buffName": "默契",
@@ -2731,7 +3719,10 @@
     "description": "当与<@cc.kw>能天使</>在同一个贸易站时，心情每小时消耗<@cc.vup>-0.3</>",
     "efficiency": 0,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_102_texas"
+    ]
   },
   "trade_ord_limit&cost_P[000]": {
     "buffName": "醉翁之意·α",
@@ -2739,7 +3730,10 @@
     "description": "当与<@cc.kw>德克萨斯</>在同一个贸易站时，心情每小时消耗<@cc.vup>-0.1</>，订单上限<@cc.vup>+2</>",
     "efficiency": 0,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_140_whitew"
+    ]
   },
   "trade_ord_limit&cost_P[001]": {
     "buffName": "醉翁之意·β",
@@ -2747,7 +3741,10 @@
     "description": "当与<@cc.kw>德克萨斯</>在同一个贸易站时，心情每小时消耗<@cc.vup>-0.1</>，订单上限<@cc.vup>+4</>",
     "efficiency": 0,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_140_whitew"
+    ]
   },
   "trade_ord_long[000]": {
     "buffName": "投资·α",
@@ -2755,7 +3752,10 @@
     "description": "进驻贸易站后，如果下笔<@cc.kw>赤金订单</>交付数大于<@cc.kw>3</>（违约订单不视作赤金订单），则其龙门币收益<@cc.kw>+250</>，心情每小时消耗<@cc.vup>-0.25</>",
     "efficiency": 0,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_486_takila"
+    ]
   },
   "trade_ord_long[010]": {
     "buffName": "投资·β",
@@ -2763,7 +3763,10 @@
     "description": "进驻贸易站后，如果下笔<@cc.kw>赤金订单</>交付数大于<@cc.kw>3</>（违约订单不视作赤金订单），则其龙门币收益<@cc.kw>+500</>，心情每小时消耗<@cc.vup>-0.25</>",
     "efficiency": 0,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_486_takila"
+    ]
   },
   "trade_ord_law[000]": {
     "buffName": "合同法",
@@ -2771,7 +3774,10 @@
     "description": "进驻贸易站时，如果下笔<@cc.kw>赤金订单</>交付数小于<@cc.kw>4</>，则视为<@cc.kw>违约订单</>",
     "efficiency": 0,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_4032_provs"
+    ]
   },
   "trade_ord_against[000]": {
     "buffName": "违约索赔·α",
@@ -2779,7 +3785,10 @@
     "description": "进驻贸易站时，如果下笔<@cc.kw>赤金订单</>是<@cc.kw>违约订单</>，则<@cc.kw>赤金</>交付数额外<@cc.vup>+1</>",
     "efficiency": 0,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_4032_provs"
+    ]
   },
   "trade_ord_against[010]": {
     "buffName": "违约索赔·β",
@@ -2787,7 +3796,10 @@
     "description": "进驻贸易站时，如果下笔<@cc.kw>赤金订单</>是<@cc.kw>违约订单</>，则<@cc.kw>赤金</>交付数额外<@cc.vup>+2</>",
     "efficiency": 0,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_4032_provs"
+    ]
   },
   "trade_ord_spd_par[000]": {
     "buffName": "帮派指南针",
@@ -2795,7 +3807,10 @@
     "description": "进驻贸易站时，同个贸易站中每有1名<$cc.g.glasgow><@cc.kw>格拉斯哥帮</></>干员，当前贸易站订单获取效率<@cc.vup>+20%</>；当与<@cc.kw>推进之王</>在同一个贸易站时，订单获取效率额外<@cc.vup>+35%</>",
     "efficiency": 0,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_154_morgan"
+    ]
   },
   "trade_ord_spd_par[001]": {
     "buffName": "同城加急单",
@@ -2803,7 +3818,10 @@
     "description": "进驻贸易站时，同个贸易站中每有1名<$cc.g.laterano><@cc.kw>拉特兰</></>干员，当前贸易站订单获取效率<@cc.vup>+15%</>",
     "efficiency": 0,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_1041_angel2"
+    ]
   },
   "trade_ord_spd&multiPar[000]": {
     "buffName": "订单分发·α",
@@ -2811,7 +3829,10 @@
     "description": "进驻贸易站时，订单获取效率<@cc.vup>+20%</>",
     "efficiency": 20,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_4193_lemuen"
+    ]
   },
   "trade_ord_spd&multiPar[100]": {
     "buffName": "相伴",
@@ -2819,7 +3840,10 @@
     "description": "进驻贸易站时，订单获取效率<@cc.vup>+20%</>；当与<@cc.kw><$cc.angel>能天使</></>在同一个贸易站时，订单获取效率额外<@cc.vup>+25%</>",
     "efficiency": 20,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_4193_lemuen"
+    ]
   },
   "trade_ord_par&per[000]": {
     "buffName": "白手起家·α",
@@ -2827,7 +3851,10 @@
     "description": "进驻贸易站时，订单获取效率<@cc.vup>+25%</>；当<@cc.kw>伊内丝</>入驻<$cc.c.room3><@cc.kw>工作场所</></>时（不包含副手），订单获取效率额外<@cc.vup>+5%</>",
     "efficiency": 25,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_4088_hodrer"
+    ]
   },
   "trade_ord_par&per[001]": {
     "buffName": "白手起家·β",
@@ -2835,7 +3862,10 @@
     "description": "进驻贸易站时，订单获取效率<@cc.vup>+30%</>；当<@cc.kw>伊内丝</>、<@cc.kw>W</>入驻<$cc.c.room3><@cc.kw>工作场所</></>时（不包含副手），订单获取效率分别额外<@cc.vup>+5%</>",
     "efficiency": 30,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_4088_hodrer"
+    ]
   },
   "trade_ord_spd_ext[000]": {
     "buffName": "对陆接洽代表·α",
@@ -2843,7 +3873,10 @@
     "description": "进驻贸易站时，订单获取效率<@cc.vup>+25%</>；当<@cc.kw>乌尔比安</>在基建内时（不包含副手及活动室使用者），订单获取效率额外<@cc.vup>+5%</>",
     "efficiency": 25,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_4137_udflow"
+    ]
   },
   "trade_ord_spd_ext[001]": {
     "buffName": "对陆接洽代表·β",
@@ -2851,7 +3884,10 @@
     "description": "进驻贸易站时，订单获取效率<@cc.vup>+30%</>；当<@cc.kw>乌尔比安</>在基建内时（不包含副手及活动室使用者），订单获取效率额外<@cc.vup>+10%</>",
     "efficiency": 30,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_4137_udflow"
+    ]
   },
   "trade_ord_spd_ext[020]": {
     "buffName": "家族经营·α",
@@ -2859,7 +3895,10 @@
     "description": "进驻贸易站时，订单获取效率<@cc.vup>+25%</>；当<@cc.kw>伺夜</>在基建内时（不包含副手及活动室使用者），订单获取效率额外<@cc.vup>+5%</>",
     "efficiency": 25,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_4037_demetr"
+    ]
   },
   "trade_ord_spd_ext[021]": {
     "buffName": "家族经营·β",
@@ -2867,7 +3906,10 @@
     "description": "进驻贸易站时，订单获取效率<@cc.vup>+30%</>；当<@cc.kw>伺夜</>在基建内时（不包含副手及活动室使用者），订单获取效率额外<@cc.vup>+10%</>",
     "efficiency": 30,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_4037_demetr"
+    ]
   },
   "trade_ord_spd&par[000]": {
     "buffName": "外贸决议·α",
@@ -2875,7 +3917,10 @@
     "description": "进驻贸易站时，订单获取效率<@cc.vup>+30%</>",
     "efficiency": 30,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_1019_siege2"
+    ]
   },
   "trade_ord_spd&par[001]": {
     "buffName": "外贸决议·β",
@@ -2883,7 +3928,10 @@
     "description": "进驻贸易站时，订单获取效率<@cc.vup>+30%</>；当前贸易站内存在<$cc.g.glasgow><@cc.kw>格拉斯哥帮</></>干员时，订单获取效率额外<@cc.vup>+10%</>",
     "efficiency": 30,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_1019_siege2"
+    ]
   },
   "trade_ord_spd&tag[000]": {
     "buffName": "订单分发·α",
@@ -2891,7 +3939,10 @@
     "description": "进驻贸易站时，订单获取效率<@cc.vup>+20%</>",
     "efficiency": 20,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_4204_mantra"
+    ]
   },
   "trade_ord_spd&tag[010]": {
     "buffName": "精英小队",
@@ -2899,7 +3950,10 @@
     "description": "进驻贸易站时，订单获取效率<@cc.vup>+25%</>，基建内（不包含副手及活动室）每有一间进驻<$cc.g.elite><@cc.kw>精英干员</></>的设施，订单获取效率额外<@cc.vup>+2%</>（最多<@cc.kw>10</>间）",
     "efficiency": 25,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_4204_mantra"
+    ]
   },
   "trade_ord_spd&tag[020]": {
     "buffName": "“孺子可教！”",
@@ -2907,7 +3961,10 @@
     "description": "进驻贸易站时，基建内（不包含副手及活动室）每有一间进驻<$cc.g.sui><@cc.kw>岁</></>干员的设施，订单获取效率<@cc.vup>+4%</>（最多<@cc.kw>5</>间）",
     "efficiency": 0,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_4222_taraxa"
+    ]
   },
   "dorm_rec_oneself[000]": {
     "buffName": "独处",
@@ -2915,7 +3972,18 @@
     "description": "进驻宿舍时，自身心情每小时恢复<@cc.vup>+0.7</>",
     "efficiency": 0,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_124_kroos",
+      "char_127_estell",
+      "char_143_ghost",
+      "char_193_frostl",
+      "char_218_cuttle",
+      "char_261_sddrag",
+      "char_263_skadi",
+      "char_297_hamoni",
+      "char_367_swllow"
+    ]
   },
   "dorm_rec_oneself[001]": {
     "buffName": "幼狼情性",
@@ -2923,7 +3991,10 @@
     "description": "进驻宿舍时，自身心情每小时恢复<@cc.vup>+0.7</>",
     "efficiency": 0,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_4014_lunacu"
+    ]
   },
   "dorm_rec_oneself[010]": {
     "buffName": "狂热",
@@ -2931,7 +4002,10 @@
     "description": "进驻宿舍时，自身心情每小时恢复<@cc.vup>+0.85</>",
     "efficiency": 0,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_143_ghost"
+    ]
   },
   "dorm_rec_oneself[011]": {
     "buffName": "麻烦回避者",
@@ -2939,7 +4013,10 @@
     "description": "进驻宿舍时，自身心情每小时恢复<@cc.vup>+0.85</>",
     "efficiency": 0,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_218_cuttle"
+    ]
   },
   "dorm_rec_oneself[020]": {
     "buffName": "悲歌",
@@ -2947,7 +4024,10 @@
     "description": "进驻宿舍时，自身心情每小时恢复<@cc.vup>+1</>",
     "efficiency": 0,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_263_skadi"
+    ]
   },
   "dorm_rec_oneself[040]": {
     "buffName": "难得休憩",
@@ -2955,7 +4035,10 @@
     "description": "进驻宿舍时，自身心情每小时恢复<@cc.vup>+0.55</>",
     "efficiency": 0,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_4225_tanya"
+    ]
   },
   "dorm_rec_oneself[030]": {
     "buffName": "隐形的美食家",
@@ -2963,7 +4046,10 @@
     "description": "进驻宿舍时，自身心情每小时恢复<@cc.vup>+0.75</>",
     "efficiency": 0,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_355_ethan"
+    ]
   },
   "dorm_rec_oneself2[000]": {
     "buffName": "“独处”",
@@ -2971,7 +4057,10 @@
     "description": "进驻宿舍时，自身心情每小时恢复<@cc.vup>+0.7</>；如果该宿舍内有其他干员，则每人额外为自身心情每小时恢复<@cc.vup>+0.05</>",
     "efficiency": 0,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_271_spikes"
+    ]
   },
   "dorm_rec_oneself2[001]": {
     "buffName": "赋格融汇",
@@ -2979,7 +4068,10 @@
     "description": "进驻宿舍时，自身心情每小时恢复<@cc.vup>+0.7</>；如果该宿舍内有其他干员，则每人额外为自身心情每小时恢复<@cc.vup>+0.05</>",
     "efficiency": 0,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_4051_akkord"
+    ]
   },
   "dorm_rec_single[010]": {
     "buffName": "善解人意",
@@ -2987,7 +4079,15 @@
     "description": "进驻宿舍时，使该宿舍内除自身以外心情未满的某个干员每小时恢复<@cc.vup>+0.55</>（同种效果取最高）",
     "efficiency": 0,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_117_myrrh",
+      "char_120_hibisc",
+      "char_126_shotst",
+      "char_147_shining",
+      "char_212_ansel",
+      "char_258_podego"
+    ]
   },
   "dorm_rec_single[1010]": {
     "buffName": "善解人意",
@@ -2995,7 +4095,10 @@
     "description": "进驻宿舍时，使该宿舍内除自身以外心情未满的某个干员每小时恢复<@cc.vup>+0.55</>（同种效果取最高）",
     "efficiency": 0,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_4122_grabds"
+    ]
   },
   "dorm_rec_single_power[100]": {
     "buffName": "天生乐天派",
@@ -3003,7 +4106,10 @@
     "description": "进驻宿舍时，使该宿舍内除自身以外心情未满的某个干员每小时恢复<@cc.vup>+0.55</>（同种效果取最高）",
     "efficiency": 0,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_1041_angel2"
+    ]
   },
   "dorm_rec_single[000]": {
     "buffName": "医疗服务",
@@ -3011,7 +4117,10 @@
     "description": "进驻宿舍时，使该宿舍内除自身以外心情未满的某个干员每小时恢复<@cc.vup>+0.65</>（同种效果取最高）",
     "efficiency": 0,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_285_medic2"
+    ]
   },
   "dorm_rec_single[001]": {
     "buffName": "疗养",
@@ -3019,7 +4128,10 @@
     "description": "进驻宿舍时，使该宿舍内除自身以外心情未满的某个干员每小时恢复<@cc.vup>+0.65</>（同种效果取最高）",
     "efficiency": 0,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_258_podego"
+    ]
   },
   "dorm_rec_bd_n1_n3[000]": {
     "buffName": "慢板行歌",
@@ -3027,7 +4139,10 @@
     "description": "进驻宿舍时，使该宿舍内除自身以外心情未满的某个干员每小时恢复<@cc.vup>+0.65</>（同种效果取最高），同时当前宿舍每级提供<@cc.vup>1</>个<$cc.bd_a1_a3><@cc.rem>小节</></>",
     "efficiency": 0,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_4047_pianst"
+    ]
   },
   "dorm_rec_bd_n1[100]": {
     "buffName": "琴键漫步",
@@ -3035,7 +4150,10 @@
     "description": "进驻宿舍时，每<@cc.vup>1</>个<$cc.bd_a1_a3><@cc.rem>小节</></>转化为<@cc.vup>1</>点<$cc.bd_a1><@cc.rem>感知信息</></>",
     "efficiency": 0,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_4047_pianst"
+    ]
   },
   "dorm_rec_single[030]": {
     "buffName": "天启",
@@ -3043,7 +4161,10 @@
     "description": "进驻宿舍时，使该宿舍内除自身以外心情未满的某个干员每小时恢复<@cc.vup>+0.7</>（同种效果取最高）",
     "efficiency": 0,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_159_peacok"
+    ]
   },
   "dorm_rec_single[031]": {
     "buffName": "维多利亚文学",
@@ -3051,7 +4172,10 @@
     "description": "进驻宿舍时，使该宿舍内除自身以外心情未满的某个干员每小时恢复<@cc.vup>+0.7</>（同种效果取最高）",
     "efficiency": 0,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_479_sleach"
+    ]
   },
   "dorm_rec_single[032]": {
     "buffName": "心理疏导",
@@ -3059,7 +4183,10 @@
     "description": "进驻宿舍时，使该宿舍内除自身以外心情未满的某个干员每小时恢复<@cc.vup>+0.7</>（同种效果取最高）",
     "efficiency": 0,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_449_glider"
+    ]
   },
   "dorm_rec_single[033]": {
     "buffName": "恩典颂歌",
@@ -3067,7 +4194,10 @@
     "description": "进驻宿舍时，使该宿舍内除自身以外心情未满的某个干员每小时恢复<@cc.vup>+0.7</>（同种效果取最高）",
     "efficiency": 0,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_4187_graceb"
+    ]
   },
   "dorm_rec_single[020]": {
     "buffName": "慈悲",
@@ -3075,7 +4205,10 @@
     "description": "进驻宿舍时，使该宿舍内除自身以外心情未满的某个干员每小时恢复<@cc.vup>+0.75</>（同种效果取最高）",
     "efficiency": 0,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_147_shining"
+    ]
   },
   "dorm_rec_single_P[000]": {
     "buffName": "沏茶",
@@ -3083,7 +4216,10 @@
     "description": "进驻宿舍时，使该宿舍内除自身以外心情未满的某个干员每小时恢复<@cc.vup>+0.55</>（同种效果取最高），如果目标是<@cc.kw>锡兰</>，则恢复效果额外<@cc.vup>+0.45</>",
     "efficiency": 0,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_340_shwaz"
+    ]
   },
   "dorm_rec_single_P[001]": {
     "buffName": "烤肉大师",
@@ -3091,7 +4227,10 @@
     "description": "进驻宿舍时，使该宿舍内除自身以外心情未满的某个干员每小时恢复<@cc.vup>+0.55</>（同种效果取最高），如果目标是<@cc.kw><$cc.gvial>嘉维尔</></>，则恢复效果额外<@cc.vup>+0.45</>",
     "efficiency": 0,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_411_tomimi"
+    ]
   },
   "dorm_rec_single_P[002]": {
     "buffName": "毒剂师之友",
@@ -3099,7 +4238,10 @@
     "description": "进驻宿舍时，使该宿舍内心情未满的某个干员每小时恢复<@cc.vup>+0.55</>（同种效果取最高），如果目标是<@cc.kw>蓝毒</>，则恢复效果额外<@cc.vup>+0.45</>",
     "efficiency": 0,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_469_indigo"
+    ]
   },
   "dorm_rec_all[000]": {
     "buffName": "鼓舞",
@@ -3107,7 +4249,11 @@
     "description": "进驻宿舍时，该宿舍内所有干员的心情每小时恢复<@cc.vup>+0.1</>（同种效果取最高）",
     "efficiency": 0,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_179_cgbird",
+      "char_365_aprl"
+    ]
   },
   "dorm_rec_bd_n1_n2[000]": {
     "buffName": "睡前故事",
@@ -3115,7 +4261,10 @@
     "description": "进驻宿舍时，该宿舍内所有干员的心情每小时恢复<@cc.vup>+0.1</>（同种效果取最高），同时当前宿舍每级提供<@cc.vup>1</>层<$cc.bd_a1_a2><@cc.rem>梦境</></>",
     "efficiency": 0,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_338_iris"
+    ]
   },
   "dorm_rec_bd_n1[000]": {
     "buffName": "梦境呓语",
@@ -3123,7 +4272,10 @@
     "description": "进驻宿舍时，每<@cc.vup>1</>层<$cc.bd_a1_a2><@cc.rem>梦境</></>转化为<@cc.vup>1</>点<$cc.bd_a1><@cc.rem>感知信息</></>",
     "efficiency": 0,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_338_iris"
+    ]
   },
   "dorm_rec_bd_dungeon[000]": {
     "buffName": "森西大食堂",
@@ -3131,7 +4283,10 @@
     "description": "进驻宿舍时，当前宿舍每级提供<@cc.vup>1</>层<$cc.bd_dungeon><@cc.rem>魔物料理</></>",
     "efficiency": 0,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_4143_sensi"
+    ]
   },
   "dorm_rec_all[010]": {
     "buffName": "小提琴独奏",
@@ -3139,7 +4294,10 @@
     "description": "进驻宿舍时，该宿舍内所有干员的心情每小时恢复<@cc.vup>+0.15</>（同种效果取最高）",
     "efficiency": 0,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_002_amiya"
+    ]
   },
   "dorm_rec_all[011]": {
     "buffName": "偶像",
@@ -3147,7 +4305,10 @@
     "description": "进驻宿舍时，该宿舍内所有干员的心情每小时恢复<@cc.vup>+0.15</>（同种效果取最高）",
     "efficiency": 0,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_101_sora"
+    ]
   },
   "dorm_rec_all[012]": {
     "buffName": "沁人心脾",
@@ -3155,7 +4316,10 @@
     "description": "进驻宿舍时，该宿舍内所有干员的心情每小时恢复<@cc.vup>+0.15</>（同种效果取最高）",
     "efficiency": 0,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_258_podego"
+    ]
   },
   "dorm_rec_all[013]": {
     "buffName": "领袖",
@@ -3163,7 +4327,12 @@
     "description": "进驻宿舍时，该宿舍内所有干员的心情每小时恢复<@cc.vup>+0.15</>（同种效果取最高）",
     "efficiency": 0,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_112_siege",
+      "char_115_headbr",
+      "char_151_myrtle"
+    ]
   },
   "dorm_rec_all[014]": {
     "buffName": "大锅饭·α",
@@ -3171,7 +4340,10 @@
     "description": "进驻宿舍时，该宿舍内所有干员的心情每小时恢复<@cc.vup>+0.15</>（同种效果取最高）",
     "efficiency": 0,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_4081_warmy"
+    ]
   },
   "dorm_rec_all[017]": {
     "buffName": "静心仪式·α",
@@ -3179,7 +4351,10 @@
     "description": "进驻宿舍时，该宿舍内所有干员的心情每小时恢复<@cc.vup>+0.15</>（同种效果取最高）",
     "efficiency": 0,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_4146_nymph"
+    ]
   },
   "dorm_rec_all[020]": {
     "buffName": "冬将军",
@@ -3187,7 +4362,10 @@
     "description": "进驻宿舍时，该宿舍内所有干员的心情每小时恢复<@cc.vup>+0.2</>（同种效果取最高）",
     "efficiency": 0,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_115_headbr"
+    ]
   },
   "dorm_rec_all[021]": {
     "buffName": "提灯女神",
@@ -3195,7 +4373,10 @@
     "description": "进驻宿舍时，该宿舍内所有干员的心情每小时恢复<@cc.vup>+0.2</>（同种效果取最高）",
     "efficiency": 0,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_179_cgbird"
+    ]
   },
   "dorm_rec_all[022]": {
     "buffName": "狮心王",
@@ -3203,7 +4384,10 @@
     "description": "进驻宿舍时，该宿舍内所有干员的心情每小时恢复<@cc.vup>+0.2</>（同种效果取最高）",
     "efficiency": 0,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_112_siege"
+    ]
   },
   "dorm_rec_all[027]": {
     "buffName": "静心仪式·β",
@@ -3211,7 +4395,10 @@
     "description": "进驻宿舍时，该宿舍内所有干员的心情每小时恢复<@cc.vup>+0.2</>（同种效果取最高）",
     "efficiency": 0,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_4146_nymph"
+    ]
   },
   "dorm_rec_all[028]": {
     "buffName": "明星效应",
@@ -3219,7 +4406,10 @@
     "description": "进驻宿舍时，该宿舍内所有干员的心情每小时恢复<@cc.vup>+0.15</>（同种效果取最高）",
     "efficiency": 0,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_4202_haruka"
+    ]
   },
   "dorm_rec_all&tag[000]": {
     "buffName": "资深料理人",
@@ -3227,7 +4417,10 @@
     "description": "进驻宿舍时，该宿舍内所有干员的心情每小时恢复<@cc.vup>+0.15</>，如果目标是<$cc.tag.dungeon><@cc.kw>莱欧斯小队</></>干员，则恢复效果额外<@cc.vup>+0.15</>（同种效果取最高）",
     "efficiency": 0,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_4143_sensi"
+    ]
   },
   "dorm_rec_all&unfull[000]": {
     "buffName": "倾听者",
@@ -3235,7 +4428,10 @@
     "description": "进驻宿舍时，该宿舍内所有干员的心情每小时恢复<@cc.vup>+0.15</>（同种效果取最高）",
     "efficiency": 0,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_487_bobb"
+    ]
   },
   "dorm_rec_all&unfull[001]": {
     "buffName": "倾谈者",
@@ -3243,7 +4439,10 @@
     "description": "进驻宿舍时，该宿舍内所有干员的心情每小时恢复<@cc.vup>+0.2</>；同时该宿舍每有<@cc.kw>1</>名心情未满的干员，则恢复效果额外<@cc.vup>+0.01</>（同种效果取最高）",
     "efficiency": 0,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_487_bobb"
+    ]
   },
   "dorm_rec_all&single[000]": {
     "buffName": "小酌怡情",
@@ -3251,7 +4450,10 @@
     "description": "进驻宿舍时，使心情未满的宿舍成员，平均分配到总计每小时心情恢复<@cc.vup>+0.8</>的加成（该技能对单名干员和多名干员生效时，同种效果分别取最高）",
     "efficiency": 0,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_4104_coldst"
+    ]
   },
   "dorm_powToRecAll[000]": {
     "buffName": "柔和微光·α",
@@ -3259,7 +4461,10 @@
     "description": "进驻宿舍时，该宿舍内所有干员的心情每小时恢复<@cc.vup>+0.1</>，同时每有<@cc.kw>1</>间发电站，则恢复效果额外<@cc.vup>+0.05</>（叠加后的最终值同种效果取最高）",
     "efficiency": 0,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_4042_lumen"
+    ]
   },
   "dorm_powToRecAll[010]": {
     "buffName": "柔和微光·β",
@@ -3267,7 +4472,10 @@
     "description": "进驻宿舍时，该宿舍内所有干员的心情每小时恢复<@cc.vup>+0.15</>，同时每有<@cc.kw>1</>间发电站，则恢复效果额外<@cc.vup>+0.05</>（叠加后的最终值同种效果取最高）",
     "efficiency": 0,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_4042_lumen"
+    ]
   },
   "dorm_hireToRecAll[000]": {
     "buffName": "寻同路人",
@@ -3275,7 +4483,10 @@
     "description": "进驻宿舍时，该宿舍内所有干员心情每小时恢复<@cc.vup>+0.15</>，同时每个招募位（不包含初始招募位）额外<@cc.vup>+0.05</>恢复效果（叠加后的最终值同种效果取最高）",
     "efficiency": 0,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_4065_judge"
+    ]
   },
   "dorm_rec_all&lv[000]": {
     "buffName": "睡前必听故事",
@@ -3283,7 +4494,10 @@
     "description": "进驻宿舍时，该宿舍内所有干员的心情每小时恢复<@cc.vup>+0.15</>（同种效果取最高）",
     "efficiency": 0,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_4214_cairn"
+    ]
   },
   "dorm_rec_all&lv[100]": {
     "buffName": "死前必做清单",
@@ -3291,7 +4505,10 @@
     "description": "进驻宿舍时，该宿舍内所有干员的心情每小时恢复<@cc.vup>+0.15</>，同时当前宿舍每级为恢复效果额外<@cc.vup>+0.02</>（叠加后的最终值同种效果取最高）",
     "efficiency": 0,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_4214_cairn"
+    ]
   },
   "dorm_rec_single&oneself[000]": {
     "buffName": "活泼",
@@ -3299,7 +4516,12 @@
     "description": "进驻宿舍时，使该宿舍内除自身以外心情未满的某个干员每小时恢复<@cc.vup>+0.2</>（同种效果取最高）；同时自身心情每小时恢复<@cc.vup>+0.4</>",
     "efficiency": 0,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_122_beagle",
+      "char_209_ardign",
+      "char_347_jaksel"
+    ]
   },
   "dorm_rec_single&oneself[001]": {
     "buffName": "探险家的热情",
@@ -3307,7 +4529,10 @@
     "description": "进驻宿舍时，使该宿舍内除自身以外心情未满的某个干员每小时恢复<@cc.vup>+0.25</>（同种效果取最高）；同时自身心情每小时恢复<@cc.vup>+0.5</>",
     "efficiency": 0,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_173_slchan"
+    ]
   },
   "dorm_rec_single&oneself[010]": {
     "buffName": "烘焙",
@@ -3315,7 +4540,10 @@
     "description": "进驻宿舍时，使该宿舍内除自身以外心情未满的某个干员每小时恢复<@cc.vup>+0.3</>（同种效果取最高）；同时自身心情每小时恢复<@cc.vup>+0.3</>",
     "efficiency": 0,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_185_frncat"
+    ]
   },
   "dorm_rec_single&oneself[011]": {
     "buffName": "烹饪",
@@ -3323,7 +4551,11 @@
     "description": "进驻宿舍时，使该宿舍内除自身以外心情未满的某个干员每小时恢复<@cc.vup>+0.35</>（同种效果取最高）；同时自身心情每小时恢复<@cc.vup>+0.35</>",
     "efficiency": 0,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_196_sunbr",
+      "char_230_savage"
+    ]
   },
   "dorm_rec_single&oneself[012]": {
     "buffName": "Give me five",
@@ -3331,7 +4563,10 @@
     "description": "进驻宿舍时，使该宿舍内除自身以外心情未满的某个干员每小时恢复<@cc.vup>+0.35</>（同种效果取最高）；同时自身心情每小时恢复<@cc.vup>+0.35</>",
     "efficiency": 0,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_366_acdrop"
+    ]
   },
   "dorm_rec_single&oneself[020]": {
     "buffName": "和谐",
@@ -3339,7 +4574,10 @@
     "description": "进驻宿舍时，使该宿舍内除自身以外心情未满的某个干员每小时恢复<@cc.vup>+0.4</>（同种效果取最高）；同时自身心情每小时恢复<@cc.vup>+0.2</>",
     "efficiency": 0,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_281_popka"
+    ]
   },
   "dorm_rec_single&oneself[021]": {
     "buffName": "喀兰圣女",
@@ -3347,7 +4585,10 @@
     "description": "进驻宿舍时，使该宿舍内除自身以外心情未满的某个干员每小时恢复<@cc.vup>+0.5</>（同种效果取最高）；同时自身心情每小时恢复<@cc.vup>+0.25</>",
     "efficiency": 0,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_174_slbell"
+    ]
   },
   "dorm_hireToRecAll[001]": {
     "buffName": "无瑕心·α",
@@ -3355,7 +4596,10 @@
     "description": "进驻宿舍时，该宿舍内所有干员心情每小时恢复<@cc.vup>+0.1</>，同时每个招募位（不包含初始招募位）额外<@cc.vup>+0.05</>恢复效果（叠加后的最终值同种效果取最高）",
     "efficiency": 0,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_4010_etlchi"
+    ]
   },
   "dorm_hireToRecAll[021]": {
     "buffName": "无瑕心·β",
@@ -3363,7 +4607,10 @@
     "description": "进驻宿舍时，该宿舍内所有干员心情每小时恢复<@cc.vup>+0.1</>，同时每个招募位（不包含初始招募位）额外<@cc.vup>+0.1</>恢复效果（叠加后的最终值同种效果取最高）",
     "efficiency": 0,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_4010_etlchi"
+    ]
   },
   "dorm_rec_single&oneself[030]": {
     "buffName": "使徒",
@@ -3371,7 +4618,10 @@
     "description": "进驻宿舍时，使该宿舍内除自身以外心情未满的某个干员每小时恢复<@cc.vup>+0.5</>（同种效果取最高）；同时自身心情每小时恢复<@cc.vup>+0.25</>",
     "efficiency": 0,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_148_nearl"
+    ]
   },
   "dorm_rec_single&oneself[040]": {
     "buffName": "甜甜圈派对",
@@ -3379,7 +4629,10 @@
     "description": "进驻宿舍时，使该宿舍内除自身以外心情未满的某个干员每小时恢复<@cc.vup>+0.4</>（同种效果取最高）；同时自身心情每小时恢复<@cc.vup>+0.4</>",
     "efficiency": 0,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_498_inside"
+    ]
   },
   "dorm_rec_single_power[000]": {
     "buffName": "降生于冰寒",
@@ -3387,7 +4640,10 @@
     "description": "进驻宿舍时，使该宿舍内除自身以外心情未满的某个干员每小时恢复<@cc.vup>+0.55</>（同种效果取最高），如果目标是<$cc.g.sm><@cc.kw>萨米</></>干员，则恢复效果额外<@cc.vup>+0.45</>",
     "efficiency": 0,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_341_sntlla"
+    ]
   },
   "dorm_rec_single_power[001]": {
     "buffName": "圣城趣事通",
@@ -3395,7 +4651,10 @@
     "description": "进驻宿舍时，使该宿舍内除自身以外心情未满的某个干员每小时恢复<@cc.vup>+0.55</>（同种效果取最高），如果目标是<$cc.g.laterano><@cc.kw>拉特兰</></>干员，则恢复效果额外<@cc.vup>+0.45</>",
     "efficiency": 0,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_1041_angel2"
+    ]
   },
   "dorm_rec_all&oneself[000]": {
     "buffName": "慵懒",
@@ -3403,7 +4662,11 @@
     "description": "进驻宿舍时，自身心情每小时恢复<@cc.vdown>-0.1</>，该宿舍内所有干员的心情每小时恢复<@cc.vup>+0.2</>（同种效果取最高）",
     "efficiency": 0,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_302_glaze",
+      "char_501_durin"
+    ]
   },
   "dorm_rec_all&oneself[001]": {
     "buffName": "嗜睡",
@@ -3411,7 +4674,10 @@
     "description": "进驻宿舍时，自身心情每小时恢复<@cc.vdown>-0.1</>，该宿舍内所有干员的心情每小时恢复<@cc.vup>+0.25</>（同种效果取最高）",
     "efficiency": 0,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_501_durin"
+    ]
   },
   "dorm_rec_all&oneself[010]": {
     "buffName": "超脱",
@@ -3419,7 +4685,10 @@
     "description": "进驻宿舍时，自身心情每小时恢复<@cc.vup>+0.55</>",
     "efficiency": 0,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_188_helage"
+    ]
   },
   "dorm_rec_all&oneself[011]": {
     "buffName": "挣脱",
@@ -3427,7 +4696,10 @@
     "description": "进驻宿舍时，该宿舍内除自身以外所有干员的心情每小时恢复<@cc.vup>+0.1</>（同种效果取最高）",
     "efficiency": 0,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_188_helage"
+    ]
   },
   "dorm_rec_all&oneself[012]": {
     "buffName": "解脱",
@@ -3435,7 +4707,10 @@
     "description": "进驻宿舍时，自身心情每小时恢复<@cc.vup>+0.55</>，该宿舍内所有干员的心情每小时恢复<@cc.vup>+0.1</>（同种效果取最高）",
     "efficiency": 0,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_188_helage"
+    ]
   },
   "dorm_rec_all&oneself[021]": {
     "buffName": "牧歌",
@@ -3443,7 +4718,10 @@
     "description": "进驻宿舍时，自身心情每小时恢复<@cc.vup>+0.55</>，该宿舍内所有干员的心情每小时恢复<@cc.vup>+0.1</>（同种效果取最高）",
     "efficiency": 0,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_222_bpipe"
+    ]
   },
   "dorm_rec_all&oneself[042]": {
     "buffName": "“归乡”",
@@ -3451,7 +4729,10 @@
     "description": "进驻宿舍时，自身心情每小时恢复<@cc.vup>+0.55</>，该宿舍内所有干员的心情每小时恢复<@cc.vup>+0.1</>（同种效果取最高）",
     "efficiency": 0,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_430_fartth"
+    ]
   },
   "dorm_rec_all&group[000]": {
     "buffName": "调众口",
@@ -3459,7 +4740,10 @@
     "description": "进驻宿舍时，基建内（不包含副手及活动室使用者）每名<$cc.g.sui><@cc.kw>岁</></>干员为该宿舍内所有干员心情每小时恢复速度<@cc.vup>+0.06</>（最多生效<@cc.kw>4</>名，且同种效果取最高）",
     "efficiency": 0,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_2026_yu"
+    ]
   },
   "dorm_rec_all&oneself[022]": {
     "buffName": "天生丽质",
@@ -3467,7 +4751,10 @@
     "description": "进驻宿舍时，自身心情每小时恢复<@cc.vup>+0.55</>，该宿舍内所有干员的心情每小时恢复<@cc.vup>+0.1</>（同种效果取最高）",
     "efficiency": 0,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_249_mlyss"
+    ]
   },
   "dorm_rec_all&profession[000]": {
     "buffName": "火山温泉浴",
@@ -3475,7 +4762,10 @@
     "description": "进驻宿舍时，基建内（不包含副手及活动室使用者）每名<@cc.kw>行医</>干员为该宿舍内所有干员心情每小时恢复速度<@cc.vup>+0.06</>（最多生效<@cc.kw>4</>名，且同种效果取最高）",
     "efficiency": 0,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_1016_agoat2"
+    ]
   },
   "dorm_exchangeAp[000]": {
     "buffName": "患难之交",
@@ -3483,7 +4773,10 @@
     "description": "进驻宿舍时，如果自身为<@cc.kw>满心情</>，则与当前宿舍<@cc.kw>前一位</>进驻的干员互换心情",
     "efficiency": 0,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_300_phenxi"
+    ]
   },
   "dorm_recExcludeOther[000]": {
     "buffName": "自律",
@@ -3491,7 +4784,10 @@
     "description": "进驻宿舍时，自身心情每小时恢复<@cc.vup>+2</>，同时<@cc.vdown>无法获得</>其他来源提供的心情恢复效果",
     "efficiency": 0,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_300_phenxi"
+    ]
   },
   "dorm_rec_toone[000]": {
     "buffName": "头号陪练",
@@ -3499,7 +4795,10 @@
     "description": "进驻宿舍时，<@cc.kw>推进之王</>对该宿舍中<$cc.g.glasgow><@cc.kw>格拉斯哥帮</></>干员恢复效果额外<@cc.vup>+0.3</>",
     "efficiency": 0,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_154_morgan"
+    ]
   },
   "dorm_rec_all[023]": {
     "buffName": "芬芳疗养·α",
@@ -3507,7 +4806,10 @@
     "description": "进驻宿舍时，该宿舍内所有干员的心情每小时恢复<@cc.vup>+0.15</>（同种效果取最高）",
     "efficiency": 0,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_494_vendla"
+    ]
   },
   "dorm_rec_all[024]": {
     "buffName": "大锅饭·β",
@@ -3515,7 +4817,10 @@
     "description": "进驻宿舍时，该宿舍内所有干员的心情每小时恢复<@cc.vup>+0.2</>（同种效果取最高）",
     "efficiency": 0,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_4081_warmy"
+    ]
   },
   "dorm_rec_all[025]": {
     "buffName": "乡野笛音",
@@ -3523,7 +4828,10 @@
     "description": "进驻宿舍时，该宿舍内所有干员的心情每小时恢复<@cc.vup>+0.15</>（同种效果取最高）",
     "efficiency": 0,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_4122_grabds"
+    ]
   },
   "dorm_rec_all[026]": {
     "buffName": "利他主义",
@@ -3531,7 +4839,10 @@
     "description": "进驻宿舍时，该宿舍内所有干员的心情每小时恢复<@cc.vup>+0.2</>（同种效果取最高）",
     "efficiency": 0,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_4125_rdoc"
+    ]
   },
   "dorm_rec_all[029]": {
     "buffName": "沉静心灵",
@@ -3539,7 +4850,10 @@
     "description": "进驻宿舍时，该宿舍内所有干员的心情每小时恢复<@cc.vup>+0.15</>（同种效果取最高）",
     "efficiency": 0,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_1022_flwr2"
+    ]
   },
   "dorm_bd_num[000]": {
     "buffName": "无声共鸣",
@@ -3547,7 +4861,10 @@
     "description": "进驻宿舍时，该宿舍内每有<@cc.vup>1</>名干员，<$cc.bd_B><@cc.rem>无声共鸣</></><@cc.vup>+1</>",
     "efficiency": 0,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_245_cello"
+    ]
   },
   "dorm_rec_all&bd[000]": {
     "buffName": "无词颂歌",
@@ -3555,7 +4872,10 @@
     "description": "进驻宿舍时，该宿舍内所有干员的心情每小时恢复<@cc.vup>+0.2</>，每有<@cc.vup>5</>点<$cc.bd_B><@cc.rem>无声共鸣</></>，该宿舍内所有干员的心情每小时恢复额外<@cc.vup>+0.01</>（同种效果取最高）",
     "efficiency": 0,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_245_cello"
+    ]
   },
   "dorm_rec_all&tired[000]": {
     "buffName": "芬芳疗养·β",
@@ -3563,7 +4883,10 @@
     "description": "进驻宿舍时，该宿舍内所有干员心情每小时恢复<@cc.vup>+0.15</>，同时该宿舍内心情<@cc.vup>18</>以下的干员恢复效果额外<@cc.vup>+0.1</>（同种效果取最高）",
     "efficiency": 0,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_494_vendla"
+    ]
   },
   "dorm_rec_all&tired[100]": {
     "buffName": "净化呼吸",
@@ -3571,7 +4894,10 @@
     "description": "进驻宿舍时，该宿舍内心情<@cc.vup>20</>以下的干员恢复效果额外<@cc.vup>+0.1</>（同种效果取最高）",
     "efficiency": 0,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_1022_flwr2"
+    ]
   },
   "hire_spd[000]": {
     "buffName": "人事管理·α",
@@ -3579,7 +4905,10 @@
     "description": "进驻人力办公室时，人脉资源的联络速度<@cc.vup>+20%</>",
     "efficiency": 20,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_503_rang"
+    ]
   },
   "hire_spd[001]": {
     "buffName": "人事管理·β",
@@ -3587,7 +4916,10 @@
     "description": "进驻人力办公室时，人脉资源的联络速度<@cc.vup>+35%</>",
     "efficiency": 35,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_4087_ines"
+    ]
   },
   "hire_spd[010]": {
     "buffName": "天灾信使·α",
@@ -3595,7 +4927,10 @@
     "description": "进驻人力办公室时，人脉资源的联络速度<@cc.vup>+30%</>",
     "efficiency": 30,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_145_prove"
+    ]
   },
   "hire_spd[011]": {
     "buffName": "天灾信使·β",
@@ -3603,7 +4938,11 @@
     "description": "进驻人力办公室时，人脉资源的联络速度<@cc.vup>+45%</>",
     "efficiency": 45,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_145_prove",
+      "char_180_amgoat"
+    ]
   },
   "hire_spd[012]": {
     "buffName": "节目邀约",
@@ -3611,7 +4950,10 @@
     "description": "进驻人力办公室时，人脉资源的联络速度<@cc.vup>+45%</>",
     "efficiency": 45,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_4202_haruka"
+    ]
   },
   "hire_spd[020]": {
     "buffName": "心理学",
@@ -3619,7 +4961,12 @@
     "description": "进驻人力办公室时，人脉资源的联络速度<@cc.vup>+40%</>",
     "efficiency": 40,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_164_nightm",
+      "char_278_orchid",
+      "char_337_utage"
+    ]
   },
   "hire_spd[030]": {
     "buffName": "WRITER",
@@ -3627,7 +4974,10 @@
     "description": "进驻人力办公室时，人脉资源的联络速度<@cc.vup>+40%</>",
     "efficiency": 40,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_355_ethan"
+    ]
   },
   "hire_spd[031]": {
     "buffName": "B-girl",
@@ -3635,7 +4985,10 @@
     "description": "进驻人力办公室时，人脉资源的联络速度<@cc.vup>+40%</>",
     "efficiency": 40,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_366_acdrop"
+    ]
   },
   "hire_spd[032]": {
     "buffName": "不停歇的电话",
@@ -3643,7 +4996,10 @@
     "description": "进驻人力办公室时，人脉资源的联络速度<@cc.vup>+40%</>",
     "efficiency": 40,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_1031_slent2"
+    ]
   },
   "hire_spd_cost[010]": {
     "buffName": "天灾信使·α",
@@ -3651,7 +5007,10 @@
     "description": "进驻人力办公室时，人脉资源的联络速度<@cc.vup>+30%</>",
     "efficiency": 30,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_183_skgoat"
+    ]
   },
   "hire_spd_cost[200]": {
     "buffName": "准时下班",
@@ -3659,7 +5018,10 @@
     "description": "进驻人力办公室时，人脉资源的联络速度<@cc.vup>+45%</>，心情每小时消耗<@cc.vdown>+2</>",
     "efficiency": 45,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_183_skgoat"
+    ]
   },
   "hire_spd_cost[210]": {
     "buffName": "法为正典",
@@ -3667,7 +5029,10 @@
     "description": "进驻人力办公室时，人脉资源的联络速度<@cc.vup>+50%</>，心情每小时消耗<@cc.vdown>+0.5</>",
     "efficiency": 50,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_4065_judge"
+    ]
   },
   "hire_spd_cost[220]": {
     "buffName": "永不停歇·α",
@@ -3675,7 +5040,10 @@
     "description": "进驻人力办公室时，人脉资源的联络速度<@cc.vup>+30%</>，心情每小时消耗<@cc.vdown>+1</>",
     "efficiency": 30,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_4177_brigid"
+    ]
   },
   "hire_spd_cost[230]": {
     "buffName": "永不停歇·β",
@@ -3683,7 +5051,10 @@
     "description": "进驻人力办公室时，人脉资源的联络速度<@cc.vup>+45%</>，心情每小时消耗<@cc.vdown>+1</>",
     "efficiency": 45,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_4177_brigid"
+    ]
   },
   "hire_spd_cost[100]": {
     "buffName": "救援队·珠算",
@@ -3691,7 +5062,10 @@
     "description": "进驻人力办公室时，人脉资源的联络速度<@cc.vup>+10%</>，心情每小时消耗<@cc.vup>-0.25</>",
     "efficiency": 10,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_473_mberry"
+    ]
   },
   "hire_spd_cost[110]": {
     "buffName": "救援队·资源清点",
@@ -3699,7 +5073,10 @@
     "description": "进驻人力办公室时，人脉资源的联络速度<@cc.vup>+20%</>，心情每小时消耗<@cc.vup>-0.25</>",
     "efficiency": 20,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_473_mberry"
+    ]
   },
   "hire_spd_cost[111]": {
     "buffName": "特殊渠道",
@@ -3707,7 +5084,10 @@
     "description": "进驻人力办公室时，人脉资源的联络速度<@cc.vup>+20%</>，心情每小时消耗<@cc.vup>-0.25</>",
     "efficiency": 20,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_4080_lin"
+    ]
   },
   "hire_spd_cost[101]": {
     "buffName": "宫廷礼仪",
@@ -3715,7 +5095,10 @@
     "description": "进驻人力办公室时，人脉资源的联络速度<@cc.vup>+10%</>，心情每小时消耗<@cc.vup>-0.25</>",
     "efficiency": 10,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_4109_baslin"
+    ]
   },
   "hire_spd_cost[120]": {
     "buffName": "威权谕使",
@@ -3723,7 +5106,10 @@
     "description": "进驻人力办公室时，人脉资源的联络速度<@cc.vup>+30%</>，心情每小时消耗<@cc.vup>-0.25</>",
     "efficiency": 30,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_4109_baslin"
+    ]
   },
   "hire_spd_cost&clue[001]": {
     "buffName": "救援队·外界联络",
@@ -3731,7 +5117,10 @@
     "description": "进驻人力办公室时，人脉资源的联络速度<@cc.vup>+30%</>",
     "efficiency": 30,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_466_qanik"
+    ]
   },
   "hire_spd_cost&clue[000]": {
     "buffName": "救援队·保证体力",
@@ -3739,7 +5128,10 @@
     "description": "进驻人力办公室时，人脉资源的联络速度<@cc.vup>+35%</>，同时每个招募位（不包含初始招募位）使心情每小时消耗<@cc.vup>-0.1</>",
     "efficiency": 35,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_466_qanik"
+    ]
   },
   "hire_spd_cost&extra[000]": {
     "buffName": "用人唯才",
@@ -3747,7 +5139,10 @@
     "description": "进驻人力办公室时，每个招募位（不包含初始招募位）<@cc.vup>+10%</>人脉资源的联络速度",
     "efficiency": 0,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_4080_lin"
+    ]
   },
   "hire_spd_cost&char[000]": {
     "buffName": "圣女声望",
@@ -3755,7 +5150,10 @@
     "description": "进驻人力办公室时，人脉资源的联络速度<@cc.vup>+20%</>，心情每小时消耗<@cc.vup>-0.25</>",
     "efficiency": 20,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_1046_sbell2"
+    ]
   },
   "hire_spd_cost&char[001]": {
     "buffName": "雪境归心",
@@ -3763,7 +5161,10 @@
     "description": "进驻人力办公室时，人脉资源的联络速度<@cc.vup>+35%</>，心情每小时消耗<@cc.vup>-0.25</>，如果<@cc.kw>凛御银灰</>进驻在<@cc.kw>控制中枢</>，则人脉资源的联络速度额外<@cc.vup>+10%</>",
     "efficiency": 35,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_1046_sbell2"
+    ]
   },
   "hire_spd&clue[010]": {
     "buffName": "天灾信使·α",
@@ -3771,7 +5172,10 @@
     "description": "进驻人力办公室时，人脉资源的联络速度<@cc.vup>+30%</>",
     "efficiency": 30,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_343_tknogi"
+    ]
   },
   "hire_spd&clue[100]": {
     "buffName": "洞悉人心",
@@ -3779,7 +5183,10 @@
     "description": "进驻人力办公室时，人脉资源的联络速度<@cc.vup>+35%</>，同时每个招募位（不包含初始招募位）额外<@cc.vup>+5%</>会客室线索搜集速度",
     "efficiency": 35,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_343_tknogi"
+    ]
   },
   "hire_spd_cost[112]": {
     "buffName": "踏坊寻味·α",
@@ -3787,7 +5194,10 @@
     "description": "进驻人力办公室时，人脉资源的联络速度<@cc.vup>+20%</>，心情每小时消耗<@cc.vup>-0.25</>",
     "efficiency": 20,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_4172_xingzh"
+    ]
   },
   "hire_spd&clue[101]": {
     "buffName": "好事之徒",
@@ -3795,7 +5205,10 @@
     "description": "进驻人力办公室时，人脉资源的联络速度<@cc.vup>+35%</>，同时每个招募位（不包含初始招募位）额外<@cc.vup>+5%</>会客室线索搜集速度",
     "efficiency": 35,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_455_nothin"
+    ]
   },
   "hire_spd&clue[110]": {
     "buffName": "交游广阔",
@@ -3803,7 +5216,10 @@
     "description": "进驻人力办公室时，人脉资源的联络速度<@cc.vup>+30%</>，同时每个招募位（不包含初始招募位）额外<@cc.vup>+5%</>会客室线索搜集速度",
     "efficiency": 30,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_498_inside"
+    ]
   },
   "hire_spd&clue[120]": {
     "buffName": "“号外！”",
@@ -3811,7 +5227,10 @@
     "description": "进驻人力办公室时，人脉资源的联络速度<@cc.vup>+30%</>，同时每个招募位（不包含初始招募位）额外<@cc.vup>+5%</>会客室线索搜集速度",
     "efficiency": 30,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_4224_turdus"
+    ]
   },
   "hire_spd&clue[121]": {
     "buffName": "街头法则",
@@ -3819,7 +5238,10 @@
     "description": "进驻人力办公室时，人脉资源的联络速度<@cc.vup>+35%</>，同时每个招募位（不包含初始招募位）额外<@cc.vup>+5%</>会客室线索搜集速度",
     "efficiency": 35,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_4224_turdus"
+    ]
   },
   "hire_spd&clue2[230]": {
     "buffName": "内幕",
@@ -3827,7 +5249,10 @@
     "description": "进驻人力办公室时，人脉资源的联络速度<@cc.vup>+20%</>，每产生<@cc.vup>1</>次联络次数，增加<@cc.kw>黑钢国际</>线索的概率（工作时长和招募位影响概率）",
     "efficiency": 20,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_264_f12yin"
+    ]
   },
   "hire_spd_cost[121]": {
     "buffName": "踏坊寻味·β",
@@ -3835,7 +5260,10 @@
     "description": "进驻人力办公室时，人脉资源的联络速度<@cc.vup>+30%</>，心情每小时消耗<@cc.vup>-0.25</>",
     "efficiency": 30,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_4172_xingzh"
+    ]
   },
   "hire_spd&clue2[250]": {
     "buffName": "人望",
@@ -3843,7 +5271,10 @@
     "description": "进驻人力办公室时，人脉资源的联络速度<@cc.vup>+20%</>，每产生<@cc.vup>1</>次联络次数，增加<@cc.kw>乌萨斯学生自治团</>线索的概率（工作时长和招募位影响概率）",
     "efficiency": 20,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_197_poca"
+    ]
   },
   "hire_spd_bd_n1_n1[100]": {
     "buffName": "巡游",
@@ -3851,7 +5282,10 @@
     "description": "进驻人力办公室时，人脉资源的联络速度<@cc.vup>+20%</>，同时每个招募位（不包含初始招募位）<@cc.vup>+10</>点<$cc.bd_a1_a1><@cc.rem>记忆碎片</></>",
     "efficiency": 20,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_436_whispr"
+    ]
   },
   "hire_spd_bd_n1[000]": {
     "buffName": "追忆",
@@ -3859,7 +5293,10 @@
     "description": "进驻人力办公室时，每<@cc.vup>1</>点<$cc.bd_a1_a1><@cc.rem>记忆碎片</></>转化为<@cc.vup>1</>点<$cc.bd_a1><@cc.rem>感知信息</></>，心情耗尽时清空所有<$cc.bd_a1_a1><@cc.rem>记忆碎片</></>和自身累积的<$cc.bd_a1><@cc.rem>感知信息</></>",
     "efficiency": 0,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_436_whispr"
+    ]
   },
   "hire_spd_bd_n1_n1[200]": {
     "buffName": "救援队·灾后普查",
@@ -3867,7 +5304,10 @@
     "description": "进驻人力办公室时，每个招募位（不包含初始招募位）<@cc.vup>+10</>点<<$cc.bd_b1><@cc.rem>人间烟火</></>",
     "efficiency": 0,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_473_mberry"
+    ]
   },
   "hire_spd_bd_n1_n1[300]": {
     "buffName": "心声图绘",
@@ -3875,7 +5315,10 @@
     "description": "进驻人力办公室时，每个招募位（不包含初始招募位）<@cc.vup>+15</>点<$cc.bd_B><@cc.rem>无声共鸣</></>",
     "efficiency": 0,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_4109_baslin"
+    ]
   },
   "hire_spd_blitz[000]": {
     "buffName": "语言学",
@@ -3883,7 +5326,10 @@
     "description": "进驻人力办公室时，人脉资源的联络速度<@cc.vup>+20%</>，每<@cc.vup>1</>点<$cc.bd_ash><@cc.rem>情报储备</></>额外<@cc.vup>+5%</>联络速度，每<@cc.vup>1</>瓶<$cc.bd_tachanka><@cc.rem>乌萨斯特饮</></>额外<@cc.vup>+5%</>联络速度",
     "efficiency": 20,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_457_blitz"
+    ]
   },
   "hire_spd&clue2[260]": {
     "buffName": "旧识新交",
@@ -3891,7 +5337,10 @@
     "description": "进驻人力办公室时，人脉资源的联络速度<@cc.vup>+20%</>，每产生<@cc.vup>1</>次联络次数，增加<$cc.g.glasgow><@cc.kw>格拉斯哥帮</></>线索的概率（工作时长和招募位影响概率）",
     "efficiency": 20,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_4110_delphn"
+    ]
   },
   "hire_spd_dorm&lv[000]": {
     "buffName": "梅兰德侦探·α",
@@ -3899,7 +5348,10 @@
     "description": "进驻人力办公室时，人脉资源的联络速度<@cc.vup>+5%</>，每间宿舍每级额外<@cc.vup>+1%</>人脉资源的联络速度",
     "efficiency": 5,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_4151_tinman"
+    ]
   },
   "hire_spd_dorm&lv[010]": {
     "buffName": "梅兰德侦探·β",
@@ -3907,7 +5359,10 @@
     "description": "进驻人力办公室时，人脉资源的联络速度<@cc.vup>+5%</>，每间宿舍每级额外<@cc.vup>+2%</>人脉资源的联络速度",
     "efficiency": 5,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_4151_tinman"
+    ]
   },
   "hire_spd_tag[000]": {
     "buffName": "“泰拉的方舟”",
@@ -3915,7 +5370,10 @@
     "description": "进驻人力办公室时，人脉资源的联络速度<@cc.vup>+30%</>，基建内（不包含副手及活动室）每有一间进驻<$cc.g.elite><@cc.kw>精英干员</></>的设施，联络速度额外<@cc.vup>+4%</>（最多<@cc.kw>5</>间）",
     "efficiency": 30,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_1052_kalts2"
+    ]
   },
   "meet_spd[000]": {
     "buffName": "线索搜集·α",
@@ -3923,7 +5381,12 @@
     "description": "进驻会客室时，线索搜集速度提升<@cc.vup>10%</>",
     "efficiency": 10,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_158_milu",
+      "char_294_ayer",
+      "char_4114_harold"
+    ]
   },
   "meet_spd[1000]": {
     "buffName": "线索搜集·α",
@@ -3931,7 +5394,11 @@
     "description": "进驻会客室时，线索搜集速度提升<@cc.vup>10%</>",
     "efficiency": 10,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_4026_vulpis",
+      "char_4199_makiri"
+    ]
   },
   "meet_spd&cost[000]": {
     "buffName": "线索搜集·α",
@@ -3939,7 +5406,10 @@
     "description": "进驻会客室时，线索搜集速度提升<@cc.vup>10%</>",
     "efficiency": 10,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_4036_forcer"
+    ]
   },
   "meet_spd[010]": {
     "buffName": "化影",
@@ -3947,7 +5417,10 @@
     "description": "进驻会客室时，线索搜集速度提升<@cc.vup>15%</>",
     "efficiency": 15,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_4016_kazema"
+    ]
   },
   "meet_spd[011]": {
     "buffName": "泡茶高手",
@@ -3955,7 +5428,10 @@
     "description": "进驻会客室时，线索搜集速度提升<@cc.vup>15%</>",
     "efficiency": 15,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_4194_rmixer"
+    ]
   },
   "meet_spd[020]": {
     "buffName": "线索搜集·β",
@@ -3963,7 +5439,15 @@
     "description": "进驻会客室时，线索搜集速度提升<@cc.vup>20%</>",
     "efficiency": 20,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_009_12fce",
+      "char_118_yuki",
+      "char_158_milu",
+      "char_236_rope",
+      "char_294_ayer",
+      "char_337_utage"
+    ]
   },
   "meet_spd[0020]": {
     "buffName": "线索搜集·β",
@@ -3971,7 +5455,11 @@
     "description": "进驻会客室时，线索搜集速度提升<@cc.vup>20%</>",
     "efficiency": 20,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_133_mm",
+      "char_347_jaksel"
+    ]
   },
   "meet_spd[1020]": {
     "buffName": "线索搜集·β",
@@ -3979,7 +5467,10 @@
     "description": "进驻会客室时，线索搜集速度提升<@cc.vup>20%</>",
     "efficiency": 20,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_4172_xingzh"
+    ]
   },
   "meet_spd[021]": {
     "buffName": "好奇心",
@@ -3987,7 +5478,10 @@
     "description": "进驻会客室时，线索搜集速度提升<@cc.vup>20%</>",
     "efficiency": 20,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_4142_laios"
+    ]
   },
   "meet_spd[022]": {
     "buffName": "社交达人",
@@ -3995,7 +5489,10 @@
     "description": "进驻会客室时，线索搜集速度提升<@cc.vup>20%</>",
     "efficiency": 20,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_4194_rmixer"
+    ]
   },
   "meet_spd[1010]": {
     "buffName": "线索搜集·β",
@@ -4003,7 +5500,10 @@
     "description": "进驻会客室时，线索搜集速度提升<@cc.vup>20%</>",
     "efficiency": 20,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_4026_vulpis"
+    ]
   },
   "meet_spd[030]": {
     "buffName": "占卜",
@@ -4011,7 +5511,10 @@
     "description": "进驻会客室时，线索搜集速度提升<@cc.vup>25%</>",
     "efficiency": 25,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_109_fmout"
+    ]
   },
   "meet_spd[031]": {
     "buffName": "追踪者",
@@ -4019,7 +5522,10 @@
     "description": "进驻会客室时，线索搜集速度提升<@cc.vup>25%</>",
     "efficiency": 25,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_144_red"
+    ]
   },
   "meet_spd[032]": {
     "buffName": "领袖外交",
@@ -4027,7 +5533,10 @@
     "description": "进驻会客室时，线索搜集速度提升<@cc.vup>25%</>",
     "efficiency": 25,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_427_vigil"
+    ]
   },
   "meet_spd&sami[000]": {
     "buffName": "冰原游弋",
@@ -4035,7 +5544,10 @@
     "description": "进驻会客室时，线索搜集速度提升<@cc.vup>10%</>，与其他<$cc.g.sm><@cc.kw>萨米</></>干员进驻会客室一起工作时，线索搜集速度额外提升<@cc.vup>5%</>，自身心情每小时消耗<@cc.vdown>+0.5</>",
     "efficiency": 10,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_2012_typhon"
+    ]
   },
   "meet_spd&sami[100]": {
     "buffName": "人情练达",
@@ -4043,7 +5555,10 @@
     "description": "进驻会客室时，线索搜集速度提升<@cc.vup>10%</>，与其他<$cc.g.bs><@cc.kw>黑钢国际干员</></>进驻会客室一起工作时，线索搜集速度额外提升<@cc.vup>15%</>，自身心情每小时消耗<@cc.vdown>+0.5</>",
     "efficiency": 10,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_4052_surfer"
+    ]
   },
   "meet_spd&sami[110]": {
     "buffName": "情报探查",
@@ -4051,7 +5566,10 @@
     "description": "进驻会客室时，线索搜集速度提升<@cc.vup>10%</>，与其他<$cc.g.bs><@cc.kw>黑钢国际干员</></>进驻会客室一起工作时，线索搜集速度额外提升<@cc.vup>20%</>",
     "efficiency": 10,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_4052_surfer"
+    ]
   },
   "meet_spd&bd[000]": {
     "buffName": "远见",
@@ -4059,7 +5577,10 @@
     "description": "进驻会客室时，线索搜集速度提升<@cc.vup>10%</>，当与<@cc.kw>提丰</>进驻会客室一起工作时，线索搜集速度额外提升<@cc.vup>15%</>，自身心情每小时消耗<@cc.vdown>+0.5</>",
     "efficiency": 10,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_4102_threye"
+    ]
   },
   "meet_spd&bd[010]": {
     "buffName": "未来之途",
@@ -4067,7 +5588,10 @@
     "description": "进驻会客室时，线索搜集速度提升<@cc.vup>10%</>，当与<@cc.kw>提丰</>进驻会客室一起工作时，线索搜集速度额外提升<@cc.vup>15%</>，自身心情每小时消耗<@cc.vdown>+0.5</>，且更容易获得线索板上尚未拥有的线索",
     "efficiency": 10,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_4102_threye"
+    ]
   },
   "meet_spd&bd[100]": {
     "buffName": "杀手的假期",
@@ -4075,7 +5599,10 @@
     "description": "进驻会客室时，当与<@cc.kw>铃兰</>进驻会客室一起工作时，线索搜集速度额外提升<@cc.vup>30%</>",
     "efficiency": 0,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_4026_vulpis"
+    ]
   },
   "meet_spd_ext&P[000]": {
     "buffName": "不泯童心",
@@ -4083,7 +5610,10 @@
     "description": "进驻会客室时，如果<@cc.kw>菲亚梅塔</>进驻在宿舍，则线索搜集速度额外提升<@cc.vup>10%</>",
     "efficiency": 0,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_4194_rmixer"
+    ]
   },
   "meet_spd_condChar[000]": {
     "buffName": "得心应手",
@@ -4091,7 +5621,10 @@
     "description": "进驻会客室时，如果会客室内只有自身处于工作状态时，线索搜集速度提升<@cc.vup>35%</>",
     "efficiency": 0,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_4016_kazema"
+    ]
   },
   "meet_spd&cost[100]": {
     "buffName": "逻辑推理",
@@ -4099,7 +5632,10 @@
     "description": "进驻会客室时，线索搜集速度提升<@cc.vup>35%</>，心情每小时消耗<@cc.vdown>+2</>",
     "efficiency": 35,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_4036_forcer"
+    ]
   },
   "meet_spd&cost_condChar[000]": {
     "buffName": "双面间谍",
@@ -4107,7 +5643,10 @@
     "description": "进驻会客室时，如果会客室内只有自身处于工作状态时，线索搜集速度提升<@cc.vup>50%</>，心情每小时消耗<@cc.vdown>+2</>",
     "efficiency": 0,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_297_hamoni"
+    ]
   },
   "meet_spd&cost_condChar[001]": {
     "buffName": "“职业操守”·α",
@@ -4115,7 +5654,11 @@
     "description": "进驻会客室时，如果会客室内只有自身处于工作状态时，线索搜集速度提升<@cc.vup>15%</>，心情每小时消耗<@cc.vdown>+1</>",
     "efficiency": 0,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_4027_heyak",
+      "char_4131_odda"
+    ]
   },
   "meet_spd&cost_condChar[011]": {
     "buffName": "“职业操守”·β",
@@ -4123,7 +5666,11 @@
     "description": "进驻会客室时，如果会客室内只有自身处于工作状态时，线索搜集速度提升<@cc.vup>35%</>，心情每小时消耗<@cc.vdown>+1</>",
     "efficiency": 0,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_4027_heyak",
+      "char_4131_odda"
+    ]
   },
   "meet_spd&cost_condChar[020]": {
     "buffName": "专业经理·α",
@@ -4131,7 +5678,10 @@
     "description": "进驻会客室时，如果会客室内只有自身处于工作状态时，线索搜集速度提升<@cc.vup>15%</>，心情每小时消耗<@cc.vdown>+1</>",
     "efficiency": 0,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_4031_liesel"
+    ]
   },
   "meet_spd&cost_condChar[021]": {
     "buffName": "专业经理·β",
@@ -4139,7 +5689,10 @@
     "description": "进驻会客室时，如果会客室内只有自身处于工作状态时，线索搜集速度提升<@cc.vup>35%</>，心情每小时消耗<@cc.vdown>+1</>",
     "efficiency": 0,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_4031_liesel"
+    ]
   },
   "meet_spd&exchange[000]": {
     "buffName": "无辜笑脸",
@@ -4147,7 +5700,10 @@
     "description": "进驻会客室时，处于线索交流时线索搜集速度提升<@cc.vup>30%</>",
     "efficiency": 0,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_4100_caper"
+    ]
   },
   "meet_spd&exchange[001]": {
     "buffName": "特殊渠道顾问",
@@ -4155,7 +5711,10 @@
     "description": "进驻会客室时，处于线索交流时线索搜集速度提升<@cc.vup>30%</>",
     "efficiency": 0,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_4214_cairn"
+    ]
   },
   "meet_team[020]": {
     "buffName": "皇家探员（自称）",
@@ -4163,7 +5722,10 @@
     "description": "进驻会客室时，更容易获得<@cc.kw>企鹅物流</>线索（工作时长影响概率）",
     "efficiency": 0,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_133_mm"
+    ]
   },
   "meet_team[050]": {
     "buffName": "秘密搜查",
@@ -4171,7 +5733,10 @@
     "description": "进驻会客室时，更容易获得<@cc.kw>乌萨斯学生自治团</>线索（工作时长影响概率）",
     "efficiency": 0,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_405_absin"
+    ]
   },
   "meet_team[060]": {
     "buffName": "通讯员",
@@ -4179,7 +5744,10 @@
     "description": "进驻会客室时，更容易获得<@cc.kw>罗德岛制药</>线索（工作时长影响概率）",
     "efficiency": 0,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_401_elysm"
+    ]
   },
   "meet_team[070]": {
     "buffName": "风声",
@@ -4187,7 +5755,10 @@
     "description": "进驻会客室时，更容易获得<@cc.kw>格拉斯哥帮</>线索（工作时长影响概率）",
     "efficiency": 0,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_492_quercu"
+    ]
   },
   "meet_team&char[000]": {
     "buffName": "交个朋友",
@@ -4195,7 +5766,10 @@
     "description": "进驻会客室时，<@cc.kw>提升</>会客室内另一干员<@cc.kw>所属派系的线索倾向效果</>（如会客室没有另一干员则不提升）",
     "efficiency": 0,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_4114_harold"
+    ]
   },
   "meet_flag[010]": {
     "buffName": "哥伦比亚史",
@@ -4203,7 +5777,10 @@
     "description": "进驻会客室后，每当新搜集到的线索不是<@cc.kw>莱茵生命</>时，则额外增加<@cc.kw>莱茵生命</>线索的出现概率（工作时长影响概率）",
     "efficiency": 0,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_264_f12yin"
+    ]
   },
   "meet_flag[040]": {
     "buffName": "耶拉冈德",
@@ -4211,7 +5788,10 @@
     "description": "进驻会客室后，每当新搜集到的线索不是<@cc.kw>喀兰贸易</>时，则额外增加<@cc.kw>喀兰贸易</>线索的出现概率（工作时长影响概率）",
     "efficiency": 0,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_4013_kjera"
+    ]
   },
   "meet_flag[050]": {
     "buffName": "甄别",
@@ -4219,7 +5799,10 @@
     "description": "进驻会客室后，每当新搜集到的线索不是<@cc.kw>乌萨斯学生自治团</>时，则额外增加<@cc.kw>乌萨斯学生自治团</>线索的出现概率（工作时长影响概率）",
     "efficiency": 0,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_405_absin"
+    ]
   },
   "meet_flag[060]": {
     "buffName": "插旗",
@@ -4227,7 +5810,10 @@
     "description": "进驻会客室后，每当新搜集到的线索不是<@cc.kw>罗德岛制药</>时，则额外增加<@cc.kw>罗德岛制药</>线索的出现概率（工作时长影响概率）",
     "efficiency": 0,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_401_elysm"
+    ]
   },
   "meet_flag[070]": {
     "buffName": "情报整理",
@@ -4235,7 +5821,10 @@
     "description": "进驻会客室后，每当新搜集到的线索不是<@cc.kw>格拉斯哥帮</>时，则额外增加<@cc.kw>格拉斯哥帮</>线索的出现概率（工作时长影响概率）",
     "efficiency": 0,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_492_quercu"
+    ]
   },
   "meet_spd&team[000]": {
     "buffName": "线索搜集·α",
@@ -4243,7 +5832,19 @@
     "description": "进驻会客室时，线索搜集速度提升<@cc.vup>10%</>",
     "efficiency": 10,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_106_franka",
+      "char_155_tiger",
+      "char_202_demkni",
+      "char_213_mostma",
+      "char_274_astesi",
+      "char_275_breeze",
+      "char_291_aglina",
+      "char_4013_kjera",
+      "char_4017_puzzle",
+      "char_4100_caper"
+    ]
   },
   "meet_spd&team[010]": {
     "buffName": "守望者",
@@ -4251,7 +5852,10 @@
     "description": "进驻会客室时，线索搜集速度提升<@cc.vup>10%</>，且更容易获得<@cc.kw>莱茵生命</>线索（工作时长影响概率）",
     "efficiency": 10,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_202_demkni"
+    ]
   },
   "meet_spd&team[020]": {
     "buffName": "信使·企鹅物流",
@@ -4259,7 +5863,10 @@
     "description": "进驻会客室时，线索搜集速度提升<@cc.vup>10%</>，且更容易获得<@cc.kw>企鹅物流</>线索（工作时长影响概率）",
     "efficiency": 10,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_213_mostma"
+    ]
   },
   "meet_spd&team[030]": {
     "buffName": "联络员",
@@ -4267,7 +5874,10 @@
     "description": "进驻会客室时，线索搜集速度提升<@cc.vup>10%</>，且更容易获得<@cc.kw>黑钢国际</>线索（工作时长影响概率）",
     "efficiency": 10,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_235_jesica"
+    ]
   },
   "meet_spd&team[031]": {
     "buffName": "B.P.R.S.",
@@ -4275,7 +5885,10 @@
     "description": "进驻会客室时，线索搜集速度提升<@cc.vup>10%</>，且更容易获得<@cc.kw>黑钢国际</>线索（工作时长影响概率）",
     "efficiency": 10,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_106_franka"
+    ]
   },
   "meet_spd&team[040]": {
     "buffName": "讯使",
@@ -4283,7 +5896,10 @@
     "description": "进驻会客室时，线索搜集速度提升<@cc.vup>10%</>，且更容易获得<@cc.kw>喀兰贸易</>线索（工作时长影响概率）",
     "efficiency": 10,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_198_blackd"
+    ]
   },
   "meet_spd&team[041]": {
     "buffName": "雪境守望",
@@ -4291,7 +5907,10 @@
     "description": "进驻会客室时，线索搜集速度提升<@cc.vup>10%</>，且更容易获得<@cc.kw>喀兰贸易</>线索（工作时长影响概率）",
     "efficiency": 10,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_4013_kjera"
+    ]
   },
   "meet_spd&team[050]": {
     "buffName": "军师",
@@ -4299,7 +5918,10 @@
     "description": "进驻会客室时，线索搜集速度提升<@cc.vup>10%</>，且更容易获得<@cc.kw>乌萨斯学生自治团</>线索（工作时长影响概率）",
     "efficiency": 10,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_195_glassb"
+    ]
   },
   "meet_spd&team[060]": {
     "buffName": "信使·罗德岛制药",
@@ -4307,7 +5929,10 @@
     "description": "进驻会客室时，线索搜集速度提升<@cc.vup>10%</>，且更容易获得<@cc.kw>罗德岛制药</>线索（工作时长影响概率）",
     "efficiency": 10,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_291_aglina"
+    ]
   },
   "meet_spd&team[070]": {
     "buffName": "传讯者",
@@ -4315,7 +5940,10 @@
     "description": "进驻会客室时，线索搜集速度提升<@cc.vup>10%</>，且更容易获得<@cc.kw>格拉斯哥帮</>线索（工作时长影响概率）",
     "efficiency": 10,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_155_tiger"
+    ]
   },
   "meet_spd&team[071]": {
     "buffName": "没落贵族",
@@ -4323,7 +5951,10 @@
     "description": "进驻会客室时，线索搜集速度提升<@cc.vup>10%</>，且更容易获得<@cc.kw>格拉斯哥帮</>线索（工作时长影响概率）",
     "efficiency": 10,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_275_breeze"
+    ]
   },
   "meet_spd&team[100]": {
     "buffName": "警司",
@@ -4331,7 +5962,10 @@
     "description": "进驻会客室时，线索搜集速度提升<@cc.vup>25%</>",
     "efficiency": 25,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_010_chen"
+    ]
   },
   "meet_spd&team[110]": {
     "buffName": "星象学",
@@ -4339,7 +5973,10 @@
     "description": "进驻会客室时，线索搜集速度提升<@cc.vup>25%</>",
     "efficiency": 25,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_274_astesi"
+    ]
   },
   "meet_spd_notOwned[000]": {
     "buffName": "不容遗漏·α",
@@ -4347,7 +5984,10 @@
     "description": "进驻会客室时，更容易获得线索板上尚未拥有的线索",
     "efficiency": 0,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_497_ctable"
+    ]
   },
   "meet_spd_notOwned[010]": {
     "buffName": "不容遗漏·β",
@@ -4355,7 +5995,10 @@
     "description": "进驻会客室时，线索搜集速度提升<@cc.vup>10%</>，且更容易获得线索板上尚未拥有的线索",
     "efficiency": 10,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_497_ctable"
+    ]
   },
   "meet_spd_notOwned[001]": {
     "buffName": "情报分析",
@@ -4363,7 +6006,10 @@
     "description": "进驻会客室时，更容易获得线索板上尚未拥有的线索",
     "efficiency": 0,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_4017_puzzle"
+    ]
   },
   "meet_spd_notOwned[002]": {
     "buffName": "见微知著",
@@ -4371,7 +6017,10 @@
     "description": "进驻会客室时，更容易获得线索板上尚未拥有的线索",
     "efficiency": 0,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_4199_makiri"
+    ]
   },
   "meet_spd_notOwned[003]": {
     "buffName": "萍踪浪迹",
@@ -4379,7 +6028,10 @@
     "description": "进驻会客室时，更容易获得线索板上尚未拥有的线索",
     "efficiency": 0,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_1050_chen3"
+    ]
   },
   "meet_spd_Owned[000]": {
     "buffName": "显眼的调查者",
@@ -4387,7 +6039,10 @@
     "description": "进驻会客室时，更容易获得线索板上已经拥有的线索",
     "efficiency": 0,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_4091_ulika"
+    ]
   },
   "meet_spd_bd[000]": {
     "buffName": "情报专家",
@@ -4395,7 +6050,10 @@
     "description": "进驻会客室时，线索搜集速度提升<@cc.vup>5%</>，同时每<@cc.vup>1</>点<$cc.bd_ash><@cc.rem>情报储备</></>额外提升<@cc.vup>5%</>",
     "efficiency": 5,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_4124_iana"
+    ]
   },
   "meet_spd_bd[001]": {
     "buffName": "饱餐的干劲",
@@ -4403,7 +6061,10 @@
     "description": "进驻会客室时，每拥有<@cc.vup>1</>点<$cc.bd_dungeon><@cc.rem>魔物料理</></>，线索搜集速度额外提升<@cc.vup>2%</>",
     "efficiency": 0,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_4142_laios"
+    ]
   },
   "meet_spd_bd[002]": {
     "buffName": "扶危行侠",
@@ -4411,7 +6072,10 @@
     "description": "进驻会客室时，线索搜集速度提升<@cc.vup>20%</>，同时每<@cc.vup>10</>点<$cc.bd_b1><@cc.rem>人间烟火</></>额外提升<@cc.vup>1%</>",
     "efficiency": 20,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_1050_chen3"
+    ]
   },
   "meet_spd_hast[000]": {
     "buffName": "聚影",
@@ -4419,7 +6083,10 @@
     "description": "进驻会客室时，线索搜集速度提升<@cc.vup>20%</>，此后每小时提升<@cc.vup>2%</>，最终达到<@cc.vup>30%</>",
     "efficiency": 20,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_4087_ines"
+    ]
   },
   "meet_spd&condChar_mustget[000]": {
     "buffName": "文献学顾问",
@@ -4427,7 +6094,10 @@
     "description": "进驻会客室时，如果会客室内只有自身处于工作状态时，连续消耗超过<@cc.kw>16</>点心情下一次<@cc.kw>必定</>获得<@cc.kw>莱茵生命</>的线索",
     "efficiency": 0,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_4027_heyak"
+    ]
   },
   "meet_spd&condChar_mustget[100]": {
     "buffName": "暗线",
@@ -4435,7 +6105,10 @@
     "description": "进驻会客室时，如果会客室内只有自身处于工作状态时，连续消耗超过<@cc.kw>16</>点心情下一次<@cc.kw>必定</>获得<@cc.kw>罗德岛制药</>的线索",
     "efficiency": 0,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_4131_odda"
+    ]
   },
   "meet_spd&clue[000]": {
     "buffName": "广交义友",
@@ -4443,7 +6116,10 @@
     "description": "进驻会客室时，每个招募位（不包含初始招募位）提升<@cc.vup>5%</>线索搜集速度",
     "efficiency": 0,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_445_wscoot"
+    ]
   },
   "meet_spd_notOwned&exchange[000]": {
     "buffName": "眼观六路",
@@ -4451,6 +6127,9 @@
     "description": "进驻会客室时，处于线索交流时更容易获得线索板上尚未拥有的线索",
     "efficiency": 0,
     "targetGroupSortId": 0,
-    "targets": []
+    "targets": [],
+    "charId": [
+      "char_445_wscoot"
+    ]
   }
 }

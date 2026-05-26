@@ -1,0 +1,9173 @@
+{
+  "char_002_amiya": {
+    "name": "阿米娅",
+    "rarity": 4,
+    "profession": "CASTER",
+    "nationId": "rhodes",
+    "groupId": null,
+    "teamId": null,
+    "subPower": [
+      {
+        "nationId": "rim",
+        "groupId": null,
+        "teamId": null
+      }
+    ],
+    "skills": [
+      {
+        "buffId": "control_tra_spd[000]",
+        "roomType": "CONTROL",
+        "phase": 0
+      },
+      {
+        "buffId": "dorm_rec_all[010]",
+        "roomType": "DORMITORY",
+        "phase": 2
+      }
+    ]
+  },
+  "char_003_kalts": {
+    "name": "凯尔希",
+    "rarity": 5,
+    "profession": "MEDIC",
+    "nationId": "rhodes",
+    "groupId": null,
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "workshop_proc_probability[040]",
+        "roomType": "WORKSHOP",
+        "phase": 0
+      },
+      {
+        "buffId": "control_prod_spd[000]",
+        "roomType": "CONTROL",
+        "phase": 2
+      }
+    ]
+  },
+  "char_009_12fce": {
+    "name": "12F",
+    "rarity": 1,
+    "profession": "CASTER",
+    "nationId": "rhodes",
+    "groupId": null,
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "meet_spd[020]",
+        "roomType": "MEETING",
+        "phase": 0
+      },
+      {
+        "buffId": "workshop_formula_probability[300]",
+        "roomType": "WORKSHOP",
+        "phase": 0
+      }
+    ]
+  },
+  "char_010_chen": {
+    "name": "陈",
+    "rarity": 5,
+    "profession": "WARRIOR",
+    "nationId": "lungmen",
+    "groupId": "lgd",
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "control_mp_cost&faction[000]",
+        "roomType": "CONTROL",
+        "phase": 0
+      },
+      {
+        "buffId": "meet_spd&team[100]",
+        "roomType": "MEETING",
+        "phase": 2
+      }
+    ]
+  },
+  "char_017_huang": {
+    "name": "煌",
+    "rarity": 5,
+    "profession": "WARRIOR",
+    "nationId": "rhodes",
+    "groupId": "elite",
+    "teamId": null,
+    "subPower": [
+      {
+        "nationId": "yan",
+        "groupId": null,
+        "teamId": null
+      },
+      {
+        "nationId": "victoria",
+        "groupId": null,
+        "teamId": null
+      }
+    ],
+    "skills": [
+      {
+        "buffId": "power_rec_spd[001]",
+        "roomType": "POWER",
+        "phase": 0
+      },
+      {
+        "buffId": "workshop_formula_probability[210]",
+        "roomType": "WORKSHOP",
+        "phase": 1
+      }
+    ]
+  },
+  "char_1011_lava2": {
+    "name": "炎狱炎熔",
+    "rarity": 4,
+    "profession": "CASTER",
+    "nationId": "rhodes",
+    "groupId": null,
+    "teamId": null,
+    "subPower": [
+      {
+        "nationId": "victoria",
+        "groupId": null,
+        "teamId": null
+      }
+    ],
+    "skills": [
+      {
+        "buffId": "control_mp_cost&faction[900]",
+        "roomType": "CONTROL",
+        "phase": 0
+      },
+      {
+        "buffId": "power_rec_spd[022]",
+        "roomType": "POWER",
+        "phase": 2
+      }
+    ]
+  },
+  "char_1012_skadi2": {
+    "name": "浊心斯卡蒂",
+    "rarity": 5,
+    "profession": "SUPPORT",
+    "nationId": "egir",
+    "groupId": null,
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "train_spd&profession2[060]",
+        "roomType": "TRAINING",
+        "phase": 0
+      },
+      {
+        "buffId": "train_spd&profession2[660]",
+        "roomType": "TRAINING",
+        "phase": 2
+      },
+      {
+        "buffId": "train_cost&profession[360]",
+        "roomType": "TRAINING",
+        "phase": 2
+      }
+    ]
+  },
+  "char_1013_chen2": {
+    "name": "假日威龙陈",
+    "rarity": 5,
+    "profession": "SNIPER",
+    "nationId": "rhodes",
+    "groupId": null,
+    "teamId": null,
+    "subPower": [
+      {
+        "nationId": "yan",
+        "groupId": null,
+        "teamId": null
+      }
+    ],
+    "skills": [
+      {
+        "buffId": "train_spd&profession2[040]",
+        "roomType": "TRAINING",
+        "phase": 0
+      },
+      {
+        "buffId": "train_spd&profession2[440]",
+        "roomType": "TRAINING",
+        "phase": 2
+      },
+      {
+        "buffId": "train_cost&profession[140]",
+        "roomType": "TRAINING",
+        "phase": 2
+      }
+    ]
+  },
+  "char_1014_nearl2": {
+    "name": "耀骑士临光",
+    "rarity": 5,
+    "profession": "WARRIOR",
+    "nationId": "kazimierz",
+    "groupId": null,
+    "teamId": null,
+    "subPower": [
+      {
+        "nationId": null,
+        "groupId": null,
+        "teamId": "followers"
+      }
+    ],
+    "skills": [
+      {
+        "buffId": "train_spd_tag[000]",
+        "roomType": "TRAINING",
+        "phase": 0
+      },
+      {
+        "buffId": "train_spd_tag[010]",
+        "roomType": "TRAINING",
+        "phase": 2
+      }
+    ]
+  },
+  "char_1016_agoat2": {
+    "name": "纯烬艾雅法拉",
+    "rarity": 5,
+    "profession": "MEDIC",
+    "nationId": "leithanien",
+    "groupId": null,
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "train_spd&profession3[180]",
+        "roomType": "TRAINING",
+        "phase": 0
+      },
+      {
+        "buffId": "train_spd&profession3[181]",
+        "roomType": "TRAINING",
+        "phase": 2
+      },
+      {
+        "buffId": "dorm_rec_all&profession[000]",
+        "roomType": "DORMITORY",
+        "phase": 2
+      }
+    ]
+  },
+  "char_1019_siege2": {
+    "name": "维娜·维多利亚",
+    "rarity": 5,
+    "profession": "WARRIOR",
+    "nationId": "victoria",
+    "groupId": null,
+    "teamId": null,
+    "subPower": [
+      {
+        "nationId": "victoria",
+        "groupId": "glasgow",
+        "teamId": null
+      }
+    ],
+    "skills": [
+      {
+        "buffId": "trade_ord_spd&par[000]",
+        "roomType": "TRADING",
+        "phase": 0
+      },
+      {
+        "buffId": "trade_ord_spd&par[001]",
+        "roomType": "TRADING",
+        "phase": 2
+      }
+    ]
+  },
+  "char_101_sora": {
+    "name": "空",
+    "rarity": 4,
+    "profession": "SUPPORT",
+    "nationId": "lungmen",
+    "groupId": "penguin",
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "dorm_rec_all[011]",
+        "roomType": "DORMITORY",
+        "phase": 0
+      },
+      {
+        "buffId": "trade_ord_spd[011]",
+        "roomType": "TRADING",
+        "phase": 2
+      }
+    ]
+  },
+  "char_1020_reed2": {
+    "name": "焰影苇草",
+    "rarity": 5,
+    "profession": "MEDIC",
+    "nationId": "victoria",
+    "groupId": "tara",
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "train_spd_doubleProf[100]",
+        "roomType": "TRAINING",
+        "phase": 0
+      },
+      {
+        "buffId": "train_spd_doubleProf[110]",
+        "roomType": "TRAINING",
+        "phase": 2
+      },
+      {
+        "buffId": "control_dorm_rec[000]",
+        "roomType": "CONTROL",
+        "phase": 1
+      }
+    ]
+  },
+  "char_1021_kroos2": {
+    "name": "寒芒克洛丝",
+    "rarity": 4,
+    "profession": "SNIPER",
+    "nationId": "rhodes",
+    "groupId": null,
+    "teamId": null,
+    "subPower": [
+      {
+        "nationId": "rim",
+        "groupId": null,
+        "teamId": null
+      }
+    ],
+    "skills": [
+      {
+        "buffId": "control_mp_cost&faction[900]",
+        "roomType": "CONTROL",
+        "phase": 0
+      },
+      {
+        "buffId": "train_spd&profession3[140]",
+        "roomType": "TRAINING",
+        "phase": 2
+      }
+    ]
+  },
+  "char_1022_flwr2": {
+    "name": "撷英调香师",
+    "rarity": 4,
+    "profession": "SUPPORT",
+    "nationId": "rhodes",
+    "groupId": null,
+    "teamId": null,
+    "subPower": [
+      {
+        "nationId": "minos",
+        "groupId": null,
+        "teamId": null
+      }
+    ],
+    "skills": [
+      {
+        "buffId": "dorm_rec_all[029]",
+        "roomType": "DORMITORY",
+        "phase": 0
+      },
+      {
+        "buffId": "dorm_rec_all&tired[100]",
+        "roomType": "DORMITORY",
+        "phase": 2
+      }
+    ]
+  },
+  "char_1023_ghost2": {
+    "name": "归溟幽灵鲨",
+    "rarity": 5,
+    "profession": "SPECIAL",
+    "nationId": "egir",
+    "groupId": "abyssal",
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "train_spd&profession2[080]",
+        "roomType": "TRAINING",
+        "phase": 0
+      },
+      {
+        "buffId": "train_spd&profession2[680]",
+        "roomType": "TRAINING",
+        "phase": 2
+      },
+      {
+        "buffId": "train_cost&profession[380]",
+        "roomType": "TRAINING",
+        "phase": 2
+      }
+    ]
+  },
+  "char_1024_hbisc2": {
+    "name": "濯尘芙蓉",
+    "rarity": 4,
+    "profession": "MEDIC",
+    "nationId": "rhodes",
+    "groupId": null,
+    "teamId": null,
+    "subPower": [
+      {
+        "nationId": "victoria",
+        "groupId": null,
+        "teamId": null
+      }
+    ],
+    "skills": [
+      {
+        "buffId": "control_mp_cost&faction[900]",
+        "roomType": "CONTROL",
+        "phase": 0
+      },
+      {
+        "buffId": "train_spd&profession2[270]",
+        "roomType": "TRAINING",
+        "phase": 2
+      }
+    ]
+  },
+  "char_1026_gvial2": {
+    "name": "百炼嘉维尔",
+    "rarity": 5,
+    "profession": "WARRIOR",
+    "nationId": "rhodes",
+    "groupId": null,
+    "teamId": null,
+    "subPower": [
+      {
+        "nationId": "sargon",
+        "groupId": null,
+        "teamId": null
+      }
+    ],
+    "skills": [
+      {
+        "buffId": "train_spd&profession2[020]",
+        "roomType": "TRAINING",
+        "phase": 0
+      },
+      {
+        "buffId": "train_spd&profession2[620]",
+        "roomType": "TRAINING",
+        "phase": 2
+      },
+      {
+        "buffId": "train_cost&profession[320]",
+        "roomType": "TRAINING",
+        "phase": 2
+      }
+    ]
+  },
+  "char_1027_greyy2": {
+    "name": "承曦格雷伊",
+    "rarity": 4,
+    "profession": "SNIPER",
+    "nationId": "rhodes",
+    "groupId": null,
+    "teamId": null,
+    "subPower": [
+      {
+        "nationId": "bolivar",
+        "groupId": null,
+        "teamId": null
+      }
+    ],
+    "skills": [
+      {
+        "buffId": "power_rec_drone[000]",
+        "roomType": "POWER",
+        "phase": 0
+      },
+      {
+        "buffId": "power_count[000]",
+        "roomType": "POWER",
+        "phase": 2
+      }
+    ]
+  },
+  "char_1028_texas2": {
+    "name": "缄默德克萨斯",
+    "rarity": 5,
+    "profession": "SPECIAL",
+    "nationId": "lungmen",
+    "groupId": "penguin",
+    "teamId": null,
+    "subPower": [
+      {
+        "nationId": "siracusa",
+        "groupId": null,
+        "teamId": null
+      }
+    ],
+    "skills": [
+      {
+        "buffId": "train_spd_doubleProf2[001]",
+        "roomType": "TRAINING",
+        "phase": 0
+      },
+      {
+        "buffId": "train_spd_doubleProf2[000]",
+        "roomType": "TRAINING",
+        "phase": 2
+      }
+    ]
+  },
+  "char_1029_yato2": {
+    "name": "麒麟R夜刀",
+    "rarity": 5,
+    "profession": "SPECIAL",
+    "nationId": "rhodes",
+    "groupId": null,
+    "teamId": "action4",
+    "subPower": [
+      {
+        "nationId": "higashi",
+        "groupId": null,
+        "teamId": null
+      }
+    ],
+    "skills": [
+      {
+        "buffId": "control_mp_cost&bd2[010]",
+        "roomType": "CONTROL",
+        "phase": 0
+      },
+      {
+        "buffId": "control_token_prod_spd2[000]",
+        "roomType": "CONTROL",
+        "phase": 2
+      }
+    ]
+  },
+  "char_102_texas": {
+    "name": "德克萨斯",
+    "rarity": 4,
+    "profession": "PIONEER",
+    "nationId": "lungmen",
+    "groupId": "penguin",
+    "teamId": null,
+    "subPower": [
+      {
+        "nationId": "siracusa",
+        "groupId": null,
+        "teamId": null
+      }
+    ],
+    "skills": [
+      {
+        "buffId": "trade_ord_spd&cost_P[000]",
+        "roomType": "TRADING",
+        "phase": 0
+      },
+      {
+        "buffId": "trade_ord_limit&cost_P[010]",
+        "roomType": "TRADING",
+        "phase": 2
+      }
+    ]
+  },
+  "char_1030_noirc2": {
+    "name": "火龙S黑角",
+    "rarity": 4,
+    "profession": "WARRIOR",
+    "nationId": "rhodes",
+    "groupId": null,
+    "teamId": "action4",
+    "subPower": [
+      {
+        "nationId": "higashi",
+        "groupId": null,
+        "teamId": null
+      }
+    ],
+    "skills": [
+      {
+        "buffId": "control_mp_bd2[000]",
+        "roomType": "CONTROL",
+        "phase": 0
+      },
+      {
+        "buffId": "control_token_tra_spd[000]",
+        "roomType": "CONTROL",
+        "phase": 2
+      }
+    ]
+  },
+  "char_1031_slent2": {
+    "name": "淬羽赫默",
+    "rarity": 5,
+    "profession": "SUPPORT",
+    "nationId": "columbia",
+    "groupId": "rhine",
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "hire_spd[032]",
+        "roomType": "HIRE",
+        "phase": 0
+      },
+      {
+        "buffId": "manu_prod_spd[021]",
+        "roomType": "MANUFACTURE",
+        "phase": 2
+      }
+    ]
+  },
+  "char_1032_excu2": {
+    "name": "圣约送葬人",
+    "rarity": 5,
+    "profession": "WARRIOR",
+    "nationId": "laterano",
+    "groupId": null,
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "manu_formula_spd[030]",
+        "roomType": "MANUFACTURE",
+        "phase": 0
+      },
+      {
+        "buffId": "manu_formula_spd[031]",
+        "roomType": "MANUFACTURE",
+        "phase": 2
+      },
+      {
+        "buffId": "manu_formula_limit[020]",
+        "roomType": "MANUFACTURE",
+        "phase": 2
+      }
+    ]
+  },
+  "char_1033_swire2": {
+    "name": "琳琅诗怀雅",
+    "rarity": 5,
+    "profession": "SPECIAL",
+    "nationId": "lungmen",
+    "groupId": null,
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "trade_ord_spd[000]",
+        "roomType": "TRADING",
+        "phase": 0
+      },
+      {
+        "buffId": "trade_ord_spd_variable[000]",
+        "roomType": "TRADING",
+        "phase": 2
+      }
+    ]
+  },
+  "char_1034_jesca2": {
+    "name": "涤火杰西卡",
+    "rarity": 5,
+    "profession": "TANK",
+    "nationId": "columbia",
+    "groupId": "blacksteel",
+    "teamId": null,
+    "subPower": [
+      {
+        "nationId": "victoria",
+        "groupId": null,
+        "teamId": null
+      }
+    ],
+    "skills": [
+      {
+        "buffId": "trade_ord_spd&limit[001]",
+        "roomType": "TRADING",
+        "phase": 0
+      },
+      {
+        "buffId": "control_bd_spd[000]",
+        "roomType": "CONTROL",
+        "phase": 2
+      }
+    ]
+  },
+  "char_1035_wisdel": {
+    "name": "维什戴尔",
+    "rarity": 5,
+    "profession": "SNIPER",
+    "nationId": null,
+    "groupId": "babel",
+    "teamId": null,
+    "subPower": [
+      {
+        "nationId": "rhodes",
+        "groupId": null,
+        "teamId": null
+      }
+    ],
+    "skills": [
+      {
+        "buffId": "control_meeting&ord[000]",
+        "roomType": "CONTROL",
+        "phase": 0
+      },
+      {
+        "buffId": "control_meeting&ord[001]",
+        "roomType": "CONTROL",
+        "phase": 2
+      },
+      {
+        "buffId": "control_mp_expand_double[000]",
+        "roomType": "CONTROL",
+        "phase": 2
+      }
+    ]
+  },
+  "char_1036_fang2": {
+    "name": "历阵锐枪芬",
+    "rarity": 4,
+    "profession": "PIONEER",
+    "nationId": "rhodes",
+    "groupId": null,
+    "teamId": null,
+    "subPower": [
+      {
+        "nationId": "kazimierz",
+        "groupId": null,
+        "teamId": null
+      }
+    ],
+    "skills": [
+      {
+        "buffId": "manu_prod_spd[1000]",
+        "roomType": "MANUFACTURE",
+        "phase": 0
+      },
+      {
+        "buffId": "manu_prod_spd&fraction[000]",
+        "roomType": "MANUFACTURE",
+        "phase": 2
+      }
+    ]
+  },
+  "char_1038_whitw2": {
+    "name": "荒芜拉普兰德",
+    "rarity": 5,
+    "profession": "CASTER",
+    "nationId": "siracusa",
+    "groupId": null,
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "train_spd_doubleProf[300]",
+        "roomType": "TRAINING",
+        "phase": 0
+      },
+      {
+        "buffId": "train_spd_tag[040]",
+        "roomType": "TRAINING",
+        "phase": 2
+      }
+    ]
+  },
+  "char_1039_thorn2": {
+    "name": "引星棘刺",
+    "rarity": 5,
+    "profession": "SPECIAL",
+    "nationId": "iberia",
+    "groupId": null,
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "manu_formula_spd[102]",
+        "roomType": "MANUFACTURE",
+        "phase": 0
+      },
+      {
+        "buffId": "manu_prod_spd&trade[1000]",
+        "roomType": "MANUFACTURE",
+        "phase": 2
+      }
+    ]
+  },
+  "char_103_angel": {
+    "name": "能天使",
+    "rarity": 5,
+    "profession": "SNIPER",
+    "nationId": "lungmen",
+    "groupId": "penguin",
+    "teamId": null,
+    "subPower": [
+      {
+        "nationId": "laterano",
+        "groupId": null,
+        "teamId": null
+      }
+    ],
+    "skills": [
+      {
+        "buffId": "trade_ord_spd[010]",
+        "roomType": "TRADING",
+        "phase": 0
+      },
+      {
+        "buffId": "trade_ord_spd[020]",
+        "roomType": "TRADING",
+        "phase": 2
+      }
+    ]
+  },
+  "char_1040_blaze2": {
+    "name": "烛煌",
+    "rarity": 5,
+    "profession": "CASTER",
+    "nationId": "rhodes",
+    "groupId": "elite",
+    "teamId": null,
+    "subPower": [
+      {
+        "nationId": "yan",
+        "groupId": null,
+        "teamId": null
+      },
+      {
+        "nationId": "victoria",
+        "groupId": null,
+        "teamId": null
+      }
+    ],
+    "skills": [
+      {
+        "buffId": "control_train_spd[011]",
+        "roomType": "CONTROL",
+        "phase": 0
+      },
+      {
+        "buffId": "power_rec_spd[1022]",
+        "roomType": "POWER",
+        "phase": 2
+      }
+    ]
+  },
+  "char_1041_angel2": {
+    "name": "新约能天使",
+    "rarity": 5,
+    "profession": "SPECIAL",
+    "nationId": "lungmen",
+    "groupId": "penguin",
+    "teamId": null,
+    "subPower": [
+      {
+        "nationId": "laterano",
+        "groupId": null,
+        "teamId": null
+      }
+    ],
+    "skills": [
+      {
+        "buffId": "dorm_rec_single_power[100]",
+        "roomType": "DORMITORY",
+        "phase": 0
+      },
+      {
+        "buffId": "dorm_rec_single_power[001]",
+        "roomType": "DORMITORY",
+        "phase": 2
+      },
+      {
+        "buffId": "trade_ord_spd_par[001]",
+        "roomType": "TRADING",
+        "phase": 2
+      }
+    ]
+  },
+  "char_1042_phatm2": {
+    "name": "酒神",
+    "rarity": 5,
+    "profession": "SUPPORT",
+    "nationId": "victoria",
+    "groupId": null,
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "manu_formula_spd&limit&cost[000]",
+        "roomType": "MANUFACTURE",
+        "phase": 0
+      },
+      {
+        "buffId": "manu_formula_spd&limit&cost[010]",
+        "roomType": "MANUFACTURE",
+        "phase": 2
+      }
+    ]
+  },
+  "char_1043_leizi2": {
+    "name": "司霆惊蛰",
+    "rarity": 5,
+    "profession": "WARRIOR",
+    "nationId": "yan",
+    "groupId": null,
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "power_rec_spd[007]",
+        "roomType": "POWER",
+        "phase": 0
+      },
+      {
+        "buffId": "workshop_formula_probability[021]",
+        "roomType": "WORKSHOP",
+        "phase": 2
+      }
+    ]
+  },
+  "char_1044_hsgma2": {
+    "name": "斩业星熊",
+    "rarity": 5,
+    "profession": "TANK",
+    "nationId": "lungmen",
+    "groupId": "lgd",
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "control_train_spd[012]",
+        "roomType": "CONTROL",
+        "phase": 0
+      },
+      {
+        "buffId": "control_token_prod_spd3[000]",
+        "roomType": "CONTROL",
+        "phase": 2
+      }
+    ]
+  },
+  "char_1045_svash2": {
+    "name": "凛御银灰",
+    "rarity": 5,
+    "profession": "PIONEER",
+    "nationId": "kjerag",
+    "groupId": null,
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "control_tra_limit&spd3[000]",
+        "roomType": "CONTROL",
+        "phase": 0
+      },
+      {
+        "buffId": "train_spd&profession2[111]",
+        "roomType": "TRAINING",
+        "phase": 0
+      },
+      {
+        "buffId": "train_spd&profession2[112]",
+        "roomType": "TRAINING",
+        "phase": 2
+      }
+    ]
+  },
+  "char_1046_sbell2": {
+    "name": "圣聆初雪",
+    "rarity": 5,
+    "profession": "CASTER",
+    "nationId": "kjerag",
+    "groupId": null,
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "hire_spd_cost&char[000]",
+        "roomType": "HIRE",
+        "phase": 0
+      },
+      {
+        "buffId": "hire_spd_cost&char[001]",
+        "roomType": "HIRE",
+        "phase": 2
+      }
+    ]
+  },
+  "char_1047_halo2": {
+    "name": "溯光星源",
+    "rarity": 5,
+    "profession": "SUPPORT",
+    "nationId": "columbia",
+    "groupId": "rhine",
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "manu_skill_limit[000]",
+        "roomType": "MANUFACTURE",
+        "phase": 0
+      },
+      {
+        "buffId": "manu_prod_spd[011]",
+        "roomType": "MANUFACTURE",
+        "phase": 2
+      }
+    ]
+  },
+  "char_1050_chen3": {
+    "name": "赤刃明霄陈",
+    "rarity": 5,
+    "profession": "WARRIOR",
+    "nationId": "yan",
+    "groupId": null,
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "meet_spd_notOwned[003]",
+        "roomType": "MEETING",
+        "phase": 0
+      },
+      {
+        "buffId": "meet_spd_bd[002]",
+        "roomType": "MEETING",
+        "phase": 2
+      }
+    ]
+  },
+  "char_1051_headb2": {
+    "name": "怒潮凛冬",
+    "rarity": 5,
+    "profession": "WARRIOR",
+    "nationId": "ursus",
+    "groupId": null,
+    "teamId": "student",
+    "skills": [
+      {
+        "buffId": "manu_formula_spd&bd[000]",
+        "roomType": "MANUFACTURE",
+        "phase": 0
+      },
+      {
+        "buffId": "manu_formula_spd&bd[001]",
+        "roomType": "MANUFACTURE",
+        "phase": 2
+      },
+      {
+        "buffId": "control_meeting_bd[000]",
+        "roomType": "CONTROL",
+        "phase": 2
+      }
+    ]
+  },
+  "char_1052_kalts2": {
+    "name": "凯尔希·思衡托",
+    "rarity": 5,
+    "profession": "MEDIC",
+    "nationId": "rhodes",
+    "groupId": null,
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "workshop_proc_probability[041]",
+        "roomType": "WORKSHOP",
+        "phase": 0
+      },
+      {
+        "buffId": "workshop_proc_probability[050]",
+        "roomType": "WORKSHOP",
+        "phase": 2
+      },
+      {
+        "buffId": "hire_spd_tag[000]",
+        "roomType": "HIRE",
+        "phase": 2
+      }
+    ]
+  },
+  "char_106_franka": {
+    "name": "芙兰卡",
+    "rarity": 4,
+    "profession": "WARRIOR",
+    "nationId": "columbia",
+    "groupId": "blacksteel",
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "train_spd&profession[020]",
+        "roomType": "TRAINING",
+        "phase": 0
+      },
+      {
+        "buffId": "train_spd&profession[021]",
+        "roomType": "TRAINING",
+        "phase": 2
+      },
+      {
+        "buffId": "meet_spd&team[000]",
+        "roomType": "MEETING",
+        "phase": 0
+      },
+      {
+        "buffId": "meet_spd&team[031]",
+        "roomType": "MEETING",
+        "phase": 2
+      }
+    ]
+  },
+  "char_107_liskam": {
+    "name": "雷蛇",
+    "rarity": 4,
+    "profession": "TANK",
+    "nationId": "columbia",
+    "groupId": "blacksteel",
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "power_rec_spd[014]",
+        "roomType": "POWER",
+        "phase": 0
+      },
+      {
+        "buffId": "power_rec_spd[021]",
+        "roomType": "POWER",
+        "phase": 2
+      }
+    ]
+  },
+  "char_108_silent": {
+    "name": "赫默",
+    "rarity": 4,
+    "profession": "MEDIC",
+    "nationId": "columbia",
+    "groupId": "rhine",
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "manu_prod_spd[001]",
+        "roomType": "MANUFACTURE",
+        "phase": 0
+      },
+      {
+        "buffId": "manu_prod_spd[011]",
+        "roomType": "MANUFACTURE",
+        "phase": 2
+      }
+    ]
+  },
+  "char_109_fmout": {
+    "name": "远山",
+    "rarity": 3,
+    "profession": "CASTER",
+    "nationId": "sami",
+    "groupId": null,
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "trade_ord_spd&limit[010]",
+        "roomType": "TRADING",
+        "phase": 0
+      },
+      {
+        "buffId": "meet_spd[030]",
+        "roomType": "MEETING",
+        "phase": 1
+      }
+    ]
+  },
+  "char_110_deepcl": {
+    "name": "深海色",
+    "rarity": 3,
+    "profession": "SUPPORT",
+    "nationId": "egir",
+    "groupId": null,
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "trade_ord_spd[000]",
+        "roomType": "TRADING",
+        "phase": 0
+      },
+      {
+        "buffId": "workshop_proc_probability[020]",
+        "roomType": "WORKSHOP",
+        "phase": 1
+      }
+    ]
+  },
+  "char_112_siege": {
+    "name": "推进之王",
+    "rarity": 5,
+    "profession": "PIONEER",
+    "nationId": "victoria",
+    "groupId": "glasgow",
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "dorm_rec_all[013]",
+        "roomType": "DORMITORY",
+        "phase": 0
+      },
+      {
+        "buffId": "dorm_rec_all[022]",
+        "roomType": "DORMITORY",
+        "phase": 2
+      }
+    ]
+  },
+  "char_113_cqbw": {
+    "name": "W",
+    "rarity": 5,
+    "profession": "SNIPER",
+    "nationId": null,
+    "groupId": "babel",
+    "teamId": null,
+    "subPower": [
+      {
+        "nationId": "rhodes",
+        "groupId": null,
+        "teamId": null
+      }
+    ],
+    "skills": [
+      {
+        "buffId": "train_spd&profession2[040]",
+        "roomType": "TRAINING",
+        "phase": 0
+      },
+      {
+        "buffId": "train_spd&profession2[640]",
+        "roomType": "TRAINING",
+        "phase": 2
+      },
+      {
+        "buffId": "train_cost&profession[340]",
+        "roomType": "TRAINING",
+        "phase": 2
+      }
+    ]
+  },
+  "char_115_headbr": {
+    "name": "凛冬",
+    "rarity": 4,
+    "profession": "PIONEER",
+    "nationId": "ursus",
+    "groupId": null,
+    "teamId": "student",
+    "skills": [
+      {
+        "buffId": "dorm_rec_all[013]",
+        "roomType": "DORMITORY",
+        "phase": 0
+      },
+      {
+        "buffId": "dorm_rec_all[020]",
+        "roomType": "DORMITORY",
+        "phase": 2
+      }
+    ]
+  },
+  "char_117_myrrh": {
+    "name": "末药",
+    "rarity": 3,
+    "profession": "MEDIC",
+    "nationId": "rhodes",
+    "groupId": null,
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "workshop_formula_probability[110]",
+        "roomType": "WORKSHOP",
+        "phase": 0
+      },
+      {
+        "buffId": "dorm_rec_single[010]",
+        "roomType": "DORMITORY",
+        "phase": 1
+      }
+    ]
+  },
+  "char_118_yuki": {
+    "name": "白雪",
+    "rarity": 3,
+    "profession": "SNIPER",
+    "nationId": "higashi",
+    "groupId": null,
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "meet_spd[020]",
+        "roomType": "MEETING",
+        "phase": 0
+      },
+      {
+        "buffId": "manu_formula_spd[010]",
+        "roomType": "MANUFACTURE",
+        "phase": 1
+      }
+    ]
+  },
+  "char_120_hibisc": {
+    "name": "芙蓉",
+    "rarity": 2,
+    "profession": "MEDIC",
+    "nationId": "rhodes",
+    "groupId": null,
+    "teamId": "reserve1",
+    "subPower": [
+      {
+        "nationId": "victoria",
+        "groupId": null,
+        "teamId": null
+      }
+    ],
+    "skills": [
+      {
+        "buffId": "dorm_rec_single[010]",
+        "roomType": "DORMITORY",
+        "phase": 0
+      },
+      {
+        "buffId": "workshop_formula_probability[100]",
+        "roomType": "WORKSHOP",
+        "phase": 1
+      }
+    ]
+  },
+  "char_121_lava": {
+    "name": "炎熔",
+    "rarity": 2,
+    "profession": "CASTER",
+    "nationId": "rhodes",
+    "groupId": null,
+    "teamId": "reserve1",
+    "subPower": [
+      {
+        "nationId": "victoria",
+        "groupId": null,
+        "teamId": null
+      }
+    ],
+    "skills": [
+      {
+        "buffId": "power_rec_spd[001]",
+        "roomType": "POWER",
+        "phase": 0
+      },
+      {
+        "buffId": "manu_formula_spd[210]",
+        "roomType": "MANUFACTURE",
+        "phase": 1
+      }
+    ]
+  },
+  "char_122_beagle": {
+    "name": "米格鲁",
+    "rarity": 2,
+    "profession": "TANK",
+    "nationId": "rhodes",
+    "groupId": null,
+    "teamId": "reserve1",
+    "subPower": [
+      {
+        "nationId": "bolivar",
+        "groupId": null,
+        "teamId": null
+      }
+    ],
+    "skills": [
+      {
+        "buffId": "manu_prod_spd&limit[000]",
+        "roomType": "MANUFACTURE",
+        "phase": 0
+      },
+      {
+        "buffId": "dorm_rec_single&oneself[000]",
+        "roomType": "DORMITORY",
+        "phase": 1
+      }
+    ]
+  },
+  "char_123_fang": {
+    "name": "芬",
+    "rarity": 2,
+    "profession": "PIONEER",
+    "nationId": "rhodes",
+    "groupId": null,
+    "teamId": "reserve1",
+    "subPower": [
+      {
+        "nationId": "kazimierz",
+        "groupId": null,
+        "teamId": null
+      }
+    ],
+    "skills": [
+      {
+        "buffId": "manu_prod_spd_addition[030]",
+        "roomType": "MANUFACTURE",
+        "phase": 0
+      },
+      {
+        "buffId": "trade_ord_spd[001]",
+        "roomType": "TRADING",
+        "phase": 1
+      }
+    ]
+  },
+  "char_124_kroos": {
+    "name": "克洛丝",
+    "rarity": 2,
+    "profession": "SNIPER",
+    "nationId": "rhodes",
+    "groupId": null,
+    "teamId": "reserve1",
+    "subPower": [
+      {
+        "nationId": "rim",
+        "groupId": null,
+        "teamId": null
+      }
+    ],
+    "skills": [
+      {
+        "buffId": "manu_prod_spd_addition[040]",
+        "roomType": "MANUFACTURE",
+        "phase": 0
+      },
+      {
+        "buffId": "dorm_rec_oneself[000]",
+        "roomType": "DORMITORY",
+        "phase": 1
+      }
+    ]
+  },
+  "char_126_shotst": {
+    "name": "流星",
+    "rarity": 3,
+    "profession": "SNIPER",
+    "nationId": "kazimierz",
+    "groupId": null,
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "manu_prod_spd[000]",
+        "roomType": "MANUFACTURE",
+        "phase": 0
+      },
+      {
+        "buffId": "dorm_rec_single[010]",
+        "roomType": "DORMITORY",
+        "phase": 1
+      }
+    ]
+  },
+  "char_127_estell": {
+    "name": "艾丝黛尔",
+    "rarity": 3,
+    "profession": "WARRIOR",
+    "nationId": "sargon",
+    "groupId": null,
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "workshop_proc_probability[020]",
+        "roomType": "WORKSHOP",
+        "phase": 0
+      },
+      {
+        "buffId": "dorm_rec_oneself[000]",
+        "roomType": "DORMITORY",
+        "phase": 1
+      }
+    ]
+  },
+  "char_128_plosis": {
+    "name": "白面鸮",
+    "rarity": 4,
+    "profession": "MEDIC",
+    "nationId": "columbia",
+    "groupId": "rhine",
+    "teamId": null,
+    "subPower": [
+      {
+        "nationId": "rhodes",
+        "groupId": null,
+        "teamId": null
+      }
+    ],
+    "skills": [
+      {
+        "buffId": "manu_prod_spd[001]",
+        "roomType": "MANUFACTURE",
+        "phase": 0
+      },
+      {
+        "buffId": "manu_prod_spd[011]",
+        "roomType": "MANUFACTURE",
+        "phase": 2
+      }
+    ]
+  },
+  "char_129_bluep": {
+    "name": "蓝毒",
+    "rarity": 4,
+    "profession": "SNIPER",
+    "nationId": "iberia",
+    "groupId": null,
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "workshop_formula_probability[111]",
+        "roomType": "WORKSHOP",
+        "phase": 0
+      },
+      {
+        "buffId": "workshop_formula_probability[121]",
+        "roomType": "WORKSHOP",
+        "phase": 2
+      }
+    ]
+  },
+  "char_130_doberm": {
+    "name": "杜宾",
+    "rarity": 3,
+    "profession": "WARRIOR",
+    "nationId": "rhodes",
+    "groupId": null,
+    "teamId": null,
+    "subPower": [
+      {
+        "nationId": "bolivar",
+        "groupId": null,
+        "teamId": null
+      }
+    ],
+    "skills": [
+      {
+        "buffId": "control_mp_cost[000]",
+        "roomType": "CONTROL",
+        "phase": 0
+      },
+      {
+        "buffId": "train_spd[000]",
+        "roomType": "TRAINING",
+        "phase": 1
+      }
+    ]
+  },
+  "char_131_flameb": {
+    "name": "炎客",
+    "rarity": 4,
+    "profession": "WARRIOR",
+    "nationId": "rhodes",
+    "groupId": null,
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "workshop_formula_probability[000]",
+        "roomType": "WORKSHOP",
+        "phase": 0
+      },
+      {
+        "buffId": "workshop_formula_probability[020]",
+        "roomType": "WORKSHOP",
+        "phase": 2
+      }
+    ]
+  },
+  "char_133_mm": {
+    "name": "梅",
+    "rarity": 3,
+    "profession": "SNIPER",
+    "nationId": "victoria",
+    "groupId": null,
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "meet_spd[0020]",
+        "roomType": "MEETING",
+        "phase": 0
+      },
+      {
+        "buffId": "meet_team[020]",
+        "roomType": "MEETING",
+        "phase": 1
+      }
+    ]
+  },
+  "char_134_ifrit": {
+    "name": "伊芙利特",
+    "rarity": 5,
+    "profession": "CASTER",
+    "nationId": "columbia",
+    "groupId": "rhine",
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "power_rec_spd[001]",
+        "roomType": "POWER",
+        "phase": 0
+      },
+      {
+        "buffId": "power_rec_spd[013]",
+        "roomType": "POWER",
+        "phase": 2
+      }
+    ]
+  },
+  "char_135_halo": {
+    "name": "星源",
+    "rarity": 4,
+    "profession": "CASTER",
+    "nationId": "columbia",
+    "groupId": "rhine",
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "manu_prod_spd[001]",
+        "roomType": "MANUFACTURE",
+        "phase": 0
+      },
+      {
+        "buffId": "manu_prod_spd[011]",
+        "roomType": "MANUFACTURE",
+        "phase": 2
+      }
+    ]
+  },
+  "char_136_hsguma": {
+    "name": "星熊",
+    "rarity": 5,
+    "profession": "TANK",
+    "nationId": "lungmen",
+    "groupId": "lgd",
+    "teamId": null,
+    "subPower": [
+      {
+        "nationId": "higashi",
+        "groupId": null,
+        "teamId": null
+      }
+    ],
+    "skills": [
+      {
+        "buffId": "train_spd&profession[030]",
+        "roomType": "TRAINING",
+        "phase": 0
+      },
+      {
+        "buffId": "train_spd&profession[130]",
+        "roomType": "TRAINING",
+        "phase": 2
+      }
+    ]
+  },
+  "char_137_brownb": {
+    "name": "猎蜂",
+    "rarity": 3,
+    "profession": "WARRIOR",
+    "nationId": "ursus",
+    "groupId": null,
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "train_spd&profession[020]",
+        "roomType": "TRAINING",
+        "phase": 0
+      },
+      {
+        "buffId": "workshop_formula_probability[300]",
+        "roomType": "WORKSHOP",
+        "phase": 1
+      }
+    ]
+  },
+  "char_140_whitew": {
+    "name": "拉普兰德",
+    "rarity": 4,
+    "profession": "WARRIOR",
+    "nationId": "siracusa",
+    "groupId": null,
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "trade_ord_limit&cost_P[000]",
+        "roomType": "TRADING",
+        "phase": 0
+      },
+      {
+        "buffId": "trade_ord_limit&cost_P[001]",
+        "roomType": "TRADING",
+        "phase": 2
+      }
+    ]
+  },
+  "char_141_nights": {
+    "name": "夜烟",
+    "rarity": 3,
+    "profession": "CASTER",
+    "nationId": "victoria",
+    "groupId": null,
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "manu_formula_spd[100]",
+        "roomType": "MANUFACTURE",
+        "phase": 0
+      },
+      {
+        "buffId": "trade_ord_spd[001]",
+        "roomType": "TRADING",
+        "phase": 1
+      }
+    ]
+  },
+  "char_143_ghost": {
+    "name": "幽灵鲨",
+    "rarity": 4,
+    "profession": "WARRIOR",
+    "nationId": "egir",
+    "groupId": "abyssal",
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "dorm_rec_oneself[000]",
+        "roomType": "DORMITORY",
+        "phase": 0
+      },
+      {
+        "buffId": "dorm_rec_oneself[010]",
+        "roomType": "DORMITORY",
+        "phase": 2
+      }
+    ]
+  },
+  "char_144_red": {
+    "name": "红",
+    "rarity": 4,
+    "profession": "SPECIAL",
+    "nationId": "rhodes",
+    "groupId": "sweep",
+    "teamId": null,
+    "subPower": [
+      {
+        "nationId": "siracusa",
+        "groupId": null,
+        "teamId": null
+      }
+    ],
+    "skills": [
+      {
+        "buffId": "control_mp_cost[001]",
+        "roomType": "CONTROL",
+        "phase": 0
+      },
+      {
+        "buffId": "meet_spd[031]",
+        "roomType": "MEETING",
+        "phase": 2
+      }
+    ]
+  },
+  "char_145_prove": {
+    "name": "普罗旺斯",
+    "rarity": 4,
+    "profession": "SNIPER",
+    "nationId": "siracusa",
+    "groupId": null,
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "hire_spd[010]",
+        "roomType": "HIRE",
+        "phase": 0
+      },
+      {
+        "buffId": "hire_spd[011]",
+        "roomType": "HIRE",
+        "phase": 2
+      }
+    ]
+  },
+  "char_147_shining": {
+    "name": "闪灵",
+    "rarity": 5,
+    "profession": "MEDIC",
+    "nationId": null,
+    "groupId": null,
+    "teamId": "followers",
+    "skills": [
+      {
+        "buffId": "dorm_rec_single[010]",
+        "roomType": "DORMITORY",
+        "phase": 0
+      },
+      {
+        "buffId": "dorm_rec_single[020]",
+        "roomType": "DORMITORY",
+        "phase": 2
+      }
+    ]
+  },
+  "char_148_nearl": {
+    "name": "临光",
+    "rarity": 4,
+    "profession": "TANK",
+    "nationId": null,
+    "groupId": null,
+    "teamId": "followers",
+    "subPower": [
+      {
+        "nationId": "kazimierz",
+        "groupId": null,
+        "teamId": null
+      }
+    ],
+    "skills": [
+      {
+        "buffId": "control_mp_cost[000]",
+        "roomType": "CONTROL",
+        "phase": 0
+      },
+      {
+        "buffId": "dorm_rec_single&oneself[030]",
+        "roomType": "DORMITORY",
+        "phase": 2
+      }
+    ]
+  },
+  "char_149_scave": {
+    "name": "清道夫",
+    "rarity": 3,
+    "profession": "PIONEER",
+    "nationId": "rhodes",
+    "groupId": "sweep",
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "control_mp_cost[001]",
+        "roomType": "CONTROL",
+        "phase": 0
+      },
+      {
+        "buffId": "manu_prod_limit&cost[000]",
+        "roomType": "MANUFACTURE",
+        "phase": 1
+      }
+    ]
+  },
+  "char_1502_crosly": {
+    "name": "弑君者",
+    "rarity": 5,
+    "profession": "SPECIAL",
+    "nationId": "rhodes",
+    "groupId": null,
+    "teamId": null,
+    "subPower": [
+      {
+        "nationId": "siracusa",
+        "groupId": null,
+        "teamId": null
+      }
+    ],
+    "skills": [
+      {
+        "buffId": "workshop_formula_probability[031]",
+        "roomType": "WORKSHOP",
+        "phase": 0
+      },
+      {
+        "buffId": "manu_formula_spd[022]",
+        "roomType": "MANUFACTURE",
+        "phase": 2
+      }
+    ]
+  },
+  "char_150_snakek": {
+    "name": "蛇屠箱",
+    "rarity": 3,
+    "profession": "TANK",
+    "nationId": "columbia",
+    "groupId": null,
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "manu_prod_spd&limit[001]",
+        "roomType": "MANUFACTURE",
+        "phase": 0
+      },
+      {
+        "buffId": "trade_ord_spd[000]",
+        "roomType": "TRADING",
+        "phase": 1
+      }
+    ]
+  },
+  "char_151_myrtle": {
+    "name": "桃金娘",
+    "rarity": 3,
+    "profession": "PIONEER",
+    "nationId": "rhodes",
+    "groupId": null,
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "trade_ord_limit&cost[000]",
+        "roomType": "TRADING",
+        "phase": 0
+      },
+      {
+        "buffId": "dorm_rec_all[013]",
+        "roomType": "DORMITORY",
+        "phase": 1
+      }
+    ]
+  },
+  "char_154_morgan": {
+    "name": "摩根",
+    "rarity": 4,
+    "profession": "WARRIOR",
+    "nationId": "victoria",
+    "groupId": "glasgow",
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "dorm_rec_toone[000]",
+        "roomType": "DORMITORY",
+        "phase": 0
+      },
+      {
+        "buffId": "trade_ord_spd_par[000]",
+        "roomType": "TRADING",
+        "phase": 2
+      }
+    ]
+  },
+  "char_155_tiger": {
+    "name": "因陀罗",
+    "rarity": 4,
+    "profession": "WARRIOR",
+    "nationId": "victoria",
+    "groupId": "glasgow",
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "meet_spd&team[000]",
+        "roomType": "MEETING",
+        "phase": 0
+      },
+      {
+        "buffId": "meet_spd&team[070]",
+        "roomType": "MEETING",
+        "phase": 2
+      }
+    ]
+  },
+  "char_157_dagda": {
+    "name": "达格达",
+    "rarity": 4,
+    "profession": "WARRIOR",
+    "nationId": "victoria",
+    "groupId": "glasgow",
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "train_spd&profession3[150]",
+        "roomType": "TRAINING",
+        "phase": 0
+      },
+      {
+        "buffId": "train_spd&profession3[151]",
+        "roomType": "TRAINING",
+        "phase": 2
+      }
+    ]
+  },
+  "char_158_milu": {
+    "name": "守林人",
+    "rarity": 4,
+    "profession": "SNIPER",
+    "nationId": "rhodes",
+    "groupId": null,
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "meet_spd[000]",
+        "roomType": "MEETING",
+        "phase": 0
+      },
+      {
+        "buffId": "meet_spd[020]",
+        "roomType": "MEETING",
+        "phase": 2
+      }
+    ]
+  },
+  "char_159_peacok": {
+    "name": "断罪者",
+    "rarity": 3,
+    "profession": "WARRIOR",
+    "nationId": "minos",
+    "groupId": null,
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "dorm_rec_single[030]",
+        "roomType": "DORMITORY",
+        "phase": 0
+      },
+      {
+        "buffId": "manu_formula_spd[020]",
+        "roomType": "MANUFACTURE",
+        "phase": 1
+      }
+    ]
+  },
+  "char_163_hpsts": {
+    "name": "火神",
+    "rarity": 4,
+    "profession": "TANK",
+    "nationId": "minos",
+    "groupId": null,
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "manu_prod_spd&limit&cost[000]",
+        "roomType": "MANUFACTURE",
+        "phase": 0
+      },
+      {
+        "buffId": "manu_prod_spd&limit&cost[001]",
+        "roomType": "MANUFACTURE",
+        "phase": 2
+      }
+    ]
+  },
+  "char_164_nightm": {
+    "name": "夜魔",
+    "rarity": 4,
+    "profession": "CASTER",
+    "nationId": "victoria",
+    "groupId": null,
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "train_spd&profession[050]",
+        "roomType": "TRAINING",
+        "phase": 0
+      },
+      {
+        "buffId": "hire_spd[020]",
+        "roomType": "HIRE",
+        "phase": 2
+      }
+    ]
+  },
+  "char_166_skfire": {
+    "name": "天火",
+    "rarity": 4,
+    "profession": "CASTER",
+    "nationId": "victoria",
+    "groupId": null,
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "train_spd&profession[050]",
+        "roomType": "TRAINING",
+        "phase": 0
+      },
+      {
+        "buffId": "train_spd&profession[051]",
+        "roomType": "TRAINING",
+        "phase": 2
+      }
+    ]
+  },
+  "char_171_bldsk": {
+    "name": "华法琳",
+    "rarity": 4,
+    "profession": "MEDIC",
+    "nationId": "rhodes",
+    "groupId": null,
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "train_spd&profession[070]",
+        "roomType": "TRAINING",
+        "phase": 0
+      },
+      {
+        "buffId": "train_spd&profession[071]",
+        "roomType": "TRAINING",
+        "phase": 2
+      }
+    ]
+  },
+  "char_172_svrash": {
+    "name": "银灰",
+    "rarity": 5,
+    "profession": "WARRIOR",
+    "nationId": "kjerag",
+    "groupId": "karlan",
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "trade_ord_spd&limit[020]",
+        "roomType": "TRADING",
+        "phase": 0
+      },
+      {
+        "buffId": "trade_ord_spd&limit[022]",
+        "roomType": "TRADING",
+        "phase": 2
+      }
+    ]
+  },
+  "char_173_slchan": {
+    "name": "崖心",
+    "rarity": 4,
+    "profession": "SPECIAL",
+    "nationId": "kjerag",
+    "groupId": null,
+    "teamId": null,
+    "subPower": [
+      {
+        "nationId": "kjerag",
+        "groupId": "karlan",
+        "teamId": null
+      }
+    ],
+    "skills": [
+      {
+        "buffId": "dorm_rec_single&oneself[001]",
+        "roomType": "DORMITORY",
+        "phase": 0
+      },
+      {
+        "buffId": "trade_ord_spd&limit[021]",
+        "roomType": "TRADING",
+        "phase": 2
+      }
+    ]
+  },
+  "char_174_slbell": {
+    "name": "初雪",
+    "rarity": 4,
+    "profession": "SUPPORT",
+    "nationId": "kjerag",
+    "groupId": null,
+    "teamId": null,
+    "subPower": [
+      {
+        "nationId": "kjerag",
+        "groupId": "karlan",
+        "teamId": null
+      }
+    ],
+    "skills": [
+      {
+        "buffId": "dorm_rec_single&oneself[021]",
+        "roomType": "DORMITORY",
+        "phase": 0
+      },
+      {
+        "buffId": "train_spd&profession[061]",
+        "roomType": "TRAINING",
+        "phase": 2
+      }
+    ]
+  },
+  "char_179_cgbird": {
+    "name": "夜莺",
+    "rarity": 5,
+    "profession": "MEDIC",
+    "nationId": null,
+    "groupId": null,
+    "teamId": "followers",
+    "skills": [
+      {
+        "buffId": "dorm_rec_all[000]",
+        "roomType": "DORMITORY",
+        "phase": 0
+      },
+      {
+        "buffId": "dorm_rec_all[021]",
+        "roomType": "DORMITORY",
+        "phase": 2
+      }
+    ]
+  },
+  "char_180_amgoat": {
+    "name": "艾雅法拉",
+    "rarity": 5,
+    "profession": "CASTER",
+    "nationId": "leithanien",
+    "groupId": null,
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "manu_formula_spd[213]",
+        "roomType": "MANUFACTURE",
+        "phase": 0
+      },
+      {
+        "buffId": "hire_spd[011]",
+        "roomType": "HIRE",
+        "phase": 2
+      }
+    ]
+  },
+  "char_181_flower": {
+    "name": "调香师",
+    "rarity": 3,
+    "profession": "MEDIC",
+    "nationId": "rhodes",
+    "groupId": null,
+    "teamId": null,
+    "subPower": [
+      {
+        "nationId": "minos",
+        "groupId": null,
+        "teamId": null
+      }
+    ],
+    "skills": [
+      {
+        "buffId": "workshop_formula_probability[110]",
+        "roomType": "WORKSHOP",
+        "phase": 0
+      },
+      {
+        "buffId": "manu_prod_spd[010]",
+        "roomType": "MANUFACTURE",
+        "phase": 1
+      }
+    ]
+  },
+  "char_183_skgoat": {
+    "name": "地灵",
+    "rarity": 3,
+    "profession": "SUPPORT",
+    "nationId": "leithanien",
+    "groupId": null,
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "hire_spd_cost[010]",
+        "roomType": "HIRE",
+        "phase": 0
+      },
+      {
+        "buffId": "hire_spd_cost[200]",
+        "roomType": "HIRE",
+        "phase": 1
+      },
+      {
+        "buffId": "manu_formula_spd[211]",
+        "roomType": "MANUFACTURE",
+        "phase": 1
+      }
+    ]
+  },
+  "char_185_frncat": {
+    "name": "慕斯",
+    "rarity": 3,
+    "profession": "WARRIOR",
+    "nationId": "victoria",
+    "groupId": null,
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "trade_ord_spd[001]",
+        "roomType": "TRADING",
+        "phase": 0
+      },
+      {
+        "buffId": "dorm_rec_single&oneself[010]",
+        "roomType": "DORMITORY",
+        "phase": 1
+      }
+    ]
+  },
+  "char_187_ccheal": {
+    "name": "嘉维尔",
+    "rarity": 3,
+    "profession": "MEDIC",
+    "nationId": "rhodes",
+    "groupId": null,
+    "teamId": null,
+    "subPower": [
+      {
+        "nationId": "sargon",
+        "groupId": null,
+        "teamId": null
+      }
+    ],
+    "skills": [
+      {
+        "buffId": "workshop_formula_probability[110]",
+        "roomType": "WORKSHOP",
+        "phase": 0
+      },
+      {
+        "buffId": "train_spd&profession[070]",
+        "roomType": "TRAINING",
+        "phase": 1
+      }
+    ]
+  },
+  "char_188_helage": {
+    "name": "赫拉格",
+    "rarity": 5,
+    "profession": "WARRIOR",
+    "nationId": "ursus",
+    "groupId": null,
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "dorm_rec_all&oneself[010]",
+        "roomType": "DORMITORY",
+        "phase": 0
+      },
+      {
+        "buffId": "dorm_rec_all&oneself[011]",
+        "roomType": "DORMITORY",
+        "phase": 1
+      },
+      {
+        "buffId": "dorm_rec_all&oneself[012]",
+        "roomType": "DORMITORY",
+        "phase": 2
+      },
+      {
+        "buffId": "workshop_formula_probability[010]",
+        "roomType": "WORKSHOP",
+        "phase": 0
+      }
+    ]
+  },
+  "char_190_clour": {
+    "name": "红云",
+    "rarity": 3,
+    "profession": "SNIPER",
+    "nationId": "siracusa",
+    "groupId": null,
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "manu_prod_limit&cost[0000]",
+        "roomType": "MANUFACTURE",
+        "phase": 0
+      },
+      {
+        "buffId": "manu_prod_spd_variable[000]",
+        "roomType": "MANUFACTURE",
+        "phase": 1
+      }
+    ]
+  },
+  "char_192_falco": {
+    "name": "翎羽",
+    "rarity": 2,
+    "profession": "PIONEER",
+    "nationId": "laterano",
+    "groupId": null,
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "train_spd&profession[010]",
+        "roomType": "TRAINING",
+        "phase": 0
+      },
+      {
+        "buffId": "trade_ord_spd&limit[000]",
+        "roomType": "TRADING",
+        "phase": 1
+      }
+    ]
+  },
+  "char_193_frostl": {
+    "name": "霜叶",
+    "rarity": 3,
+    "profession": "WARRIOR",
+    "nationId": "rhodes",
+    "groupId": null,
+    "teamId": null,
+    "subPower": [
+      {
+        "nationId": "columbia",
+        "groupId": null,
+        "teamId": null
+      }
+    ],
+    "skills": [
+      {
+        "buffId": "dorm_rec_oneself[000]",
+        "roomType": "DORMITORY",
+        "phase": 0
+      },
+      {
+        "buffId": "manu_formula_spd[010]",
+        "roomType": "MANUFACTURE",
+        "phase": 1
+      }
+    ]
+  },
+  "char_194_leto": {
+    "name": "烈夏",
+    "rarity": 4,
+    "profession": "WARRIOR",
+    "nationId": "ursus",
+    "groupId": null,
+    "teamId": "student",
+    "skills": [
+      {
+        "buffId": "train_spd&profession[020]",
+        "roomType": "TRAINING",
+        "phase": 0
+      },
+      {
+        "buffId": "manu_formula_spd_P[000]",
+        "roomType": "MANUFACTURE",
+        "phase": 2
+      }
+    ]
+  },
+  "char_195_glassb": {
+    "name": "真理",
+    "rarity": 4,
+    "profession": "SUPPORT",
+    "nationId": "ursus",
+    "groupId": null,
+    "teamId": "student",
+    "skills": [
+      {
+        "buffId": "train_spd&profession[060]",
+        "roomType": "TRAINING",
+        "phase": 0
+      },
+      {
+        "buffId": "meet_spd&team[050]",
+        "roomType": "MEETING",
+        "phase": 2
+      }
+    ]
+  },
+  "char_196_sunbr": {
+    "name": "古米",
+    "rarity": 3,
+    "profession": "TANK",
+    "nationId": "ursus",
+    "groupId": null,
+    "teamId": "student",
+    "skills": [
+      {
+        "buffId": "trade_ord_spd&cost[000]",
+        "roomType": "TRADING",
+        "phase": 0
+      },
+      {
+        "buffId": "dorm_rec_single&oneself[011]",
+        "roomType": "DORMITORY",
+        "phase": 1
+      }
+    ]
+  },
+  "char_197_poca": {
+    "name": "早露",
+    "rarity": 5,
+    "profession": "SNIPER",
+    "nationId": "ursus",
+    "groupId": null,
+    "teamId": "student",
+    "skills": [
+      {
+        "buffId": "control_mp_cost&faction[020]",
+        "roomType": "CONTROL",
+        "phase": 0
+      },
+      {
+        "buffId": "hire_spd&clue2[250]",
+        "roomType": "HIRE",
+        "phase": 2
+      }
+    ]
+  },
+  "char_198_blackd": {
+    "name": "讯使",
+    "rarity": 3,
+    "profession": "PIONEER",
+    "nationId": "kjerag",
+    "groupId": "karlan",
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "trade_ord_spd&limit[020]",
+        "roomType": "TRADING",
+        "phase": 0
+      },
+      {
+        "buffId": "meet_spd&team[040]",
+        "roomType": "MEETING",
+        "phase": 1
+      }
+    ]
+  },
+  "char_199_yak": {
+    "name": "角峰",
+    "rarity": 3,
+    "profession": "TANK",
+    "nationId": "kjerag",
+    "groupId": "karlan",
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "trade_ord_spd&limit[020]",
+        "roomType": "TRADING",
+        "phase": 0
+      },
+      {
+        "buffId": "train_spd&profession[031]",
+        "roomType": "TRAINING",
+        "phase": 1
+      }
+    ]
+  },
+  "char_2012_typhon": {
+    "name": "提丰",
+    "rarity": 5,
+    "profession": "SNIPER",
+    "nationId": "sami",
+    "groupId": null,
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "meet_spd&sami[000]",
+        "roomType": "MEETING",
+        "phase": 0
+      },
+      {
+        "buffId": "train_spd&profession3[170]",
+        "roomType": "TRAINING",
+        "phase": 2
+      }
+    ]
+  },
+  "char_2013_cerber": {
+    "name": "刻俄柏",
+    "rarity": 5,
+    "profession": "CASTER",
+    "nationId": "rhodes",
+    "groupId": null,
+    "teamId": null,
+    "subPower": [
+      {
+        "nationId": "bolivar",
+        "groupId": null,
+        "teamId": null
+      }
+    ],
+    "skills": [
+      {
+        "buffId": "manu_prod_limit&cost[002]",
+        "roomType": "MANUFACTURE",
+        "phase": 0
+      },
+      {
+        "buffId": "manu_prod_spd_addition[031]",
+        "roomType": "MANUFACTURE",
+        "phase": 2
+      }
+    ]
+  },
+  "char_2014_nian": {
+    "name": "年",
+    "rarity": 5,
+    "profession": "TANK",
+    "nationId": "yan",
+    "groupId": "sui",
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "workshop_formula_probability[160]",
+        "roomType": "WORKSHOP",
+        "phase": 0
+      },
+      {
+        "buffId": "workshop_formula_cost[010]",
+        "roomType": "WORKSHOP",
+        "phase": 0
+      }
+    ]
+  },
+  "char_2015_dusk": {
+    "name": "夕",
+    "rarity": 5,
+    "profession": "CASTER",
+    "nationId": "yan",
+    "groupId": "sui",
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "control_mp_cost&bd1[000]",
+        "roomType": "CONTROL",
+        "phase": 0
+      },
+      {
+        "buffId": "control_mp_cost&bd2[000]",
+        "roomType": "CONTROL",
+        "phase": 0
+      }
+    ]
+  },
+  "char_201_moeshd": {
+    "name": "可颂",
+    "rarity": 4,
+    "profession": "TANK",
+    "nationId": "lungmen",
+    "groupId": "penguin",
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "trade_ord_spd&limit[030]",
+        "roomType": "TRADING",
+        "phase": 0
+      },
+      {
+        "buffId": "trade_ord_spd&limit[031]",
+        "roomType": "TRADING",
+        "phase": 2
+      }
+    ]
+  },
+  "char_2023_ling": {
+    "name": "令",
+    "rarity": 5,
+    "profession": "SUPPORT",
+    "nationId": "yan",
+    "groupId": "sui",
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "control_facCostReset[000]",
+        "roomType": "CONTROL",
+        "phase": 0
+      },
+      {
+        "buffId": "control_costToBD[000]",
+        "roomType": "CONTROL",
+        "phase": 2
+      }
+    ]
+  },
+  "char_2024_chyue": {
+    "name": "重岳",
+    "rarity": 5,
+    "profession": "WARRIOR",
+    "nationId": "yan",
+    "groupId": "sui",
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "control_mp_cost&bd_up[000]",
+        "roomType": "CONTROL",
+        "phase": 0
+      },
+      {
+        "buffId": "control_mp_bd_cost_expand[000]",
+        "roomType": "CONTROL",
+        "phase": 2
+      }
+    ]
+  },
+  "char_2025_shu": {
+    "name": "黍",
+    "rarity": 5,
+    "profession": "TANK",
+    "nationId": "yan",
+    "groupId": "sui",
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "manu_cost[000]",
+        "roomType": "MANUFACTURE",
+        "phase": 0
+      },
+      {
+        "buffId": "manu_prod_spd_bd[300]",
+        "roomType": "MANUFACTURE",
+        "phase": 2
+      }
+    ]
+  },
+  "char_2026_yu": {
+    "name": "余",
+    "rarity": 5,
+    "profession": "TANK",
+    "nationId": "yan",
+    "groupId": "sui",
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "dorm_rec_all&group[000]",
+        "roomType": "DORMITORY",
+        "phase": 0
+      },
+      {
+        "buffId": "train_spd_bd[000]",
+        "roomType": "TRAINING",
+        "phase": 2
+      }
+    ]
+  },
+  "char_2027_wang": {
+    "name": "望",
+    "rarity": 5,
+    "profession": "SPECIAL",
+    "nationId": "yan",
+    "groupId": "sui",
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "control_prod_tra_spd[000]",
+        "roomType": "CONTROL",
+        "phase": 0
+      },
+      {
+        "buffId": "train_spd&level[000]",
+        "roomType": "TRAINING",
+        "phase": 2
+      }
+    ]
+  },
+  "char_202_demkni": {
+    "name": "塞雷娅",
+    "rarity": 5,
+    "profession": "TANK",
+    "nationId": "columbia",
+    "groupId": "rhine",
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "meet_spd&team[000]",
+        "roomType": "MEETING",
+        "phase": 0
+      },
+      {
+        "buffId": "meet_spd&team[010]",
+        "roomType": "MEETING",
+        "phase": 2
+      }
+    ]
+  },
+  "char_204_platnm": {
+    "name": "白金",
+    "rarity": 4,
+    "profession": "SNIPER",
+    "nationId": "kazimierz",
+    "groupId": null,
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "train_spd&profession[040]",
+        "roomType": "TRAINING",
+        "phase": 0
+      },
+      {
+        "buffId": "train_spd&profession[041]",
+        "roomType": "TRAINING",
+        "phase": 2
+      }
+    ]
+  },
+  "char_206_gnosis": {
+    "name": "灵知",
+    "rarity": 5,
+    "profession": "SUPPORT",
+    "nationId": "kjerag",
+    "groupId": "karlan",
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "control_mp_cost&faction[030]",
+        "roomType": "CONTROL",
+        "phase": 0
+      },
+      {
+        "buffId": "control_tra_limit&spd[000]",
+        "roomType": "CONTROL",
+        "phase": 2
+      }
+    ]
+  },
+  "char_208_melan": {
+    "name": "玫兰莎",
+    "rarity": 2,
+    "profession": "WARRIOR",
+    "nationId": "rhodes",
+    "groupId": null,
+    "teamId": "reserve4",
+    "subPower": [
+      {
+        "nationId": "victoria",
+        "groupId": null,
+        "teamId": null
+      }
+    ],
+    "skills": [
+      {
+        "buffId": "trade_ord_spd&limit[010]",
+        "roomType": "TRADING",
+        "phase": 0
+      },
+      {
+        "buffId": "workshop_proc_probability[000]",
+        "roomType": "WORKSHOP",
+        "phase": 1
+      }
+    ]
+  },
+  "char_209_ardign": {
+    "name": "卡缇",
+    "rarity": 2,
+    "profession": "TANK",
+    "nationId": "rhodes",
+    "groupId": null,
+    "teamId": "reserve4",
+    "subPower": [
+      {
+        "nationId": "leithanien",
+        "groupId": null,
+        "teamId": null
+      }
+    ],
+    "skills": [
+      {
+        "buffId": "manu_prod_spd&limit[000]",
+        "roomType": "MANUFACTURE",
+        "phase": 0
+      },
+      {
+        "buffId": "dorm_rec_single&oneself[000]",
+        "roomType": "DORMITORY",
+        "phase": 1
+      }
+    ]
+  },
+  "char_210_stward": {
+    "name": "史都华德",
+    "rarity": 2,
+    "profession": "CASTER",
+    "nationId": "rhodes",
+    "groupId": null,
+    "teamId": "reserve4",
+    "subPower": [
+      {
+        "nationId": "kjerag",
+        "groupId": null,
+        "teamId": null
+      }
+    ],
+    "skills": [
+      {
+        "buffId": "trade_ord_limit&cost[000]",
+        "roomType": "TRADING",
+        "phase": 0
+      },
+      {
+        "buffId": "manu_prod_spd[010]",
+        "roomType": "MANUFACTURE",
+        "phase": 1
+      }
+    ]
+  },
+  "char_211_adnach": {
+    "name": "安德切尔",
+    "rarity": 2,
+    "profession": "SNIPER",
+    "nationId": "rhodes",
+    "groupId": null,
+    "teamId": "reserve4",
+    "subPower": [
+      {
+        "nationId": "laterano",
+        "groupId": null,
+        "teamId": null
+      }
+    ],
+    "skills": [
+      {
+        "buffId": "trade_ord_spd[000]",
+        "roomType": "TRADING",
+        "phase": 0
+      },
+      {
+        "buffId": "workshop_proc_probability[010]",
+        "roomType": "WORKSHOP",
+        "phase": 1
+      }
+    ]
+  },
+  "char_212_ansel": {
+    "name": "安赛尔",
+    "rarity": 2,
+    "profession": "MEDIC",
+    "nationId": "rhodes",
+    "groupId": null,
+    "teamId": "reserve4",
+    "subPower": [
+      {
+        "nationId": "rim",
+        "groupId": null,
+        "teamId": null
+      }
+    ],
+    "skills": [
+      {
+        "buffId": "dorm_rec_single[010]",
+        "roomType": "DORMITORY",
+        "phase": 0
+      },
+      {
+        "buffId": "workshop_formula_probability[110]",
+        "roomType": "WORKSHOP",
+        "phase": 1
+      }
+    ]
+  },
+  "char_213_mostma": {
+    "name": "莫斯提马",
+    "rarity": 5,
+    "profession": "CASTER",
+    "nationId": "laterano",
+    "groupId": null,
+    "teamId": null,
+    "subPower": [
+      {
+        "nationId": "lungmen",
+        "groupId": "penguin",
+        "teamId": null
+      }
+    ],
+    "skills": [
+      {
+        "buffId": "meet_spd&team[000]",
+        "roomType": "MEETING",
+        "phase": 0
+      },
+      {
+        "buffId": "meet_spd&team[020]",
+        "roomType": "MEETING",
+        "phase": 2
+      }
+    ]
+  },
+  "char_214_kafka": {
+    "name": "卡夫卡",
+    "rarity": 4,
+    "profession": "SPECIAL",
+    "nationId": "columbia",
+    "groupId": null,
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "trade_ord_wt&cost[001]",
+        "roomType": "TRADING",
+        "phase": 0
+      },
+      {
+        "buffId": "trade_ord_wt&cost[011]",
+        "roomType": "TRADING",
+        "phase": 2
+      }
+    ]
+  },
+  "char_215_mantic": {
+    "name": "狮蝎",
+    "rarity": 4,
+    "profession": "SPECIAL",
+    "nationId": "sargon",
+    "groupId": null,
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "train_spd&profession[080]",
+        "roomType": "TRAINING",
+        "phase": 0
+      },
+      {
+        "buffId": "train_spd&profession[081]",
+        "roomType": "TRAINING",
+        "phase": 2
+      }
+    ]
+  },
+  "char_218_cuttle": {
+    "name": "安哲拉",
+    "rarity": 4,
+    "profession": "SNIPER",
+    "nationId": "egir",
+    "groupId": "abyssal",
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "dorm_rec_oneself[000]",
+        "roomType": "DORMITORY",
+        "phase": 0
+      },
+      {
+        "buffId": "dorm_rec_oneself[011]",
+        "roomType": "DORMITORY",
+        "phase": 2
+      }
+    ]
+  },
+  "char_219_meteo": {
+    "name": "陨星",
+    "rarity": 4,
+    "profession": "SNIPER",
+    "nationId": "rhodes",
+    "groupId": null,
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "workshop_formula_probability[112]",
+        "roomType": "WORKSHOP",
+        "phase": 0
+      },
+      {
+        "buffId": "workshop_formula_probability[122]",
+        "roomType": "WORKSHOP",
+        "phase": 2
+      }
+    ]
+  },
+  "char_220_grani": {
+    "name": "格拉尼",
+    "rarity": 4,
+    "profession": "PIONEER",
+    "nationId": "victoria",
+    "groupId": null,
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "train_spd&profession[010]",
+        "roomType": "TRAINING",
+        "phase": 0
+      },
+      {
+        "buffId": "train_spd&profession[011]",
+        "roomType": "TRAINING",
+        "phase": 2
+      }
+    ]
+  },
+  "char_222_bpipe": {
+    "name": "风笛",
+    "rarity": 5,
+    "profession": "PIONEER",
+    "nationId": "victoria",
+    "groupId": null,
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "dorm_rec_all&oneself[021]",
+        "roomType": "DORMITORY",
+        "phase": 0
+      },
+      {
+        "buffId": "workshop_formula_probability[310]",
+        "roomType": "WORKSHOP",
+        "phase": 2
+      }
+    ]
+  },
+  "char_225_haak": {
+    "name": "阿",
+    "rarity": 5,
+    "profession": "SPECIAL",
+    "nationId": "lungmen",
+    "groupId": null,
+    "teamId": "lee",
+    "skills": [
+      {
+        "buffId": "control_clue_cost[000]",
+        "roomType": "CONTROL",
+        "phase": 0
+      },
+      {
+        "buffId": "train_spd&profession[170]",
+        "roomType": "TRAINING",
+        "phase": 2
+      }
+    ]
+  },
+  "char_226_hmau": {
+    "name": "吽",
+    "rarity": 4,
+    "profession": "TANK",
+    "nationId": "lungmen",
+    "groupId": null,
+    "teamId": "lee",
+    "skills": [
+      {
+        "buffId": "workshop_proc_probability[010]",
+        "roomType": "WORKSHOP",
+        "phase": 0
+      },
+      {
+        "buffId": "control_mp_cost&faction2[000]",
+        "roomType": "CONTROL",
+        "phase": 2
+      }
+    ]
+  },
+  "char_230_savage": {
+    "name": "暴行",
+    "rarity": 4,
+    "profession": "WARRIOR",
+    "nationId": "rim",
+    "groupId": null,
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "workshop_formula_probability[000]",
+        "roomType": "WORKSHOP",
+        "phase": 0
+      },
+      {
+        "buffId": "dorm_rec_single&oneself[011]",
+        "roomType": "DORMITORY",
+        "phase": 2
+      }
+    ]
+  },
+  "char_235_jesica": {
+    "name": "杰西卡",
+    "rarity": 3,
+    "profession": "SNIPER",
+    "nationId": "columbia",
+    "groupId": "blacksteel",
+    "teamId": null,
+    "subPower": [
+      {
+        "nationId": "victoria",
+        "groupId": null,
+        "teamId": null
+      }
+    ],
+    "skills": [
+      {
+        "buffId": "manu_prod_spd[010]",
+        "roomType": "MANUFACTURE",
+        "phase": 0
+      },
+      {
+        "buffId": "meet_spd&team[030]",
+        "roomType": "MEETING",
+        "phase": 1
+      }
+    ]
+  },
+  "char_236_rope": {
+    "name": "暗索",
+    "rarity": 3,
+    "profession": "SPECIAL",
+    "nationId": "lungmen",
+    "groupId": null,
+    "teamId": null,
+    "subPower": [
+      {
+        "nationId": "rim",
+        "groupId": null,
+        "teamId": null
+      }
+    ],
+    "skills": [
+      {
+        "buffId": "meet_spd[020]",
+        "roomType": "MEETING",
+        "phase": 0
+      },
+      {
+        "buffId": "trade_ord_limit&cost[000]",
+        "roomType": "TRADING",
+        "phase": 1
+      }
+    ]
+  },
+  "char_237_gravel": {
+    "name": "砾",
+    "rarity": 3,
+    "profession": "SPECIAL",
+    "nationId": "kazimierz",
+    "groupId": null,
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "workshop_proc_probability[000]",
+        "roomType": "WORKSHOP",
+        "phase": 0
+      },
+      {
+        "buffId": "manu_formula_spd[110]",
+        "roomType": "MANUFACTURE",
+        "phase": 1
+      }
+    ]
+  },
+  "char_240_wyvern": {
+    "name": "香草",
+    "rarity": 2,
+    "profession": "PIONEER",
+    "nationId": "columbia",
+    "groupId": "blacksteel",
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "manu_prod_spd[010]",
+        "roomType": "MANUFACTURE",
+        "phase": 0
+      },
+      {
+        "buffId": "trade_ord_spd[000]",
+        "roomType": "TRADING",
+        "phase": 1
+      }
+    ]
+  },
+  "char_241_panda": {
+    "name": "食铁兽",
+    "rarity": 4,
+    "profession": "SPECIAL",
+    "nationId": "lungmen",
+    "groupId": null,
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "manu_formula_spd[010]",
+        "roomType": "MANUFACTURE",
+        "phase": 0
+      },
+      {
+        "buffId": "manu_formula_spd[020]",
+        "roomType": "MANUFACTURE",
+        "phase": 2
+      }
+    ]
+  },
+  "char_242_otter": {
+    "name": "梅尔",
+    "rarity": 4,
+    "profession": "SUPPORT",
+    "nationId": "columbia",
+    "groupId": "rhine",
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "workshop_proc_probability[030]",
+        "roomType": "WORKSHOP",
+        "phase": 0
+      },
+      {
+        "buffId": "manu_prod_spd[020]",
+        "roomType": "MANUFACTURE",
+        "phase": 2
+      }
+    ]
+  },
+  "char_243_waaifu": {
+    "name": "槐琥",
+    "rarity": 4,
+    "profession": "SPECIAL",
+    "nationId": "lungmen",
+    "groupId": null,
+    "teamId": "lee",
+    "skills": [
+      {
+        "buffId": "manu_cost_all[000]",
+        "roomType": "MANUFACTURE",
+        "phase": 0
+      },
+      {
+        "buffId": "manu_prod_spd_variable2[000]",
+        "roomType": "MANUFACTURE",
+        "phase": 2
+      }
+    ]
+  },
+  "char_245_cello": {
+    "name": "塑心",
+    "rarity": 5,
+    "profession": "SUPPORT",
+    "nationId": "laterano",
+    "groupId": null,
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "dorm_bd_num[000]",
+        "roomType": "DORMITORY",
+        "phase": 0
+      },
+      {
+        "buffId": "dorm_rec_all&bd[000]",
+        "roomType": "DORMITORY",
+        "phase": 2
+      }
+    ]
+  },
+  "char_248_mgllan": {
+    "name": "麦哲伦",
+    "rarity": 5,
+    "profession": "SUPPORT",
+    "nationId": "columbia",
+    "groupId": "rhine",
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "workshop_proc_probability[011]",
+        "roomType": "WORKSHOP",
+        "phase": 0
+      },
+      {
+        "buffId": "workshop_formula_cost[000]",
+        "roomType": "WORKSHOP",
+        "phase": 2
+      }
+    ]
+  },
+  "char_249_mlyss": {
+    "name": "缪尔赛思",
+    "rarity": 5,
+    "profession": "PIONEER",
+    "nationId": "columbia",
+    "groupId": "rhine",
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "dorm_rec_all&oneself[022]",
+        "roomType": "DORMITORY",
+        "phase": 0
+      },
+      {
+        "buffId": "power_rec_rhine[000]",
+        "roomType": "POWER",
+        "phase": 2
+      }
+    ]
+  },
+  "char_250_phatom": {
+    "name": "傀影",
+    "rarity": 5,
+    "profession": "SPECIAL",
+    "nationId": "victoria",
+    "groupId": null,
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "train_spd&profession[080]",
+        "roomType": "TRAINING",
+        "phase": 0
+      },
+      {
+        "buffId": "train_spd&profession[180]",
+        "roomType": "TRAINING",
+        "phase": 2
+      }
+    ]
+  },
+  "char_252_bibeak": {
+    "name": "柏喙",
+    "rarity": 4,
+    "profession": "WARRIOR",
+    "nationId": "sami",
+    "groupId": null,
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "trade_ord_wt&cost[000]",
+        "roomType": "TRADING",
+        "phase": 0
+      },
+      {
+        "buffId": "trade_ord_wt&cost[010]",
+        "roomType": "TRADING",
+        "phase": 2
+      }
+    ]
+  },
+  "char_253_greyy": {
+    "name": "格雷伊",
+    "rarity": 3,
+    "profession": "CASTER",
+    "nationId": "bolivar",
+    "groupId": null,
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "power_rec_spd[020]",
+        "roomType": "POWER",
+        "phase": 0
+      },
+      {
+        "buffId": "workshop_proc_probability[010]",
+        "roomType": "WORKSHOP",
+        "phase": 1
+      }
+    ]
+  },
+  "char_254_vodfox": {
+    "name": "巫恋",
+    "rarity": 4,
+    "profession": "SUPPORT",
+    "nationId": "siracusa",
+    "groupId": null,
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "trade_ord_wt&cost[000]",
+        "roomType": "TRADING",
+        "phase": 0
+      },
+      {
+        "buffId": "trade_ord_vodfox[000]",
+        "roomType": "TRADING",
+        "phase": 2
+      }
+    ]
+  },
+  "char_258_podego": {
+    "name": "波登可",
+    "rarity": 3,
+    "profession": "SUPPORT",
+    "nationId": "rhodes",
+    "groupId": null,
+    "teamId": null,
+    "subPower": [
+      {
+        "nationId": "bolivar",
+        "groupId": null,
+        "teamId": null
+      }
+    ],
+    "skills": [
+      {
+        "buffId": "dorm_rec_single[010]",
+        "roomType": "DORMITORY",
+        "phase": 0
+      },
+      {
+        "buffId": "dorm_rec_single[001]",
+        "roomType": "DORMITORY",
+        "phase": 1
+      },
+      {
+        "buffId": "dorm_rec_all[012]",
+        "roomType": "DORMITORY",
+        "phase": 1
+      }
+    ]
+  },
+  "char_260_durnar": {
+    "name": "坚雷",
+    "rarity": 3,
+    "profession": "TANK",
+    "nationId": "rhodes",
+    "groupId": null,
+    "teamId": null,
+    "subPower": [
+      {
+        "nationId": "columbia",
+        "groupId": null,
+        "teamId": null
+      }
+    ],
+    "skills": [
+      {
+        "buffId": "train_spd&profession[030]",
+        "roomType": "TRAINING",
+        "phase": 0
+      },
+      {
+        "buffId": "control_mp_cost[002]",
+        "roomType": "CONTROL",
+        "phase": 1
+      }
+    ]
+  },
+  "char_261_sddrag": {
+    "name": "苇草",
+    "rarity": 4,
+    "profession": "PIONEER",
+    "nationId": "victoria",
+    "groupId": null,
+    "teamId": null,
+    "subPower": [
+      {
+        "nationId": "victoria",
+        "groupId": "tara",
+        "teamId": null
+      }
+    ],
+    "skills": [
+      {
+        "buffId": "dorm_rec_oneself[000]",
+        "roomType": "DORMITORY",
+        "phase": 0
+      },
+      {
+        "buffId": "control_mp_cost[004]",
+        "roomType": "CONTROL",
+        "phase": 2
+      }
+    ]
+  },
+  "char_263_skadi": {
+    "name": "斯卡蒂",
+    "rarity": 5,
+    "profession": "WARRIOR",
+    "nationId": "egir",
+    "groupId": "abyssal",
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "dorm_rec_oneself[000]",
+        "roomType": "DORMITORY",
+        "phase": 0
+      },
+      {
+        "buffId": "dorm_rec_oneself[020]",
+        "roomType": "DORMITORY",
+        "phase": 2
+      }
+    ]
+  },
+  "char_264_f12yin": {
+    "name": "山",
+    "rarity": 5,
+    "profession": "WARRIOR",
+    "nationId": "columbia",
+    "groupId": null,
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "hire_spd&clue2[230]",
+        "roomType": "HIRE",
+        "phase": 0
+      },
+      {
+        "buffId": "meet_flag[010]",
+        "roomType": "MEETING",
+        "phase": 2
+      }
+    ]
+  },
+  "char_265_sophia": {
+    "name": "鞭刃",
+    "rarity": 4,
+    "profession": "WARRIOR",
+    "nationId": "kazimierz",
+    "groupId": null,
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "train_spd&profession[020]",
+        "roomType": "TRAINING",
+        "phase": 0
+      },
+      {
+        "buffId": "train_spd[0000]",
+        "roomType": "TRAINING",
+        "phase": 2
+      }
+    ]
+  },
+  "char_271_spikes": {
+    "name": "芳汀",
+    "rarity": 3,
+    "profession": "WARRIOR",
+    "nationId": "laterano",
+    "groupId": null,
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "workshop_formula_dorm[000]",
+        "roomType": "WORKSHOP",
+        "phase": 0
+      },
+      {
+        "buffId": "workshop_formula_dorm[001]",
+        "roomType": "WORKSHOP",
+        "phase": 1
+      },
+      {
+        "buffId": "dorm_rec_oneself2[000]",
+        "roomType": "DORMITORY",
+        "phase": 1
+      }
+    ]
+  },
+  "char_272_strong": {
+    "name": "孑",
+    "rarity": 3,
+    "profession": "SPECIAL",
+    "nationId": "lungmen",
+    "groupId": null,
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "trade_ord_limit_diff[000]",
+        "roomType": "TRADING",
+        "phase": 0
+      },
+      {
+        "buffId": "trade_ord_limit_count[000]",
+        "roomType": "TRADING",
+        "phase": 1
+      }
+    ]
+  },
+  "char_274_astesi": {
+    "name": "星极",
+    "rarity": 4,
+    "profession": "WARRIOR",
+    "nationId": "columbia",
+    "groupId": null,
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "meet_spd&team[000]",
+        "roomType": "MEETING",
+        "phase": 0
+      },
+      {
+        "buffId": "meet_spd&team[110]",
+        "roomType": "MEETING",
+        "phase": 2
+      }
+    ]
+  },
+  "char_275_breeze": {
+    "name": "微风",
+    "rarity": 4,
+    "profession": "MEDIC",
+    "nationId": "victoria",
+    "groupId": null,
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "meet_spd&team[000]",
+        "roomType": "MEETING",
+        "phase": 0
+      },
+      {
+        "buffId": "meet_spd&team[071]",
+        "roomType": "MEETING",
+        "phase": 2
+      }
+    ]
+  },
+  "char_277_sqrrel": {
+    "name": "阿消",
+    "rarity": 3,
+    "profession": "SPECIAL",
+    "nationId": "lungmen",
+    "groupId": null,
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "workshop_formula_probability[200]",
+        "roomType": "WORKSHOP",
+        "phase": 0
+      },
+      {
+        "buffId": "power_rec_spd[010]",
+        "roomType": "POWER",
+        "phase": 1
+      }
+    ]
+  },
+  "char_278_orchid": {
+    "name": "梓兰",
+    "rarity": 2,
+    "profession": "SUPPORT",
+    "nationId": "rhodes",
+    "groupId": null,
+    "teamId": "reserve6",
+    "subPower": [
+      {
+        "nationId": "columbia",
+        "groupId": null,
+        "teamId": null
+      }
+    ],
+    "skills": [
+      {
+        "buffId": "hire_spd[020]",
+        "roomType": "HIRE",
+        "phase": 0
+      },
+      {
+        "buffId": "trade_ord_spd&limit[010]",
+        "roomType": "TRADING",
+        "phase": 1
+      }
+    ]
+  },
+  "char_279_excu": {
+    "name": "送葬人",
+    "rarity": 4,
+    "profession": "SNIPER",
+    "nationId": "laterano",
+    "groupId": null,
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "train_spd&profession[040]",
+        "roomType": "TRAINING",
+        "phase": 0
+      },
+      {
+        "buffId": "control_mp_cost[003]",
+        "roomType": "CONTROL",
+        "phase": 2
+      }
+    ]
+  },
+  "char_281_popka": {
+    "name": "泡普卡",
+    "rarity": 2,
+    "profession": "WARRIOR",
+    "nationId": "rhodes",
+    "groupId": null,
+    "teamId": "reserve6",
+    "subPower": [
+      {
+        "nationId": "rim",
+        "groupId": null,
+        "teamId": null
+      }
+    ],
+    "skills": [
+      {
+        "buffId": "manu_prod_spd&limit&cost[010]",
+        "roomType": "MANUFACTURE",
+        "phase": 0
+      },
+      {
+        "buffId": "dorm_rec_single&oneself[020]",
+        "roomType": "DORMITORY",
+        "phase": 1
+      }
+    ]
+  },
+  "char_282_catap": {
+    "name": "空爆",
+    "rarity": 2,
+    "profession": "SNIPER",
+    "nationId": "rhodes",
+    "groupId": null,
+    "teamId": "reserve6",
+    "subPower": [
+      {
+        "nationId": "kazimierz",
+        "groupId": null,
+        "teamId": null
+      }
+    ],
+    "skills": [
+      {
+        "buffId": "trade_ord_spd&cost[000]",
+        "roomType": "TRADING",
+        "phase": 0
+      },
+      {
+        "buffId": "workshop_formula_probability[122]",
+        "roomType": "WORKSHOP",
+        "phase": 1
+      }
+    ]
+  },
+  "char_283_midn": {
+    "name": "月见夜",
+    "rarity": 2,
+    "profession": "WARRIOR",
+    "nationId": "rhodes",
+    "groupId": null,
+    "teamId": "reserve6",
+    "subPower": [
+      {
+        "nationId": "higashi",
+        "groupId": null,
+        "teamId": null
+      }
+    ],
+    "skills": [
+      {
+        "buffId": "trade_ord_spd&cost[000]",
+        "roomType": "TRADING",
+        "phase": 0
+      },
+      {
+        "buffId": "manu_formula_spd[200]",
+        "roomType": "MANUFACTURE",
+        "phase": 1
+      }
+    ]
+  },
+  "char_284_spot": {
+    "name": "斑点",
+    "rarity": 2,
+    "profession": "TANK",
+    "nationId": "rhodes",
+    "groupId": null,
+    "teamId": "reserve6",
+    "subPower": [
+      {
+        "nationId": "sargon",
+        "groupId": null,
+        "teamId": null
+      }
+    ],
+    "skills": [
+      {
+        "buffId": "workshop_proc_probability[010]",
+        "roomType": "WORKSHOP",
+        "phase": 0
+      },
+      {
+        "buffId": "manu_formula_spd[100]",
+        "roomType": "MANUFACTURE",
+        "phase": 1
+      }
+    ]
+  },
+  "char_285_medic2": {
+    "name": "Lancet-2",
+    "rarity": 0,
+    "profession": "MEDIC",
+    "nationId": "rhodes",
+    "groupId": null,
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "power_rec_spd[000]",
+        "roomType": "POWER",
+        "phase": 0
+      },
+      {
+        "buffId": "dorm_rec_single[000]",
+        "roomType": "DORMITORY",
+        "phase": 0
+      }
+    ]
+  },
+  "char_286_cast3": {
+    "name": "Castle-3",
+    "rarity": 0,
+    "profession": "WARRIOR",
+    "nationId": "rhodes",
+    "groupId": null,
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "power_rec_spd[000]",
+        "roomType": "POWER",
+        "phase": 0
+      },
+      {
+        "buffId": "manu_formula_spd[010]",
+        "roomType": "MANUFACTURE",
+        "phase": 0
+      }
+    ]
+  },
+  "char_289_gyuki": {
+    "name": "缠丸",
+    "rarity": 3,
+    "profession": "WARRIOR",
+    "nationId": "higashi",
+    "groupId": null,
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "workshop_formula_probability[000]",
+        "roomType": "WORKSHOP",
+        "phase": 0
+      },
+      {
+        "buffId": "trade_ord_spd[001]",
+        "roomType": "TRADING",
+        "phase": 1
+      }
+    ]
+  },
+  "char_290_vigna": {
+    "name": "红豆",
+    "rarity": 3,
+    "profession": "PIONEER",
+    "nationId": "columbia",
+    "groupId": null,
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "manu_formula_spd[010]",
+        "roomType": "MANUFACTURE",
+        "phase": 0
+      },
+      {
+        "buffId": "train_spd&profession[011]",
+        "roomType": "TRAINING",
+        "phase": 1
+      }
+    ]
+  },
+  "char_291_aglina": {
+    "name": "安洁莉娜",
+    "rarity": 5,
+    "profession": "SUPPORT",
+    "nationId": "siracusa",
+    "groupId": null,
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "meet_spd&team[000]",
+        "roomType": "MEETING",
+        "phase": 0
+      },
+      {
+        "buffId": "meet_spd&team[060]",
+        "roomType": "MEETING",
+        "phase": 2
+      }
+    ]
+  },
+  "char_293_thorns": {
+    "name": "棘刺",
+    "rarity": 5,
+    "profession": "WARRIOR",
+    "nationId": "iberia",
+    "groupId": null,
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "workshop_proc_probability[012]",
+        "roomType": "WORKSHOP",
+        "phase": 0
+      },
+      {
+        "buffId": "workshop_formula_recovery[000]",
+        "roomType": "WORKSHOP",
+        "phase": 2
+      }
+    ]
+  },
+  "char_294_ayer": {
+    "name": "断崖",
+    "rarity": 4,
+    "profession": "WARRIOR",
+    "nationId": "rim",
+    "groupId": null,
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "meet_spd[000]",
+        "roomType": "MEETING",
+        "phase": 0
+      },
+      {
+        "buffId": "meet_spd[020]",
+        "roomType": "MEETING",
+        "phase": 2
+      }
+    ]
+  },
+  "char_297_hamoni": {
+    "name": "和弦",
+    "rarity": 4,
+    "profession": "CASTER",
+    "nationId": "victoria",
+    "groupId": "tara",
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "dorm_rec_oneself[000]",
+        "roomType": "DORMITORY",
+        "phase": 0
+      },
+      {
+        "buffId": "meet_spd&cost_condChar[000]",
+        "roomType": "MEETING",
+        "phase": 2
+      }
+    ]
+  },
+  "char_298_susuro": {
+    "name": "苏苏洛",
+    "rarity": 3,
+    "profession": "MEDIC",
+    "nationId": "rhodes",
+    "groupId": null,
+    "teamId": null,
+    "subPower": [
+      {
+        "nationId": "siracusa",
+        "groupId": null,
+        "teamId": null
+      }
+    ],
+    "skills": [
+      {
+        "buffId": "train_spd&profession[070]",
+        "roomType": "TRAINING",
+        "phase": 0
+      },
+      {
+        "buffId": "workshop_formula_probability[120]",
+        "roomType": "WORKSHOP",
+        "phase": 1
+      }
+    ]
+  },
+  "char_300_phenxi": {
+    "name": "菲亚梅塔",
+    "rarity": 5,
+    "profession": "SNIPER",
+    "nationId": "laterano",
+    "groupId": null,
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "dorm_recExcludeOther[000]",
+        "roomType": "DORMITORY",
+        "phase": 0
+      },
+      {
+        "buffId": "dorm_exchangeAp[000]",
+        "roomType": "DORMITORY",
+        "phase": 0
+      }
+    ]
+  },
+  "char_301_cutter": {
+    "name": "刻刀",
+    "rarity": 3,
+    "profession": "WARRIOR",
+    "nationId": "columbia",
+    "groupId": null,
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "workshop_formula_probability[300]",
+        "roomType": "WORKSHOP",
+        "phase": 0
+      },
+      {
+        "buffId": "workshop_formula_cost3[300]",
+        "roomType": "WORKSHOP",
+        "phase": 1
+      }
+    ]
+  },
+  "char_302_glaze": {
+    "name": "安比尔",
+    "rarity": 3,
+    "profession": "SNIPER",
+    "nationId": "laterano",
+    "groupId": null,
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "dorm_rec_all&oneself[000]",
+        "roomType": "DORMITORY",
+        "phase": 0
+      },
+      {
+        "buffId": "trade_ord_spd[001]",
+        "roomType": "TRADING",
+        "phase": 1
+      }
+    ]
+  },
+  "char_304_zebra": {
+    "name": "暴雨",
+    "rarity": 4,
+    "profession": "TANK",
+    "nationId": "rhodes",
+    "groupId": null,
+    "teamId": null,
+    "subPower": [
+      {
+        "nationId": "sargon",
+        "groupId": null,
+        "teamId": null
+      }
+    ],
+    "skills": [
+      {
+        "buffId": "control_mp_cost[006]",
+        "roomType": "CONTROL",
+        "phase": 0
+      },
+      {
+        "buffId": "train_spd&profession2[030]",
+        "roomType": "TRAINING",
+        "phase": 0
+      },
+      {
+        "buffId": "train_spd&profession2[230]",
+        "roomType": "TRAINING",
+        "phase": 2
+      }
+    ]
+  },
+  "char_306_leizi": {
+    "name": "惊蛰",
+    "rarity": 4,
+    "profession": "CASTER",
+    "nationId": "yan",
+    "groupId": null,
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "control_clue_cost[010]",
+        "roomType": "CONTROL",
+        "phase": 0
+      },
+      {
+        "buffId": "control_clue_cost[011]",
+        "roomType": "CONTROL",
+        "phase": 2
+      }
+    ]
+  },
+  "char_308_swire": {
+    "name": "诗怀雅",
+    "rarity": 4,
+    "profession": "WARRIOR",
+    "nationId": "lungmen",
+    "groupId": "lgd",
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "control_tra_spd[010]",
+        "roomType": "CONTROL",
+        "phase": 0
+      },
+      {
+        "buffId": "train_spd[000]",
+        "roomType": "TRAINING",
+        "phase": 2
+      }
+    ]
+  },
+  "char_311_mudrok": {
+    "name": "泥岩",
+    "rarity": 5,
+    "profession": "TANK",
+    "nationId": "rhodes",
+    "groupId": null,
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "workshop_formula_cost4[000]",
+        "roomType": "WORKSHOP",
+        "phase": 0
+      },
+      {
+        "buffId": "workshop_formula_device[050]",
+        "roomType": "WORKSHOP",
+        "phase": 2
+      }
+    ]
+  },
+  "char_322_lmlee": {
+    "name": "老鲤",
+    "rarity": 5,
+    "profession": "SPECIAL",
+    "nationId": "lungmen",
+    "groupId": null,
+    "teamId": "lee",
+    "skills": [
+      {
+        "buffId": "control_allCost_condChar[000]",
+        "roomType": "CONTROL",
+        "phase": 0
+      },
+      {
+        "buffId": "control_upMeetingSpeed[000]",
+        "roomType": "CONTROL",
+        "phase": 2
+      }
+    ]
+  },
+  "char_325_bison": {
+    "name": "拜松",
+    "rarity": 4,
+    "profession": "TANK",
+    "nationId": "lungmen",
+    "groupId": null,
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "trade_ord_spd&limit[032]",
+        "roomType": "TRADING",
+        "phase": 0
+      },
+      {
+        "buffId": "trade_ord_spd&limit[033]",
+        "roomType": "TRADING",
+        "phase": 2
+      }
+    ]
+  },
+  "char_326_glacus": {
+    "name": "格劳克斯",
+    "rarity": 4,
+    "profession": "SUPPORT",
+    "nationId": "iberia",
+    "groupId": null,
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "power_rec_spd[003]",
+        "roomType": "POWER",
+        "phase": 0
+      },
+      {
+        "buffId": "power_rec_spd[015]",
+        "roomType": "POWER",
+        "phase": 2
+      }
+    ]
+  },
+  "char_328_cammou": {
+    "name": "卡达",
+    "rarity": 3,
+    "profession": "CASTER",
+    "nationId": "rhodes",
+    "groupId": null,
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "manu_formula_cost[000]",
+        "roomType": "MANUFACTURE",
+        "phase": 0
+      },
+      {
+        "buffId": "manu_formula_limit[010]",
+        "roomType": "MANUFACTURE",
+        "phase": 1
+      }
+    ]
+  },
+  "char_332_archet": {
+    "name": "空弦",
+    "rarity": 5,
+    "profession": "SNIPER",
+    "nationId": "laterano",
+    "groupId": null,
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "trade_ord_spd&dorm&lv[000]",
+        "roomType": "TRADING",
+        "phase": 0
+      },
+      {
+        "buffId": "trade_ord_spd&dorm&lv[010]",
+        "roomType": "TRADING",
+        "phase": 2
+      }
+    ]
+  },
+  "char_333_sidero": {
+    "name": "铸铁",
+    "rarity": 4,
+    "profession": "WARRIOR",
+    "nationId": "minos",
+    "groupId": null,
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "train_spd&profession2[020]",
+        "roomType": "TRAINING",
+        "phase": 0
+      },
+      {
+        "buffId": "train_spd&profession2[320]",
+        "roomType": "TRAINING",
+        "phase": 2
+      }
+    ]
+  },
+  "char_336_folivo": {
+    "name": "稀音",
+    "rarity": 4,
+    "profession": "SUPPORT",
+    "nationId": "sargon",
+    "groupId": null,
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "manu_prod_spd_addition[041]",
+        "roomType": "MANUFACTURE",
+        "phase": 0
+      },
+      {
+        "buffId": "manu_formula_limit[0000]",
+        "roomType": "MANUFACTURE",
+        "phase": 2
+      }
+    ]
+  },
+  "char_337_utage": {
+    "name": "宴",
+    "rarity": 3,
+    "profession": "WARRIOR",
+    "nationId": "higashi",
+    "groupId": null,
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "hire_spd[020]",
+        "roomType": "HIRE",
+        "phase": 0
+      },
+      {
+        "buffId": "meet_spd[020]",
+        "roomType": "MEETING",
+        "phase": 1
+      }
+    ]
+  },
+  "char_338_iris": {
+    "name": "爱丽丝",
+    "rarity": 4,
+    "profession": "CASTER",
+    "nationId": "victoria",
+    "groupId": null,
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "dorm_rec_bd_n1_n2[000]",
+        "roomType": "DORMITORY",
+        "phase": 0
+      },
+      {
+        "buffId": "dorm_rec_bd_n1[000]",
+        "roomType": "DORMITORY",
+        "phase": 2
+      }
+    ]
+  },
+  "char_340_shwaz": {
+    "name": "黑",
+    "rarity": 5,
+    "profession": "SNIPER",
+    "nationId": "columbia",
+    "groupId": "siesta",
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "dorm_rec_single_P[000]",
+        "roomType": "DORMITORY",
+        "phase": 0
+      },
+      {
+        "buffId": "train_spd&profession[140]",
+        "roomType": "TRAINING",
+        "phase": 2
+      }
+    ]
+  },
+  "char_341_sntlla": {
+    "name": "寒檀",
+    "rarity": 4,
+    "profession": "CASTER",
+    "nationId": "sami",
+    "groupId": null,
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "dorm_rec_single_power[000]",
+        "roomType": "DORMITORY",
+        "phase": 0
+      },
+      {
+        "buffId": "train_spd_power[000]",
+        "roomType": "TRAINING",
+        "phase": 2
+      }
+    ]
+  },
+  "char_343_tknogi": {
+    "name": "月禾",
+    "rarity": 4,
+    "profession": "SUPPORT",
+    "nationId": "higashi",
+    "groupId": null,
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "hire_spd&clue[010]",
+        "roomType": "HIRE",
+        "phase": 0
+      },
+      {
+        "buffId": "hire_spd&clue[100]",
+        "roomType": "HIRE",
+        "phase": 2
+      }
+    ]
+  },
+  "char_344_beewax": {
+    "name": "蜜蜡",
+    "rarity": 4,
+    "profession": "CASTER",
+    "nationId": "sargon",
+    "groupId": null,
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "train_spd&profession[050]",
+        "roomType": "TRAINING",
+        "phase": 0
+      },
+      {
+        "buffId": "train_spd&profession[051]",
+        "roomType": "TRAINING",
+        "phase": 2
+      }
+    ]
+  },
+  "char_345_folnic": {
+    "name": "亚叶",
+    "rarity": 4,
+    "profession": "MEDIC",
+    "nationId": "rhodes",
+    "groupId": null,
+    "teamId": null,
+    "subPower": [
+      {
+        "nationId": "ursus",
+        "groupId": null,
+        "teamId": null
+      }
+    ],
+    "skills": [
+      {
+        "buffId": "workshop_formula_probability[111]",
+        "roomType": "WORKSHOP",
+        "phase": 0
+      },
+      {
+        "buffId": "workshop_formula_cost3[100]",
+        "roomType": "WORKSHOP",
+        "phase": 2
+      }
+    ]
+  },
+  "char_346_aosta": {
+    "name": "奥斯塔",
+    "rarity": 4,
+    "profession": "SNIPER",
+    "nationId": "siracusa",
+    "groupId": null,
+    "teamId": "chiave",
+    "skills": [
+      {
+        "buffId": "workshop_formula_cost3[110]",
+        "roomType": "WORKSHOP",
+        "phase": 0
+      },
+      {
+        "buffId": "workshop_formula_device[030]",
+        "roomType": "WORKSHOP",
+        "phase": 2
+      }
+    ]
+  },
+  "char_347_jaksel": {
+    "name": "杰克",
+    "rarity": 3,
+    "profession": "WARRIOR",
+    "nationId": "columbia",
+    "groupId": null,
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "dorm_rec_single&oneself[000]",
+        "roomType": "DORMITORY",
+        "phase": 0
+      },
+      {
+        "buffId": "meet_spd[0020]",
+        "roomType": "MEETING",
+        "phase": 1
+      }
+    ]
+  },
+  "char_348_ceylon": {
+    "name": "锡兰",
+    "rarity": 4,
+    "profession": "MEDIC",
+    "nationId": "columbia",
+    "groupId": "siesta",
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "workshop_formula_probability[129]",
+        "roomType": "WORKSHOP",
+        "phase": 0
+      },
+      {
+        "buffId": "manu_formula_spd[212]",
+        "roomType": "MANUFACTURE",
+        "phase": 2
+      }
+    ]
+  },
+  "char_349_chiave": {
+    "name": "贾维",
+    "rarity": 4,
+    "profession": "PIONEER",
+    "nationId": "siracusa",
+    "groupId": null,
+    "teamId": "chiave",
+    "skills": [
+      {
+        "buffId": "workshop_formula_cost3[110]",
+        "roomType": "WORKSHOP",
+        "phase": 0
+      },
+      {
+        "buffId": "workshop_formula_device[000]",
+        "roomType": "WORKSHOP",
+        "phase": 2
+      }
+    ]
+  },
+  "char_350_surtr": {
+    "name": "史尔特尔",
+    "rarity": 5,
+    "profession": "WARRIOR",
+    "nationId": "rhodes",
+    "groupId": null,
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "train_spd&profession[020]",
+        "roomType": "TRAINING",
+        "phase": 0
+      },
+      {
+        "buffId": "train_spd&profession[120]",
+        "roomType": "TRAINING",
+        "phase": 2
+      }
+    ]
+  },
+  "char_355_ethan": {
+    "name": "伊桑",
+    "rarity": 3,
+    "profession": "SPECIAL",
+    "nationId": "rhodes",
+    "groupId": null,
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "hire_spd[030]",
+        "roomType": "HIRE",
+        "phase": 0
+      },
+      {
+        "buffId": "dorm_rec_oneself[030]",
+        "roomType": "DORMITORY",
+        "phase": 1
+      }
+    ]
+  },
+  "char_356_broca": {
+    "name": "布洛卡",
+    "rarity": 4,
+    "profession": "WARRIOR",
+    "nationId": "siracusa",
+    "groupId": null,
+    "teamId": "chiave",
+    "skills": [
+      {
+        "buffId": "train_spd&profession[020]",
+        "roomType": "TRAINING",
+        "phase": 0
+      },
+      {
+        "buffId": "train_spd&profession[021]",
+        "roomType": "TRAINING",
+        "phase": 2
+      }
+    ]
+  },
+  "char_358_lisa": {
+    "name": "铃兰",
+    "rarity": 5,
+    "profession": "SUPPORT",
+    "nationId": "siracusa",
+    "groupId": null,
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "train_spd&profession[060]",
+        "roomType": "TRAINING",
+        "phase": 0
+      },
+      {
+        "buffId": "train_spd&profession[160]",
+        "roomType": "TRAINING",
+        "phase": 2
+      }
+    ]
+  },
+  "char_362_saga": {
+    "name": "嵯峨",
+    "rarity": 5,
+    "profession": "PIONEER",
+    "nationId": "higashi",
+    "groupId": null,
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "train_spd&profession[010]",
+        "roomType": "TRAINING",
+        "phase": 0
+      },
+      {
+        "buffId": "train_spd&profession[110]",
+        "roomType": "TRAINING",
+        "phase": 2
+      }
+    ]
+  },
+  "char_363_toddi": {
+    "name": "熔泉",
+    "rarity": 4,
+    "profession": "SNIPER",
+    "nationId": "victoria",
+    "groupId": null,
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "workshop_formula_cost3[111]",
+        "roomType": "WORKSHOP",
+        "phase": 0
+      },
+      {
+        "buffId": "workshop_formula_device[020]",
+        "roomType": "WORKSHOP",
+        "phase": 2
+      }
+    ]
+  },
+  "char_365_aprl": {
+    "name": "四月",
+    "rarity": 4,
+    "profession": "SNIPER",
+    "nationId": "rim",
+    "groupId": null,
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "trade_ord_spd&limit[000]",
+        "roomType": "TRADING",
+        "phase": 0
+      },
+      {
+        "buffId": "trade_ord_spd&limit[001]",
+        "roomType": "TRADING",
+        "phase": 2
+      },
+      {
+        "buffId": "dorm_rec_all[000]",
+        "roomType": "DORMITORY",
+        "phase": 0
+      }
+    ]
+  },
+  "char_366_acdrop": {
+    "name": "酸糖",
+    "rarity": 3,
+    "profession": "SNIPER",
+    "nationId": "columbia",
+    "groupId": null,
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "hire_spd[031]",
+        "roomType": "HIRE",
+        "phase": 0
+      },
+      {
+        "buffId": "dorm_rec_single&oneself[012]",
+        "roomType": "DORMITORY",
+        "phase": 1
+      }
+    ]
+  },
+  "char_367_swllow": {
+    "name": "灰喉",
+    "rarity": 4,
+    "profession": "SNIPER",
+    "nationId": "rhodes",
+    "groupId": null,
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "control_mp_cost[005]",
+        "roomType": "CONTROL",
+        "phase": 0
+      },
+      {
+        "buffId": "dorm_rec_oneself[000]",
+        "roomType": "DORMITORY",
+        "phase": 2
+      }
+    ]
+  },
+  "char_369_bena": {
+    "name": "贝娜",
+    "rarity": 4,
+    "profession": "SPECIAL",
+    "nationId": "victoria",
+    "groupId": null,
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "manu_prod_spd&limit&cost[020]",
+        "roomType": "MANUFACTURE",
+        "phase": 0
+      },
+      {
+        "buffId": "trade_ord_wt&cost[000]",
+        "roomType": "TRADING",
+        "phase": 2
+      }
+    ]
+  },
+  "char_373_lionhd": {
+    "name": "莱恩哈特",
+    "rarity": 4,
+    "profession": "CASTER",
+    "nationId": "rim",
+    "groupId": null,
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "workshop_formula_probability[220]",
+        "roomType": "WORKSHOP",
+        "phase": 0
+      },
+      {
+        "buffId": "workshop_formula_cost3[220]",
+        "roomType": "WORKSHOP",
+        "phase": 2
+      }
+    ]
+  },
+  "char_376_therex": {
+    "name": "THRM-EX",
+    "rarity": 0,
+    "profession": "SPECIAL",
+    "nationId": "rhodes",
+    "groupId": null,
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "power_rec_spd[000]",
+        "roomType": "POWER",
+        "phase": 0
+      },
+      {
+        "buffId": "power_rec_spd&cost[000]",
+        "roomType": "POWER",
+        "phase": 0
+      }
+    ]
+  },
+  "char_377_gdglow": {
+    "name": "澄闪",
+    "rarity": 5,
+    "profession": "CASTER",
+    "nationId": "victoria",
+    "groupId": null,
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "power_rec_spd[003]",
+        "roomType": "POWER",
+        "phase": 0
+      },
+      {
+        "buffId": "power_rec_spd[023]",
+        "roomType": "POWER",
+        "phase": 2
+      }
+    ]
+  },
+  "char_378_asbest": {
+    "name": "石棉",
+    "rarity": 4,
+    "profession": "TANK",
+    "nationId": "rim",
+    "groupId": null,
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "manu_prod_spd&limit&cost[011]",
+        "roomType": "MANUFACTURE",
+        "phase": 0
+      },
+      {
+        "buffId": "manu_prod_limit&cost[020]",
+        "roomType": "MANUFACTURE",
+        "phase": 2
+      }
+    ]
+  },
+  "char_379_sesa": {
+    "name": "慑砂",
+    "rarity": 4,
+    "profession": "SNIPER",
+    "nationId": "sargon",
+    "groupId": null,
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "workshop_formula_cost3[120]",
+        "roomType": "WORKSHOP",
+        "phase": 0
+      },
+      {
+        "buffId": "workshop_formula_probability[119]",
+        "roomType": "WORKSHOP",
+        "phase": 2
+      }
+    ]
+  },
+  "char_381_bubble": {
+    "name": "泡泡",
+    "rarity": 3,
+    "profession": "TANK",
+    "nationId": "sargon",
+    "groupId": null,
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "manu_prod_limit&cost[010]",
+        "roomType": "MANUFACTURE",
+        "phase": 0
+      },
+      {
+        "buffId": "manu_prod_spd_variable3[000]",
+        "roomType": "MANUFACTURE",
+        "phase": 1
+      }
+    ]
+  },
+  "char_383_snsant": {
+    "name": "雪雉",
+    "rarity": 4,
+    "profession": "SPECIAL",
+    "nationId": "lungmen",
+    "groupId": null,
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "trade_ord_spd_variable2[000]",
+        "roomType": "TRADING",
+        "phase": 0
+      },
+      {
+        "buffId": "trade_ord_spd_variable2[001]",
+        "roomType": "TRADING",
+        "phase": 2
+      }
+    ]
+  },
+  "char_385_finlpp": {
+    "name": "清流",
+    "rarity": 3,
+    "profession": "MEDIC",
+    "nationId": "yan",
+    "groupId": null,
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "power_rec_spd[011]",
+        "roomType": "POWER",
+        "phase": 0
+      },
+      {
+        "buffId": "manu_prod_spd&trade[000]",
+        "roomType": "MANUFACTURE",
+        "phase": 1
+      }
+    ]
+  },
+  "char_388_mint": {
+    "name": "薄绿",
+    "rarity": 4,
+    "profession": "CASTER",
+    "nationId": "victoria",
+    "groupId": null,
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "train_spd&profession2[050]",
+        "roomType": "TRAINING",
+        "phase": 0
+      },
+      {
+        "buffId": "train_spd&profession2[250]",
+        "roomType": "TRAINING",
+        "phase": 2
+      },
+      {
+        "buffId": "manu_formula_spd[201]",
+        "roomType": "MANUFACTURE",
+        "phase": 1
+      }
+    ]
+  },
+  "char_391_rosmon": {
+    "name": "迷迭香",
+    "rarity": 5,
+    "profession": "SNIPER",
+    "nationId": "rhodes",
+    "groupId": "elite",
+    "teamId": null,
+    "subPower": [
+      {
+        "nationId": "columbia",
+        "groupId": null,
+        "teamId": null
+      }
+    ],
+    "skills": [
+      {
+        "buffId": "manu_prod_spd_bd_n1[000]",
+        "roomType": "MANUFACTURE",
+        "phase": 0
+      },
+      {
+        "buffId": "manu_prod_spd_bd[000]",
+        "roomType": "MANUFACTURE",
+        "phase": 0
+      },
+      {
+        "buffId": "manu_prod_spd_bd[010]",
+        "roomType": "MANUFACTURE",
+        "phase": 2
+      }
+    ]
+  },
+  "char_394_hadiya": {
+    "name": "哈蒂娅",
+    "rarity": 4,
+    "profession": "WARRIOR",
+    "nationId": "sargon",
+    "groupId": null,
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "train_spd&profession2[321]",
+        "roomType": "TRAINING",
+        "phase": 0
+      },
+      {
+        "buffId": "train_spd&profession2[322]",
+        "roomType": "TRAINING",
+        "phase": 2
+      }
+    ]
+  },
+  "char_4000_jnight": {
+    "name": "正义骑士号",
+    "rarity": 0,
+    "profession": "SNIPER",
+    "nationId": "kazimierz",
+    "groupId": "pinus",
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "power_rec_spd[000]",
+        "roomType": "POWER",
+        "phase": 0
+      },
+      {
+        "buffId": "power_prod_spd_P[000]",
+        "roomType": "POWER",
+        "phase": 0
+      }
+    ]
+  },
+  "char_4004_pudd": {
+    "name": "布丁",
+    "rarity": 3,
+    "profession": "CASTER",
+    "nationId": "columbia",
+    "groupId": null,
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "power_rec_spd[010]",
+        "roomType": "POWER",
+        "phase": 0
+      },
+      {
+        "buffId": "control_token_prod_spd[000]",
+        "roomType": "CONTROL",
+        "phase": 1
+      }
+    ]
+  },
+  "char_4006_melnte": {
+    "name": "玫拉",
+    "rarity": 4,
+    "profession": "SNIPER",
+    "nationId": "columbia",
+    "groupId": null,
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "train_spd&profession2[040]",
+        "roomType": "TRAINING",
+        "phase": 0
+      },
+      {
+        "buffId": "train_spd&profession2[630]",
+        "roomType": "TRAINING",
+        "phase": 2
+      }
+    ]
+  },
+  "char_4009_irene": {
+    "name": "艾丽妮",
+    "rarity": 5,
+    "profession": "WARRIOR",
+    "nationId": "iberia",
+    "groupId": null,
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "train_spd_doubleProf[000]",
+        "roomType": "TRAINING",
+        "phase": 0
+      },
+      {
+        "buffId": "train_spd_reduceTime[000]",
+        "roomType": "TRAINING",
+        "phase": 2
+      }
+    ]
+  },
+  "char_400_weedy": {
+    "name": "温蒂",
+    "rarity": 5,
+    "profession": "SPECIAL",
+    "nationId": "rhodes",
+    "groupId": null,
+    "teamId": null,
+    "subPower": [
+      {
+        "nationId": "iberia",
+        "groupId": null,
+        "teamId": null
+      }
+    ],
+    "skills": [
+      {
+        "buffId": "manu_prod_spd&power[010]",
+        "roomType": "MANUFACTURE",
+        "phase": 0
+      },
+      {
+        "buffId": "manu_prod_spd&power[020]",
+        "roomType": "MANUFACTURE",
+        "phase": 2
+      }
+    ]
+  },
+  "char_4010_etlchi": {
+    "name": "隐德来希",
+    "rarity": 5,
+    "profession": "WARRIOR",
+    "nationId": "rhodes",
+    "groupId": null,
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "dorm_hireToRecAll[001]",
+        "roomType": "DORMITORY",
+        "phase": 0
+      },
+      {
+        "buffId": "dorm_hireToRecAll[021]",
+        "roomType": "DORMITORY",
+        "phase": 2
+      }
+    ]
+  },
+  "char_4011_lessng": {
+    "name": "止颂",
+    "rarity": 5,
+    "profession": "WARRIOR",
+    "nationId": "leithanien",
+    "groupId": null,
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "workshop_formula_cost4[010]",
+        "roomType": "WORKSHOP",
+        "phase": 0
+      },
+      {
+        "buffId": "workshop_formula_cost4[011]",
+        "roomType": "WORKSHOP",
+        "phase": 2
+      },
+      {
+        "buffId": "workshop_formula_probability[139]",
+        "roomType": "WORKSHOP",
+        "phase": 2
+      }
+    ]
+  },
+  "char_4013_kjera": {
+    "name": "耶拉",
+    "rarity": 4,
+    "profession": "CASTER",
+    "nationId": "kjerag",
+    "groupId": null,
+    "teamId": null,
+    "subPower": [
+      {
+        "nationId": "kjerag",
+        "groupId": "karlan",
+        "teamId": null
+      }
+    ],
+    "skills": [
+      {
+        "buffId": "meet_spd&team[000]",
+        "roomType": "MEETING",
+        "phase": 0
+      },
+      {
+        "buffId": "meet_spd&team[041]",
+        "roomType": "MEETING",
+        "phase": 2
+      },
+      {
+        "buffId": "meet_flag[040]",
+        "roomType": "MEETING",
+        "phase": 2
+      }
+    ]
+  },
+  "char_4014_lunacu": {
+    "name": "子月",
+    "rarity": 4,
+    "profession": "SNIPER",
+    "nationId": "siracusa",
+    "groupId": null,
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "dorm_rec_oneself[001]",
+        "roomType": "DORMITORY",
+        "phase": 0
+      },
+      {
+        "buffId": "workshop_formula_probability[011]",
+        "roomType": "WORKSHOP",
+        "phase": 2
+      }
+    ]
+  },
+  "char_4015_spuria": {
+    "name": "空构",
+    "rarity": 4,
+    "profession": "SPECIAL",
+    "nationId": "laterano",
+    "groupId": null,
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "power_rec_spd&addition[000]",
+        "roomType": "POWER",
+        "phase": 0
+      },
+      {
+        "buffId": "power_rec_spd&addition[001]",
+        "roomType": "POWER",
+        "phase": 2
+      },
+      {
+        "buffId": "power_rec_spd&cost[010]",
+        "roomType": "POWER",
+        "phase": 0
+      }
+    ]
+  },
+  "char_4016_kazema": {
+    "name": "风丸",
+    "rarity": 4,
+    "profession": "SPECIAL",
+    "nationId": "higashi",
+    "groupId": null,
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "meet_spd[010]",
+        "roomType": "MEETING",
+        "phase": 0
+      },
+      {
+        "buffId": "meet_spd_condChar[000]",
+        "roomType": "MEETING",
+        "phase": 2
+      }
+    ]
+  },
+  "char_4017_puzzle": {
+    "name": "谜图",
+    "rarity": 4,
+    "profession": "PIONEER",
+    "nationId": "victoria",
+    "groupId": null,
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "meet_spd&team[000]",
+        "roomType": "MEETING",
+        "phase": 0
+      },
+      {
+        "buffId": "meet_spd_notOwned[001]",
+        "roomType": "MEETING",
+        "phase": 2
+      }
+    ]
+  },
+  "char_4019_ncdeer": {
+    "name": "九色鹿",
+    "rarity": 4,
+    "profession": "SUPPORT",
+    "nationId": "yan",
+    "groupId": null,
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "workshop_formula_bonus1[000]",
+        "roomType": "WORKSHOP",
+        "phase": 0
+      },
+      {
+        "buffId": "workshop_formula_bonus2[000]",
+        "roomType": "WORKSHOP",
+        "phase": 2
+      }
+    ]
+  },
+  "char_401_elysm": {
+    "name": "极境",
+    "rarity": 4,
+    "profession": "PIONEER",
+    "nationId": "rhodes",
+    "groupId": null,
+    "teamId": null,
+    "subPower": [
+      {
+        "nationId": "iberia",
+        "groupId": null,
+        "teamId": null
+      }
+    ],
+    "skills": [
+      {
+        "buffId": "meet_team[060]",
+        "roomType": "MEETING",
+        "phase": 0
+      },
+      {
+        "buffId": "meet_flag[060]",
+        "roomType": "MEETING",
+        "phase": 2
+      }
+    ]
+  },
+  "char_4023_rfalcn": {
+    "name": "红隼",
+    "rarity": 4,
+    "profession": "PIONEER",
+    "nationId": "sargon",
+    "groupId": null,
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "control_dorm_rec[001]",
+        "roomType": "CONTROL",
+        "phase": 0
+      },
+      {
+        "buffId": "control_mp_cost[011]",
+        "roomType": "CONTROL",
+        "phase": 2
+      }
+    ]
+  },
+  "char_4025_aprot2": {
+    "name": "暮落",
+    "rarity": 4,
+    "profession": "TANK",
+    "nationId": "victoria",
+    "groupId": null,
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "train_spd&profession3[130]",
+        "roomType": "TRAINING",
+        "phase": 0
+      },
+      {
+        "buffId": "train_spd&profession3[131]",
+        "roomType": "TRAINING",
+        "phase": 2
+      }
+    ]
+  },
+  "char_4026_vulpis": {
+    "name": "忍冬",
+    "rarity": 5,
+    "profession": "PIONEER",
+    "nationId": "siracusa",
+    "groupId": null,
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "meet_spd[1000]",
+        "roomType": "MEETING",
+        "phase": 0
+      },
+      {
+        "buffId": "meet_spd[1010]",
+        "roomType": "MEETING",
+        "phase": 2
+      },
+      {
+        "buffId": "meet_spd&bd[100]",
+        "roomType": "MEETING",
+        "phase": 2
+      }
+    ]
+  },
+  "char_4027_heyak": {
+    "name": "霍尔海雅",
+    "rarity": 5,
+    "profession": "CASTER",
+    "nationId": "columbia",
+    "groupId": null,
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "meet_spd&cost_condChar[001]",
+        "roomType": "MEETING",
+        "phase": 0
+      },
+      {
+        "buffId": "meet_spd&cost_condChar[011]",
+        "roomType": "MEETING",
+        "phase": 2
+      },
+      {
+        "buffId": "meet_spd&condChar_mustget[000]",
+        "roomType": "MEETING",
+        "phase": 2
+      }
+    ]
+  },
+  "char_402_tuye": {
+    "name": "图耶",
+    "rarity": 4,
+    "profession": "MEDIC",
+    "nationId": "sargon",
+    "groupId": null,
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "trade_ord_spd&gold[000]",
+        "roomType": "TRADING",
+        "phase": 0
+      },
+      {
+        "buffId": "trade_ord_spd&gold[010]",
+        "roomType": "TRADING",
+        "phase": 2
+      }
+    ]
+  },
+  "char_4031_liesel": {
+    "name": "复奏",
+    "rarity": 4,
+    "profession": "CASTER",
+    "nationId": "siracusa",
+    "groupId": null,
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "meet_spd&cost_condChar[020]",
+        "roomType": "MEETING",
+        "phase": 0
+      },
+      {
+        "buffId": "meet_spd&cost_condChar[021]",
+        "roomType": "MEETING",
+        "phase": 2
+      }
+    ]
+  },
+  "char_4032_provs": {
+    "name": "但书",
+    "rarity": 4,
+    "profession": "SUPPORT",
+    "nationId": "kazimierz",
+    "groupId": null,
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "trade_ord_law[000]",
+        "roomType": "TRADING",
+        "phase": 0
+      },
+      {
+        "buffId": "trade_ord_against[000]",
+        "roomType": "TRADING",
+        "phase": 0
+      },
+      {
+        "buffId": "trade_ord_against[010]",
+        "roomType": "TRADING",
+        "phase": 2
+      }
+    ]
+  },
+  "char_4036_forcer": {
+    "name": "见行者",
+    "rarity": 4,
+    "profession": "SPECIAL",
+    "nationId": "laterano",
+    "groupId": null,
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "meet_spd&cost[000]",
+        "roomType": "MEETING",
+        "phase": 0
+      },
+      {
+        "buffId": "meet_spd&cost[100]",
+        "roomType": "MEETING",
+        "phase": 2
+      }
+    ]
+  },
+  "char_4037_demetr": {
+    "name": "贝洛内",
+    "rarity": 5,
+    "profession": "WARRIOR",
+    "nationId": "siracusa",
+    "groupId": null,
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "trade_ord_spd_ext[020]",
+        "roomType": "TRADING",
+        "phase": 0
+      },
+      {
+        "buffId": "trade_ord_spd_ext[021]",
+        "roomType": "TRADING",
+        "phase": 2
+      },
+      {
+        "buffId": "trade_ord_limit&cost_P[020]",
+        "roomType": "TRADING",
+        "phase": 0
+      }
+    ]
+  },
+  "char_4039_horn": {
+    "name": "号角",
+    "rarity": 5,
+    "profession": "TANK",
+    "nationId": "victoria",
+    "groupId": null,
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "workshop_formula_cost3[112]",
+        "roomType": "WORKSHOP",
+        "phase": 0
+      },
+      {
+        "buffId": "workshop_formula_device[111]",
+        "roomType": "WORKSHOP",
+        "phase": 2
+      }
+    ]
+  },
+  "char_4040_rockr": {
+    "name": "洛洛",
+    "rarity": 4,
+    "profession": "CASTER",
+    "nationId": "victoria",
+    "groupId": null,
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "workshop_proc_probability[031]",
+        "roomType": "WORKSHOP",
+        "phase": 0
+      },
+      {
+        "buffId": "workshop_formula_drop[020]",
+        "roomType": "WORKSHOP",
+        "phase": 2
+      }
+    ]
+  },
+  "char_4041_chnut": {
+    "name": "褐果",
+    "rarity": 3,
+    "profession": "MEDIC",
+    "nationId": "rhodes",
+    "groupId": null,
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "manu_prod_spd[000]",
+        "roomType": "MANUFACTURE",
+        "phase": 0
+      },
+      {
+        "buffId": "manu_formula_spd[201]",
+        "roomType": "MANUFACTURE",
+        "phase": 1
+      }
+    ]
+  },
+  "char_4042_lumen": {
+    "name": "流明",
+    "rarity": 5,
+    "profession": "MEDIC",
+    "nationId": "iberia",
+    "groupId": null,
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "dorm_powToRecAll[000]",
+        "roomType": "DORMITORY",
+        "phase": 0
+      },
+      {
+        "buffId": "dorm_powToRecAll[010]",
+        "roomType": "DORMITORY",
+        "phase": 2
+      }
+    ]
+  },
+  "char_4043_erato": {
+    "name": "埃拉托",
+    "rarity": 4,
+    "profession": "SNIPER",
+    "nationId": "minos",
+    "groupId": null,
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "train_spd&profession2[040]",
+        "roomType": "TRAINING",
+        "phase": 0
+      },
+      {
+        "buffId": "train_spd&profession2[240]",
+        "roomType": "TRAINING",
+        "phase": 2
+      }
+    ]
+  },
+  "char_4045_heidi": {
+    "name": "海蒂",
+    "rarity": 4,
+    "profession": "SUPPORT",
+    "nationId": "victoria",
+    "groupId": null,
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "trade_ord_spd[000]",
+        "roomType": "TRADING",
+        "phase": 0
+      },
+      {
+        "buffId": "trade_ord_spd[021]",
+        "roomType": "TRADING",
+        "phase": 2
+      },
+      {
+        "buffId": "control_clue_faction[070]",
+        "roomType": "CONTROL",
+        "phase": 2
+      }
+    ]
+  },
+  "char_4046_ebnhlz": {
+    "name": "黑键",
+    "rarity": 5,
+    "profession": "CASTER",
+    "nationId": "leithanien",
+    "groupId": null,
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "trade_ord_spd_bd_n1[000]",
+        "roomType": "TRADING",
+        "phase": 0
+      },
+      {
+        "buffId": "trade_ord_spd_bd[000]",
+        "roomType": "TRADING",
+        "phase": 0
+      },
+      {
+        "buffId": "trade_ord_spd_bd[010]",
+        "roomType": "TRADING",
+        "phase": 2
+      }
+    ]
+  },
+  "char_4047_pianst": {
+    "name": "车尔尼",
+    "rarity": 4,
+    "profession": "TANK",
+    "nationId": "leithanien",
+    "groupId": null,
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "dorm_rec_bd_n1_n3[000]",
+        "roomType": "DORMITORY",
+        "phase": 0
+      },
+      {
+        "buffId": "dorm_rec_bd_n1[100]",
+        "roomType": "DORMITORY",
+        "phase": 2
+      }
+    ]
+  },
+  "char_4048_doroth": {
+    "name": "多萝西",
+    "rarity": 5,
+    "profession": "SPECIAL",
+    "nationId": "columbia",
+    "groupId": "rhine",
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "manu_skill_spd1[010]",
+        "roomType": "MANUFACTURE",
+        "phase": 0
+      },
+      {
+        "buffId": "manu_prod_spd[011]",
+        "roomType": "MANUFACTURE",
+        "phase": 2
+      }
+    ]
+  },
+  "char_4051_akkord": {
+    "name": "协律",
+    "rarity": 3,
+    "profession": "CASTER",
+    "nationId": "leithanien",
+    "groupId": null,
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "power_rec_spd[008]",
+        "roomType": "POWER",
+        "phase": 0
+      },
+      {
+        "buffId": "power_rec_spd[009]",
+        "roomType": "POWER",
+        "phase": 1
+      },
+      {
+        "buffId": "dorm_rec_oneself2[001]",
+        "roomType": "DORMITORY",
+        "phase": 1
+      }
+    ]
+  },
+  "char_4052_surfer": {
+    "name": "寻澜",
+    "rarity": 4,
+    "profession": "PIONEER",
+    "nationId": "columbia",
+    "groupId": "blacksteel",
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "meet_spd&sami[100]",
+        "roomType": "MEETING",
+        "phase": 0
+      },
+      {
+        "buffId": "meet_spd&sami[110]",
+        "roomType": "MEETING",
+        "phase": 2
+      }
+    ]
+  },
+  "char_4054_malist": {
+    "name": "至简",
+    "rarity": 4,
+    "profession": "CASTER",
+    "nationId": "sargon",
+    "groupId": null,
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "manu_constrLv[000]",
+        "roomType": "MANUFACTURE",
+        "phase": 0
+      },
+      {
+        "buffId": "manu_prod_spd_bd[100]",
+        "roomType": "MANUFACTURE",
+        "phase": 0
+      },
+      {
+        "buffId": "manu_prod_spd_bd[110]",
+        "roomType": "MANUFACTURE",
+        "phase": 2
+      }
+    ]
+  },
+  "char_4055_bgsnow": {
+    "name": "鸿雪",
+    "rarity": 5,
+    "profession": "SNIPER",
+    "nationId": "rhodes",
+    "groupId": null,
+    "teamId": null,
+    "subPower": [
+      {
+        "nationId": "ursus",
+        "groupId": null,
+        "teamId": null
+      }
+    ],
+    "skills": [
+      {
+        "buffId": "trade_ord_spd&gold[100]",
+        "roomType": "TRADING",
+        "phase": 0
+      },
+      {
+        "buffId": "trade_ord_line_durin[010]",
+        "roomType": "TRADING",
+        "phase": 2
+      }
+    ]
+  },
+  "char_4056_titi": {
+    "name": "缇缇",
+    "rarity": 5,
+    "profession": "MEDIC",
+    "nationId": "sargon",
+    "groupId": null,
+    "teamId": null,
+    "subPower": [
+      {
+        "nationId": "minos",
+        "groupId": null,
+        "teamId": null
+      }
+    ],
+    "skills": [
+      {
+        "buffId": "workshop_formula_probability[118]",
+        "roomType": "WORKSHOP",
+        "phase": 0
+      },
+      {
+        "buffId": "workshop_formula_probability[128]",
+        "roomType": "WORKSHOP",
+        "phase": 2
+      },
+      {
+        "buffId": "workshop_formula_cost3[600]",
+        "roomType": "WORKSHOP",
+        "phase": 2
+      }
+    ]
+  },
+  "char_4058_pepe": {
+    "name": "佩佩",
+    "rarity": 5,
+    "profession": "WARRIOR",
+    "nationId": "sargon",
+    "groupId": null,
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "trade_ord_limit&trade&lv[000]",
+        "roomType": "TRADING",
+        "phase": 0
+      },
+      {
+        "buffId": "trade_ord_pepe[000]",
+        "roomType": "TRADING",
+        "phase": 2
+      }
+    ]
+  },
+  "char_405_absin": {
+    "name": "苦艾",
+    "rarity": 4,
+    "profession": "CASTER",
+    "nationId": "ursus",
+    "groupId": null,
+    "teamId": "student",
+    "skills": [
+      {
+        "buffId": "meet_team[050]",
+        "roomType": "MEETING",
+        "phase": 0
+      },
+      {
+        "buffId": "meet_flag[050]",
+        "roomType": "MEETING",
+        "phase": 2
+      }
+    ]
+  },
+  "char_4062_totter": {
+    "name": "铅踝",
+    "rarity": 3,
+    "profession": "SNIPER",
+    "nationId": "sargon",
+    "groupId": null,
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "manu_prod_spd_reduce[000]",
+        "roomType": "MANUFACTURE",
+        "phase": 0
+      },
+      {
+        "buffId": "manu_prod_spd_addition&cost[000]",
+        "roomType": "MANUFACTURE",
+        "phase": 1
+      }
+    ]
+  },
+  "char_4063_quartz": {
+    "name": "石英",
+    "rarity": 3,
+    "profession": "WARRIOR",
+    "nationId": "columbia",
+    "groupId": null,
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "manu_prod_spd[000]",
+        "roomType": "MANUFACTURE",
+        "phase": 0
+      },
+      {
+        "buffId": "trade_ord_spd&formula[000]",
+        "roomType": "TRADING",
+        "phase": 1
+      }
+    ]
+  },
+  "char_4064_mlynar": {
+    "name": "玛恩纳",
+    "rarity": 5,
+    "profession": "WARRIOR",
+    "nationId": "kazimierz",
+    "groupId": null,
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "control_mp_cost[008]",
+        "roomType": "CONTROL",
+        "phase": 0
+      },
+      {
+        "buffId": "control_mp_lonely[000]",
+        "roomType": "CONTROL",
+        "phase": 2
+      }
+    ]
+  },
+  "char_4065_judge": {
+    "name": "斥罪",
+    "rarity": 5,
+    "profession": "TANK",
+    "nationId": "siracusa",
+    "groupId": null,
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "hire_spd_cost[210]",
+        "roomType": "HIRE",
+        "phase": 0
+      },
+      {
+        "buffId": "dorm_hireToRecAll[000]",
+        "roomType": "DORMITORY",
+        "phase": 2
+      }
+    ]
+  },
+  "char_4066_highmo": {
+    "name": "海沫",
+    "rarity": 4,
+    "profession": "WARRIOR",
+    "nationId": "iberia",
+    "groupId": null,
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "manu_skill_change[000]",
+        "roomType": "MANUFACTURE",
+        "phase": 0
+      },
+      {
+        "buffId": "manu_prod_spd[010]",
+        "roomType": "MANUFACTURE",
+        "phase": 2
+      }
+    ]
+  },
+  "char_4067_lolxh": {
+    "name": "罗小黑",
+    "rarity": 3,
+    "profession": "WARRIOR",
+    "nationId": "yan",
+    "groupId": null,
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "workshop_proc_cost[000]",
+        "roomType": "WORKSHOP",
+        "phase": 0
+      },
+      {
+        "buffId": "workshop_formula_lolxh[000]",
+        "roomType": "WORKSHOP",
+        "phase": 1
+      }
+    ]
+  },
+  "char_4071_peper": {
+    "name": "明椒",
+    "rarity": 4,
+    "profession": "MEDIC",
+    "nationId": "rhodes",
+    "groupId": null,
+    "teamId": null,
+    "subPower": [
+      {
+        "nationId": "columbia",
+        "groupId": null,
+        "teamId": null
+      }
+    ],
+    "skills": [
+      {
+        "buffId": "control_tra_spd[020]",
+        "roomType": "CONTROL",
+        "phase": 0
+      },
+      {
+        "buffId": "trade_ord_wt&cost[000]",
+        "roomType": "TRADING",
+        "phase": 0
+      },
+      {
+        "buffId": "trade_ord_wt&cost[010]",
+        "roomType": "TRADING",
+        "phase": 2
+      }
+    ]
+  },
+  "char_4072_ironmn": {
+    "name": "白铁",
+    "rarity": 5,
+    "profession": "SUPPORT",
+    "nationId": "victoria",
+    "groupId": null,
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "workshop_formula_cost&dorm[000]",
+        "roomType": "WORKSHOP",
+        "phase": 0
+      },
+      {
+        "buffId": "workshop_formula_dorm[002]",
+        "roomType": "WORKSHOP",
+        "phase": 2
+      }
+    ]
+  },
+  "char_4077_palico": {
+    "name": "泰拉大陆调查团",
+    "rarity": 0,
+    "profession": "SNIPER",
+    "nationId": "rhodes",
+    "groupId": null,
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "trade_ord_spd&limit&bd[000]",
+        "roomType": "TRADING",
+        "phase": 0
+      },
+      {
+        "buffId": "manu_prod_spd&limit&bd[000]",
+        "roomType": "MANUFACTURE",
+        "phase": 0
+      }
+    ]
+  },
+  "char_4078_bdhkgt": {
+    "name": "截云",
+    "rarity": 4,
+    "profession": "SNIPER",
+    "nationId": "yan",
+    "groupId": null,
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "manu_bd_to_bd[000]",
+        "roomType": "MANUFACTURE",
+        "phase": 0
+      },
+      {
+        "buffId": "manu_prod_spd_bd[200]",
+        "roomType": "MANUFACTURE",
+        "phase": 0
+      },
+      {
+        "buffId": "manu_prod_spd_bd[201]",
+        "roomType": "MANUFACTURE",
+        "phase": 2
+      }
+    ]
+  },
+  "char_4079_haini": {
+    "name": "海霓",
+    "rarity": 4,
+    "profession": "SUPPORT",
+    "nationId": "egir",
+    "groupId": null,
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "power_rec_spd[025]",
+        "roomType": "POWER",
+        "phase": 0
+      },
+      {
+        "buffId": "power_rec_spd[026]",
+        "roomType": "POWER",
+        "phase": 2
+      }
+    ]
+  },
+  "char_4080_lin": {
+    "name": "林",
+    "rarity": 5,
+    "profession": "CASTER",
+    "nationId": "lungmen",
+    "groupId": null,
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "hire_spd_cost[111]",
+        "roomType": "HIRE",
+        "phase": 0
+      },
+      {
+        "buffId": "hire_spd_cost&extra[000]",
+        "roomType": "HIRE",
+        "phase": 2
+      }
+    ]
+  },
+  "char_4081_warmy": {
+    "name": "温米",
+    "rarity": 4,
+    "profession": "CASTER",
+    "nationId": "rim",
+    "groupId": null,
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "dorm_rec_all[014]",
+        "roomType": "DORMITORY",
+        "phase": 0
+      },
+      {
+        "buffId": "dorm_rec_all[024]",
+        "roomType": "DORMITORY",
+        "phase": 2
+      },
+      {
+        "buffId": "manu_formula_spd[101]",
+        "roomType": "MANUFACTURE",
+        "phase": 2
+      }
+    ]
+  },
+  "char_4082_qiubai": {
+    "name": "仇白",
+    "rarity": 5,
+    "profession": "WARRIOR",
+    "nationId": "yan",
+    "groupId": null,
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "train_spd&profession3[160]",
+        "roomType": "TRAINING",
+        "phase": 0
+      },
+      {
+        "buffId": "train_spd&profession3[161]",
+        "roomType": "TRAINING",
+        "phase": 2
+      }
+    ]
+  },
+  "char_4083_chimes": {
+    "name": "铎铃",
+    "rarity": 4,
+    "profession": "WARRIOR",
+    "nationId": "yan",
+    "groupId": null,
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "trade_cost&bd2[000]",
+        "roomType": "TRADING",
+        "phase": 0
+      },
+      {
+        "buffId": "trade_cost&bd2[001]",
+        "roomType": "TRADING",
+        "phase": 2
+      }
+    ]
+  },
+  "char_4087_ines": {
+    "name": "伊内丝",
+    "rarity": 5,
+    "profession": "PIONEER",
+    "nationId": null,
+    "groupId": "babel",
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "hire_spd[001]",
+        "roomType": "HIRE",
+        "phase": 0
+      },
+      {
+        "buffId": "meet_spd_hast[000]",
+        "roomType": "MEETING",
+        "phase": 2
+      }
+    ]
+  },
+  "char_4088_hodrer": {
+    "name": "赫德雷",
+    "rarity": 5,
+    "profession": "WARRIOR",
+    "nationId": null,
+    "groupId": "babel",
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "trade_ord_par&per[000]",
+        "roomType": "TRADING",
+        "phase": 0
+      },
+      {
+        "buffId": "trade_ord_par&per[001]",
+        "roomType": "TRADING",
+        "phase": 2
+      }
+    ]
+  },
+  "char_4091_ulika": {
+    "name": "U-Official",
+    "rarity": 0,
+    "profession": "SUPPORT",
+    "nationId": "rhodes",
+    "groupId": null,
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "trade_ord_spd&wt[000]",
+        "roomType": "TRADING",
+        "phase": 0
+      },
+      {
+        "buffId": "meet_spd_Owned[000]",
+        "roomType": "MEETING",
+        "phase": 0
+      }
+    ]
+  },
+  "char_4093_frston": {
+    "name": "Friston-3",
+    "rarity": 0,
+    "profession": "TANK",
+    "nationId": "rhodes",
+    "groupId": null,
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "power_rec_spd[000]",
+        "roomType": "POWER",
+        "phase": 0
+      },
+      {
+        "buffId": "power_rec_spd_P[000]",
+        "roomType": "POWER",
+        "phase": 0
+      }
+    ]
+  },
+  "char_4098_vvana": {
+    "name": "薇薇安娜",
+    "rarity": 5,
+    "profession": "WARRIOR",
+    "nationId": "leithanien",
+    "groupId": null,
+    "teamId": null,
+    "subPower": [
+      {
+        "nationId": "kazimierz",
+        "groupId": null,
+        "teamId": null
+      }
+    ],
+    "skills": [
+      {
+        "buffId": "control_mp_cost[010]",
+        "roomType": "CONTROL",
+        "phase": 0
+      },
+      {
+        "buffId": "control_prod_fraction[000]",
+        "roomType": "CONTROL",
+        "phase": 2
+      }
+    ]
+  },
+  "char_4100_caper": {
+    "name": "跃跃",
+    "rarity": 3,
+    "profession": "SNIPER",
+    "nationId": "bolivar",
+    "groupId": null,
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "meet_spd&team[000]",
+        "roomType": "MEETING",
+        "phase": 0
+      },
+      {
+        "buffId": "meet_spd&exchange[000]",
+        "roomType": "MEETING",
+        "phase": 1
+      }
+    ]
+  },
+  "char_4102_threye": {
+    "name": "凛视",
+    "rarity": 4,
+    "profession": "SUPPORT",
+    "nationId": "sami",
+    "groupId": null,
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "meet_spd&bd[000]",
+        "roomType": "MEETING",
+        "phase": 0
+      },
+      {
+        "buffId": "meet_spd&bd[010]",
+        "roomType": "MEETING",
+        "phase": 2
+      }
+    ]
+  },
+  "char_4104_coldst": {
+    "name": "冰酿",
+    "rarity": 4,
+    "profession": "SNIPER",
+    "nationId": "columbia",
+    "groupId": null,
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "control_mp_cost[009]",
+        "roomType": "CONTROL",
+        "phase": 0
+      },
+      {
+        "buffId": "dorm_rec_all&single[000]",
+        "roomType": "DORMITORY",
+        "phase": 2
+      }
+    ]
+  },
+  "char_4105_almond": {
+    "name": "杏仁",
+    "rarity": 4,
+    "profession": "SPECIAL",
+    "nationId": "columbia",
+    "groupId": "blacksteel",
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "manu_formula_spd&cost[000]",
+        "roomType": "MANUFACTURE",
+        "phase": 0
+      },
+      {
+        "buffId": "manu_formula_spd&cost_bd[000]",
+        "roomType": "MANUFACTURE",
+        "phase": 2
+      }
+    ]
+  },
+  "char_4106_bryota": {
+    "name": "苍苔",
+    "rarity": 4,
+    "profession": "WARRIOR",
+    "nationId": "columbia",
+    "groupId": "siesta",
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "manu_formula_spd[100]",
+        "roomType": "MANUFACTURE",
+        "phase": 0
+      },
+      {
+        "buffId": "manu_skill_spd1[020]",
+        "roomType": "MANUFACTURE",
+        "phase": 2
+      }
+    ]
+  },
+  "char_4107_vrdant": {
+    "name": "维荻",
+    "rarity": 3,
+    "profession": "SPECIAL",
+    "nationId": "victoria",
+    "groupId": null,
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "workshop_formula_cost3[101]",
+        "roomType": "WORKSHOP",
+        "phase": 0
+      },
+      {
+        "buffId": "workshop_formula_device[060]",
+        "roomType": "WORKSHOP",
+        "phase": 1
+      }
+    ]
+  },
+  "char_4109_baslin": {
+    "name": "深律",
+    "rarity": 4,
+    "profession": "TANK",
+    "nationId": "leithanien",
+    "groupId": null,
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "hire_spd_cost[101]",
+        "roomType": "HIRE",
+        "phase": 0
+      },
+      {
+        "buffId": "hire_spd_cost[120]",
+        "roomType": "HIRE",
+        "phase": 2
+      },
+      {
+        "buffId": "hire_spd_bd_n1_n1[300]",
+        "roomType": "HIRE",
+        "phase": 2
+      }
+    ]
+  },
+  "char_4110_delphn": {
+    "name": "戴菲恩",
+    "rarity": 4,
+    "profession": "CASTER",
+    "nationId": "victoria",
+    "groupId": null,
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "hire_spd&clue2[260]",
+        "roomType": "HIRE",
+        "phase": 0
+      },
+      {
+        "buffId": "control_tra_limit&spd[010]",
+        "roomType": "CONTROL",
+        "phase": 2
+      }
+    ]
+  },
+  "char_4114_harold": {
+    "name": "哈洛德",
+    "rarity": 4,
+    "profession": "MEDIC",
+    "nationId": "victoria",
+    "groupId": null,
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "meet_spd[000]",
+        "roomType": "MEETING",
+        "phase": 0
+      },
+      {
+        "buffId": "meet_team&char[000]",
+        "roomType": "MEETING",
+        "phase": 2
+      }
+    ]
+  },
+  "char_4116_blkkgt": {
+    "name": "锏",
+    "rarity": 5,
+    "profession": "WARRIOR",
+    "nationId": "kjerag",
+    "groupId": "karlan",
+    "teamId": null,
+    "subPower": [
+      {
+        "nationId": "kazimierz",
+        "groupId": null,
+        "teamId": null
+      },
+      {
+        "nationId": "leithanien",
+        "groupId": null,
+        "teamId": null
+      }
+    ],
+    "skills": [
+      {
+        "buffId": "trade_ord_spd&limit[100]",
+        "roomType": "TRADING",
+        "phase": 0
+      },
+      {
+        "buffId": "trade_ord_spd&limit[101]",
+        "roomType": "TRADING",
+        "phase": 2
+      },
+      {
+        "buffId": "trade_ord_spd_variable3[000]",
+        "roomType": "TRADING",
+        "phase": 2
+      }
+    ]
+  },
+  "char_4117_ray": {
+    "name": "莱伊",
+    "rarity": 5,
+    "profession": "SNIPER",
+    "nationId": "rim",
+    "groupId": null,
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "workshop_formula_probability[116]",
+        "roomType": "WORKSHOP",
+        "phase": 0
+      },
+      {
+        "buffId": "workshop_formula_probability[126]",
+        "roomType": "WORKSHOP",
+        "phase": 2
+      },
+      {
+        "buffId": "workshop_formula_drop[040]",
+        "roomType": "WORKSHOP",
+        "phase": 2
+      }
+    ]
+  },
+  "char_4119_wanqin": {
+    "name": "万顷",
+    "rarity": 4,
+    "profession": "PIONEER",
+    "nationId": "yan",
+    "groupId": null,
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "workshop_proc_probability[032]",
+        "roomType": "WORKSHOP",
+        "phase": 0
+      },
+      {
+        "buffId": "workshop_formula_cost3[400]",
+        "roomType": "WORKSHOP",
+        "phase": 2
+      }
+    ]
+  },
+  "char_411_tomimi": {
+    "name": "特米米",
+    "rarity": 4,
+    "profession": "CASTER",
+    "nationId": "sargon",
+    "groupId": null,
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "dorm_rec_single_P[001]",
+        "roomType": "DORMITORY",
+        "phase": 0
+      },
+      {
+        "buffId": "train_spd&profession2[150]",
+        "roomType": "TRAINING",
+        "phase": 2
+      }
+    ]
+  },
+  "char_4121_zuole": {
+    "name": "左乐",
+    "rarity": 5,
+    "profession": "WARRIOR",
+    "nationId": "yan",
+    "groupId": null,
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "train_spd[001]",
+        "roomType": "TRAINING",
+        "phase": 0
+      },
+      {
+        "buffId": "train_spd_bd&reduceTime[000]",
+        "roomType": "TRAINING",
+        "phase": 2
+      }
+    ]
+  },
+  "char_4122_grabds": {
+    "name": "小满",
+    "rarity": 4,
+    "profession": "SUPPORT",
+    "nationId": "yan",
+    "groupId": null,
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "dorm_rec_single[1010]",
+        "roomType": "DORMITORY",
+        "phase": 0
+      },
+      {
+        "buffId": "dorm_rec_all[025]",
+        "roomType": "DORMITORY",
+        "phase": 2
+      }
+    ]
+  },
+  "char_4123_ela": {
+    "name": "艾拉",
+    "rarity": 5,
+    "profession": "SPECIAL",
+    "nationId": null,
+    "groupId": null,
+    "teamId": "rainbow",
+    "skills": [
+      {
+        "buffId": "train_spd_tag[020]",
+        "roomType": "TRAINING",
+        "phase": 0
+      },
+      {
+        "buffId": "control_clue_cost&faction[990]",
+        "roomType": "CONTROL",
+        "phase": 2
+      }
+    ]
+  },
+  "char_4124_iana": {
+    "name": "双月",
+    "rarity": 4,
+    "profession": "SPECIAL",
+    "nationId": null,
+    "groupId": null,
+    "teamId": "rainbow",
+    "skills": [
+      {
+        "buffId": "train_spd_tag[030]",
+        "roomType": "TRAINING",
+        "phase": 0
+      },
+      {
+        "buffId": "meet_spd_bd[000]",
+        "roomType": "MEETING",
+        "phase": 2
+      }
+    ]
+  },
+  "char_4125_rdoc": {
+    "name": "医生",
+    "rarity": 4,
+    "profession": "WARRIOR",
+    "nationId": null,
+    "groupId": null,
+    "teamId": "rainbow",
+    "skills": [
+      {
+        "buffId": "train_spd_tag[1020]",
+        "roomType": "TRAINING",
+        "phase": 0
+      },
+      {
+        "buffId": "dorm_rec_all[026]",
+        "roomType": "DORMITORY",
+        "phase": 2
+      }
+    ]
+  },
+  "char_4126_fuze": {
+    "name": "导火索",
+    "rarity": 4,
+    "profession": "WARRIOR",
+    "nationId": null,
+    "groupId": null,
+    "teamId": "rainbow",
+    "skills": [
+      {
+        "buffId": "train_spd_tag[1030]",
+        "roomType": "TRAINING",
+        "phase": 0
+      },
+      {
+        "buffId": "manu_prod_bd[000]",
+        "roomType": "MANUFACTURE",
+        "phase": 2
+      }
+    ]
+  },
+  "char_4130_luton": {
+    "name": "露托",
+    "rarity": 3,
+    "profession": "TANK",
+    "nationId": "bolivar",
+    "groupId": null,
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "workshop_formula_cost3[100]",
+        "roomType": "WORKSHOP",
+        "phase": 0
+      },
+      {
+        "buffId": "workshop_formula_probability[101]",
+        "roomType": "WORKSHOP",
+        "phase": 1
+      }
+    ]
+  },
+  "char_4131_odda": {
+    "name": "奥达",
+    "rarity": 4,
+    "profession": "WARRIOR",
+    "nationId": "rhodes",
+    "groupId": null,
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "meet_spd&cost_condChar[001]",
+        "roomType": "MEETING",
+        "phase": 0
+      },
+      {
+        "buffId": "meet_spd&cost_condChar[011]",
+        "roomType": "MEETING",
+        "phase": 2
+      },
+      {
+        "buffId": "meet_spd&condChar_mustget[100]",
+        "roomType": "MEETING",
+        "phase": 2
+      }
+    ]
+  },
+  "char_4132_ascln": {
+    "name": "阿斯卡纶",
+    "rarity": 5,
+    "profession": "SPECIAL",
+    "nationId": "rhodes",
+    "groupId": "sweep",
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "control_train_spd[010]",
+        "roomType": "CONTROL",
+        "phase": 0
+      },
+      {
+        "buffId": "control_tra_spd[030]",
+        "roomType": "CONTROL",
+        "phase": 2
+      }
+    ]
+  },
+  "char_4133_logos": {
+    "name": "逻各斯",
+    "rarity": 5,
+    "profession": "CASTER",
+    "nationId": "rhodes",
+    "groupId": "elite",
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "train_spd_doubleProf[200]",
+        "roomType": "TRAINING",
+        "phase": 0
+      },
+      {
+        "buffId": "train_spd_reduceTime[001]",
+        "roomType": "TRAINING",
+        "phase": 2
+      }
+    ]
+  },
+  "char_4134_cetsyr": {
+    "name": "魔王",
+    "rarity": 5,
+    "profession": "SUPPORT",
+    "nationId": "rhodes",
+    "groupId": null,
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "control_mp_cost_double[000]",
+        "roomType": "CONTROL",
+        "phase": 0
+      },
+      {
+        "buffId": "control_mp_cost_double[001]",
+        "roomType": "CONTROL",
+        "phase": 2
+      },
+      {
+        "buffId": "control_upMeetingSpeed[100]",
+        "roomType": "CONTROL",
+        "phase": 2
+      }
+    ]
+  },
+  "char_4136_phonor": {
+    "name": "PhonoR-0",
+    "rarity": 0,
+    "profession": "SUPPORT",
+    "nationId": "rhodes",
+    "groupId": null,
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "power_rec_spd[004]",
+        "roomType": "POWER",
+        "phase": 0
+      },
+      {
+        "buffId": "power_rec_spd_P[001]",
+        "roomType": "POWER",
+        "phase": 0
+      }
+    ]
+  },
+  "char_4137_udflow": {
+    "name": "深巡",
+    "rarity": 4,
+    "profession": "TANK",
+    "nationId": "egir",
+    "groupId": null,
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "trade_ord_spd_ext[000]",
+        "roomType": "TRADING",
+        "phase": 0
+      },
+      {
+        "buffId": "trade_ord_spd_ext[001]",
+        "roomType": "TRADING",
+        "phase": 2
+      }
+    ]
+  },
+  "char_4138_narant": {
+    "name": "娜仁图亚",
+    "rarity": 5,
+    "profession": "SNIPER",
+    "nationId": "sargon",
+    "groupId": null,
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "manu_prod_limit&cost[011]",
+        "roomType": "MANUFACTURE",
+        "phase": 0
+      },
+      {
+        "buffId": "manu_formula_spd&dorm&lv[000]",
+        "roomType": "MANUFACTURE",
+        "phase": 2
+      }
+    ]
+  },
+  "char_4139_papyrs": {
+    "name": "莎草",
+    "rarity": 4,
+    "profession": "MEDIC",
+    "nationId": "sargon",
+    "groupId": null,
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "train_spd&profession3[182]",
+        "roomType": "TRAINING",
+        "phase": 0
+      },
+      {
+        "buffId": "train_spd&profession3[183]",
+        "roomType": "TRAINING",
+        "phase": 2
+      }
+    ]
+  },
+  "char_4140_lasher": {
+    "name": "衡沙",
+    "rarity": 4,
+    "profession": "SUPPORT",
+    "nationId": "sargon",
+    "groupId": null,
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "trade_ord_spd&limit[034]",
+        "roomType": "TRADING",
+        "phase": 0
+      },
+      {
+        "buffId": "trade_ord_spd&limit[035]",
+        "roomType": "TRADING",
+        "phase": 2
+      }
+    ]
+  },
+  "char_4141_marcil": {
+    "name": "玛露西尔",
+    "rarity": 5,
+    "profession": "CASTER",
+    "nationId": null,
+    "groupId": null,
+    "teamId": "laios",
+    "skills": [
+      {
+        "buffId": "manu_prod_spd[004]",
+        "roomType": "MANUFACTURE",
+        "phase": 0
+      },
+      {
+        "buffId": "manu_prod_spd[014]",
+        "roomType": "MANUFACTURE",
+        "phase": 2
+      },
+      {
+        "buffId": "manu_prod_spd_bd[400]",
+        "roomType": "MANUFACTURE",
+        "phase": 2
+      }
+    ]
+  },
+  "char_4142_laios": {
+    "name": "莱欧斯",
+    "rarity": 4,
+    "profession": "WARRIOR",
+    "nationId": null,
+    "groupId": null,
+    "teamId": "laios",
+    "skills": [
+      {
+        "buffId": "meet_spd[021]",
+        "roomType": "MEETING",
+        "phase": 0
+      },
+      {
+        "buffId": "meet_spd_bd[001]",
+        "roomType": "MEETING",
+        "phase": 2
+      }
+    ]
+  },
+  "char_4143_sensi": {
+    "name": "森西",
+    "rarity": 4,
+    "profession": "TANK",
+    "nationId": null,
+    "groupId": null,
+    "teamId": "laios",
+    "skills": [
+      {
+        "buffId": "dorm_rec_all&tag[000]",
+        "roomType": "DORMITORY",
+        "phase": 0
+      },
+      {
+        "buffId": "dorm_rec_bd_dungeon[000]",
+        "roomType": "DORMITORY",
+        "phase": 2
+      }
+    ]
+  },
+  "char_4144_chilc": {
+    "name": "齐尔查克",
+    "rarity": 4,
+    "profession": "PIONEER",
+    "nationId": null,
+    "groupId": null,
+    "teamId": "laios",
+    "skills": [
+      {
+        "buffId": "trade_ord_spd&limit[036]",
+        "roomType": "TRADING",
+        "phase": 0
+      },
+      {
+        "buffId": "trade_ord_spd_bd[100]",
+        "roomType": "TRADING",
+        "phase": 2
+      }
+    ]
+  },
+  "char_4145_ulpia": {
+    "name": "乌尔比安",
+    "rarity": 5,
+    "profession": "WARRIOR",
+    "nationId": "egir",
+    "groupId": "abyssal",
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "train_spd_doubleProf[201]",
+        "roomType": "TRAINING",
+        "phase": 0
+      },
+      {
+        "buffId": "train_spd_power_down[000]",
+        "roomType": "TRAINING",
+        "phase": 2
+      }
+    ]
+  },
+  "char_4146_nymph": {
+    "name": "妮芙",
+    "rarity": 5,
+    "profession": "CASTER",
+    "nationId": "rhodes",
+    "groupId": null,
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "dorm_rec_all[017]",
+        "roomType": "DORMITORY",
+        "phase": 0
+      },
+      {
+        "buffId": "dorm_rec_all[027]",
+        "roomType": "DORMITORY",
+        "phase": 2
+      },
+      {
+        "buffId": "control_dorm_rec[002]",
+        "roomType": "CONTROL",
+        "phase": 2
+      }
+    ]
+  },
+  "char_4147_mitm": {
+    "name": "渡桥",
+    "rarity": 4,
+    "profession": "PIONEER",
+    "nationId": "rhodes",
+    "groupId": null,
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "trade_ord_wt&cost[003]",
+        "roomType": "TRADING",
+        "phase": 0
+      },
+      {
+        "buffId": "trade_ord_spd&meet[010]",
+        "roomType": "TRADING",
+        "phase": 2
+      }
+    ]
+  },
+  "char_4148_philae": {
+    "name": "菲莱",
+    "rarity": 4,
+    "profession": "TANK",
+    "nationId": "sargon",
+    "groupId": null,
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "power_rec_spd[005]",
+        "roomType": "POWER",
+        "phase": 0
+      },
+      {
+        "buffId": "power_rec_spd&dorm&lv[000]",
+        "roomType": "POWER",
+        "phase": 2
+      }
+    ]
+  },
+  "char_4151_tinman": {
+    "name": "锡人",
+    "rarity": 4,
+    "profession": "SPECIAL",
+    "nationId": "columbia",
+    "groupId": null,
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "hire_spd_dorm&lv[000]",
+        "roomType": "HIRE",
+        "phase": 0
+      },
+      {
+        "buffId": "hire_spd_dorm&lv[010]",
+        "roomType": "HIRE",
+        "phase": 2
+      }
+    ]
+  },
+  "char_4155_talr": {
+    "name": "裁度",
+    "rarity": 4,
+    "profession": "SPECIAL",
+    "nationId": "siracusa",
+    "groupId": null,
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "manu_prod_spd&limit&cost[100]",
+        "roomType": "MANUFACTURE",
+        "phase": 0
+      },
+      {
+        "buffId": "manu_prod_spd&limit&cost[200]",
+        "roomType": "MANUFACTURE",
+        "phase": 2
+      }
+    ]
+  },
+  "char_415_flint": {
+    "name": "燧石",
+    "rarity": 4,
+    "profession": "WARRIOR",
+    "nationId": "sargon",
+    "groupId": null,
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "train_spd&profession2[020]",
+        "roomType": "TRAINING",
+        "phase": 0
+      },
+      {
+        "buffId": "train_spd&profession2[220]",
+        "roomType": "TRAINING",
+        "phase": 2
+      }
+    ]
+  },
+  "char_4162_cathy": {
+    "name": "凯瑟琳",
+    "rarity": 4,
+    "profession": "SUPPORT",
+    "nationId": "victoria",
+    "groupId": null,
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "workshop_proc_probability&ext[000]",
+        "roomType": "WORKSHOP",
+        "phase": 0
+      },
+      {
+        "buffId": "workshop_proc_probability&ext[001]",
+        "roomType": "WORKSHOP",
+        "phase": 2
+      },
+      {
+        "buffId": "workshop_formula_cost[001]",
+        "roomType": "WORKSHOP",
+        "phase": 2
+      }
+    ]
+  },
+  "char_4163_rosesa": {
+    "name": "瑰盐",
+    "rarity": 4,
+    "profession": "MEDIC",
+    "nationId": "iberia",
+    "groupId": null,
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "trade_ord_limit&trade&lv[001]",
+        "roomType": "TRADING",
+        "phase": 0
+      },
+      {
+        "buffId": "trade_ord_spd[1001]",
+        "roomType": "TRADING",
+        "phase": 2
+      }
+    ]
+  },
+  "char_4164_tecno": {
+    "name": "特克诺",
+    "rarity": 4,
+    "profession": "CASTER",
+    "nationId": "bolivar",
+    "groupId": null,
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "workshop_formula_cost5[000]",
+        "roomType": "WORKSHOP",
+        "phase": 0
+      },
+      {
+        "buffId": "workshop_formula_device[070]",
+        "roomType": "WORKSHOP",
+        "phase": 2
+      }
+    ]
+  },
+  "char_4165_ctrail": {
+    "name": "云迹",
+    "rarity": 3,
+    "profession": "SPECIAL",
+    "nationId": "columbia",
+    "groupId": null,
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "workshop_formula_probability[102]",
+        "roomType": "WORKSHOP",
+        "phase": 0
+      },
+      {
+        "buffId": "train_spd&profession[1081]",
+        "roomType": "TRAINING",
+        "phase": 2
+      }
+    ]
+  },
+  "char_4166_varkis": {
+    "name": "摆渡人",
+    "rarity": 4,
+    "profession": "WARRIOR",
+    "nationId": "minos",
+    "groupId": null,
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "control_meeting&mp_cost[000]",
+        "roomType": "CONTROL",
+        "phase": 0
+      },
+      {
+        "buffId": "control_meeting&mp_cost[100]",
+        "roomType": "CONTROL",
+        "phase": 1
+      }
+    ]
+  },
+  "char_416_zumama": {
+    "name": "森蚺",
+    "rarity": 5,
+    "profession": "TANK",
+    "nationId": "sargon",
+    "groupId": null,
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "manu_prod_spd&power[000]",
+        "roomType": "MANUFACTURE",
+        "phase": 0
+      },
+      {
+        "buffId": "manu_prod_spd&power[010]",
+        "roomType": "MANUFACTURE",
+        "phase": 2
+      },
+      {
+        "buffId": "control_pow_bot[000]",
+        "roomType": "CONTROL",
+        "phase": 2
+      }
+    ]
+  },
+  "char_4171_wulfen": {
+    "name": "钼铅",
+    "rarity": 4,
+    "profession": "SPECIAL",
+    "nationId": "sargon",
+    "groupId": null,
+    "teamId": null,
+    "subPower": [
+      {
+        "nationId": "columbia",
+        "groupId": null,
+        "teamId": null
+      }
+    ],
+    "skills": [
+      {
+        "buffId": "manu_prod_spd&limit&cost[300]",
+        "roomType": "MANUFACTURE",
+        "phase": 0
+      },
+      {
+        "buffId": "manu_prod_limit&cost[1020]",
+        "roomType": "MANUFACTURE",
+        "phase": 2
+      }
+    ]
+  },
+  "char_4172_xingzh": {
+    "name": "行箸",
+    "rarity": 4,
+    "profession": "SUPPORT",
+    "nationId": "yan",
+    "groupId": null,
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "hire_spd_cost[112]",
+        "roomType": "HIRE",
+        "phase": 0
+      },
+      {
+        "buffId": "hire_spd_cost[121]",
+        "roomType": "HIRE",
+        "phase": 2
+      },
+      {
+        "buffId": "meet_spd[1020]",
+        "roomType": "MEETING",
+        "phase": 2
+      }
+    ]
+  },
+  "char_4173_nowell": {
+    "name": "诺威尔",
+    "rarity": 4,
+    "profession": "MEDIC",
+    "nationId": "victoria",
+    "groupId": null,
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "workshop_formula_probability[117]",
+        "roomType": "WORKSHOP",
+        "phase": 0
+      },
+      {
+        "buffId": "workshop_formula_cost3[102]",
+        "roomType": "WORKSHOP",
+        "phase": 2
+      }
+    ]
+  },
+  "char_4177_brigid": {
+    "name": "水灯心",
+    "rarity": 4,
+    "profession": "SNIPER",
+    "nationId": "victoria",
+    "groupId": "tara",
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "hire_spd_cost[220]",
+        "roomType": "HIRE",
+        "phase": 0
+      },
+      {
+        "buffId": "hire_spd_cost[230]",
+        "roomType": "HIRE",
+        "phase": 2
+      }
+    ]
+  },
+  "char_4178_alanna": {
+    "name": "阿兰娜",
+    "rarity": 4,
+    "profession": "SUPPORT",
+    "nationId": "rim",
+    "groupId": null,
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "manu_token_prod_spd[000]",
+        "roomType": "MANUFACTURE",
+        "phase": 0
+      },
+      {
+        "buffId": "manu_token_prod_spd[010]",
+        "roomType": "MANUFACTURE",
+        "phase": 2
+      },
+      {
+        "buffId": "manu_prod_spd_double[000]",
+        "roomType": "MANUFACTURE",
+        "phase": 2
+      }
+    ]
+  },
+  "char_4179_monstr": {
+    "name": "Mon3tr",
+    "rarity": 5,
+    "profession": "MEDIC",
+    "nationId": "rhodes",
+    "groupId": null,
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "control_mp_cost[012]",
+        "roomType": "CONTROL",
+        "phase": 0
+      },
+      {
+        "buffId": "control_prod_spd[1000]",
+        "roomType": "CONTROL",
+        "phase": 2
+      }
+    ]
+  },
+  "char_4182_oblvns": {
+    "name": "丰川祥子",
+    "rarity": 5,
+    "profession": "WARRIOR",
+    "nationId": null,
+    "groupId": null,
+    "teamId": "mujica",
+    "skills": [
+      {
+        "buffId": "control_prod_bd_spd[000]",
+        "roomType": "CONTROL",
+        "phase": 0
+      },
+      {
+        "buffId": "control_prod_bd_spd[010]",
+        "roomType": "CONTROL",
+        "phase": 2
+      },
+      {
+        "buffId": "control_mp_cost&bd3[000]",
+        "roomType": "CONTROL",
+        "phase": 0
+      }
+    ]
+  },
+  "char_4183_mortis": {
+    "name": "若叶睦",
+    "rarity": 4,
+    "profession": "SPECIAL",
+    "nationId": null,
+    "groupId": null,
+    "teamId": "mujica",
+    "skills": [
+      {
+        "buffId": "control_mp_bd&trade[000]",
+        "roomType": "CONTROL",
+        "phase": 0
+      },
+      {
+        "buffId": "control_mp_cost_reset[000]",
+        "roomType": "CONTROL",
+        "phase": 2
+      }
+    ]
+  },
+  "char_4184_dolris": {
+    "name": "三角初华",
+    "rarity": 4,
+    "profession": "SUPPORT",
+    "nationId": null,
+    "groupId": null,
+    "teamId": "mujica",
+    "skills": [
+      {
+        "buffId": "control_dorm_bd[000]",
+        "roomType": "CONTROL",
+        "phase": 0
+      },
+      {
+        "buffId": "control_dorm_rec2[000]",
+        "roomType": "CONTROL",
+        "phase": 2
+      }
+    ]
+  },
+  "char_4185_amoris": {
+    "name": "祐天寺若麦",
+    "rarity": 4,
+    "profession": "WARRIOR",
+    "nationId": null,
+    "groupId": null,
+    "teamId": "mujica",
+    "skills": [
+      {
+        "buffId": "control_meeting_spd&bd[000]",
+        "roomType": "CONTROL",
+        "phase": 0
+      },
+      {
+        "buffId": "control_mp&meet_spd[000]",
+        "roomType": "CONTROL",
+        "phase": 2
+      }
+    ]
+  },
+  "char_4186_tmoris": {
+    "name": "八幡海铃",
+    "rarity": 4,
+    "profession": "SPECIAL",
+    "nationId": null,
+    "groupId": null,
+    "teamId": "mujica",
+    "skills": [
+      {
+        "buffId": "control_hire_spd&bd[000]",
+        "roomType": "CONTROL",
+        "phase": 0
+      },
+      {
+        "buffId": "control_tra_limit&spd2[000]",
+        "roomType": "CONTROL",
+        "phase": 2
+      }
+    ]
+  },
+  "char_4187_graceb": {
+    "name": "聆音",
+    "rarity": 4,
+    "profession": "WARRIOR",
+    "nationId": "bolivar",
+    "groupId": null,
+    "teamId": null,
+    "subPower": [
+      {
+        "nationId": "laterano",
+        "groupId": null,
+        "teamId": null
+      }
+    ],
+    "skills": [
+      {
+        "buffId": "dorm_rec_single[033]",
+        "roomType": "DORMITORY",
+        "phase": 0
+      },
+      {
+        "buffId": "train_spd&profession[1020]",
+        "roomType": "TRAINING",
+        "phase": 0
+      }
+    ]
+  },
+  "char_4188_confes": {
+    "name": "CONFESS-47",
+    "rarity": 0,
+    "profession": "PIONEER",
+    "nationId": "laterano",
+    "groupId": null,
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "power_rec_spd[006]",
+        "roomType": "POWER",
+        "phase": 0
+      },
+      {
+        "buffId": "power_rec_spd_ext&faction[000]",
+        "roomType": "POWER",
+        "phase": 0
+      }
+    ]
+  },
+  "char_4191_tippi": {
+    "name": "蒂比",
+    "rarity": 4,
+    "profession": "SPECIAL",
+    "nationId": "columbia",
+    "groupId": null,
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "workshop_proc_probability[033]",
+        "roomType": "WORKSHOP",
+        "phase": 0
+      },
+      {
+        "buffId": "workshop_formula_cost3[500]",
+        "roomType": "WORKSHOP",
+        "phase": 2
+      }
+    ]
+  },
+  "char_4193_lemuen": {
+    "name": "蕾缪安",
+    "rarity": 5,
+    "profession": "SNIPER",
+    "nationId": "laterano",
+    "groupId": null,
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "trade_ord_spd&multiPar[000]",
+        "roomType": "TRADING",
+        "phase": 0
+      },
+      {
+        "buffId": "trade_ord_spd&multiPar[100]",
+        "roomType": "TRADING",
+        "phase": 2
+      }
+    ]
+  },
+  "char_4194_rmixer": {
+    "name": "信仰搅拌机",
+    "rarity": 5,
+    "profession": "TANK",
+    "nationId": "laterano",
+    "groupId": null,
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "meet_spd[011]",
+        "roomType": "MEETING",
+        "phase": 0
+      },
+      {
+        "buffId": "meet_spd[022]",
+        "roomType": "MEETING",
+        "phase": 2
+      },
+      {
+        "buffId": "meet_spd_ext&P[000]",
+        "roomType": "MEETING",
+        "phase": 2
+      }
+    ]
+  },
+  "char_4195_radian": {
+    "name": "电弧",
+    "rarity": 5,
+    "profession": "SUPPORT",
+    "nationId": "rhodes",
+    "groupId": "elite",
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "control_mp_cost[013]",
+        "roomType": "CONTROL",
+        "phase": 0
+      },
+      {
+        "buffId": "control_dorm_rec_tag[001]",
+        "roomType": "CONTROL",
+        "phase": 2
+      }
+    ]
+  },
+  "char_4196_reckpr": {
+    "name": "录武官",
+    "rarity": 4,
+    "profession": "MEDIC",
+    "nationId": "yan",
+    "groupId": null,
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "train_spd&profession3[184]",
+        "roomType": "TRAINING",
+        "phase": 0
+      },
+      {
+        "buffId": "train_spd[002]",
+        "roomType": "TRAINING",
+        "phase": 2
+      }
+    ]
+  },
+  "char_4198_christ": {
+    "name": "Miss.Christine",
+    "rarity": 4,
+    "profession": "CASTER",
+    "nationId": "victoria",
+    "groupId": null,
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "manu_prod_limit&cost[012]",
+        "roomType": "MANUFACTURE",
+        "phase": 0
+      },
+      {
+        "buffId": "manu_prod_spd_double[100]",
+        "roomType": "MANUFACTURE",
+        "phase": 2
+      }
+    ]
+  },
+  "char_4199_makiri": {
+    "name": "松桐",
+    "rarity": 4,
+    "profession": "PIONEER",
+    "nationId": "higashi",
+    "groupId": null,
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "meet_spd[1000]",
+        "roomType": "MEETING",
+        "phase": 0
+      },
+      {
+        "buffId": "meet_spd_notOwned[002]",
+        "roomType": "MEETING",
+        "phase": 2
+      }
+    ]
+  },
+  "char_4202_haruka": {
+    "name": "遥",
+    "rarity": 5,
+    "profession": "SUPPORT",
+    "nationId": "higashi",
+    "groupId": null,
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "dorm_rec_all[028]",
+        "roomType": "DORMITORY",
+        "phase": 0
+      },
+      {
+        "buffId": "hire_spd[012]",
+        "roomType": "HIRE",
+        "phase": 2
+      }
+    ]
+  },
+  "char_4203_kichi": {
+    "name": "吉星",
+    "rarity": 4,
+    "profession": "SNIPER",
+    "nationId": "higashi",
+    "groupId": null,
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "trade_ord_spd&share[001]",
+        "roomType": "TRADING",
+        "phase": 0
+      },
+      {
+        "buffId": "trade_ord_spd&share[002]",
+        "roomType": "TRADING",
+        "phase": 2
+      }
+    ]
+  },
+  "char_4204_mantra": {
+    "name": "真言",
+    "rarity": 5,
+    "profession": "CASTER",
+    "nationId": "rhodes",
+    "groupId": "elite",
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "trade_ord_spd&tag[000]",
+        "roomType": "TRADING",
+        "phase": 0
+      },
+      {
+        "buffId": "trade_ord_spd&tag[010]",
+        "roomType": "TRADING",
+        "phase": 2
+      }
+    ]
+  },
+  "char_4207_branch": {
+    "name": "折桠",
+    "rarity": 4,
+    "profession": "TANK",
+    "nationId": "ursus",
+    "groupId": null,
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "workshop_formula_cost5[100]",
+        "roomType": "WORKSHOP",
+        "phase": 0
+      },
+      {
+        "buffId": "workshop_formula_device[021]",
+        "roomType": "WORKSHOP",
+        "phase": 2
+      }
+    ]
+  },
+  "char_4208_wintim": {
+    "name": "冬时",
+    "rarity": 3,
+    "profession": "PIONEER",
+    "nationId": "ursus",
+    "groupId": null,
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "manu_prod_spd&manu[000]",
+        "roomType": "MANUFACTURE",
+        "phase": 0
+      },
+      {
+        "buffId": "manu_prod_spd&manu[100]",
+        "roomType": "MANUFACTURE",
+        "phase": 1
+      }
+    ]
+  },
+  "char_420_flamtl": {
+    "name": "焰尾",
+    "rarity": 5,
+    "profession": "PIONEER",
+    "nationId": "kazimierz",
+    "groupId": "pinus",
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "control_mp_cost[007]",
+        "roomType": "CONTROL",
+        "phase": 0
+      },
+      {
+        "buffId": "control_mp_psk[000]",
+        "roomType": "CONTROL",
+        "phase": 2
+      }
+    ]
+  },
+  "char_4211_snhunt": {
+    "name": "雪猎",
+    "rarity": 4,
+    "profession": "SNIPER",
+    "nationId": "kjerag",
+    "groupId": null,
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "manu_prod_spd&limit&cost[101]",
+        "roomType": "MANUFACTURE",
+        "phase": 0
+      },
+      {
+        "buffId": "manu_prod_spd&limit&cost[110]",
+        "roomType": "MANUFACTURE",
+        "phase": 2
+      }
+    ]
+  },
+  "char_4212_nasti": {
+    "name": "娜斯提",
+    "rarity": 5,
+    "profession": "SUPPORT",
+    "nationId": "columbia",
+    "groupId": "rhine",
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "manu_prod_spd[011]",
+        "roomType": "MANUFACTURE",
+        "phase": 0
+      },
+      {
+        "buffId": "manu_formula_spd&cost_bd[100]",
+        "roomType": "MANUFACTURE",
+        "phase": 2
+      }
+    ]
+  },
+  "char_4213_skybx": {
+    "name": "天空盒",
+    "rarity": 4,
+    "profession": "SNIPER",
+    "nationId": "columbia",
+    "groupId": null,
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "workshop_formula_probability[1110]",
+        "roomType": "WORKSHOP",
+        "phase": 0
+      },
+      {
+        "buffId": "power_rec_spd[024]",
+        "roomType": "POWER",
+        "phase": 2
+      }
+    ]
+  },
+  "char_4214_cairn": {
+    "name": "响石",
+    "rarity": 4,
+    "profession": "TANK",
+    "nationId": "columbia",
+    "groupId": null,
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "dorm_rec_all&lv[000]",
+        "roomType": "DORMITORY",
+        "phase": 0
+      },
+      {
+        "buffId": "dorm_rec_all&lv[100]",
+        "roomType": "DORMITORY",
+        "phase": 2
+      },
+      {
+        "buffId": "meet_spd&exchange[001]",
+        "roomType": "MEETING",
+        "phase": 2
+      }
+    ]
+  },
+  "char_421_crow": {
+    "name": "羽毛笔",
+    "rarity": 4,
+    "profession": "WARRIOR",
+    "nationId": "bolivar",
+    "groupId": null,
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "workshop_formula_cost3[000]",
+        "roomType": "WORKSHOP",
+        "phase": 0
+      },
+      {
+        "buffId": "workshop_formula_probability[030]",
+        "roomType": "WORKSHOP",
+        "phase": 2
+      }
+    ]
+  },
+  "char_4221_ju": {
+    "name": "矩",
+    "rarity": 4,
+    "profession": "SNIPER",
+    "nationId": "yan",
+    "groupId": null,
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "workshop_formula_cost2[110]",
+        "roomType": "WORKSHOP",
+        "phase": 0
+      },
+      {
+        "buffId": "workshop_formula_cost2[111]",
+        "roomType": "WORKSHOP",
+        "phase": 2
+      }
+    ]
+  },
+  "char_4222_taraxa": {
+    "name": "风絮",
+    "rarity": 4,
+    "profession": "MEDIC",
+    "nationId": "yan",
+    "groupId": null,
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "trade_ord_spd[000]",
+        "roomType": "TRADING",
+        "phase": 0
+      },
+      {
+        "buffId": "trade_ord_spd&tag[020]",
+        "roomType": "TRADING",
+        "phase": 2
+      }
+    ]
+  },
+  "char_4223_botany": {
+    "name": "伯塔尼",
+    "rarity": 4,
+    "profession": "SUPPORT",
+    "nationId": "ursus",
+    "groupId": null,
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "workshop_formula_cost3[001]",
+        "roomType": "WORKSHOP",
+        "phase": 0
+      },
+      {
+        "buffId": "workshop_formula_probability[032]",
+        "roomType": "WORKSHOP",
+        "phase": 2
+      }
+    ]
+  },
+  "char_4224_turdus": {
+    "name": "乌啾",
+    "rarity": 4,
+    "profession": "MEDIC",
+    "nationId": "ursus",
+    "groupId": null,
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "hire_spd&clue[120]",
+        "roomType": "HIRE",
+        "phase": 0
+      },
+      {
+        "buffId": "hire_spd&clue[121]",
+        "roomType": "HIRE",
+        "phase": 2
+      }
+    ]
+  },
+  "char_4225_tanya": {
+    "name": "裂响",
+    "rarity": 4,
+    "profession": "TANK",
+    "nationId": "ursus",
+    "groupId": null,
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "dorm_rec_oneself[040]",
+        "roomType": "DORMITORY",
+        "phase": 0
+      },
+      {
+        "buffId": "manu_formula_spd&limit&cost[100]",
+        "roomType": "MANUFACTURE",
+        "phase": 2
+      }
+    ]
+  },
+  "char_4226_veen": {
+    "name": "维伊",
+    "rarity": 5,
+    "profession": "CASTER",
+    "nationId": "ursus",
+    "groupId": null,
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "train_spd_doubleProf[301]",
+        "roomType": "TRAINING",
+        "phase": 0
+      },
+      {
+        "buffId": "train_spd_doubleProf[310]",
+        "roomType": "TRAINING",
+        "phase": 2
+      },
+      {
+        "buffId": "manu_prod_spd_train&lv[000]",
+        "roomType": "MANUFACTURE",
+        "phase": 2
+      }
+    ]
+  },
+  "char_4227_gallus": {
+    "name": "GALLUS²",
+    "rarity": 0,
+    "profession": "CASTER",
+    "nationId": "rhodes",
+    "groupId": null,
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "power_rec_spd[0010]",
+        "roomType": "POWER",
+        "phase": 0
+      },
+      {
+        "buffId": "power_rec_spd_ext&tag[000]",
+        "roomType": "POWER",
+        "phase": 0
+      }
+    ]
+  },
+  "char_4228_closur": {
+    "name": "可露希尔",
+    "rarity": 5,
+    "profession": "PIONEER",
+    "nationId": "rhodes",
+    "groupId": null,
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "control_mp_cost[014]",
+        "roomType": "CONTROL",
+        "phase": 0
+      },
+      {
+        "buffId": "trade_ord_closure[000]",
+        "roomType": "TRADING",
+        "phase": 2
+      }
+    ]
+  },
+  "char_422_aurora": {
+    "name": "极光",
+    "rarity": 4,
+    "profession": "TANK",
+    "nationId": "kjerag",
+    "groupId": null,
+    "teamId": null,
+    "subPower": [
+      {
+        "nationId": "kjerag",
+        "groupId": "karlan",
+        "teamId": null
+      }
+    ],
+    "skills": [
+      {
+        "buffId": "train_spd&profession2[030]",
+        "roomType": "TRAINING",
+        "phase": 0
+      },
+      {
+        "buffId": "train_spd&profession2[130]",
+        "roomType": "TRAINING",
+        "phase": 2
+      }
+    ]
+  },
+  "char_423_blemsh": {
+    "name": "瑕光",
+    "rarity": 5,
+    "profession": "TANK",
+    "nationId": "kazimierz",
+    "groupId": null,
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "workshop_formula_free[000]",
+        "roomType": "WORKSHOP",
+        "phase": 0
+      },
+      {
+        "buffId": "workshop_formula_cost2[000]",
+        "roomType": "WORKSHOP",
+        "phase": 2
+      }
+    ]
+  },
+  "char_426_billro": {
+    "name": "卡涅利安",
+    "rarity": 5,
+    "profession": "CASTER",
+    "nationId": "leithanien",
+    "groupId": null,
+    "teamId": null,
+    "subPower": [
+      {
+        "nationId": "sargon",
+        "groupId": null,
+        "teamId": null
+      }
+    ],
+    "skills": [
+      {
+        "buffId": "train_spd&profession[050]",
+        "roomType": "TRAINING",
+        "phase": 0
+      },
+      {
+        "buffId": "train_spd&profession[150]",
+        "roomType": "TRAINING",
+        "phase": 2
+      }
+    ]
+  },
+  "char_427_vigil": {
+    "name": "伺夜",
+    "rarity": 5,
+    "profession": "PIONEER",
+    "nationId": "siracusa",
+    "groupId": null,
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "meet_spd[032]",
+        "roomType": "MEETING",
+        "phase": 0
+      },
+      {
+        "buffId": "trade_ord_spd&meet[000]",
+        "roomType": "TRADING",
+        "phase": 2
+      }
+    ]
+  },
+  "char_430_fartth": {
+    "name": "远牙",
+    "rarity": 5,
+    "profession": "SNIPER",
+    "nationId": "kazimierz",
+    "groupId": "pinus",
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "dorm_rec_all&oneself[042]",
+        "roomType": "DORMITORY",
+        "phase": 0
+      },
+      {
+        "buffId": "manu_prod_spd[002]",
+        "roomType": "MANUFACTURE",
+        "phase": 0
+      },
+      {
+        "buffId": "manu_prod_spd[012]",
+        "roomType": "MANUFACTURE",
+        "phase": 2
+      }
+    ]
+  },
+  "char_431_ashlok": {
+    "name": "灰毫",
+    "rarity": 4,
+    "profession": "TANK",
+    "nationId": "kazimierz",
+    "groupId": "pinus",
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "manu_prod_spd[002]",
+        "roomType": "MANUFACTURE",
+        "phase": 0
+      },
+      {
+        "buffId": "manu_prod_spd[012]",
+        "roomType": "MANUFACTURE",
+        "phase": 2
+      }
+    ]
+  },
+  "char_433_windft": {
+    "name": "掠风",
+    "rarity": 4,
+    "profession": "SUPPORT",
+    "nationId": "columbia",
+    "groupId": null,
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "workshop_formula_probability[115]",
+        "roomType": "WORKSHOP",
+        "phase": 0
+      },
+      {
+        "buffId": "manu_prod_spd&power[000]",
+        "roomType": "MANUFACTURE",
+        "phase": 2
+      }
+    ]
+  },
+  "char_436_whispr": {
+    "name": "絮雨",
+    "rarity": 4,
+    "profession": "MEDIC",
+    "nationId": "iberia",
+    "groupId": null,
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "hire_spd_bd_n1_n1[100]",
+        "roomType": "HIRE",
+        "phase": 0
+      },
+      {
+        "buffId": "hire_spd_bd_n1[000]",
+        "roomType": "HIRE",
+        "phase": 2
+      }
+    ]
+  },
+  "char_437_mizuki": {
+    "name": "水月",
+    "rarity": 5,
+    "profession": "SPECIAL",
+    "nationId": "higashi",
+    "groupId": null,
+    "teamId": null,
+    "subPower": [
+      {
+        "nationId": "egir",
+        "groupId": null,
+        "teamId": null
+      }
+    ],
+    "skills": [
+      {
+        "buffId": "manu_skill_spd1[000]",
+        "roomType": "MANUFACTURE",
+        "phase": 0
+      },
+      {
+        "buffId": "manu_prod_spd[010]",
+        "roomType": "MANUFACTURE",
+        "phase": 2
+      }
+    ]
+  },
+  "char_440_pinecn": {
+    "name": "松果",
+    "rarity": 3,
+    "profession": "SNIPER",
+    "nationId": "columbia",
+    "groupId": null,
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "workshop_formula_probability[200]",
+        "roomType": "WORKSHOP",
+        "phase": 0
+      },
+      {
+        "buffId": "workshop_formula_cost3[200]",
+        "roomType": "WORKSHOP",
+        "phase": 1
+      }
+    ]
+  },
+  "char_445_wscoot": {
+    "name": "骋风",
+    "rarity": 3,
+    "profession": "WARRIOR",
+    "nationId": "yan",
+    "groupId": null,
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "meet_spd&clue[000]",
+        "roomType": "MEETING",
+        "phase": 0
+      },
+      {
+        "buffId": "meet_spd_notOwned&exchange[000]",
+        "roomType": "MEETING",
+        "phase": 1
+      }
+    ]
+  },
+  "char_446_aroma": {
+    "name": "阿罗玛",
+    "rarity": 4,
+    "profession": "CASTER",
+    "nationId": "siracusa",
+    "groupId": null,
+    "teamId": null,
+    "subPower": [
+      {
+        "nationId": "columbia",
+        "groupId": null,
+        "teamId": null
+      }
+    ],
+    "skills": [
+      {
+        "buffId": "manu_formula_spd&cost[001]",
+        "roomType": "MANUFACTURE",
+        "phase": 0
+      },
+      {
+        "buffId": "manu_prod_spd_addition[100]",
+        "roomType": "MANUFACTURE",
+        "phase": 2
+      }
+    ]
+  },
+  "char_449_glider": {
+    "name": "蜜莓",
+    "rarity": 4,
+    "profession": "MEDIC",
+    "nationId": "rim",
+    "groupId": null,
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "workshop_formula_probability[114]",
+        "roomType": "WORKSHOP",
+        "phase": 0
+      },
+      {
+        "buffId": "workshop_formula_probability[124]",
+        "roomType": "WORKSHOP",
+        "phase": 2
+      },
+      {
+        "buffId": "dorm_rec_single[032]",
+        "roomType": "DORMITORY",
+        "phase": 2
+      }
+    ]
+  },
+  "char_450_necras": {
+    "name": "死芒",
+    "rarity": 5,
+    "profession": "CASTER",
+    "nationId": "victoria",
+    "groupId": "tara",
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "train_spd&profession2[052]",
+        "roomType": "TRAINING",
+        "phase": 0
+      },
+      {
+        "buffId": "train_spd&profession2[650]",
+        "roomType": "TRAINING",
+        "phase": 2
+      },
+      {
+        "buffId": "train_cost&profession[350]",
+        "roomType": "TRAINING",
+        "phase": 2
+      }
+    ]
+  },
+  "char_451_robin": {
+    "name": "罗宾",
+    "rarity": 4,
+    "profession": "SPECIAL",
+    "nationId": "columbia",
+    "groupId": null,
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "train_spd&profession2[080]",
+        "roomType": "TRAINING",
+        "phase": 0
+      },
+      {
+        "buffId": "train_spd&profession2[180]",
+        "roomType": "TRAINING",
+        "phase": 2
+      }
+    ]
+  },
+  "char_452_bstalk": {
+    "name": "豆苗",
+    "rarity": 3,
+    "profession": "PIONEER",
+    "nationId": "columbia",
+    "groupId": null,
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "manu_prod_spd[003]",
+        "roomType": "MANUFACTURE",
+        "phase": 0
+      },
+      {
+        "buffId": "manu_prod_limit&cost[001]",
+        "roomType": "MANUFACTURE",
+        "phase": 1
+      }
+    ]
+  },
+  "char_455_nothin": {
+    "name": "乌有",
+    "rarity": 4,
+    "profession": "SPECIAL",
+    "nationId": "yan",
+    "groupId": null,
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "hire_spd&clue[101]",
+        "roomType": "HIRE",
+        "phase": 0
+      },
+      {
+        "buffId": "trade_ord_spd_bd_n2[000]",
+        "roomType": "TRADING",
+        "phase": 2
+      }
+    ]
+  },
+  "char_456_ash": {
+    "name": "灰烬",
+    "rarity": 5,
+    "profession": "SNIPER",
+    "nationId": null,
+    "groupId": null,
+    "teamId": "rainbow",
+    "skills": [
+      {
+        "buffId": "control_mp_cost&faction[990]",
+        "roomType": "CONTROL",
+        "phase": 0
+      },
+      {
+        "buffId": "control_mp_bd[000]",
+        "roomType": "CONTROL",
+        "phase": 2
+      }
+    ]
+  },
+  "char_457_blitz": {
+    "name": "闪击",
+    "rarity": 4,
+    "profession": "TANK",
+    "nationId": null,
+    "groupId": null,
+    "teamId": "rainbow",
+    "skills": [
+      {
+        "buffId": "control_mp_cost&faction[990]",
+        "roomType": "CONTROL",
+        "phase": 0
+      },
+      {
+        "buffId": "hire_spd_blitz[000]",
+        "roomType": "HIRE",
+        "phase": 2
+      }
+    ]
+  },
+  "char_458_rfrost": {
+    "name": "霜华",
+    "rarity": 4,
+    "profession": "SPECIAL",
+    "nationId": null,
+    "groupId": null,
+    "teamId": "rainbow",
+    "skills": [
+      {
+        "buffId": "control_mp_cost&faction[990]",
+        "roomType": "CONTROL",
+        "phase": 0
+      },
+      {
+        "buffId": "workshop_formula_frost[000]",
+        "roomType": "WORKSHOP",
+        "phase": 2
+      }
+    ]
+  },
+  "char_459_tachak": {
+    "name": "战车",
+    "rarity": 4,
+    "profession": "WARRIOR",
+    "nationId": null,
+    "groupId": null,
+    "teamId": "rainbow",
+    "skills": [
+      {
+        "buffId": "control_mp_cost&faction[990]",
+        "roomType": "CONTROL",
+        "phase": 0
+      },
+      {
+        "buffId": "control_mp_bd[010]",
+        "roomType": "CONTROL",
+        "phase": 2
+      }
+    ]
+  },
+  "char_464_cement": {
+    "name": "洋灰",
+    "rarity": 4,
+    "profession": "TANK",
+    "nationId": "rim",
+    "groupId": null,
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "manu_prod_spd[000]",
+        "roomType": "MANUFACTURE",
+        "phase": 0
+      },
+      {
+        "buffId": "manu_prod_limit&cost[021]",
+        "roomType": "MANUFACTURE",
+        "phase": 2
+      }
+    ]
+  },
+  "char_466_qanik": {
+    "name": "雪绒",
+    "rarity": 4,
+    "profession": "CASTER",
+    "nationId": "sami",
+    "groupId": null,
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "hire_spd_cost&clue[001]",
+        "roomType": "HIRE",
+        "phase": 0
+      },
+      {
+        "buffId": "hire_spd_cost&clue[000]",
+        "roomType": "HIRE",
+        "phase": 2
+      }
+    ]
+  },
+  "char_469_indigo": {
+    "name": "深靛",
+    "rarity": 3,
+    "profession": "CASTER",
+    "nationId": "iberia",
+    "groupId": null,
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "dorm_rec_single_P[002]",
+        "roomType": "DORMITORY",
+        "phase": 0
+      },
+      {
+        "buffId": "power_rec_spd[002]",
+        "roomType": "POWER",
+        "phase": 0
+      },
+      {
+        "buffId": "power_rec_spd[017]",
+        "roomType": "POWER",
+        "phase": 1
+      }
+    ]
+  },
+  "char_472_pasngr": {
+    "name": "异客",
+    "rarity": 5,
+    "profession": "CASTER",
+    "nationId": "sargon",
+    "groupId": null,
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "power_rec_spd[003]",
+        "roomType": "POWER",
+        "phase": 0
+      },
+      {
+        "buffId": "power_rec_spd[016]",
+        "roomType": "POWER",
+        "phase": 2
+      },
+      {
+        "buffId": "manu_prod_spd&power[000]",
+        "roomType": "MANUFACTURE",
+        "phase": 2
+      }
+    ]
+  },
+  "char_473_mberry": {
+    "name": "桑葚",
+    "rarity": 4,
+    "profession": "MEDIC",
+    "nationId": "yan",
+    "groupId": null,
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "hire_spd_cost[100]",
+        "roomType": "HIRE",
+        "phase": 0
+      },
+      {
+        "buffId": "hire_spd_cost[110]",
+        "roomType": "HIRE",
+        "phase": 1
+      },
+      {
+        "buffId": "hire_spd_bd_n1_n1[200]",
+        "roomType": "HIRE",
+        "phase": 2
+      }
+    ]
+  },
+  "char_474_glady": {
+    "name": "歌蕾蒂娅",
+    "rarity": 5,
+    "profession": "SPECIAL",
+    "nationId": "egir",
+    "groupId": "abyssal",
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "control_mp_aegir1[000]",
+        "roomType": "CONTROL",
+        "phase": 0
+      },
+      {
+        "buffId": "control_mp_aegir2[000]",
+        "roomType": "CONTROL",
+        "phase": 0
+      },
+      {
+        "buffId": "control_mp_aegir2[010]",
+        "roomType": "CONTROL",
+        "phase": 2
+      }
+    ]
+  },
+  "char_475_akafyu": {
+    "name": "赤冬",
+    "rarity": 4,
+    "profession": "WARRIOR",
+    "nationId": "higashi",
+    "groupId": null,
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "train_spd&profession2[020]",
+        "roomType": "TRAINING",
+        "phase": 0
+      },
+      {
+        "buffId": "train_spd&profession2[120]",
+        "roomType": "TRAINING",
+        "phase": 2
+      }
+    ]
+  },
+  "char_476_blkngt": {
+    "name": "夜半",
+    "rarity": 4,
+    "profession": "PIONEER",
+    "nationId": "rim",
+    "groupId": null,
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "train_spd&profession2[010]",
+        "roomType": "TRAINING",
+        "phase": 0
+      },
+      {
+        "buffId": "train_spd&profession2[110]",
+        "roomType": "TRAINING",
+        "phase": 2
+      }
+    ]
+  },
+  "char_478_kirara": {
+    "name": "绮良",
+    "rarity": 4,
+    "profession": "SPECIAL",
+    "nationId": "higashi",
+    "groupId": null,
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "trade_ord_line_gold[000]",
+        "roomType": "TRADING",
+        "phase": 0
+      },
+      {
+        "buffId": "trade_ord_line_gold[010]",
+        "roomType": "TRADING",
+        "phase": 2
+      }
+    ]
+  },
+  "char_479_sleach": {
+    "name": "琴柳",
+    "rarity": 5,
+    "profession": "PIONEER",
+    "nationId": "victoria",
+    "groupId": null,
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "dorm_rec_single[031]",
+        "roomType": "DORMITORY",
+        "phase": 0
+      },
+      {
+        "buffId": "control_hire_spd[000]",
+        "roomType": "CONTROL",
+        "phase": 2
+      }
+    ]
+  },
+  "char_484_robrta": {
+    "name": "罗比菈塔",
+    "rarity": 3,
+    "profession": "SUPPORT",
+    "nationId": "columbia",
+    "groupId": null,
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "workshop_formula_probability[200]",
+        "roomType": "WORKSHOP",
+        "phase": 0
+      },
+      {
+        "buffId": "manu_prod_spd[010]",
+        "roomType": "MANUFACTURE",
+        "phase": 1
+      }
+    ]
+  },
+  "char_485_pallas": {
+    "name": "帕拉斯",
+    "rarity": 5,
+    "profession": "WARRIOR",
+    "nationId": "minos",
+    "groupId": null,
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "manu_prod_limit&cost[003]",
+        "roomType": "MANUFACTURE",
+        "phase": 0
+      },
+      {
+        "buffId": "manu_formula_spd[000]",
+        "roomType": "MANUFACTURE",
+        "phase": 2
+      }
+    ]
+  },
+  "char_486_takila": {
+    "name": "龙舌兰",
+    "rarity": 4,
+    "profession": "WARRIOR",
+    "nationId": "bolivar",
+    "groupId": null,
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "trade_ord_long[000]",
+        "roomType": "TRADING",
+        "phase": 0
+      },
+      {
+        "buffId": "trade_ord_long[010]",
+        "roomType": "TRADING",
+        "phase": 2
+      }
+    ]
+  },
+  "char_487_bobb": {
+    "name": "波卜",
+    "rarity": 4,
+    "profession": "SUPPORT",
+    "nationId": "columbia",
+    "groupId": null,
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "dorm_rec_all&unfull[000]",
+        "roomType": "DORMITORY",
+        "phase": 0
+      },
+      {
+        "buffId": "dorm_rec_all&unfull[001]",
+        "roomType": "DORMITORY",
+        "phase": 2
+      }
+    ]
+  },
+  "char_488_buildr": {
+    "name": "青枳",
+    "rarity": 4,
+    "profession": "PIONEER",
+    "nationId": "columbia",
+    "groupId": "siesta",
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "workshop_formula_probability[221]",
+        "roomType": "WORKSHOP",
+        "phase": 0
+      },
+      {
+        "buffId": "workshop_formula_cost3[221]",
+        "roomType": "WORKSHOP",
+        "phase": 2
+      }
+    ]
+  },
+  "char_489_serum": {
+    "name": "蚀清",
+    "rarity": 4,
+    "profession": "CASTER",
+    "nationId": "columbia",
+    "groupId": null,
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "workshop_formula_probability[113]",
+        "roomType": "WORKSHOP",
+        "phase": 0
+      },
+      {
+        "buffId": "workshop_formula_probability[123]",
+        "roomType": "WORKSHOP",
+        "phase": 2
+      },
+      {
+        "buffId": "workshop_formula_drop[030]",
+        "roomType": "WORKSHOP",
+        "phase": 2
+      }
+    ]
+  },
+  "char_491_humus": {
+    "name": "休谟斯",
+    "rarity": 3,
+    "profession": "WARRIOR",
+    "nationId": "rhodes",
+    "groupId": null,
+    "teamId": null,
+    "subPower": [
+      {
+        "nationId": "columbia",
+        "groupId": null,
+        "teamId": null
+      }
+    ],
+    "skills": [
+      {
+        "buffId": "workshop_proc_probability[013]",
+        "roomType": "WORKSHOP",
+        "phase": 0
+      },
+      {
+        "buffId": "workshop_formula_rub[000]",
+        "roomType": "WORKSHOP",
+        "phase": 1
+      }
+    ]
+  },
+  "char_492_quercu": {
+    "name": "夏栎",
+    "rarity": 4,
+    "profession": "SUPPORT",
+    "nationId": "rhodes",
+    "groupId": null,
+    "teamId": null,
+    "subPower": [
+      {
+        "nationId": "victoria",
+        "groupId": null,
+        "teamId": null
+      }
+    ],
+    "skills": [
+      {
+        "buffId": "meet_team[070]",
+        "roomType": "MEETING",
+        "phase": 0
+      },
+      {
+        "buffId": "meet_flag[070]",
+        "roomType": "MEETING",
+        "phase": 2
+      }
+    ]
+  },
+  "char_493_firwhl": {
+    "name": "火哨",
+    "rarity": 4,
+    "profession": "TANK",
+    "nationId": "rim",
+    "groupId": null,
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "trade_cost[000]",
+        "roomType": "TRADING",
+        "phase": 0
+      },
+      {
+        "buffId": "trade_ord_spd&share[000]",
+        "roomType": "TRADING",
+        "phase": 2
+      }
+    ]
+  },
+  "char_494_vendla": {
+    "name": "刺玫",
+    "rarity": 4,
+    "profession": "MEDIC",
+    "nationId": "victoria",
+    "groupId": null,
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "dorm_rec_all[023]",
+        "roomType": "DORMITORY",
+        "phase": 0
+      },
+      {
+        "buffId": "dorm_rec_all&tired[000]",
+        "roomType": "DORMITORY",
+        "phase": 2
+      }
+    ]
+  },
+  "char_496_wildmn": {
+    "name": "野鬃",
+    "rarity": 4,
+    "profession": "PIONEER",
+    "nationId": "kazimierz",
+    "groupId": "pinus",
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "manu_prod_spd[002]",
+        "roomType": "MANUFACTURE",
+        "phase": 0
+      },
+      {
+        "buffId": "manu_prod_spd[012]",
+        "roomType": "MANUFACTURE",
+        "phase": 2
+      }
+    ]
+  },
+  "char_497_ctable": {
+    "name": "晓歌",
+    "rarity": 4,
+    "profession": "PIONEER",
+    "nationId": "rhodes",
+    "groupId": null,
+    "teamId": null,
+    "subPower": [
+      {
+        "nationId": "bolivar",
+        "groupId": null,
+        "teamId": null
+      }
+    ],
+    "skills": [
+      {
+        "buffId": "meet_spd_notOwned[000]",
+        "roomType": "MEETING",
+        "phase": 0
+      },
+      {
+        "buffId": "meet_spd_notOwned[010]",
+        "roomType": "MEETING",
+        "phase": 2
+      }
+    ]
+  },
+  "char_498_inside": {
+    "name": "隐现",
+    "rarity": 4,
+    "profession": "SNIPER",
+    "nationId": "laterano",
+    "groupId": null,
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "hire_spd&clue[110]",
+        "roomType": "HIRE",
+        "phase": 0
+      },
+      {
+        "buffId": "dorm_rec_single&oneself[040]",
+        "roomType": "DORMITORY",
+        "phase": 2
+      }
+    ]
+  },
+  "char_499_kaitou": {
+    "name": "折光",
+    "rarity": 4,
+    "profession": "CASTER",
+    "nationId": "leithanien",
+    "groupId": null,
+    "teamId": null,
+    "skills": [
+      {
+        "buffId": "trade_ord_wt&cost[002]",
+        "roomType": "TRADING",
+        "phase": 0
+      },
+      {
+        "buffId": "trade_ord_wt&cost[012]",
+        "roomType": "TRADING",
+        "phase": 2
+      }
+    ]
+  },
+  "char_500_noirc": {
+    "name": "黑角",
+    "rarity": 1,
+    "profession": "TANK",
+    "nationId": "rhodes",
+    "groupId": null,
+    "teamId": "action4",
+    "subPower": [
+      {
+        "nationId": "higashi",
+        "groupId": null,
+        "teamId": null
+      }
+    ],
+    "skills": [
+      {
+        "buffId": "manu_prod_spd&limit[001]",
+        "roomType": "MANUFACTURE",
+        "phase": 0
+      },
+      {
+        "buffId": "trade_ord_spd&limit[000]",
+        "roomType": "TRADING",
+        "phase": 0
+      }
+    ]
+  },
+  "char_501_durin": {
+    "name": "杜林",
+    "rarity": 1,
+    "profession": "CASTER",
+    "nationId": "rhodes",
+    "groupId": null,
+    "teamId": "action4",
+    "skills": [
+      {
+        "buffId": "dorm_rec_all&oneself[000]",
+        "roomType": "DORMITORY",
+        "phase": 0
+      },
+      {
+        "buffId": "dorm_rec_all&oneself[001]",
+        "roomType": "DORMITORY",
+        "phase": 0
+      }
+    ]
+  },
+  "char_502_nblade": {
+    "name": "夜刀",
+    "rarity": 1,
+    "profession": "PIONEER",
+    "nationId": "rhodes",
+    "groupId": null,
+    "teamId": "action4",
+    "subPower": [
+      {
+        "nationId": "higashi",
+        "groupId": null,
+        "teamId": null
+      }
+    ],
+    "skills": [
+      {
+        "buffId": "trade_ord_spd[001]",
+        "roomType": "TRADING",
+        "phase": 0
+      },
+      {
+        "buffId": "manu_prod_spd[000]",
+        "roomType": "MANUFACTURE",
+        "phase": 0
+      }
+    ]
+  },
+  "char_503_rang": {
+    "name": "巡林者",
+    "rarity": 1,
+    "profession": "SNIPER",
+    "nationId": "rhodes",
+    "groupId": null,
+    "teamId": "action4",
+    "skills": [
+      {
+        "buffId": "hire_spd[000]",
+        "roomType": "HIRE",
+        "phase": 0
+      },
+      {
+        "buffId": "workshop_proc_probability[021]",
+        "roomType": "WORKSHOP",
+        "phase": 0
+      }
+    ]
+  }
+}
