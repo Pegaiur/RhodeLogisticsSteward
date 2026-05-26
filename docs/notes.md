@@ -124,3 +124,22 @@
 - `_A6_FACILITY_TABLE` 中硬编码为 3.0%/贸易站，与 A3 技能计数（金属工艺·α）独立叠加
 - Mfg[2] 总加成: 个体效率(A3+metal) + synergy_skill_count(金属工艺) + synergy_facility_count(引星棘刺 6%) = 214%
 
+---
+
+## MV5 Phase 5b (C1 中枢全局效率) — 2026-05-26
+
+### 实现范围
+- `GlobalBonus` dataclass + `compute_control_global_bonus()` 函数
+- 硬编码中枢全局效率表：凯尔希(最高权限) → 制造站+2%，同种取最高
+- 注入 `solver._evaluate_room_combo()` 和 `production._room_efficiency_integral()`，全局加成 = bonus × T
+- 3 个单元测试（TDD：红灯→绿灯）
+
+### 决策 8: 全局加成作为 e(t) 积分附加项
+- 全局效率加成不影响 per-operator e(t)，而是直接加到房间总积分
+- `total += global_bonus.mfg_bonus * T` 在 operator loop 之后执行
+- **影响**: 与 per-operator 技能加成正交叠加，数学等价于 P(t)=1+0.01n+Σeᵢ/100+global/100
+
+### 效果
+- 固定中枢（令+重岳+夕+凯尔希+焰尾）→ 仅凯尔希触发 → 4 间制造站各 +2%
+- CombatRecord: 208%→210%, 203%→205%；PureGold: 214%→216%, 193%→195%
+

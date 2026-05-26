@@ -402,3 +402,65 @@ class TestSynergyFacilityCount:
         # Assert: +12%
         assert len(segs) == 1
         assert segs[0].a == 12.0
+
+
+# ─── C1 中枢全局效率 ─────────────────────────────────────────────
+
+class TestControlGlobalBonus:
+    """C1: compute_control_global_bonus — 中枢干员提供全局效率加成"""
+
+    def test_凯尔希_制造站加2percent(self):
+        """凯尔希(最高权限) → 制造站+2%，同种取最高"""
+        from steward_core.synergy import compute_control_global_bonus
+
+        # Arrange
+        kalts = _mk_op("凯尔希")
+        ling = _mk_op("令")
+        chongyue = _mk_op("重岳")
+        xi = _mk_op("夕")
+
+        # Act
+        bonus = compute_control_global_bonus([kalts, ling, chongyue, xi])
+
+        # Assert
+        assert bonus.mfg_bonus == 2.0
+        assert bonus.trade_bonus == 0.0
+
+    def test_无加成中枢_返回零(self):
+        """令/重岳/夕/焰尾 均无全局效率 buff → 返回零"""
+        from steward_core.synergy import compute_control_global_bonus
+
+        # Arrange
+        ops = [_mk_op("令"), _mk_op("重岳"), _mk_op("夕"), _mk_op("焰尾")]
+
+        # Act
+        bonus = compute_control_global_bonus(ops)
+
+        # Assert
+        assert bonus.mfg_bonus == 0.0
+        assert bonus.trade_bonus == 0.0
+
+    def test_empty_control(self):
+        """空中枢 → 无加成"""
+        from steward_core.synergy import compute_control_global_bonus
+
+        bonus = compute_control_global_bonus([])
+        assert bonus.mfg_bonus == 0.0
+        assert bonus.trade_bonus == 0.0
+
+    def test_Mon3tr_制造站加2percent(self):
+        """Mon3tr(最高权限) → 制造站+2%（真数据下可能替代凯尔希出现）"""
+        from steward_core.synergy import compute_control_global_bonus
+
+        mon3tr = _mk_op("Mon3tr")
+        bonus = compute_control_global_bonus([mon3tr])
+        assert bonus.mfg_bonus == 2.0
+
+    def test_同种取最高_两干员共存(self):
+        """凯尔希和 Mon3tr 共存 → 同种效果取最高，仍为 2%"""
+        from steward_core.synergy import compute_control_global_bonus
+
+        kalts = _mk_op("凯尔希")
+        mon3tr = _mk_op("Mon3tr")
+        bonus = compute_control_global_bonus([kalts, mon3tr])
+        assert bonus.mfg_bonus == 2.0

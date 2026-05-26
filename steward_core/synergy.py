@@ -1,9 +1,11 @@
 """联动体系函数
 
 每个体系一个独立函数。同层体系之间并行计算后线性叠加。
-MVP 范围: A1/A3/A4/A5/A6（A 层已完成）。
-A2/A7/B/C 层在后续迭代补充。
+MVP 范围: A1/A3/A4/A5/A6/C1（A/C 层已完成）。
+A2/A7/B 层在后续迭代补充。
 """
+
+from dataclasses import dataclass
 
 from steward_core.models import LinearSegment, Operator, LayoutConfig
 
@@ -245,3 +247,39 @@ def synergy_facility_count(
             segments.append(LinearSegment(a=bonus, b=0.0, t_start=0.0, dt=T))
 
     return segments
+
+
+# ─── C1 中枢全局效率 ─────────────────────────────────────────────
+
+# 中枢全局效率表: {干员名: (制造加成%, 贸易加成%)}
+# buffs_infrastructure.json 中 efficiency=0 的条件型 CONTROL buff
+# 同种效果取最高（不叠加）
+_C1_GLOBAL_TABLE: dict[str, tuple[float, float]] = {
+    "凯尔希": (2.0, 0.0),
+    "Mon3tr": (2.0, 0.0),
+}
+
+
+@dataclass
+class GlobalBonus:
+    """中枢全局效率加成"""
+    mfg_bonus: float = 0.0
+    trade_bonus: float = 0.0
+
+
+def compute_control_global_bonus(
+    control_operators: list[Operator],
+) -> GlobalBonus:
+    """计算中枢干员提供的全局制造/贸易加成
+
+    同种效果取最高值（游戏内描述"同种效果取最高"）。
+    """
+    names = {op.name for op in control_operators}
+    best_mfg = 0.0
+    best_trade = 0.0
+    for name in names:
+        if name in _C1_GLOBAL_TABLE:
+            m, t = _C1_GLOBAL_TABLE[name]
+            best_mfg = max(best_mfg, m)
+            best_trade = max(best_trade, t)
+    return GlobalBonus(mfg_bonus=best_mfg, trade_bonus=best_trade)
