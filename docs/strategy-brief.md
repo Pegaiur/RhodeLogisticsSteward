@@ -39,7 +39,7 @@
 ```mermaid
 flowchart TD
     S["加载玩家干员 × MAA 效率值"] --> R["按设施分组排序<br/>每设施按 efficient 降序"]
-    R --> G["贪心分配<br/>按优先级: Control → Trade → Mfg → Power → Reception → Office"]
+    R --> G["贪心分配<br/>按资源链优先级: Mfg(经验→赤金) → Trade → Control → Power → Reception → Office"]
     G --> C{"有重复占用?"}
     C -->|是| B["冲突干员: 保留高分设施<br/>低分设施选下一个"]
     C -->|否| D["输出结果"]
