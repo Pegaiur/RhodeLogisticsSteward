@@ -219,7 +219,7 @@ def solve_mvp(operators: list[Operator]) -> SolveResult:
     assignments: list[RoomAssignment] = []
     autofill_count = 0
 
-    # Phase 2: 制造站穷举（CR 2间 + PG 2间）
+    # Phase 2: 制造站穷举（CR 2间 + PG 2间）—— 共享 assigned_ids 防跨产物冲突
     for product, count in [("CombatRecord", 2), ("PureGold", 2)]:
         mfg_ops = [op for op in operators if op.has_skill_for("Mfg", product)]
         if not mfg_ops:
@@ -233,6 +233,8 @@ def solve_mvp(operators: list[Operator]) -> SolveResult:
 
         classification = _classify_mfg_operators(mfg_ops, product)
         pool = _build_candidate_pool(mfg_ops, classification)
+        # 排除已分配干员
+        pool = [op for op in pool if op.char_id not in assigned_ids]
         combos = _generate_combos(pool, 3)
 
         # 评估所有组合
