@@ -283,3 +283,87 @@ def compute_control_global_bonus(
             best_mfg = max(best_mfg, m)
             best_trade = max(best_trade, t)
     return GlobalBonus(mfg_bonus=best_mfg, trade_bonus=best_trade)
+
+
+# ─── B1 人间烟火 / 感知信息 / 巫术结晶 ──────────────────────────
+
+@dataclass
+class BuffPool:
+    """全局 buff 点数池"""
+    yanhuo: int = 0        # 人间烟火
+    perception: int = 0    # 感知信息
+    wushu_crystal: int = 0 # 巫术结晶
+
+
+def compute_buff_pool(
+    control_operators: list[Operator],
+    suich_count: int = 5,
+) -> BuffPool:
+    """计算全局 buff 点数池（Phase 1 预计算）
+
+    固定中枢方案：令+重岳+夕+凯尔希+焰尾
+    - 令(mood>12): +15 烟火
+    - 重岳: 每个外部岁干员 +5 烟火（默认 5 名）
+    - 夕(mood>12): +10 感知信息
+     - 烟火→巫术结晶: yanhuo // 5（截云消费链路）
+     """
+    names = {op.name for op in control_operators}
+    yanhuo = 0
+    perception = 0
+
+    # 令: mood>12 → +15 烟火
+    if "令" in names:
+        yanhuo += 15
+
+    # 重岳: 每个外部岁干员 +5 烟火（上限 5 名）
+    if "重岳" in names:
+        yanhuo += min(suich_count, 5) * 5
+
+    # 夕: mood>12 → +10 感知信息
+    if "夕" in names:
+        perception += 10
+
+    # 12h 班次 mood 不衰减（令杯莫停消除岁干员消耗）
+    wushu_crystal = yanhuo // 5  # 烟火→巫术结晶（截云消费）
+    return BuffPool(yanhuo=yanhuo, perception=perception, wushu_crystal=wushu_crystal)
+
+
+# 烟火消费者表: {干员名: (设施类型, 转化比例, 消费单位, 每单位加成%)}
+_B1_CONSUMER_TABLE: dict[str, tuple[str, str, int, float]] = {
+    "黍": ("Mfg", "yanhuo", 3, 1.0),
+    "桑葚": ("Mfg", "yanhuo", 3, 1.0),
+    "乌有": ("Trade", "yanhuo", 1, 1.0),
+    "截云": ("Mfg", "wushu_crystal", 1, 2.0),   # β: 每巫术结晶 +2%
+    "铎铃": ("Trade", "yanhuo", 10, 0.0),        # 仅影响心情消耗，不影响效率
+}
+
+
+def synergy_buff_pool_consumer(
+    operators: list[Operator],
+    room_type: str,
+    product: str,
+    buff_pool: BuffPool,
+) -> list[LinearSegment]:
+    """烟火消费者：将 BuffPool 中的点数转化为房间效率加成"""
+    names = {op.name for op in operators}
+    segments = []
+
+    for name in names:
+        if name not in _B1_CONSUMER_TABLE:
+            continue
+        target_room, pool_key, per_unit, bonus_per = _B1_CONSUMER_TABLE[name]
+        if room_type != target_room:
+            continue
+        if bonus_per <= 0:  # 铎铃影响心情而非效率
+            continue
+
+        pool_value = getattr(buff_pool, pool_key, 0)
+        if pool_value <= 0:
+            continue
+
+        units = pool_value // per_unit
+        if units > 0:
+            bonus = units * bonus_per
+            segments.append(LinearSegment(a=bonus, b=0.0, t_start=0.0, dt=T))
+
+    return segments

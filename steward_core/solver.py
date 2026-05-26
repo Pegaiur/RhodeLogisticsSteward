@@ -13,7 +13,9 @@ from steward_core.models import LayoutConfig, Operator, RoomAssignment, RoomConf
 from steward_core.efficiency_fn import constant_efficiency, integrate_segments, rank_by_dominance
 from steward_core.synergy import (
     synergy_pair, synergy_skill_count, synergy_skill_alias, synergy_automation,
-    synergy_facility_count, _skill_class, GlobalBonus, compute_control_global_bonus,
+    synergy_facility_count, synergy_buff_pool_consumer, _skill_class,
+    GlobalBonus, compute_control_global_bonus,
+    compute_buff_pool,
 )
 
 T = 12.0
@@ -102,8 +104,9 @@ def _evaluate_room_combo(
     product: str,
     power_count: int = POWER_COUNT,
     global_bonus: GlobalBonus | None = None,
+    buff_pool = None,
 ) -> float:
-    """评估一个房间组合的 12h 总积分（含联动+全局加成）"""
+    """评估一个房间组合的 12h 总积分（含联动+全局加成+烟火）"""
     if not operators:
         return 0.0
 
@@ -128,6 +131,11 @@ def _evaluate_room_combo(
         if eff > 0:
             seg = constant_efficiency(eff, mood_burn=0.0, T=T)
             total += integrate_segments(seg, T)
+
+    if buff_pool is not None:
+        total += integrate_segments(
+            synergy_buff_pool_consumer(operators, room_type, product, buff_pool), T,
+        )
 
     if room_type == "Mfg":
         total += global_bonus.mfg_bonus * T
@@ -230,6 +238,9 @@ def solve_mvp(operators: list[Operator]) -> SolveResult:
     control_ops = [op for op in operators if op.name in FIXED_CONTROL]
     global_bonus = compute_control_global_bonus(control_ops)
 
+    # B1: 人间烟火预计算（Phase 1 保守估计）
+    buff_pool = compute_buff_pool(control_ops, suich_count=5)
+
     # Phase 2: 制造站穷举（CR 2间 + PG 2间）—— 共享 assigned_ids 防跨产物冲突
     for product, count in [("CombatRecord", 2), ("PureGold", 2)]:
         mfg_ops = [op for op in operators if op.has_skill_for("Mfg", product)]
@@ -251,7 +262,7 @@ def solve_mvp(operators: list[Operator]) -> SolveResult:
         # 评估所有组合
         evaluated = []
         for combo_ops in combos:
-            score = _evaluate_room_combo(combo_ops, "Mfg", product, POWER_COUNT, global_bonus)
+            score = _evaluate_room_combo(combo_ops, "Mfg", product, POWER_COUNT, global_bonus, buff_pool)
             evaluated.append((score, [op.name for op in combo_ops]))
         evaluated.sort(key=lambda x: -x[0])
 

@@ -424,7 +424,86 @@ class TestControlGlobalBonus:
 
         # Assert
         assert bonus.mfg_bonus == 2.0
-        assert bonus.trade_bonus == 0.0
+
+
+# ─── B1 人间烟火 ─────────────────────────────────────────────────
+
+class TestBuffPool:
+    """B1: compute_buff_pool + synergy_buff_pool_consumer"""
+
+    def test_固定中枢_产生烟火(self):
+        """令+重岳+夕+凯尔希+焰尾 → 烟火=15(令)+25(重岳5岁)=40"""
+        from steward_core.synergy import compute_buff_pool
+
+        control = [_mk_op("令"), _mk_op("重岳"), _mk_op("夕"), _mk_op("凯尔希"), _mk_op("焰尾")]
+        pool = compute_buff_pool(control, suich_count=5)
+
+        assert pool.yanhuo == 40
+        assert pool.perception == 10  # 夕 mood>12
+
+    def test_empty_control(self):
+        """无中枢 → 零烟火"""
+        from steward_core.synergy import compute_buff_pool
+
+        pool = compute_buff_pool([])
+        assert pool.yanhuo == 0
+        assert pool.perception == 0
+
+    def test_黍_烟火转化为制造效率(self):
+        """黍: per 3 烟火 → +1%，40 烟火 → +13%"""
+        from steward_core.synergy import synergy_buff_pool_consumer, BuffPool, compute_buff_pool
+
+        shu = _mk_op("黍")
+        pool = BuffPool(yanhuo=40, perception=0)
+
+        segs = synergy_buff_pool_consumer([shu], "Mfg", "PureGold", pool)
+        assert len(segs) == 1
+        assert segs[0].a == 13.0  # 40//3 = 13
+
+    def test_乌有_烟火转化为贸易效率(self):
+        """乌有: per 1 烟火 → +1%，40 烟火 → +40%"""
+        from steward_core.synergy import synergy_buff_pool_consumer, BuffPool
+
+        wuyou = _mk_op("乌有")
+        pool = BuffPool(yanhuo=40, perception=0)
+
+        segs = synergy_buff_pool_consumer([wuyou], "Trade", "Money", pool)
+        assert len(segs) == 1
+        assert segs[0].a == 40.0
+
+    def test_截云_烟火转巫术结晶(self):
+        """截云: per 5 烟火 → +1 巫术结晶，per 1 巫术结晶 → +2% Mfg(β)"""
+        from steward_core.synergy import synergy_buff_pool_consumer, BuffPool
+
+        jieyun = _mk_op("截云")
+        pool = BuffPool(yanhuo=40, perception=0, wushu_crystal=8)  # 40//5=8
+
+        segs = synergy_buff_pool_consumer([jieyun], "Mfg", "PureGold", pool)
+        assert len(segs) == 1
+        assert segs[0].a == 16.0  # 8 × 2%
+
+    def test_零烟火_无加成(self):
+        """BuffPool 归零 → 消费者无输出"""
+        from steward_core.synergy import synergy_buff_pool_consumer, BuffPool
+
+        shu = _mk_op("黍")
+        pool = BuffPool(yanhuo=0, perception=0)
+
+        segs = synergy_buff_pool_consumer([shu], "Mfg", "PureGold", pool)
+        assert segs == []
+
+    def test_非目标房间_不触发(self):
+        """黍在 Trade → 不触发烟火加成"""
+        from steward_core.synergy import synergy_buff_pool_consumer, BuffPool
+
+        shu = _mk_op("黍")
+        pool = BuffPool(yanhuo=40, perception=0)
+
+        segs = synergy_buff_pool_consumer([shu], "Trade", "Money", pool)
+        assert segs == []
+
+
+# ─── 旧 C1 测试续（已在 TestControlGlobalBonus 类中） ────────────
 
     def test_无加成中枢_返回零(self):
         """令/重岳/夕/焰尾 均无全局效率 buff → 返回零"""

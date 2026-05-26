@@ -15,7 +15,8 @@ from steward_core.models import Operator, ShiftPlan, LayoutConfig
 from steward_core.efficiency_fn import constant_efficiency, integrate_segments
 from steward_core.synergy import (
     synergy_pair, synergy_skill_count, synergy_skill_alias, synergy_automation,
-    synergy_facility_count, GlobalBonus, compute_control_global_bonus,
+    synergy_facility_count, synergy_buff_pool_consumer,
+    GlobalBonus, compute_control_global_bonus, compute_buff_pool,
 )
 
 # ─── 制造站 Lv3 基础参数 ────────────────────────────────────────
@@ -115,8 +116,9 @@ def _room_efficiency_integral(
     power_count: int = 3,
     T: float = 12.0,
     global_bonus: GlobalBonus | None = None,
+    buff_pool = None,
 ) -> float:
-    """返回房间总效率积分 Σ∫e(t)dt（含联动+全局加成）
+    """返回房间总效率积分 Σ∫e(t)dt（含联动+全局加成+烟火）
 
     与 solver._evaluate_room_combo 使用相同的积分逻辑，
     确保排班评分与产出报告一致。
@@ -144,6 +146,11 @@ def _room_efficiency_integral(
         eff = op.best_efficiency(room_type, product)
         if eff > 0:
             total += integrate_segments(constant_efficiency(eff, mood_burn=0.0, T=T), T)
+
+    if buff_pool is not None:
+        total += integrate_segments(
+            synergy_buff_pool_consumer(operators, room_type, product, buff_pool), T,
+        )
 
     if room_type == "Mfg":
         total += global_bonus.mfg_bonus * T
@@ -199,6 +206,9 @@ def calculate(plan: ShiftPlan, operators: list[Operator], hours: float = 24.0) -
     control_ops = [op for op in operators if op.name in FIXED_CONTROL]
     global_bonus = compute_control_global_bonus(control_ops)
 
+    # B1: 人间烟火预计算
+    buff_pool = compute_buff_pool(control_ops, suich_count=5)
+
     # 1. 收集发电站干员，计算无人机产量（按工期比例缩放）
     for assignment in plan.assignments:
         if assignment.room_type == "Power":
@@ -220,7 +230,7 @@ def calculate(plan: ShiftPlan, operators: list[Operator], hours: float = 24.0) -
         n = len(ops)
 
         if assignment.room_type == "Mfg" and assignment.product == "CombatRecord":
-            eff_int = _room_efficiency_integral(ops, "Mfg", "CombatRecord", power_count, hours, global_bonus)
+            eff_int = _room_efficiency_integral(ops, "Mfg", "CombatRecord", power_count, hours, global_bonus, buff_pool)
             productivity_int = hours * (1.0 + 0.01 * n) + eff_int / 100.0
             avg_prod = productivity_int / hours
             drone_boost = 0.0
@@ -237,7 +247,7 @@ def calculate(plan: ShiftPlan, operators: list[Operator], hours: float = 24.0) -
             production.total_records_per_day += output_per_day
 
         elif assignment.room_type == "Mfg" and assignment.product == "PureGold":
-            eff_int = _room_efficiency_integral(ops, "Mfg", "PureGold", power_count, hours, global_bonus)
+            eff_int = _room_efficiency_integral(ops, "Mfg", "PureGold", power_count, hours, global_bonus, buff_pool)
             productivity_int = hours * (1.0 + 0.01 * n) + eff_int / 100.0
             avg_prod = productivity_int / hours
             drone_boost = 0.0
@@ -254,7 +264,7 @@ def calculate(plan: ShiftPlan, operators: list[Operator], hours: float = 24.0) -
             production.total_gold_produced_per_day += output_per_day
 
         elif assignment.room_type == "Trade":
-            eff_int = _room_efficiency_integral(ops, "Trade", "Money", power_count, hours, global_bonus)
+            eff_int = _room_efficiency_integral(ops, "Trade", "Money", power_count, hours, global_bonus, buff_pool)
             efficiency_integrated = hours * (1.0 + 0.01 * n) + eff_int / 100.0
             avg_eff = efficiency_integrated / hours
             drone_boost = 0.0

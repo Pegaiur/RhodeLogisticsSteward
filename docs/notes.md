@@ -143,3 +143,25 @@
 - 固定中枢（令+重岳+夕+凯尔希+焰尾）→ 仅凯尔希触发 → 4 间制造站各 +2%
 - CombatRecord: 208%→210%, 203%→205%；PureGold: 214%→216%, 193%→195%
 
+---
+
+## MV5 Phase 5d (B1 人间烟火) — 2026-05-26
+
+### 实现范围
+- `BuffPool` dataclass(yanhuo, perception, wushu_crystal) + `compute_buff_pool()` 生产者
+- `synergy_buff_pool_consumer()`: 5 名消费者（黍/桑葚/截云/乌有/铎铃），烟火→效率转化
+- 注入 `solver._evaluate_room_combo()` 和 `production._room_efficiency_integral()`
+- 7 个单元测试（TDD）
+
+### 决策 9: Phase 1 预计算用保守硬编码
+- 固定中枢方案（令+重岳+夕+凯尔希+焰尾）→ 烟火=40(令15+重岳25)、感知信息=10(夕)
+- `suich_count=5` 为默认参数（重岳上限 5 名岁干员），后续 Phase 5 用实际分配修正
+- 12h 班次 mood 不衰减（令的杯莫停消除岁干员消耗）
+
+### 发现 4: B1 烟火消费者未出现在排班结果中
+- 烟火=40 → 黍/桑葚可获 +13%、乌有可获 +40%、截云可获 +16%(β)
+- 但这些干员在 buffs_infrastructure.json 中 efficiency=0（条件型 buff）
+- `op.best_efficiency()` 返回 0/负 → 被 `has_skill_for` 过滤或剪枝阶段剔除
+- **根因**: 条件型 buff 干员的原始效率为 0，依赖 synergy 函数补充，但 solver 的过滤/剪枝阶段只看原始效率
+- **状态**: B1 函数正确实现且测试通过，积分链路完整。要在排班中生效需修正 solver 的过滤策略（将 B1 消费者纳入候选池）
+
