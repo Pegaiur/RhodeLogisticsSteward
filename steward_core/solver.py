@@ -16,11 +16,12 @@ from steward_core.synergy import (
     synergy_facility_count, synergy_buff_pool_consumer, _skill_class,
     GlobalBonus, compute_control_global_bonus,
     compute_buff_pool,
+    _B_LAYER_CONSUMER_TABLE,
 )
+from steward_core.constants import FIXED_CONTROL
 
 T = 12.0
 POWER_COUNT = 3
-FIXED_CONTROL = ["令", "重岳", "夕", "凯尔希", "焰尾"]
 
 ANCHOR_NAMES = {
     "水月", "多萝西", "苍苔", "海沫",
@@ -57,6 +58,8 @@ def _classify_mfg_operators(
         if is_anchor:
             result.anchors.append(op)
         elif has_skill_label:
+            result.providers.append(op)
+        elif op.name in _B_LAYER_CONSUMER_TABLE and _B_LAYER_CONSUMER_TABLE[op.name][0] == "Mfg":
             result.providers.append(op)
         else:
             result.pure_efficiency.append(op)
@@ -193,6 +196,9 @@ def _greedy_remaining(
             if not op.has_skill_for(room.room_type, room.product):
                 continue
             eff = op.best_efficiency(room.room_type, room.product)
+            if eff <= 0:
+                a6_segs = synergy_facility_count([op], room.room_type, room.product, _LAYOUT_243)
+                eff = sum(s.a for s in a6_segs)
             if eff <= 0:
                 continue
             seg = constant_efficiency(eff, mood_burn=0.0, T=T)

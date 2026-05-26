@@ -115,6 +115,55 @@ class TestClassifyOperators:
         assert 70 <= len(cr_ops) <= 90
         assert 70 <= len(pg_ops) <= 90
 
+    def test_B层消费者_归为providers(self):
+        """黍(raw eff=0,B1消费者) → 应归入 providers 而非被剪枝"""
+        from steward_core.solver import _classify_mfg_operators
+
+        # Arrange: 黍持有 Mfg 条件型 buff (eff=0)
+        shu = _mk_op("黍", [_mk_mfg_skill("人间烟火·α", 0.0, "b1")])
+        filler = _mk_op("白雪", [_mk_mfg_skill("高效生产", 30.0)])
+
+        # Act
+        result = _classify_mfg_operators([shu, filler], "CombatRecord")
+
+        # Assert: 黍 → providers（不被剪枝）
+        provider_names = {op.name for op in result.providers}
+        pure_names = {op.name for op in result.pure_efficiency}
+        assert "黍" in provider_names
+        assert "黍" not in pure_names
+
+    def test_B层消费者_桑葚归为providers(self):
+        """桑葚(raw eff=0,B1消费者) → providers"""
+        from steward_core.solver import _classify_mfg_operators
+
+        # Arrange
+        sangshen = _mk_op("桑葚", [_mk_mfg_skill("人间烟火·α", 0.0, "b1")])
+        filler = _mk_op("白雪", [_mk_mfg_skill("高效生产", 30.0)])
+
+        # Act
+        result = _classify_mfg_operators([sangshen, filler], "CombatRecord")
+
+        # Assert
+        provider_names = {op.name for op in result.providers}
+        assert "桑葚" in provider_names
+
+    def test_B层消费者_乌有在Trade_不影响Mfg分类(self):
+        """乌有是 Trade 消费者，在 Mfg 分类中不应出现"""
+        from steward_core.solver import _classify_mfg_operators
+
+        # Arrange: 乌有有 Trade skill，但在 Mfg 分类上下文中
+        wuyou = _mk_op("乌有", [
+            _mk_mfg_skill("人间烟火·α", 0.0, "b1", room_type="Trade"),
+        ])
+        filler = _mk_op("白雪", [_mk_mfg_skill("高效生产", 30.0)])
+
+        # Act
+        result = _classify_mfg_operators([wuyou, filler], "CombatRecord")
+
+        # Assert: 乌有不应出现在 Mfg providers 中（他是 Trade 专属）
+        provider_names = {op.name for op in result.providers}
+        assert "乌有" not in provider_names
+
 
 # ─── 剪枝规则 ───────────────────────────────────────────────────
 
@@ -393,3 +442,126 @@ class TestRealDataEndToEnd:
         # Assert: 成功分配至少1间
         assert len(allocated) >= 1
         assert len(allocated[0]) == 3
+
+
+# ─── _greedy_remaining 正确性 ────────────────────────────────────
+
+class TestGreedyRemainingA6:
+    """_greedy_remaining 应正确评估 Trade A6 条件型 buff 干员"""
+
+    def test_空弦_条件型buff_仍被选中(self):
+        """空弦 raw eff=0 但 A6 提供 +24%，应出现在 Trade 排班中"""
+        from steward_core.solver import _greedy_remaining
+
+        # Arrange: 空弦(Trade skill, eff=0) + 5 个普通 Trade 干员(各 30%)
+        # 2 间 Trade × 3 工位 = 6 人，空弦(24%) 比最弱竞争者(30%)低但刚好填满
+        kongxian = _mk_op("空弦", [
+            _mk_mfg_skill("兰登战术", 0.0, "t1", room_type="Trade"),
+        ])
+        others = [
+            _mk_op(f"贸易{i}", [
+                _mk_mfg_skill("谈判", 30.0, f"t{i}", room_type="Trade"),
+            ]) for i in range(5)
+        ]
+        all_ops = [kongxian] + others
+
+        # Act: 仅剩 Trade 设施未分配（模拟 phase 4）
+        assigned_ids = set()
+        results = _greedy_remaining(assigned_ids, all_ops)
+
+        # Assert: 6 人填满 2 间 Trade
+        trade_rooms = [r for r in results if r.room_type == "Trade"]
+        assert len(trade_rooms) == 2
+        all_trade_names = []
+        for r in trade_rooms:
+            all_trade_names.extend(r.operators)
+        assert len(all_trade_names) == 6
+        assert "空弦" in all_trade_names
+
+    def test_伺夜_条件型buff_含上限(self):
+        """伺夜 raw eff=0，A6 meeting_level×5%(cap 40)=15%，应出现在 Trade"""
+        from steward_core.solver import _greedy_remaining
+
+        # Arrange
+        siye = _mk_op("伺夜", [
+            _mk_mfg_skill("隐秘行动", 0.0, "t1", room_type="Trade"),
+        ])
+        others = [
+            _mk_op(f"贸易{i}", [
+                _mk_mfg_skill("谈判", 30.0, f"t{i}", room_type="Trade"),
+            ]) for i in range(5)
+        ]
+        all_ops = [siye] + others
+
+        # Act
+        results = _greedy_remaining(set(), all_ops)
+
+        # Assert: 伺夜出现在 Trade 排班中
+        trade_rooms = [r for r in results if r.room_type == "Trade"]
+        all_trade_names = []
+        for r in trade_rooms:
+            all_trade_names.extend(r.operators)
+        assert len(all_trade_names) == 6
+        assert "伺夜" in all_trade_names
+
+    def test_渡桥_条件型buff_含上限30(self):
+        """渡桥 raw eff=0，A6 meeting×5%(cap 30)，应出现"""
+        from steward_core.solver import _greedy_remaining
+
+        # Arrange
+        duqiao = _mk_op("渡桥", [
+            _mk_mfg_skill("桥梁加固", 0.0, "t1", room_type="Trade"),
+        ])
+        others = [
+            _mk_op(f"贸易{i}", [
+                _mk_mfg_skill("谈判", 30.0, f"t{i}", room_type="Trade"),
+            ]) for i in range(5)
+        ]
+        all_ops = [duqiao] + others
+
+        # Act
+        results = _greedy_remaining(set(), all_ops)
+
+        # Assert
+        trade_rooms = [r for r in results if r.room_type == "Trade"]
+        all_trade_names = []
+        for r in trade_rooms:
+            all_trade_names.extend(r.operators)
+        assert "渡桥" in all_trade_names
+
+    def test_普通Trade干员_不因A6修改受影响(self):
+        """非 A6 干员按原始效率正常参与排序"""
+        from steward_core.solver import _greedy_remaining
+
+        # Arrange
+        ops = [
+            _mk_op("贸易A", [
+                _mk_mfg_skill("谈判", 30.0, "ta", room_type="Trade"),
+            ]),
+            _mk_op("贸易B", [
+                _mk_mfg_skill("谈判", 30.0, "tb", room_type="Trade"),
+            ]),
+            _mk_op("贸易C", [
+                _mk_mfg_skill("谈判", 25.0, "tc", room_type="Trade"),
+            ]),
+            _mk_op("贸易D", [
+                _mk_mfg_skill("谈判", 25.0, "td", room_type="Trade"),
+            ]),
+            _mk_op("贸易E", [
+                _mk_mfg_skill("谈判", 20.0, "te", room_type="Trade"),
+            ]),
+            _mk_op("贸易F", [
+                _mk_mfg_skill("谈判", 20.0, "tf", room_type="Trade"),
+            ]),
+        ]
+
+        # Act
+        results = _greedy_remaining(set(), ops)
+
+        # Assert: 无崩溃，2 间 Trade 各 3 人
+        trade_rooms = [r for r in results if r.room_type == "Trade"]
+        assert len(trade_rooms) == 2
+        all_trade_names = []
+        for r in trade_rooms:
+            all_trade_names.extend(r.operators)
+        assert len(all_trade_names) == 6

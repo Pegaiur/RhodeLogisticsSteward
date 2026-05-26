@@ -243,6 +243,41 @@ class TestSynergyAutomation:
         assert "B" in zero_set
         assert "温蒂" not in zero_set
 
+    def test_森蚺持有α和β_取最高版本(self):
+        """森蚺同时持有 automation[000](α/5%) 和 [010](β/10%) → 应取 β(10%/站)"""
+        from steward_core.synergy import synergy_automation
+
+        # Arrange: 森蚺 skills 含两个 automation buff
+        senran = _mk_op("森蚺")
+        senran.skills.append(_mk_skill("manu_prod_spd&power[000]", "Mfg", "自动化·α"))
+        senran.skills.append(_mk_skill("manu_prod_spd&power[010]", "Mfg", "自动化·β"))
+        filler1 = _mk_op("A")
+        filler2 = _mk_op("B")
+
+        # Act
+        segs, zero_set = synergy_automation([senran, filler1, filler2], "Mfg", power_count=3)
+
+        # Assert: 3 发电站 × 10%(β) = 30%
+        assert len(segs) == 1
+        assert segs[0].a == 30.0  # 不是 15.0 (α)
+
+    def test_掠风仅有α_取5percent(self):
+        """掠风仅持有 automation[000](α) → 应取 5%/站"""
+        from steward_core.synergy import synergy_automation
+
+        # Arrange
+        luefeng = _mk_op("掠风")
+        luefeng.skills.append(_mk_skill("manu_prod_spd&power[000]", "Mfg", "自动化·α"))
+        filler1 = _mk_op("A")
+        filler2 = _mk_op("B")
+
+        # Act
+        segs, zero_set = synergy_automation([luefeng, filler1, filler2], "Mfg", power_count=3)
+
+        # Assert: 3 发电站 × 5%(α) = 15%
+        assert len(segs) == 1
+        assert segs[0].a == 15.0
+
     def test_自动化不触发_普通房间(self):
         """无自动化干员 → 返回空"""
         from steward_core.synergy import synergy_automation

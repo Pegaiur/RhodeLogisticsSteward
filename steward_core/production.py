@@ -18,6 +18,7 @@ from steward_core.synergy import (
     synergy_facility_count, synergy_buff_pool_consumer,
     GlobalBonus, compute_control_global_bonus, compute_buff_pool,
 )
+from steward_core.constants import FIXED_CONTROL
 
 # ─── 制造站 Lv3 基础参数 ────────────────────────────────────────
 # 作战记录：基础 1个/3h → 0.333 个/h
@@ -43,7 +44,6 @@ _DRONE_MINUTES_TRADE = 1.5
 # 注: 游戏内贸易站加速效果为制造站的 1/2，PRTS Wiki 的 3 分钟指基础耗时非实际加速量
 
 _LAYOUT_243 = LayoutConfig.layout_243()
-FIXED_CONTROL = ["令", "重岳", "夕", "凯尔希", "焰尾"]
 
 
 @dataclass

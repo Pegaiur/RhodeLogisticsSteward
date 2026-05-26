@@ -239,12 +239,18 @@ def rank_by_dominance(candidates: list[tuple[list[LinearSegment], Operator]],
                       T: float) -> list[Operator]:
     """基于 e(t) 支配偏序的多趟拓扑输出"""
     n = len(candidates)
-    # 1. 构建支配 DAG: i → j 若 e_i 支配 e_j
+    # 1. 构建支配 DAG: i → j 若 e_i 严格支配 e_j
+    # 仅严格支配（A 支配 B 且 B 不支配 A）时加边，
+    # 避免等价干员形成双向边导致 DAG 循环。
     graph = {i: set() for i in range(n)}
     in_degree = {i: 0 for i in range(n)}
     for i in range(n):
         for j in range(n):
-            if i != j and _dominates(candidates[i][0], candidates[j][0], T):
+            if i == j:
+                continue
+            a_dom_b = _dominates(candidates[i][0], candidates[j][0], T)
+            b_dom_a = _dominates(candidates[j][0], candidates[i][0], T)
+            if a_dom_b and not b_dom_a:
                 graph[i].add(j)
                 in_degree[j] += 1
 
@@ -283,6 +289,7 @@ def _dominates(seg_a: list[LinearSegment], seg_b: list[LinearSegment],
 - 支配检查简化为 O(1) 二维比较（效率值 + 有效时长），仅 ramp 技能退化到分段遍历
 - 候选池 N ≤ 20 → DAG 构建 ≤ 400 次 O(1) 比较，Python < 0.1ms
 - 贪心排序行从 `candidates.sort()` 替换为 `rank_by_dominance(candidates, T)`
+- DAG 仅添加严格支配边（A 支配 B 且 B 不支配 A），等价干员退化为互不支配走全积分比较，避免双向边形成循环
 - 贪心填充的其余逻辑（逐槽位、冲突回溯）不变。回溯触发频率显著降低——支配关系消除了大部分假歧义
 
 #### 支配偏序的简化
@@ -302,9 +309,16 @@ def _dominates_simple(seg_a: list[LinearSegment], seg_b: list[LinearSegment],
     return k_a >= k_b and t_a >= t_b
 
 def _key_values(seg: list[LinearSegment], T: float) -> tuple[float, float]:
-    """提取 e(t) 的常数值和有效时长"""
+    """提取 e(t) 的常数值和有效时长
+
+    k 取首段效率值。t_end 取最后一个非零段终点——
+    避免 mood_burn 截断场景下 seg[-1] 为归零段导致 t_end 错误偏大。
+    """
     k = seg[0].a  # 常数值
-    t_end = seg[-1].t_start + seg[-1].dt  # 归零点
+    t_end = 0.0
+    for s in seg:
+        if s.a > 0 or s.b > 0:
+            t_end = s.t_start + s.dt
     return k, min(t_end, T)
 ```
 

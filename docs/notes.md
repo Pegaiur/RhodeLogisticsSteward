@@ -193,3 +193,30 @@
 - B6 全局阵营计数 + B7 跨房间配对：需全设施分配，与 Phase 5 精确验证同步
 - D 层会客室/办公室：非产能，低优先级
 
+---
+
+## 偏差修复记录 — 2026-05-27
+
+### 修复 1: 偏差 3（森蚺 A5 版本检测）
+- 修改 `synergy_automation()`：从 `op.skills` 的 `buff_id` 检测实际持有的 automation buff 版本（[000]=5%, [010]=10%, [020]=15%）
+- 森蚺同时持有 α+β → 自动取 β(10%/站)，硬编码表降级为回退值
+- `_A5_AUTO_TABLE` 拆分为 `_A5_AUTO_NAMES`(名集合) + `_POWER_BUFF_BONUS`(buff_id→加成) + `_A5_AUTO_FALLBACK`(回退值)
+- 新增 `_automation_bonus_from_skills()` 辅助函数
+- 3 个测试：森蚺α+β、掠风仅α、温蒂回退
+
+### 修复 2: FIXED_CONTROL 去重
+- 提取到 `steward_core/constants.py`，solver.py 和 production.py 统一引用
+
+### 修复 3: 发现 3（_greedy_remaining Trade A6 联动）
+- `_greedy_remaining` 中 `eff <= 0` 时回退检测 `synergy_facility_count`，空弦/伺夜/渡桥/石英 现可参与 Trade 排班
+- 4 个测试：空弦(24%)、伺夜(15%)、渡桥(15%)、普通干员不受影响
+
+### 修复 4: 发现 4（B1 烟火消费者纳入候选池）
+- `_classify_mfg_operators` 新增 B 层消费者检测：`_B_LAYER_CONSUMER_TABLE` 中 `target_room="Mfg"` 的干员归入 providers 而非 pure_efficiency
+- 黍/桑葚/截云/至简/迷迭香/玛露西尔 不再被等效剪枝过滤
+- 3 个测试：黍→providers、桑葚→providers、乌有(Trade)不误入 Mfg
+
+### 文档同步: 偏差 1/2
+- `efficiency-function-design.md`：`_key_values` 改为取最后一个非零段终点，`rank_by_dominance` DAG 构建改为严格支配（避免双向边循环）
+
+

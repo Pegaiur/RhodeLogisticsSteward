@@ -130,14 +130,34 @@ def synergy_skill_alias(
 
 # ─── A5 自动化 ───────────────────────────────────────────────────
 
-# 自动化干员: {干员名: (等级, 每发电站加成%)}
-# 来自 manu_prod_spd&power[000/010/020]
-_A5_AUTO_TABLE: dict[str, tuple[int, float]] = {
-    "森蚺": (5, 5.0),
-    "掠风": (5, 5.0),
-    "异客": (5, 5.0),
-    "温蒂": (15, 15.0),
+# 自动化干员名集合（硬编码回退，技能数据可用时优先走 buff_id 版本检测）
+_A5_AUTO_NAMES: set[str] = {"森蚺", "掠风", "异客", "温蒂"}
+
+# 自动化 buff 版本 → 每发电站加成%: manu_prod_spd&power[000/010/020]
+_POWER_BUFF_BONUS: dict[str, float] = {
+    "manu_prod_spd&power[000]": 5.0,
+    "manu_prod_spd&power[010]": 10.0,
+    "manu_prod_spd&power[020]": 15.0,
 }
+
+# 默认加成表（技能数据不可用时的回退值）
+_A5_AUTO_FALLBACK: dict[str, float] = {
+    "森蚺": 5.0,
+    "掠风": 5.0,
+    "异客": 5.0,
+    "温蒂": 15.0,
+}
+
+
+def _automation_bonus_from_skills(skills: list) -> float:
+    """从干员技能列表中检测 automation buff 的最高版本加成"""
+    best = 0.0
+    for sk in skills:
+        if sk.buff_id in _POWER_BUFF_BONUS:
+            b = _POWER_BUFF_BONUS[sk.buff_id]
+            if b > best:
+                best = b
+    return best
 
 
 def synergy_automation(
@@ -149,17 +169,21 @@ def synergy_automation(
     if room_type != "Mfg":
         return [], set()
 
-    # 找最高等级自动化干员
-    best_level = 0
     best_bonus = 0.0
     auto_op_names = set()
     for op in operators:
-        if op.name in _A5_AUTO_TABLE:
-            auto_op_names.add(op.name)
-            level, bonus = _A5_AUTO_TABLE[op.name]
-            if bonus > best_bonus:
-                best_level = level
-                best_bonus = bonus
+        if op.name not in _A5_AUTO_NAMES:
+            continue
+        auto_op_names.add(op.name)
+
+        skill_bonus = _automation_bonus_from_skills(op.skills)
+        if skill_bonus > 0:
+            bonus = skill_bonus
+        else:
+            bonus = _A5_AUTO_FALLBACK.get(op.name, 0.0)
+
+        if bonus > best_bonus:
+            best_bonus = bonus
 
     if not auto_op_names:
         return [], set()
