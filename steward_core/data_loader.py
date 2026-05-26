@@ -135,3 +135,94 @@ def load_operators_v2(
         operators.append(op)
 
     return operators
+
+
+# ─── 旧版兼容层（供 run_solver.py 等存量代码使用，MV4 后移除） ───
+
+# 旧版 infrast.json 设施键列表
+_LEGACY_INFRA_FACILITIES = ["Control", "Mfg", "Trade", "Power", "Reception", "Office", "Dormitory"]
+
+_LEGACY_PHASE_MAP: dict[str, int] = {
+    "PHASE_0": 0,
+    "PHASE_1": 1,
+    "PHASE_2": 2,
+}
+
+
+def _legacy_build_efficiency_index(infrast: dict) -> dict[str, EfficiencyMap]:
+    """从 infrast.json 构建 skillIcon → EfficiencyMap 的索引"""
+    index: dict[str, EfficiencyMap] = {}
+    for facility_key in _LEGACY_INFRA_FACILITIES:
+        facility_data = infrast.get(facility_key, {})
+        skills = facility_data.get("skills", {})
+        for skill_icon, skill_data in skills.items():
+            efficient_raw = skill_data.get("efficient", {})
+            if efficient_raw:
+                index[skill_icon] = EfficiencyMap(raw=dict(efficient_raw))
+    return index
+
+
+def load_operators(
+    building_data_path: Path,
+    infrast_path: Path,
+    name_lookup: Optional[dict[str, str]] = None,
+) -> list[Operator]:
+    """加载全量干员数据 (旧版 API，兼容 building_data.json + infrast.json)
+
+    遍历 building_data.json 中所有干员，展开 buffChar → buffData，
+    通过 buffId 查询 roomType / skillIcon，再通过 skillIcon 查询效率值。
+
+    此函数为旧版兼容层，MV4 将迁移到 load_operators_v2 后移除。
+    """
+    building = _load_json(building_data_path)
+    infrast = _load_json(infrast_path)
+
+    eff_index = _legacy_build_efficiency_index(infrast)
+    chars = building.get("chars", {})
+    buffs = building.get("buffs", {})
+
+    if name_lookup is None:
+        name_lookup = {}
+
+    operators: list[Operator] = []
+
+    for char_id, char_data in chars.items():
+        name = name_lookup.get(char_id, char_id)
+        rarity = char_data.get("rarity", 0)
+        op = Operator(char_id=char_id, name=name, rarity=rarity)
+
+        for buff_char in char_data.get("buffChar", []):
+            for buff_data in buff_char.get("buffData", []):
+                buff_id = buff_data.get("buffId", "")
+                if not buff_id:
+                    continue
+
+                phase_str = buff_data.get("cond", {}).get("phase", "PHASE_0")
+                phase = _LEGACY_PHASE_MAP.get(phase_str, 0)
+
+                buff_info = buffs.get(buff_id, {})
+                room_type_raw = buff_info.get("roomType", "")
+                room_type = ROOM_TYPE_MAP.get(room_type_raw, "")
+                skill_icon = buff_info.get("skillIcon", "")
+                buff_name = buff_info.get("buffName", buff_id)
+
+                if not room_type:
+                    continue
+
+                efficient = eff_index.get(skill_icon)
+                if efficient is None:
+                    continue
+
+                skill = Skill(
+                    buff_id=buff_id,
+                    buff_name=buff_name,
+                    skill_icon=skill_icon,
+                    room_type=room_type,
+                    efficient=efficient,
+                    phase=phase,
+                )
+                op.skills.append(skill)
+
+        operators.append(op)
+
+    return operators
