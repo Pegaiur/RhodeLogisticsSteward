@@ -162,6 +162,28 @@ class TestSynergySkillCount:
         assert len(segs) == 1
         assert segs[0].a == 15.0
 
+    def test_苍苔_计数含自身金属工艺技能(self):
+        """苍苔(金属工艺计数) + 自身金属工艺·α + 2个金属工艺干员 → +15%"""
+        from steward_core.synergy import synergy_skill_count, synergy_skill_alias
+
+        # Arrange: 苍苔自身持有金属工艺·α（打工心得应含自身）
+        cangtai = _mk_op("苍苔")
+        cangtai.skills.append(_mk_skill("sk_self", "Mfg", "金属工艺·α"))
+        yinxing = _mk_op("引星棘刺")
+        yinxing.skills.append(_mk_skill("sk1", "Mfg", "金属工艺·α"))
+        li = _mk_op("砾")
+        li.skills.append(_mk_skill("sk2", "Mfg", "金属工艺·β"))
+
+        ops = [cangtai, yinxing, li]
+        alias = synergy_skill_alias(ops)
+
+        # Act
+        segs = synergy_skill_count(ops, "Mfg", alias)
+
+        # Assert: 苍苔 + 引星棘刺 + 砾 = 3 × 5% = 15%
+        assert len(segs) == 1
+        assert segs[0].a == 15.0
+
 
 # ─── A4 技能类型别名 ─────────────────────────────────────────────
 

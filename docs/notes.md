@@ -39,29 +39,6 @@
 - **决策**: 先实现通版 `_dominates()` 和 O(1) 简化版 `_dominates_simple()`，MVP 默认走简化版
 - **影响**: 排序实际就是 `sorted(candidates, key=lambda x: x[0], reverse=True)`
 
-### 偏差 1: `_dominates_simple` 的 `_key_values` 实现
-- **问题**: 文档 `efficiency-function-design.md` 中的 `_key_values` 取 `seg[-1].t_start + seg[-1].dt` 作为 t_end。
-  这导致 mood_burn 截断场景下 t_end 取到了归零段的终点（如 24h），而非有效段的终点（如 16h）。
-- **修正**: `_key_values` 改为取**最后一个非零段**的终点：
-  ```python
-  for s in segments:
-      if s.a > 0 or s.b > 0:
-          t_end = s.t_start + s.dt
-  ```
-  这使得支配关系在截断场景下正确工作（如 eff=40/8h vs eff=25/12h → 互不支配）。
-- **影响**: 与文档描述有偏差，但更正确。记录以备文档同步。
-
-### 偏差 2: 互支配时 DAG 不加边
-- **问题**: `rank_by_dominance` 中两节点互支配时（如 eff=30 vs eff=30），原实现给两边都加边 → 形成循环 → DAG 拓扑排序失败。
-- **修正**: 仅在**严格**支配（A 支配 B 且 B 不支配 A）时加入有向边：
-  ```python
-  a_dom_b = _dominates_simple(A, B)
-  b_dom_a = _dominates_simple(B, A)
-  if a_dom_b and not b_dom_a:
-      graph[A].add(B)
-  ```
-- **影响**: 等价干员同时出现在 in_degree=0 的极大元中，通过全积分退化解决定序。
-
 ---
 
 ## MV2 (联动函数) — 2026-05-26
@@ -71,12 +48,6 @@
 - **决策**: A1(配对)、A4(别名)、A5(自动化) 使用硬编码干员名查找表；A3(技能计数) 使用 `buff_name` 中的关键词（标准化/莱茵科技/金属工艺）匹配
 - **权衡**: 干员名硬编码意味着异格干员（如麒麟R夜刀 vs 夜刀）需要单独加入表。但 MVP 全box 场景下此问题不突出
 - **影响**: ~30 行硬编码表，MV 后续可改为从 buff 元数据自动生成
-
-### 偏差 3: A5 自动化只取最高等级
-- 森蚺同时持有 α(5%/站) 和 β(10%/站)
-- 当前实现按名查表取得固定值，未检测实际持有的 buff 版本
-- **决策**: 真数据加载后，通过检测干员 skills 中的 `manu_prod_spd&power` buff_id 版本判定等级
-- **影响**: 当前硬编码温蒂=15%/站，森蚺=5%/站。真数据下森蚺应走 β(10%/站)
 
 ---
 
@@ -88,11 +59,6 @@
 - **原因**: `EfficiencyMap` 中 `all` 键让所有通用技能对双产物均可用，而早期脚本仅用 description 文本判定
 - **决策**: 82 人 × C(82,3) 仍可接受（~88k 组合），剪枝后约 4-5k。不修正 EfficiencyMap 判定逻辑
 - **影响**: 实际组合数比预期高约 30%，但仍在 MV3 计算预算内（< 1 秒）
-
-### 偏差 5: 分类测试用 Operator 对象比较 vs 干员名比较
-- `_classify_mfg_operators` 返回 `MfgClassification(anchors=list[Operator])`，测试中 `assert "水月" in result.anchors` 失败（字符串 vs Operator 对象）
-- **修正**: 测试改为 `{op.name for op in result.anchors}` 比较
-- **影响**: 测试修正，代码逻辑不变
 
 ### 发现 2: 真数据下 Control 固定方案的干员不存在
 - `solve_mvp` 中 `FIXED_CONTROL = ["令", "重岳", "夕", "凯尔希", "焰尾"]`
@@ -112,17 +78,6 @@
 - LayoutConfig 不包含宿舍信息（宿舍不属于 243 工作设施）
 - **决策**: `synergy_facility_count(dorm_levels=12)` 作为默认参数，后续可由求解器传入实际配置
 - **影响**: 切换布局（如 252）时需同步调整默认值
-
-### 发现 3: A6 Trade 干员未被贪心分配选中
-- 空弦/伺夜/渡桥/石英的 A6 buff 在 buffs_infrastructure.json 中 efficiency=0（条件型）
-- `op.best_efficiency("Trade", "Money")` 对这些干员返回 0 → `_greedy_remaining` 中 `eff > 0` 过滤掉
-- **根因**: `_greedy_remaining` 不调用 synergy 函数，只依赖原始效率值
-- **状态**: 制造站 Mfg[2]（引星棘刺 +3%/贸易站）已生效。Trade 端待后续优化，可用 `_evaluate_room_combo` 替代 `rank_by_dominance` 方式
-
-### 偏差 6: 引星棘刺的 A6 buff 数据确认
-- `manu_prod_spd&trade[1000]` (原质塑金副产物) efficiency=0，description 含"每个贸易站贵金属+3%"
-- `_A6_FACILITY_TABLE` 中硬编码为 3.0%/贸易站，与 A3 技能计数（金属工艺·α）独立叠加
-- Mfg[2] 总加成: 个体效率(A3+metal) + synergy_skill_count(金属工艺) + synergy_facility_count(引星棘刺 6%) = 214%
 
 ---
 

@@ -95,11 +95,9 @@ def synergy_skill_count(
             continue
         target_cls = _A3_COUNTER_TABLE[op.name]
 
-        # 统计同房其他干员中持有 target_cls 类型的数量
+        # 统计同房所有干员（含自身）中持有 target_cls 类型的数量
         count = 0
         for other in operators:
-            if other.name == op.name:
-                continue
             if target_cls in op_classes.get(other.name, set()):
                 count += 1
 
