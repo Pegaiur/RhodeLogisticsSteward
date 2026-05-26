@@ -64,28 +64,27 @@ flowchart LR
 > 这意味着约束复杂度不在"有没有人"，而在"选谁最好"——典型的**组合优化**问题。
 
 ```mermaid
-block-beta
-    columns 7
-    block:中枢["控制中枢 ×1<br/>5人"]
-        A["中枢"] 
-    end
-    space:6
-    block:宿舍["宿舍 ×4<br/>每间5人 = 20人"]
-        B1["宿1"] B2["宿2"] B3["宿3"] B4["宿4"]
-    end
-    space
-    block:制造["制造站 ×4<br/>每间3人 = 12人"]
-        M1["Mfg1"] M2["Mfg2"] M3["Mfg3"] M4["Mfg4"]
-    end
-    space:2
-    block:贸易["贸易站 ×2<br/>每间3人 = 6人"]
-        T1["Trade1"] T2["Trade2"]
-    end
-    space:2
-    block:其他["辅助设施"]
-        P1["发电×3"] P2["会客×1"] P3["办公×1"]
-    end
+mindmap
+  root((243 布局))
+    控制中枢
+      1 间 × 5 人
+    制造站
+      Mfg1 3人
+      Mfg2 3人
+      Mfg3 3人
+      Mfg4 3人
+    贸易站
+      Trade1 3人
+      Trade2 3人
+    发电站
+      3 间 × 1人
+    宿舍
+      4 间 × 5人
+    其他
+      会客室 2人
+      办公室 1人
 ```
+> 核心工位 = 5 + 12 + 6 + 3 + 2 + 1 = **29 人**；干员/工位比 = 225/29 ≈ **7.8:1**
 
 ---
 
@@ -247,104 +246,63 @@ pie title 玩家干员技能条目分布 (892条)
 
 ## 4. 求解策略设计
 
-### 4.1 问题规模分析
+### 4.1 核心思路
 
-| 参数 | 值 |
-|------|-----|
-| 决策变量数 | 29个工位 × 225个候选 = 6,525个二元决策 |
-| 约束数 | ~50个硬约束 + ~100个软约束 + ~300个联动条件（MAA infrast.json 文本关键词匹配: 联动182 + 条件118） |
-| 解空间 | C(225,29) ≈ 10^38（暴力不可行） |
-| 问题类型 | **NP-难 的组合优化** (可以规约为加权二分图匹配+约束满足) |
+排班问题的本质是**每设施选当前最优 N 人，不重复占用即可**。不应预设"全 box + 高频换班"的理想条件——联动/体系是锦上添花，缺 box 或低频换班时完全不需要。
 
-### 4.2 推荐策略：分层贪心 + 回溯
+不同玩家场景下，求解策略自然分档：
 
-考虑到实际基建中"联动鸡尾酒"的层级结构，采用**自顶向下的分层求解**：
+| 场景 | 策略 | 复杂度 |
+|------|------|--------|
+| 一天一换 / box 不全 | **单班次贪心** | O(N log N) |
+| 一天两换 | 单班次贪心 × 2（两套人马各解一遍） | 同上 |
+| 一天三换 + 全 box | 贪心 + 可选联动校验 | 同上，联动是后校验不是驱动力 |
+
+### 4.2 单班次求解（默认基线）
 
 ```mermaid
 flowchart TD
-    L1["🔵 L1: 中枢控制中心<br/>枚举 C(15~20, 5) ≈ 15,504 种<br/>确定人间烟火 / 孤光共照体系"]
-    L1 --> L2["🟢 L2: 宿舍恢复<br/>根据中枢体系选配宿管<br/>O(N_dorm) 贪心"]
-    L2 --> L3["🟡 L3: 核心联动组<br/>巫恋+龙舌兰 / 清流+温蒂+森蚺<br/>红云+稀音 / 野鬃+远牙+灰毫"]
-    L3 --> L4["🟠 L4: 设施最优填充<br/>排序+贪心逐设施选取<br/>Trade→Mfg→Power→Reception→Office"]
-    L4 --> L5["🔴 L5: 冲突回溯<br/>局部搜索解决干员重复占用<br/>优先保留 L3 联动组"]
-    L5 --> L4
+    S["1. 加载玩家干员<br/>过滤: elite ≥ 技能要求 phase<br/>匹配: roomType 对应该设施"] --> R["2. 按设施分组排序<br/>每设施按 efficient 值降序"]
+    R --> G["3. 贪心逐设施分配<br/>优先级: Control → Trade → Mfg → Power → Reception → Office"]
+    G --> C{"4. 有重复占用?"}
+    C -->|是| B["冲突干员保留高分设施<br/>低分设施用下一个候选"]
+    C -->|否| D["5. 输出 custom_infrast JSON"]
+    B --> C
 ```
 
-### 4.3 算法伪代码
+算法等同于：对每个设施追问 **"我手里还有谁能胜任？排前面的没被占吧？放进去。"**
 
 ```python
-def solve_schedule(layout, operators, elite_filter):
-    """
-    分层求解排班方案
-    
-    layout: {"Control":5, "Trade":6, "Mfg":12, "Power":3, "Reception":2, "Office":1}
-    operators: 玩家拥有的干员列表[{"id":..., "elite":..., "level":...}]
-    elite_filter: 按精英化过滤可用的技能
-    """
-    assigned = {}  # operator_id → facility_id
-    
-    # L1: 中枢控制中心
-    control = solve_control(operators, elites=elite_filter)
-    assigned.update(control)
-    
-    # L2: 宿舍恢复（根据中枢体系选配）
-    dorm = solve_dorm(operators, control_style=control["style"], 
-                      exclude=assigned)
-    assigned.update(dorm)
-    
-    # L3: 核心联动组（不可拆分）
-    combos = find_best_combos(operators, exclude=assigned)
-    for combo in combos:
-        if all_combo_available(combo, assigned):
-            assigned.update(combo)
-    
-    # L4: 设施内最优填充
-    for facility in ["Trade", "Mfg", "Power", "Reception", "Office"]:
+def solve_single_shift(operators, layout):
+    assigned = {}  # op_id → facility
+    for facility in ["Control", "Trade", "Mfg", "Power", "Reception", "Office"]:
         slots = layout[facility]
-        filled = greedy_fill(facility, slots, operators, exclude=assigned)
-        assigned.update(filled)
-    
-    # L5: 冲突回溯
-    if has_conflicts(assigned):
-        assigned = backtrack_resolve(assigned, operators)
-    
-    return to_custom_infrast_json(assigned, layout)
+        candidates = rank_operators(operators, facility, exclude=assigned)
+        for i in range(slots):
+            if i < len(candidates):
+                assigned[candidates[i].id] = facility
+            else:
+                mark_autofill(facility)  # 候选不足，委托 MAA 补位
+    return to_json(assigned, layout)
 ```
 
-### 4.4 效率计算核心
+### 4.3 多班次
 
-对于每个设施，需要计算任意干员组合在该设施的**综合效率**：
+同一组干员无法支撑高频换班。处理方式：把候选池按换班次数切分为 N 份，每份独立执行单班次贪心。候选不足时房间标记 `autofill: true` 委托 MAA 补位。
 
-```python
-def compute_efficiency(facility, operator_skill_ids, product=None):
-    """
-    计算一组干员在某设施的综合效率
-    
-    facility: "Trade" | "Mfg" | "Control" | ...
-    operator_skill_ids: [(op_id, [skill_id, ...]), ...]
-    product: 当前产物(仅制造站有意义)
-    """
-    base = 0
-    for op_id, skill_ids in operator_skill_ids:
-        for sk_id in skill_ids:
-            eff = get_efficiency(facility, sk_id, product)
-            
-            # 检查联动条件
-            for cond in get_conditions(sk_id):
-                if cond.meets(operator_skill_ids, facility):
-                    eff += cond.bonus
-            
-            base += eff
-    
-    # 检查阵营/联动加成
-    base += compute_synergy(operator_skill_ids, facility)
-    
-    return base
-```
+### 4.4 联动处理（可选后校验）
 
-### 4.5 多班次策略
+联动**不作为驱动因素**，贪心结束后检查：
 
-一天的排班需要处理心情消耗与恢复：
+- 玩家凑齐了知名组合全成员 → 标记锁定，重新贪心时将组合固化为单元
+- 缺成员 → 不处理，剩余位置正常贪心
+- box 太小 / 低频换班 → 整个步骤跳过
+
+> 一天一换时"人间烟火→孤光共照"中枢大体系无意义——不轮换就不需要那点额外恢复速度。
+
+### 4.5 效率排序
+
+直接使用 MAA `infrast.json` 的 `efficient` 值做排序键——不精确计算，只排序。最终效率由 MAA 自行计算，我们只需要给出"先用谁"的顺序。
 
 | 参数 | 典型值 |
 |------|--------|
