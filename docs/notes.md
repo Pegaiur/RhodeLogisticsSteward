@@ -99,3 +99,28 @@
 - 从 `character_identity.json` 加载后，这些干员名可能不全匹配（如 Mon3tr 替代凯尔希）
 - **状态**: MV4 入口整合时需验证并调整
 
+---
+
+## MV5 Phase 5a (A6 设施数量联动) — 2026-05-26
+
+### 实现范围
+- `synergy_facility_count()`: 7 名干员的设施数量联动，基于 `LayoutConfig` 提取 Trade/Meeting/Mfg recipe 统计，宿舍等级默认 12（4×Lv3）
+- 接入 solver `_evaluate_room_combo()` 和 production `_room_efficiency_integral()`
+- 8 个单元测试（TDD：红灯→绿灯）
+
+### 决策 7: 宿舍等级硬编码为默认参数
+- LayoutConfig 不包含宿舍信息（宿舍不属于 243 工作设施）
+- **决策**: `synergy_facility_count(dorm_levels=12)` 作为默认参数，后续可由求解器传入实际配置
+- **影响**: 切换布局（如 252）时需同步调整默认值
+
+### 发现 3: A6 Trade 干员未被贪心分配选中
+- 空弦/伺夜/渡桥/石英的 A6 buff 在 buffs_infrastructure.json 中 efficiency=0（条件型）
+- `op.best_efficiency("Trade", "Money")` 对这些干员返回 0 → `_greedy_remaining` 中 `eff > 0` 过滤掉
+- **根因**: `_greedy_remaining` 不调用 synergy 函数，只依赖原始效率值
+- **状态**: 制造站 Mfg[2]（引星棘刺 +3%/贸易站）已生效。Trade 端待后续优化，可用 `_evaluate_room_combo` 替代 `rank_by_dominance` 方式
+
+### 偏差 6: 引星棘刺的 A6 buff 数据确认
+- `manu_prod_spd&trade[1000]` (原质塑金副产物) efficiency=0，description 含"每个贸易站贵金属+3%"
+- `_A6_FACILITY_TABLE` 中硬编码为 3.0%/贸易站，与 A3 技能计数（金属工艺·α）独立叠加
+- Mfg[2] 总加成: 个体效率(A3+metal) + synergy_skill_count(金属工艺) + synergy_facility_count(引星棘刺 6%) = 214%
+

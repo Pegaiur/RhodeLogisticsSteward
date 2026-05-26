@@ -13,7 +13,7 @@ from steward_core.models import LayoutConfig, Operator, RoomAssignment, RoomConf
 from steward_core.efficiency_fn import constant_efficiency, integrate_segments, rank_by_dominance
 from steward_core.synergy import (
     synergy_pair, synergy_skill_count, synergy_skill_alias, synergy_automation,
-    _skill_class,
+    synergy_facility_count, _skill_class,
 )
 
 T = 12.0
@@ -111,6 +111,9 @@ def _evaluate_room_combo(
     alias = synergy_skill_alias(operators)
     total += integrate_segments(synergy_pair(operators, room_type, product), T)
     total += integrate_segments(synergy_skill_count(operators, room_type, alias), T)
+    total += integrate_segments(synergy_facility_count(
+        operators, room_type, product, _LAYOUT_243,
+    ), T)
     auto_segs, zero_set = synergy_automation(operators, room_type, power_count)
     total += integrate_segments(auto_segs, T)
 

@@ -257,33 +257,148 @@ class TestSynergyAutomation:
         assert segs == []
         assert zero_set == set()
 
-    def test_森蚺_自动化α_5percent每站(self):
-        """森蚺(自动化α) → 3站×5%=15%"""
-        from steward_core.synergy import synergy_automation
+
+# ─── A6 设施数量联动 ─────────────────────────────────────────────
+
+class TestSynergyFacilityCount:
+    """A6: synergy_facility_count — 根据全基建设施数量计算加成"""
+
+    def test_清流_每个贸易站加20贵金属(self):
+        """清流在 Mfg PureGold，2 个贸易站 → +40%"""
+        from steward_core.synergy import synergy_facility_count
+        from steward_core.models import LayoutConfig, RoomConfig
 
         # Arrange
-        senia = _mk_op("森蚺")
-        filler1 = _mk_op("A")
-        filler2 = _mk_op("B")
+        qingliu = _mk_op("清流")
+        layout = LayoutConfig(rooms=[
+            RoomConfig("Trade", 0, 3, "Money"),
+            RoomConfig("Trade", 1, 3, "Money"),
+        ])
 
         # Act
-        segs, zero_set = synergy_automation([senia, filler1, filler2], "Mfg", power_count=3)
+        segs = synergy_facility_count([qingliu], "Mfg", "PureGold", layout)
 
-        # Assert
+        # Assert: +40% 常数段
         assert len(segs) == 1
-        assert segs[0].a == 15.0  # 3×5%
+        assert segs[0].a == 40.0
 
-    def test_非制造站_不触发(self):
-        """自动化仅在 Mfg 触发"""
-        from steward_core.synergy import synergy_automation
+    def test_清流_非贵金属产物_不触发(self):
+        """清流在 CombatRecord → 不应触发（仅贵金属）"""
+        from steward_core.synergy import synergy_facility_count
+        from steward_core.models import LayoutConfig, RoomConfig
 
         # Arrange
-        wenti = _mk_op("温蒂")
-        filler = _mk_op("A")
+        qingliu = _mk_op("清流")
+        layout = LayoutConfig(rooms=[
+            RoomConfig("Trade", 0, 3, "Money"),
+            RoomConfig("Trade", 1, 3, "Money"),
+        ])
 
         # Act
-        segs, zero_set = synergy_automation([wenti, filler], "Trade", power_count=3)
+        segs = synergy_facility_count([qingliu], "Mfg", "CombatRecord", layout)
 
         # Assert
         assert segs == []
-        assert zero_set == set()
+
+    def test_空弦_每宿舍等级加2贸易(self):
+        """空弦 (β) 在 Trade，4 间宿舍 × Lv3 → +24%"""
+        from steward_core.synergy import synergy_facility_count
+        from steward_core.models import LayoutConfig
+
+        # Arrange
+        kongxian = _mk_op("空弦")
+        layout = LayoutConfig(rooms=[])
+
+        # Act: dorm_levels 默认 12
+        segs = synergy_facility_count([kongxian], "Trade", "Money", layout)
+
+        # Assert: +24%
+        assert len(segs) == 1
+        assert segs[0].a == 24.0
+
+    def test_伺夜_每会客室等级加5_上限40(self):
+        """伺夜在 Trade，Meeting Lv3 → +15%（未触上限）"""
+        from steward_core.synergy import synergy_facility_count
+        from steward_core.models import LayoutConfig, RoomConfig
+
+        # Arrange
+        siye = _mk_op("伺夜")
+        layout = LayoutConfig(rooms=[
+            RoomConfig("Reception", 0, 2, "General"),
+        ])
+
+        # Act: 1间 Reception × Lv3 = 3 × 5% = 15%
+        segs = synergy_facility_count([siye], "Trade", "Money", layout)
+
+        # Assert
+        assert len(segs) == 1
+        assert segs[0].a == 15.0
+
+    def test_伺夜_高会客室触发上限(self):
+        """伺夜在 Trade，Meeting Lv9 → 45% → clamp 到 40%"""
+        from steward_core.synergy import synergy_facility_count
+        from steward_core.models import LayoutConfig, RoomConfig
+
+        # Arrange
+        siye = _mk_op("伺夜")
+        layout = LayoutConfig(rooms=[
+            RoomConfig("Reception", 0, 2, "General"),
+            RoomConfig("Reception", 1, 2, "General"),
+            RoomConfig("Reception", 2, 2, "General"),
+        ])
+
+        # Act: 3间 Meeting × Lv3 = 9 × 5% = 45% → clamp to 40%
+        segs = synergy_facility_count([siye], "Trade", "Money", layout)
+
+        # Assert
+        assert segs[0].a == 40.0
+
+    def test_石英_每配方类型加2贸易(self):
+        """石英在 Trade，制造站 2 种配方 → +4%"""
+        from steward_core.synergy import synergy_facility_count
+        from steward_core.models import LayoutConfig, RoomConfig
+
+        # Arrange
+        shiying = _mk_op("石英")
+        layout = LayoutConfig(rooms=[
+            RoomConfig("Mfg", 0, 3, "CombatRecord"),
+            RoomConfig("Mfg", 1, 3, "PureGold"),
+        ])
+
+        # Act: 2 种配方类型 × 2% = 4%
+        segs = synergy_facility_count([shiying], "Trade", "Money", layout)
+
+        # Assert
+        assert len(segs) == 1
+        assert segs[0].a == 4.0
+
+    def test_无A6干员_返回空(self):
+        """房间内无 A6 干员 → 空列表"""
+        from steward_core.synergy import synergy_facility_count
+        from steward_core.models import LayoutConfig
+
+        # Arrange
+        filler = _mk_op("填位")
+        layout = LayoutConfig(rooms=[])
+
+        # Act
+        segs = synergy_facility_count([filler], "Mfg", "PureGold", layout)
+
+        # Assert
+        assert segs == []
+
+    def test_娜仁图亚_赤金加宿舍等级(self):
+        """娜仁图亚在 Mfg PureGold，12 宿舍等级 → +12%"""
+        from steward_core.synergy import synergy_facility_count
+        from steward_core.models import LayoutConfig
+
+        # Arrange
+        narentuya = _mk_op("娜仁图亚")
+        layout = LayoutConfig(rooms=[])
+
+        # Act: dorm_levels 默认 12
+        segs = synergy_facility_count([narentuya], "Mfg", "PureGold", layout)
+
+        # Assert: +12%
+        assert len(segs) == 1
+        assert segs[0].a == 12.0

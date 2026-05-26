@@ -11,10 +11,11 @@
 from dataclasses import dataclass, field
 from typing import Optional
 
-from steward_core.models import Operator, ShiftPlan
+from steward_core.models import Operator, ShiftPlan, LayoutConfig
 from steward_core.efficiency_fn import constant_efficiency, integrate_segments
 from steward_core.synergy import (
     synergy_pair, synergy_skill_count, synergy_skill_alias, synergy_automation,
+    synergy_facility_count,
 )
 
 # ─── 制造站 Lv3 基础参数 ────────────────────────────────────────
@@ -39,6 +40,8 @@ _DRONE_BASE_PER_DAY = 240.0
 _DRONE_MINUTES_MFG = 3.0
 _DRONE_MINUTES_TRADE = 1.5
 # 注: 游戏内贸易站加速效果为制造站的 1/2，PRTS Wiki 的 3 分钟指基础耗时非实际加速量
+
+_LAYOUT_243 = LayoutConfig.layout_243()
 
 
 @dataclass
@@ -123,6 +126,9 @@ def _room_efficiency_integral(
 
     alias = synergy_skill_alias(operators)
     total += integrate_segments(synergy_skill_count(operators, room_type, alias), T)
+    total += integrate_segments(synergy_facility_count(
+        operators, room_type, product, _LAYOUT_243,
+    ), T)
 
     auto_segs, zero_set = synergy_automation(operators, room_type, power_count)
     total += integrate_segments(auto_segs, T)

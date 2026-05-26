@@ -1,11 +1,11 @@
 """联动体系函数
 
 每个体系一个独立函数。同层体系之间并行计算后线性叠加。
-MVP 范围: A1(配对) / A3(技能计数) / A4(别名) / A5(自动化)。
-A2 / A6 / A7 / B / C 层在后续迭代补充。
+MVP 范围: A1/A3/A4/A5/A6（A 层已完成）。
+A2/A7/B/C 层在后续迭代补充。
 """
 
-from steward_core.models import LinearSegment, Operator
+from steward_core.models import LinearSegment, Operator, LayoutConfig
 
 T = 12.0  # MVP 固定 12h 排班
 
@@ -167,3 +167,81 @@ def synergy_automation(
 
     zero_set = {op.name for op in operators if op.name not in auto_op_names}
     return segments, zero_set
+
+
+# ─── A6 设施数量联动 ─────────────────────────────────────────────
+
+# 设施数量联动表: {干员名: (计数对象, 每单位加成%, 设施类型, 产物, 上限或无)}
+# buffs_infrastructure.json 中 efficiency=0 的条件型 buff，
+# 按全基建设施数量统计后输出加成
+_A6_FACILITY_TABLE: dict[str, tuple[str, float, str, str | None, float | None]] = {
+    "清流": ("trade_count", 20.0, "Mfg", "PureGold", None),
+    "引星棘刺": ("trade_count", 3.0, "Mfg", "PureGold", None),
+    "娜仁图亚": ("dorm_levels", 1.0, "Mfg", "PureGold", None),
+    "空弦": ("dorm_levels", 2.0, "Trade", "Money", None),
+    "伺夜": ("meeting_level", 5.0, "Trade", "Money", 40.0),
+    "渡桥": ("meeting_level", 5.0, "Trade", "Money", 30.0),
+    "石英": ("mfg_recipe_types", 2.0, "Trade", "Money", None),
+}
+
+# 设施等级 Lv3
+_FACILITY_LEVEL = 3
+# 243 布局默认宿舍等级（4 间 × Lv3）
+_DEFAULT_DORM_LEVELS = 12
+
+
+def synergy_facility_count(
+    operators: list[Operator],
+    room_type: str,
+    product: str,
+    layout: LayoutConfig,
+    dorm_levels: int = _DEFAULT_DORM_LEVELS,
+) -> list[LinearSegment]:
+    """根据全基建设施数量/等级为当前房间提供联动加成
+
+    Returns:
+        联动加成段列表，每个非零加成对应一个常数段
+    """
+    names = {op.name for op in operators}
+    segments = []
+
+    # 从 LayoutConfig 提取设施统计
+    trade_count = sum(1 for r in layout.rooms if r.room_type == "Trade")
+    meeting_level = sum(
+        _FACILITY_LEVEL for r in layout.rooms if r.room_type == "Reception"
+    )
+    mfg_products = {
+        r.product for r in layout.rooms
+        if r.room_type == "Mfg" and r.product is not None
+    }
+    mfg_recipe_types = len(mfg_products)
+
+    for name in names:
+        if name not in _A6_FACILITY_TABLE:
+            continue
+        count_key, bonus_per, target_room, target_product, cap = _A6_FACILITY_TABLE[name]
+
+        if room_type != target_room:
+            continue
+        if target_product is not None and product != target_product:
+            continue
+
+        if count_key == "trade_count":
+            count = trade_count
+        elif count_key == "dorm_levels":
+            count = dorm_levels
+        elif count_key == "meeting_level":
+            count = meeting_level
+        elif count_key == "mfg_recipe_types":
+            count = mfg_recipe_types
+        else:
+            continue
+
+        bonus = count * bonus_per
+        if cap is not None:
+            bonus = min(bonus, cap)
+
+        if bonus > 0:
+            segments.append(LinearSegment(a=bonus, b=0.0, t_start=0.0, dt=T))
+
+    return segments
