@@ -19,10 +19,11 @@ env/
 *.swo
 *~
 
-# ===== 外部数据文件（体积大/频繁更新/含个人数据） =====
+# ===== 外部数据文件及派生数据 =====
 building_data.json
 character_table.json
 operators_data.json
+buffs_extracted.json
 
 # ===== 输出产物 =====
 output/
