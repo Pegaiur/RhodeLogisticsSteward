@@ -1,10 +1,12 @@
 """数据加载模块
 
-加载 building_data.json（干员→技能映射）和 infrast.json（技能→效率值），
-交叉引用后产出可用于排班求解的 Operator 列表。
+从 character_identity.json + buffs_infrastructure.json 加载干员与技能数据，
+产出可用于排班求解的 Operator 列表。
 
-Step 1 全 box 满练度：不按 phase 过滤，所有技能均可用。
-Step 4 真实练度：由求解器根据玩家 elite 等级过滤 skills。
+与旧版 data_loader 的区别：
+- 数据源：character_identity.json (替代 building_data.json) + buffs_infrastructure.json (替代 infrast.json)
+- 效率值：buffs_infrastructure.json 的 efficiency 字段 (float)，通过 description 文本判定产物匹配
+- 身份字段：nationId/groupId/teamId → nation_id/group_id/team_id
 """
 
 import json
@@ -13,7 +15,6 @@ from typing import Optional
 
 from steward_core.models import EfficiencyMap, Operator, Skill
 
-# building_data.json 中的 roomType 到 infrast.json 中设施键的映射
 ROOM_TYPE_MAP: dict[str, str] = {
     "CONTROL": "Control",
     "TRADING": "Trade",
@@ -24,15 +25,9 @@ ROOM_TYPE_MAP: dict[str, str] = {
     "DORMITORY": "Dormitory",
 }
 
-# infrast.json 中的设施键列表（所有可能包含技能定义的设施）
-_INFRA_FACILITIES = ["Control", "Mfg", "Trade", "Power", "Reception", "Office", "Dormitory"]
+FACILITY_TYPES = {v for v in ROOM_TYPE_MAP.values()}
 
-# PHASE 字符串到数值的映射
-PHASE_MAP: dict[str, int] = {
-    "PHASE_0": 0,
-    "PHASE_1": 1,
-    "PHASE_2": 2,
-}
+SENTINEL = -999.0
 
 
 def _load_json(path: Path) -> dict:
@@ -40,86 +35,102 @@ def _load_json(path: Path) -> dict:
         return json.load(f)
 
 
-def _build_efficiency_index(infrast: dict) -> dict[str, EfficiencyMap]:
-    """从 infrast.json 构建 skillIcon → EfficiencyMap 的索引"""
-    index: dict[str, EfficiencyMap] = {}
-    for facility_key in _INFRA_FACILITIES:
-        facility_data = infrast.get(facility_key, {})
-        skills = facility_data.get("skills", {})
-        for skill_icon, skill_data in skills.items():
-            efficient_raw = skill_data.get("efficient", {})
-            if efficient_raw:
-                index[skill_icon] = EfficiencyMap(raw=dict(efficient_raw))
-    return index
+def _determine_product(description: str) -> Optional[str]:
+    """根据 buff description 文本判定产物类型
+
+    返回 'CombatRecord', 'PureGold', 或 None (通用技能)。
+    """
+    desc = description
+    has_record = "作战记录" in desc
+    has_gold = "贵金属" in desc or "赤金" in desc
+
+    if has_record and not has_gold:
+        return "CombatRecord"
+    if has_gold and not has_record:
+        return "PureGold"
+    return None
 
 
-def load_operators(
-    building_data_path: Path,
-    infrast_path: Path,
-    name_lookup: Optional[dict[str, str]] = None,
+def _build_efficiency_map(efficiency: float, product: Optional[str]) -> EfficiencyMap:
+    """将 buffs_infrastructure 的 efficiency 字段转换为 EfficiencyMap
+
+    产物匹配逻辑：
+    - 纯作战记录技能: EfficiencyMap({"CombatRecord": efficiency})
+    - 纯贵金属技能: EfficiencyMap({"PureGold": efficiency})
+    - 通用技能: EfficiencyMap({"all": efficiency})
+    - efficiency=0 的条件技能: EfficiencyMap({"all": 0.0})
+    """
+    if product == "CombatRecord":
+        return EfficiencyMap(raw={"CombatRecord": efficiency})
+    elif product == "PureGold":
+        return EfficiencyMap(raw={"PureGold": efficiency})
+    else:
+        return EfficiencyMap(raw={"all": efficiency})
+
+
+def load_operators_v2(
+    character_identity_path: Path,
+    buffs_infrastructure_path: Path,
 ) -> list[Operator]:
-    """加载全量干员数据
-
-    遍历 building_data.json 中所有干员，展开 buffChar → buffData，
-    通过 buffId 查询 roomType / skillIcon，再通过 skillIcon 查询效率值。
-    所有技能均保留原始 phase 值，由求解器按需过滤。
+    """从 character_identity.json + buffs_infrastructure.json 加载全量干员
 
     Args:
-        building_data_path: building_data.json 路径
-        infrast_path: infrast.json 路径
-        name_lookup: char_id → 中文名 的可选映射，不提供时用 char_id 作为名称
+        character_identity_path: character_identity.json 路径
+        buffs_infrastructure_path: buffs_infrastructure.json 路径
 
     Returns:
         全量 Operator 列表，每人含已解析效率值的 Skill 列表
     """
-    building = _load_json(building_data_path)
-    infrast = _load_json(infrast_path)
-
-    eff_index = _build_efficiency_index(infrast)
-    chars = building.get("chars", {})
-    buffs = building.get("buffs", {})
-
-    if name_lookup is None:
-        name_lookup = {}
+    ci = _load_json(character_identity_path)
+    bi = _load_json(buffs_infrastructure_path)
 
     operators: list[Operator] = []
 
-    for char_id, char_data in chars.items():
-        name = name_lookup.get(char_id, char_id)
+    for char_id, char_data in ci.items():
+        name = char_data.get("name", char_id)
         rarity = char_data.get("rarity", 0)
-        op = Operator(char_id=char_id, name=name, rarity=rarity)
+        nation_id = char_data.get("nationId") or None
+        group_id = char_data.get("groupId") or None
+        team_id = char_data.get("teamId") or None
 
-        for buff_char in char_data.get("buffChar", []):
-            for buff_data in buff_char.get("buffData", []):
-                buff_id = buff_data.get("buffId", "")
-                if not buff_id:
-                    continue
+        op = Operator(
+            char_id=char_id,
+            name=name,
+            rarity=rarity,
+            group_id=group_id,
+            nation_id=nation_id,
+            team_id=team_id,
+        )
 
-                phase_str = buff_data.get("cond", {}).get("phase", "PHASE_0")
-                phase = PHASE_MAP.get(phase_str, 0)
+        for sk_data in char_data.get("skills", []):
+            buff_id = sk_data.get("buffId", "")
+            if not buff_id or buff_id not in bi:
+                continue
 
-                buff_info = buffs.get(buff_id, {})
-                room_type_raw = buff_info.get("roomType", "")
-                room_type = ROOM_TYPE_MAP.get(room_type_raw, "")
-                skill_icon = buff_info.get("skillIcon", "")
-                buff_name = buff_info.get("buffName", buff_id)
+            buff = bi[buff_id]
+            room_type_raw = buff.get("roomType", "")
+            room_type = ROOM_TYPE_MAP.get(room_type_raw, "")
 
-                if not room_type:
-                    continue
+            if room_type not in FACILITY_TYPES:
+                continue
 
-                efficient = eff_index.get(skill_icon)
-                if efficient is None:
-                    continue
+            efficiency = buff.get("efficiency", 0.0)
+            description = buff.get("description", "")
+            buff_name = buff.get("buffName", buff_id)
+            phase = sk_data.get("phase", 0)
 
-                skill = Skill(
-                    buff_id=buff_id,
-                    buff_name=buff_name,
-                    skill_icon=skill_icon,
-                    room_type=room_type,
-                    efficient=efficient,
-                    phase=phase,
-                )
-                op.skills.append(skill)
+            product = _determine_product(description)
+            efficient = _build_efficiency_map(efficiency, product)
+
+            skill = Skill(
+                buff_id=buff_id,
+                buff_name=buff_name,
+                skill_icon=buff_id,
+                room_type=room_type,
+                efficient=efficient,
+                phase=phase,
+            )
+            op.skills.append(skill)
 
         operators.append(op)
 
