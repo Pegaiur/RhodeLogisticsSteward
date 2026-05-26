@@ -356,7 +356,7 @@ class TestEdgeCases:
     """验证空值、零值、缺失场景"""
 
     def test_空干员工厂_不崩溃(self):
-        """autofill 房间 (空干员列表) — 基线生产力仍有效 (1.0)，但不应崩溃"""
+        """autofill 房间 (空干员列表) — 无工人无产出，不应崩溃"""
         # Arrange
         plan = _plan_with_mfg([])
         op = _mk_op("X", [])
@@ -364,8 +364,8 @@ class TestEdgeCases:
         # Act
         result = calculate(plan, [op])
 
-        # Assert: 空干员工厂仍有基线产出 (生产力=1.0)
-        assert result.total_gold_produced_per_day > 0
+        # Assert: 空干员工厂 — 无工人，产出为零
+        assert result.total_gold_produced_per_day == 0.0
 
     def test_干员无对应设施技能_产出为零(self):
         """干员只有 Trade 技能却被放进 Mfg"""

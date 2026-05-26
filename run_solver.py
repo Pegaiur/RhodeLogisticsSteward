@@ -12,6 +12,7 @@ from pathlib import Path
 from steward_core.data_loader import load_operators_v2
 from steward_core.output import save_json
 from steward_core.solver import solve_mvp
+from steward_core import production
 
 
 def main():
@@ -45,6 +46,32 @@ def main():
         tag = " [autofill]" if a.autofill else ""
         product_str = f" ({a.product})" if a.product else ""
         print(f"  {a.room_type}[{a.room_index}]{product_str}: {a.operators}{tag}")
+
+    # ── 12h 产出计算 ──
+    print("\n[产出] 计算 12h 生产结果...\n")
+    dp = production.calculate(result.plans[0], all_operators, hours=12.0)
+
+    print("── 作战记录（经验）──")
+    for room in dp.record_rooms:
+        drone = f" (含无人机+{room.drone_boost_pct:.0%})" if room.drone_boost_pct > 0 else ""
+        print(f"  Mfg[{room.room_index}]: {room.operators} → {room.output_per_day:.1f} 个/12h (效率{room.productivity*100:.0f}%){drone}")
+    print(f"  合计: {dp.total_records_per_day:.1f} 个/12h\n")
+
+    print("── 赤金制造 ──")
+    for room in dp.gold_rooms:
+        drone = f" (含无人机+{room.drone_boost_pct:.0%})" if room.drone_boost_pct > 0 else ""
+        print(f"  Mfg[{room.room_index}]: {room.operators} → {room.output_per_day:.1f} 个/12h (效率{room.productivity*100:.0f}%){drone}")
+    print(f"  合计: {dp.total_gold_produced_per_day:.1f} 个/12h\n")
+
+    print("── 贸易站（龙门币）──")
+    for room in dp.trade_rooms:
+        drone = f" (含无人机+{room.drone_boost_pct:.0%})" if room.drone_boost_pct > 0 else ""
+        gold_use = room.output_per_day / dp.total_lmd_per_day * dp.total_gold_consumed_per_day
+        print(f"  Trade[{room.room_index}]: {room.operators} → {room.output_per_day:,.0f} LMD/12h{drone}  |  消耗赤金 {gold_use:.1f}/12h")
+    print(f"  合计: {dp.total_lmd_per_day:,.0f} LMD/12h")
+    print(f"  赤金消耗: {dp.total_gold_consumed_per_day:.1f} 个/12h")
+    if dp.gold_surplus < 0:
+        print(f"  赤金缺口 {abs(dp.gold_surplus):.1f} 个 → 有效收入 {dp.effective_lmd_per_day:,.0f} LMD/12h")
 
     output_path = project_root / "output" / "custom_infrast" / "mvp_12h.json"
     save_json(result, output_path, title="MVP 全box满练度 12h排班")

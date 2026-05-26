@@ -12,6 +12,10 @@ from dataclasses import dataclass, field
 from typing import Optional
 
 from steward_core.models import Operator, ShiftPlan
+from steward_core.efficiency_fn import constant_efficiency, integrate_segments
+from steward_core.synergy import (
+    synergy_pair, synergy_skill_count, synergy_skill_alias, synergy_automation,
+)
 
 # ─── 制造站 Lv3 基础参数 ────────────────────────────────────────
 # 作战记录：基础 1个/3h → 0.333 个/h
@@ -100,39 +104,37 @@ def _operator_lookup(operators: list[Operator]) -> dict[str, Operator]:
     return {op.name: op for op in operators}
 
 
-def _calc_mfg_productivity(
-    op_names: list[str],
-    op_lookup: dict[str, Operator],
+def _room_efficiency_integral(
+    operators: list[Operator],
+    room_type: str,
     product: str,
+    power_count: int = 3,
+    T: float = 12.0,
 ) -> float:
-    """制造站生产力: 1 + 0.01×人数 + Σ(技能加成/100)"""
-    base = 1.0 + 0.01 * len(op_names)
-    skill_sum = 0.0
-    for name in op_names:
-        op = op_lookup.get(name)
-        if op is None:
-            continue
-        best = op.best_efficiency("Mfg", product)
-        if best > 0:
-            skill_sum += best / 100.0
-    return base + skill_sum
+    """返回房间总效率积分 Σ∫e(t)dt（含联动）
 
+    与 solver._evaluate_room_combo 使用相同的积分逻辑，
+    确保排班评分与产出报告一致。
+    """
+    if not operators:
+        return 0.0
 
-def _calc_trade_efficiency(
-    op_names: list[str],
-    op_lookup: dict[str, Operator],
-) -> float:
-    """贸易站订单效率: 1 + 0.01×人数 + Σ(技能加成/100)"""
-    base = 1.0 + 0.01 * len(op_names)
-    skill_sum = 0.0
-    for name in op_names:
-        op = op_lookup.get(name)
-        if op is None:
+    total = integrate_segments(synergy_pair(operators, room_type, product), T)
+
+    alias = synergy_skill_alias(operators)
+    total += integrate_segments(synergy_skill_count(operators, room_type, alias), T)
+
+    auto_segs, zero_set = synergy_automation(operators, room_type, power_count)
+    total += integrate_segments(auto_segs, T)
+
+    for op in operators:
+        if op.name in zero_set:
             continue
-        best = op.best_efficiency("Trade", "Money")
-        if best > 0:
-            skill_sum += best / 100.0
-    return base + skill_sum
+        eff = op.best_efficiency(room_type, product)
+        if eff > 0:
+            total += integrate_segments(constant_efficiency(eff, mood_burn=0.0, T=T), T)
+
+    return total
 
 
 def _calc_drone_daily(
@@ -189,51 +191,62 @@ def calculate(plan: ShiftPlan, operators: list[Operator], hours: float = 24.0) -
     drone_room_index = plan.drone_index
     production.drone_target = f"{drone_room_type}[{drone_room_index}]"
 
-    # 3. 计算各设施产出
+    # 3. 计算各设施产出（走 efficiency_fn 积分，含联动）
+    power_count = sum(1 for a in plan.assignments if a.room_type == "Power" and a.operators)
     for assignment in plan.assignments:
+        ops = [op_lookup[n] for n in assignment.operators if n in op_lookup]
+        if not ops:
+            continue
+        n = len(ops)
+
         if assignment.room_type == "Mfg" and assignment.product == "CombatRecord":
-            prod = _calc_mfg_productivity(assignment.operators, op_lookup, "CombatRecord")
-            # 无人机加速（仅目标房间）
+            eff_int = _room_efficiency_integral(ops, "Mfg", "CombatRecord", power_count, hours)
+            productivity_int = hours * (1.0 + 0.01 * n) + eff_int / 100.0
+            avg_prod = productivity_int / hours
             drone_boost = 0.0
             if assignment.room_type == drone_room_type and assignment.room_index == drone_room_index:
                 drone_boost = _drone_multiplier(production.daily_drones, _DRONE_MINUTES_MFG, hours) - 1.0
-            output_per_day = _RECORD_BASE_PER_HOUR * prod * hours * (1.0 + drone_boost)
+            output_per_day = _RECORD_BASE_PER_HOUR * productivity_int * (1.0 + drone_boost)
             room = RoomOutput(
                 room_type="Mfg", room_index=assignment.room_index,
                 product="CombatRecord", operators=assignment.operators,
-                productivity=prod, output_per_day=output_per_day,
+                productivity=avg_prod, output_per_day=output_per_day,
                 drone_boost_pct=drone_boost, output_unit="个",
             )
             production.record_rooms.append(room)
             production.total_records_per_day += output_per_day
 
         elif assignment.room_type == "Mfg" and assignment.product == "PureGold":
-            prod = _calc_mfg_productivity(assignment.operators, op_lookup, "PureGold")
+            eff_int = _room_efficiency_integral(ops, "Mfg", "PureGold", power_count, hours)
+            productivity_int = hours * (1.0 + 0.01 * n) + eff_int / 100.0
+            avg_prod = productivity_int / hours
             drone_boost = 0.0
             if assignment.room_type == drone_room_type and assignment.room_index == drone_room_index:
                 drone_boost = _drone_multiplier(production.daily_drones, _DRONE_MINUTES_MFG, hours) - 1.0
-            output_per_day = _GOLD_BASE_PER_HOUR * prod * hours * (1.0 + drone_boost)
+            output_per_day = _GOLD_BASE_PER_HOUR * productivity_int * (1.0 + drone_boost)
             room = RoomOutput(
                 room_type="Mfg", room_index=assignment.room_index,
                 product="PureGold", operators=assignment.operators,
-                productivity=prod, output_per_day=output_per_day,
+                productivity=avg_prod, output_per_day=output_per_day,
                 drone_boost_pct=drone_boost, output_unit="个",
             )
             production.gold_rooms.append(room)
             production.total_gold_produced_per_day += output_per_day
 
         elif assignment.room_type == "Trade":
-            eff = _calc_trade_efficiency(assignment.operators, op_lookup)
+            eff_int = _room_efficiency_integral(ops, "Trade", "Money", power_count, hours)
+            efficiency_integrated = hours * (1.0 + 0.01 * n) + eff_int / 100.0
+            avg_eff = efficiency_integrated / hours
             drone_boost = 0.0
             if assignment.room_type == drone_room_type and assignment.room_index == drone_room_index:
                 drone_boost = _drone_multiplier(production.daily_drones, _DRONE_MINUTES_TRADE, hours) - 1.0
-            orders_per_day = hours / (_TRADE_AVG_TIME_HOURS / eff) * (1.0 + drone_boost)
+            orders_per_day = efficiency_integrated / _TRADE_AVG_TIME_HOURS * (1.0 + drone_boost)
             gold_consumed = orders_per_day * _TRADE_AVG_GOLD_PER_ORDER
             lmd_output = orders_per_day * _TRADE_AVG_LMD_PER_ORDER
             room = RoomOutput(
                 room_type="Trade", room_index=assignment.room_index,
                 product="Money", operators=assignment.operators,
-                productivity=eff, output_per_day=lmd_output,
+                productivity=avg_eff, output_per_day=lmd_output,
                 drone_boost_pct=drone_boost, output_unit="LMD",
             )
             production.trade_rooms.append(room)
