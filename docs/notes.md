@@ -77,3 +77,25 @@
 - 当前实现按名查表取得固定值，未检测实际持有的 buff 版本
 - **决策**: 真数据加载后，通过检测干员 skills 中的 `manu_prod_spd&power` buff_id 版本判定等级
 - **影响**: 当前硬编码温蒂=15%/站，森蚺=5%/站。真数据下森蚺应走 β(10%/站)
+
+---
+
+## MV3 (求解器) — 2026-05-26
+
+### 偏差 4: 真数据下制造站候选人数超出文档预期
+- **预期**: 文档 `strategy-brief.md` 写 CR≈60, PG≈56（基于 description 文本分析）
+- **实际**: `has_skill_for("Mfg", "CombatRecord")` 判定下 CR=82, PG=83
+- **原因**: `EfficiencyMap` 中 `all` 键让所有通用技能对双产物均可用，而早期脚本仅用 description 文本判定
+- **决策**: 82 人 × C(82,3) 仍可接受（~88k 组合），剪枝后约 4-5k。不修正 EfficiencyMap 判定逻辑
+- **影响**: 实际组合数比预期高约 30%，但仍在 MV3 计算预算内（< 1 秒）
+
+### 偏差 5: 分类测试用 Operator 对象比较 vs 干员名比较
+- `_classify_mfg_operators` 返回 `MfgClassification(anchors=list[Operator])`，测试中 `assert "水月" in result.anchors` 失败（字符串 vs Operator 对象）
+- **修正**: 测试改为 `{op.name for op in result.anchors}` 比较
+- **影响**: 测试修正，代码逻辑不变
+
+### 发现 2: 真数据下 Control 固定方案的干员不存在
+- `solve_mvp` 中 `FIXED_CONTROL = ["令", "重岳", "夕", "凯尔希", "焰尾"]`
+- 从 `character_identity.json` 加载后，这些干员名可能不全匹配（如 Mon3tr 替代凯尔希）
+- **状态**: MV4 入口整合时需验证并调整
+
