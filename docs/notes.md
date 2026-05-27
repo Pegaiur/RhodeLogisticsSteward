@@ -167,4 +167,43 @@
 ### 文档同步: 偏差 1/2
 - `efficiency-function-design.md`：`_key_values` 改为取最后一个非零段终点，`rank_by_dominance` DAG 构建改为严格支配（避免双向边循环）
 
+---
+
+## Trade C(n,3) 穷举重构 — 2026-05-27
+
+### 决策 12: Trade 从单干员贪心改为 C(n,3) 穷举
+- **背景**: A7 订单机制硬编码效率值维护成本高（16个分支），且贪心排序 2人评估丢失第三席信息
+- **决策**: 参照制造站 Phase 1 的穷举方案，Trade 也走 classify → combo → evaluate → allocate 管道
+- **影响**: 删除 `get_trade_order_equivalent_efficiency`（~100行）+ `_partner_available`（~8行），新增 `classify_trade_operators`（~30行）+ `_evaluate_trade_combo`（~25行）
+- **净代码**: -25 行，硬编码值 16→0
+
+### 决策 13: _greedy_remaining 设施过滤改为正向匹配
+- 旧: `if room.room_type in ("Mfg", "Control", "Dormitory"): continue`
+- 新: `if room.room_type not in ("Power", "Reception", "Office"): continue`
+- **原因**: Trade 已从 `_greedy_remaining` 中移出，仅剩 Power/Reception/Office 三种设施
+- **影响**: `_greedy_remaining` 中 Trade 专属 A7 逻辑全部删除
+
+### 决策 14: _SYSTEM_CONTRIBUTORS 新增 Trade 锚点
+- 新增 7 名 Trade anchor: 巫恋(低语)、火哨(代为说项)、吉星(勤俭经营)、雪雉(天道酬勤)、德克萨斯(恩怨)、摩根(帮派指南针)、新约能天使(同城加急单)
+- 订单机制型（但书/龙舌兰/可露希尔）由 `classify_trade_operators` 内联 buff_id 检测，不走注册表
+
+### 决策 15: 裁缝不视为 Trade 锚点
+- 裁缝 (trade_ord_wt&cost) 自身效率极低，不是锚点
+- 其效果已在 `_get_trade_order_multiplier` 的 `_extract_tailor_level` 中通过全组检测自然计入
+- **影响**: `_SYSTEM_CONTRIBUTORS` 无需注册裁缝持有者，`classify_trade_operators` 也不检测裁缝 buff_id
+
+### 偏差 5: Phase 3 拆分后 locked_support["Trade"] 处理简化
+- 原 Phase 3 通过 priority_names 将 Trade 支撑干员强制放入 `_greedy_remaining`
+- Phase 3a 改为在 Trade 候选池中释放 locked_support["Trade"]，自然参与 C(n,3) 穷举
+- Phase 3b 不再需要 locked_support["Trade"] 的 priority 合并
+
+### 测试清理
+- 删除 `TestTradeOrderEquivalentEfficiency`（5用例）：测试已删除的 A7 等效效率函数
+- 删除 `TestTradePairingVerification`（4用例）：同上
+- 删除 `TestTradeContextualEfficiency`（5用例）：同上
+- 删除 `TestGreedyRemainingA6`（4用例）：Trade 不再通过 `_greedy_remaining` 处理
+- 删除 `TestGreedyRemainingA6Trade`（4用例）：同上
+- 新增 `TestClassifyTradeOperators`（5用例）：Trade 干员分类
+- 新增 `TestEvaluateTradeCombo`（2用例）：Trade 3人组合 LMD 评估
+
 
