@@ -18,7 +18,6 @@ from steward_core.synergy import (
     compute_buff_pool,
     _B_LAYER_CONSUMER_TABLE,
 )
-from steward_core.constants import FIXED_CONTROL
 
 T = 12.0
 POWER_COUNT = 3
@@ -229,23 +228,160 @@ def _greedy_remaining(
     return results
 
 
+# ─── 最优支撑函数 ─────────────────────────────────────────────────
+
+# 制造站干员类型 → 所需支撑干员映射
+# 支撑集格式: {设施类型: [干员名, ...]}
+_ROSEMARY_SUPPORT: dict[str, list[str]] = {
+    "Control": ["令", "夕"],
+    "Trade": ["黑键"],
+    "Dormitory": ["爱丽丝", "车尔尼", "森西"],
+}
+
+# 红松骑士团 group_id
+_PINUS_GROUP = "pinus"
+
+# 骑士标签持有者（name 推导，后期改为 nation/group 查询）
+_KNIGHT_NAMES: set[str] = {
+    "砾", "野鬃", "白金", "鞭刃", "暴雨", "耀骑士临光",
+    "瑕光", "临光", "远牙", "灰毫", "焰尾", "薇薇安娜",
+}
+
+
+def compute_optimal_support(
+    combo_ops: list[Operator],
+) -> dict[str, list[str]]:
+    """计算制造站组合所需的最优支撑干员集
+
+    按"加成包"概念：每种制造站 combo 类型决定性地对应一组支撑干员。
+    如果 combo 含多种类型（如迷迭香+骑士），支撑集取并集。
+
+    Returns:
+        {"Control": [names], "Trade": [names], "Dormitory": [names]}
+    """
+    support: dict[str, set[str]] = {
+        "Control": set(),
+        "Trade": set(),
+        "Dormitory": set(),
+    }
+
+    names = {op.name for op in combo_ops}
+
+    # 迷迭香包
+    if "迷迭香" in names:
+        for facility, ops in _ROSEMARY_SUPPORT.items():
+            support[facility].update(ops)
+
+    # 骑士包
+    has_knight = any(
+        op.name in _KNIGHT_NAMES or op.group_id == "pinus"
+        for op in combo_ops
+    )
+    if has_knight:
+        support["Control"].add("薇薇安娜")
+
+    # 红松骑士团包
+    has_pinus = any(op.group_id == _PINUS_GROUP for op in combo_ops)
+    if has_pinus:
+        support["Control"].add("焰尾")
+
+    return {k: sorted(v) for k, v in support.items()}
+
+
+def _evaluate_with_support(
+    combo_ops: list[Operator],
+    room_type: str,
+    product: str,
+    all_operators: list[Operator],
+    assigned_ids: set[str],
+    dorm_count: int = 20,
+) -> tuple[float, dict[str, list[str]]]:
+    """评估 combo 含最优支撑的完整评分
+
+    1. 计算 combo 所需支撑干员
+    2. 过滤已被分配的支撑干员
+    3. 用可用支撑构建 global_bonus + buff_pool
+    4. 评估房间效率积分
+
+    Returns:
+        (score, support_map) — support_map 仅含可用的支撑干员
+    """
+    support_map = compute_optimal_support(combo_ops)
+    op_lookup = {op.name: op for op in all_operators}
+
+    # 过滤已分配的支撑干员
+    available_support: dict[str, list[str]] = {}
+    for facility, names in support_map.items():
+        available = [n for n in names if n not in assigned_ids]
+        if available:
+            available_support[facility] = available
+
+    # 构建全局上下文
+    control_names = available_support.get("Control", [])
+    control_ops = [op_lookup[n] for n in control_names if n in op_lookup]
+    global_bonus = compute_control_global_bonus(control_ops)
+
+    dorm_names = available_support.get("Dormitory", [])
+    dorm_ops = [op_lookup[n] for n in dorm_names if n in op_lookup]
+
+    has_rosmontis = any(op.name == "迷迭香" for op in combo_ops)
+    has_ebnhlz = "黑键" in available_support.get("Trade", [])
+
+    buff_pool = compute_buff_pool(
+        control_ops, suich_count=5,
+        dorm_operators=dorm_ops, dorm_level=5,
+        has_rosmontis_in_mfg=has_rosmontis,
+        has_ebnhlz_in_trade=has_ebnhlz,
+        ling_mood_below_12=True,
+    )
+
+    score = _evaluate_room_combo(
+        combo_ops, room_type, product, POWER_COUNT, global_bonus, buff_pool,
+    )
+
+    return score, available_support
+
+
+def _greedy_allocate_with_support(
+    evaluated: list,
+    room_count: int,
+) -> list[tuple[list[str], dict[str, list[str]]]]:
+    """从排序组合中贪心取无冲突的 N 间（含支撑干员冲突检查）
+
+    evaluated: [(score, combo_names, all_support_names, support_map), ...]
+    """
+    assigned = set()
+    result = []
+    for _score, combo_names, all_support_names, support_map in evaluated:
+        if any(n in assigned for n in combo_names):
+            continue
+        if any(n in assigned for n in all_support_names):
+            continue
+        result.append((combo_names, support_map))
+        assigned.update(combo_names)
+        assigned.update(all_support_names)
+        if len(result) >= room_count:
+            break
+    return result
+
+
 # ─── 主入口 ─────────────────────────────────────────────────────
 
 def solve_mvp(operators: list[Operator]) -> SolveResult:
-    """MVP 完整求解：制造站穷举 + 剩余设施贪心
+    """MVP 完整求解：制造站穷举 + 支撑干员锁 + 剩余设施贪心
 
+    中枢不再固定——由制造站 combo 的支撑需求动态决定。
     返回 SolveResult，含一个 12h ShiftPlan。
     """
     assigned_ids: set[str] = set()
+    assigned_names: set[str] = set()  # 用于支撑干员冲突检测
     assignments: list[RoomAssignment] = []
     autofill_count = 0
-
-    # C1: 全局效率加成（固定中枢方案预计算）
-    control_ops = [op for op in operators if op.name in FIXED_CONTROL]
-    global_bonus = compute_control_global_bonus(control_ops)
-
-    # B1: 人间烟火预计算（Phase 1 保守估计）
-    buff_pool = compute_buff_pool(control_ops, suich_count=5)
+    op_lookup = {op.name: op for op in operators}
+    # 累计所有已选中 combo 的支撑干员（用于最终填充 Control/Trade/Dorm）
+    locked_support: dict[str, set[str]] = {
+        "Control": set(), "Trade": set(), "Dormitory": set(),
+    }
 
     # Phase 2: 制造站穷举（CR 2间 + PG 2间）—— 共享 assigned_ids 防跨产物冲突
     for product, count in [("CombatRecord", 2), ("PureGold", 2)]:
@@ -261,23 +397,34 @@ def solve_mvp(operators: list[Operator]) -> SolveResult:
 
         classification = _classify_mfg_operators(mfg_ops, product)
         pool = _build_candidate_pool(mfg_ops, classification)
-        # 排除已分配干员
         pool = [op for op in pool if op.char_id not in assigned_ids]
         combos = _generate_combos(pool, 3)
 
-        # 评估所有组合
+        # 评估所有组合（含最优支撑）
         evaluated = []
         for combo_ops in combos:
-            score = _evaluate_room_combo(combo_ops, "Mfg", product, POWER_COUNT, global_bonus, buff_pool)
-            evaluated.append((score, [op.name for op in combo_ops]))
+            score, support_map = _evaluate_with_support(
+                combo_ops, "Mfg", product, operators, assigned_names,
+            )
+            combo_names = [op.name for op in combo_ops]
+            all_support_names = [n for names in support_map.values() for n in names]
+            evaluated.append((score, combo_names, all_support_names, support_map))
         evaluated.sort(key=lambda x: -x[0])
 
-        # 贪心分配
-        allocated = _greedy_allocate(evaluated, room_count=count)
-        for names in allocated:
+        # 贪心分配（含支撑干员锁）
+        allocated = _greedy_allocate_with_support(evaluated, room_count=count)
+        for names, support_map in allocated:
             for op in pool:
                 if op.name in names:
                     assigned_ids.add(op.char_id)
+                    assigned_names.add(op.name)
+            # 锁定支撑干员
+            for facility, s_names in support_map.items():
+                locked_support[facility].update(s_names)
+                for n in s_names:
+                    if n in op_lookup:
+                        assigned_ids.add(op_lookup[n].char_id)
+                        assigned_names.add(n)
             assignments.append(RoomAssignment(
                 room_type="Mfg",
                 room_index=len([a for a in assignments if a.room_type == "Mfg"]),
@@ -293,14 +440,11 @@ def solve_mvp(operators: list[Operator]) -> SolveResult:
                 ))
                 autofill_count += 1
 
-    # Phase 3: Control 固定
-    ctrl_names = []
-    for name in FIXED_CONTROL:
-        for op in operators:
-            if op.name == name:
-                assigned_ids.add(op.char_id)
-                ctrl_names.append(name)
-                break
+    # Phase 3: 填充中枢（来自累计支撑干员）
+    ctrl_names = sorted(locked_support["Control"])[:5]
+    for n in ctrl_names:
+        if n in op_lookup:
+            assigned_ids.add(op_lookup[n].char_id)
     assignments.append(RoomAssignment(
         room_type="Control", room_index=0, operators=ctrl_names,
     ))
