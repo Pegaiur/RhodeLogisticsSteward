@@ -102,6 +102,9 @@ RhodeLogisticsSteward/
 | `_OP_PLATFORM_NAMES` | 作业平台干员名称 | 新增机器人/作业平台干员 |
 | `_MH_NAMES` | 怪物猎人小队干员名 | 新增怪物猎人联动干员 |
 | `_LUNG_MEN_GUARD_NAMES` | 龙门近卫局干员名 | 新增龙门近卫局干员 |
+| `_BLACKSTEEL_HOLDERS` | 老友相聚中枢持有者 | 新增黑钢国际相关中枢干员 |
+| `_A2_FACTION_TABLE` | 阵营计数联动表 | 新增同房阵营计数型联动 buff |
+| `_B7_CROSS_PAIR_TABLE` | 跨房间配对表 | 新增跨设施干员条件配对 buff |
 
 ### 维护流程
 
