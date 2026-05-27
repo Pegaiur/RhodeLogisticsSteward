@@ -724,7 +724,7 @@ class BuffPool:
     perception: int = 0        # 感知信息
     wushu_crystal: int = 0     # 巫术结晶
     thought_chains: int = 0    # 思维链环 (B3)
-    silent_resonance: int = 0  # 无声共鸣 (B5) TODO: B5 生成待实现
+    silent_resonance: int = 0  # 无声共鸣 (B5) — 由塑心宿舍 + 黑键感知转化生成
     engineering_robots: int = 0  # 工程机器人 (B2)
     monster_cuisine: int = 0     # 魔物料理 (B4)
 
@@ -738,6 +738,8 @@ def compute_buff_pool(
     has_ebnhlz_in_trade: bool = False,
     ling_mood_below_12: bool = False,
     layout: LayoutConfig | None = None,
+    perception_from_office: int = 0,
+    has_wuyou_in_trade: bool = False,
 ) -> BuffPool:
     """计算全局 buff 点数池（Phase 1 预计算）
 
@@ -752,8 +754,19 @@ def compute_buff_pool(
     - 爱丽丝梦境呓语: 宿舍每级→1梦境→1感知
     - 车尔尼琴键漫步: 宿舍每级→1小节→1感知
 
+    贸易源（B1 烟火）：
+    - 乌有（在贸易站）: 宿舍每有1名干员→烟火+1
+
+    办公室源（B1 感知/烟火）：
+    - 絮雨巡游+追忆: 每额外招募位+10记忆碎片→感知（243布局 Lv3=+20）
+    - 桑葚: 每招募位+10烟火（当迷迭香在Mfg时絮雨占用唯一Office工位，桑葚排除）
+
     宿舍源（B4 魔物料理）：
     - 森西大食堂: 宿舍每级→1魔物料理
+
+    宿舍源（B5 无声共鸣）：
+    - 塑心: 宿舍每有1名干员→无声共鸣+1
+    - 黑键（在贸易站）: 感知信息→无声共鸣 1:1
 
     烟火→巫术结晶: yanhuo // 5（截云消费链路）
     感知信息→思维链环: 1:1（迷迭香超感）
@@ -801,6 +814,17 @@ def compute_buff_pool(
     if _dorm_has_buff(dorm_operators, "dorm_rec_bd_n1_n3[000]"):
         perception += dorm_level
 
+    # ─── 贸易源烟火 ───
+
+    # 乌有: 宿舍每有1名干员→烟火+1
+    if has_wuyou_in_trade and dorm_operators:
+        yanhuo += len(dorm_operators)
+
+    # ─── 办公室源感知 ───
+
+    # 絮雨巡游+追忆: 每额外招募位+10记忆碎片→感知（243 Lv3: 2额外招募位=20）
+    perception += perception_from_office
+
     # ─── 宿舍源魔物料理 ───
 
     # 森西大食堂: 宿舍每级→1魔物料理
@@ -811,11 +835,25 @@ def compute_buff_pool(
     wushu_crystal = yanhuo // 5  # 烟火→巫术结晶（截云消费）
     thought_chains = perception  # B3: 感知信息→思维链环（1:1，迷迭香消费）
     eng_robots = compute_engineering_robots(layout) if layout is not None else 0
+
+    # ─── B5 无声共鸣 ───
+
+    silent_resonance = 0
+    # 黑键在贸易站: 感知信息→无声共鸣 1:1
+    if has_ebnhlz_in_trade:
+        silent_resonance += perception
+    # 塑心在宿舍: 每名干员→无声共鸣+1
+    if dorm_operators:
+        suxin_names = {op.name for op in dorm_operators}
+        if "塑心" in suxin_names:
+            silent_resonance += len(dorm_operators)
+
     return BuffPool(
         yanhuo=yanhuo, perception=perception,
         wushu_crystal=wushu_crystal, thought_chains=thought_chains,
         monster_cuisine=monster_cuisine,
         engineering_robots=eng_robots,
+        silent_resonance=silent_resonance,
     )
 
 
@@ -862,7 +900,8 @@ _B_LAYER_CONSUMER_TABLE: dict[str, tuple[str, str, int, float]] = {
 ROSEMARY_SUPPORT: dict[str, list[str]] = {
     "Control": ["令", "夕"],
     "Trade": ["黑键"],
-    "Dormitory": ["爱丽丝", "车尔尼", "森西"],
+    "Dormitory": ["爱丽丝", "车尔尼", "森西", "塑心"],
+    "Office": ["絮雨"],
 }
 
 # B 层关键干员名称（避免多处字符串硬编码）

@@ -1454,3 +1454,159 @@ class TestGoldLineSynergy:
         segs = synergy_trade_gold_lines([hongxue], "Trade", "Money", layout, durin_names, 12.0)
         assert len(segs) == 1
         assert segs[0].a == 30.0  # (2基础+min(5,4)) × 5%
+
+
+# ─── B1 办公室/Trade 生成源（新增） ──────────────────────────────────
+
+class TestB1OfficeTradeGeneration:
+    """B1: compute_buff_pool 扩展 — Office/Trade 来源的烟火/感知信息生成"""
+
+    def test_絮雨_office_感知信息(self):
+        """perception_from_office=20 → 感知信息额外 +20（2招募位×10记忆碎片）"""
+        from steward_core.synergy import compute_buff_pool
+
+        control = [_mk_op("令"), _mk_op("夕")]
+        pool = compute_buff_pool(control, perception_from_office=20)
+
+        assert pool.perception == 30  # 夕(10) + 絮雨Office(20)
+        assert pool.thought_chains == 30
+
+    def test_絮雨_office_感知信息_与迷迭香超感叠加(self):
+        """perception_from_office=20 + 迷迭香超感(5 dorm) → 叠加"""
+        from steward_core.synergy import compute_buff_pool
+
+        control = [_mk_op("令"), _mk_op("夕")]
+        dorm = [_mk_op(f"填位{i}") for i in range(5)]
+
+        pool = compute_buff_pool(
+            control, dorm_operators=dorm,
+            has_rosmontis_in_mfg=True, perception_from_office=20,
+        )
+
+        assert pool.perception == 10 + 5 + 20  # 夕(10) + 迷迭香超感(5) + 絮雨(20)
+        assert pool.thought_chains == 35
+
+    def test_乌有_trade_烟火生成(self):
+        """乌有在贸易站，20名宿舍干员 → yanhuo +20"""
+        from steward_core.synergy import compute_buff_pool
+
+        control = [_mk_op("令"), _mk_op("重岳")]
+        dorm = [_mk_op(f"填位{i}") for i in range(20)]
+
+        pool = compute_buff_pool(
+            control, suich_count=5, dorm_operators=dorm,
+            has_wuyou_in_trade=True,
+        )
+
+        assert pool.yanhuo == 15 + 25 + 20  # 令(15) + 重岳5岁(25) + 乌有(20)
+        assert pool.wushu_crystal == 60 // 5  # 60 烟火 → 12 巫术结晶
+
+    def test_乌有_未在贸易站_不产生烟火(self):
+        """乌有不在贸易站 → 无额外烟火"""
+        from steward_core.synergy import compute_buff_pool
+
+        control = [_mk_op("令"), _mk_op("重岳")]
+        dorm = [_mk_op(f"填位{i}") for i in range(20)]
+
+        pool = compute_buff_pool(control, suich_count=5, dorm_operators=dorm)
+
+        assert pool.yanhuo == 15 + 25  # 仅令(15) + 重岳(25)，无乌有
+
+    def test_絮雨_零招募位_不产生感知(self):
+        """perception_from_office=0 → 无额外感知（边界）"""
+        from steward_core.synergy import compute_buff_pool
+
+        control = [_mk_op("令"), _mk_op("夕")]
+        pool = compute_buff_pool(control, perception_from_office=0)
+
+        assert pool.perception == 10  # 仅夕(10)
+
+
+# ─── B5 无声共鸣生成（新增） ─────────────────────────────────────────
+
+class TestB5SilentResonance:
+    """B5: compute_buff_pool 扩展 — 无声共鸣生成（塑心宿舍 + 黑键感知转化）"""
+
+    def test_塑心_宿舍_无声共鸣生成(self):
+        """塑心在宿舍，20名干员 → silent_resonance +20"""
+        from steward_core.synergy import compute_buff_pool
+
+        control = [_mk_op("令"), _mk_op("夕")]
+        suxin = _mk_op("塑心")
+        dorm = [suxin] + [_mk_op(f"填位{i}") for i in range(19)]
+
+        pool = compute_buff_pool(
+            control, dorm_operators=dorm, dorm_level=5,
+            has_ebnhlz_in_trade=True, ling_mood_below_12=True,
+        )
+
+        # 令<12(10) + 夕(10) + 黑键乐感20人(20) = 40 perception → 40 silent_resonance
+        # 塑心宿舍 20人 → +20 silent_resonance
+        assert pool.perception == 40  # 令<12(10)+夕(10)+黑键乐感(20)
+        assert pool.thought_chains == 40
+        assert pool.silent_resonance == 60  # 40(感知→共鸣) + 20(塑心)
+
+    def test_黑键_不在贸易站_无声共鸣仅塑心(self):
+        """黑键不在 Trade → 无感知→共鸣转化，仅塑心宿舍生成"""
+        from steward_core.synergy import compute_buff_pool
+
+        control = [_mk_op("令"), _mk_op("夕")]
+        suxin = _mk_op("塑心")
+        dorm = [suxin] + [_mk_op(f"填位{i}") for i in range(4)]
+
+        pool = compute_buff_pool(
+            control, dorm_operators=dorm, dorm_level=5,
+            ling_mood_below_12=True,
+        )
+
+        # 黑键不在 Trade → silent_resonance 仅来自塑心
+        assert pool.silent_resonance == 5  # 塑心宿舍 5人
+
+    def test_无声共鸣_零感知_零塑心_为零(self):
+        """无感知 + 无塑心 → silent_resonance=0（边界）"""
+        from steward_core.synergy import compute_buff_pool
+
+        control = [_mk_op("令")]  # 令 mood>12 → 烟火，无感知
+        pool = compute_buff_pool(control)
+
+        assert pool.silent_resonance == 0
+        assert pool.perception == 0
+
+    def test_完整链_无声共鸣全链路(self):
+        """令<12(10)+夕(10)+迷迭香超感(5)+黑键乐感(5)+塑心宿舍(5)=35 silent_resonance"""
+        from steward_core.synergy import compute_buff_pool
+
+        control = [_mk_op("令"), _mk_op("夕")]
+        suxin = _mk_op("塑心")
+        dorm = [suxin] + [_mk_op(f"填位{i}") for i in range(4)]
+
+        pool = compute_buff_pool(
+            control, dorm_operators=dorm, dorm_level=5,
+            has_rosmontis_in_mfg=True, has_ebnhlz_in_trade=True,
+            ling_mood_below_12=True,
+        )
+
+        # 感知: 令<12(10) + 夕(10) + 迷迭香(5) + 黑键(5) = 30
+        # silent_resonance: 感知→共鸣(30) + 塑心宿舍(5) = 35
+        assert pool.perception == 30
+        assert pool.silent_resonance == 35
+        assert pool.thought_chains == 30
+
+
+# ─── ROSEMARY_SUPPORT 扩展（新增） ────────────────────────────────────
+
+class TestRosemarySupportExtension:
+    """ROSEMARY_SUPPORT: 办公室支撑干员注册"""
+
+    def test_rosemary_support_含office键(self):
+        """ROSEMARY_SUPPORT 应包含 'Office' 键"""
+        from steward_core.synergy import ROSEMARY_SUPPORT
+
+        assert "Office" in ROSEMARY_SUPPORT
+        assert ROSEMARY_SUPPORT["Office"] == ["絮雨"]
+
+    def test_rosemary_support_含塑心(self):
+        """ROSEMARY_SUPPORT['Dormitory'] 应包含塑心（B5无声共鸣生成者）"""
+        from steward_core.synergy import ROSEMARY_SUPPORT
+
+        assert "塑心" in ROSEMARY_SUPPORT["Dormitory"]

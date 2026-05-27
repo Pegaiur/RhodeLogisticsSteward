@@ -562,17 +562,30 @@ def solve_mvp(operators: list[Operator]) -> SolveResult:
             and _has_power_count_modifier(op)
         )
 
-        # 评估所有组合
+        # 评估所有组合（含宿舍估计用于乌有烟火/黑键感知等B1生成）
+        # 阶段3a时宿舍未分配，用锁定支撑 + 填充至20人估计
+        estimated_dorm_count = 20
+        dorm_est = [Operator(char_id=f"_dorm_{i}", name=f"填位宿舍{i}", skills=[])
+                    for i in range(estimated_dorm_count)]
+        has_ebnhlz_any = "黑键" in locked_support["Trade"]
+
         evaluated = []
         for combo_ops in combos:
+            combo_names = [op.name for op in combo_ops]
+            has_wuyou = "乌有" in combo_names
+            has_ebnhlz = has_ebnhlz_any or "黑键" in combo_names
             ctrl_bonus = control_per_operator_bonus(
                 ctrl_ops, combo_ops, "Money", room_type="Trade",
             )
             lmd = _evaluate_trade_combo(
                 combo_ops, effective_power, T, global_bonus,
-                compute_buff_pool(ctrl_ops, suich_count=5), ctrl_bonus,
+                compute_buff_pool(
+                    ctrl_ops, suich_count=5,
+                    dorm_operators=dorm_est, dorm_level=5,
+                    has_ebnhlz_in_trade=has_ebnhlz,
+                    has_wuyou_in_trade=has_wuyou,
+                ), ctrl_bonus,
             )
-            combo_names = [op.name for op in combo_ops]
             evaluated.append((lmd, combo_names))
         evaluated.sort(key=lambda x: -x[0])
 
@@ -605,6 +618,11 @@ def solve_mvp(operators: list[Operator]) -> SolveResult:
             autofill_count += 1
 
     # Phase 3b: 剩余设施（Power/Reception/Office）贪心
+    # 释放 Office 锁定干员（Phase 1 锁入 assigned_ids，需释放后由 _greedy_remaining 分配）
+    for name in locked_support["Office"]:
+        if name in op_lookup:
+            assigned_ids.discard(op_lookup[name].char_id)
+            assigned_names.discard(name)
     priority = _POWER_NAMES | locked_support["Office"]
     remaining = _greedy_remaining(assigned_ids, operators, priority)
     assignments.extend(remaining)
