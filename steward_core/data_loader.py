@@ -10,6 +10,7 @@
 """
 
 import json
+import re
 from pathlib import Path
 from typing import Optional
 
@@ -26,6 +27,8 @@ ROOM_TYPE_MAP: dict[str, str] = {
 }
 
 FACILITY_TYPES = {v for v in ROOM_TYPE_MAP.values()}
+
+_CAPACITY_RE = re.compile(r"仓库容量上限\+(\d+)")
 
 
 def _load_json(path: Path) -> dict:
@@ -127,6 +130,11 @@ def load_operators_v2(
             product = _determine_product(description)
             efficient = _build_efficiency_map(efficiency, product)
 
+            capacity = 0
+            m = _CAPACITY_RE.search(description)
+            if m:
+                capacity = int(m.group(1))
+
             skill = Skill(
                 buff_id=buff_id,
                 buff_name=buff_name,
@@ -134,6 +142,7 @@ def load_operators_v2(
                 room_type=room_type,
                 efficient=efficient,
                 phase=phase,
+                capacity_bonus=capacity,
             )
             op.skills.append(skill)
 

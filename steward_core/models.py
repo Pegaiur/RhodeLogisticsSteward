@@ -72,6 +72,7 @@ class Skill:
     room_type: str
     efficient: EfficiencyMap
     phase: int = 0
+    capacity_bonus: int = 0
 
     def effective_for(self, room_type: str, product: Optional[str] = None) -> bool:
         """检查该技能在指定设施和产物下是否生效"""

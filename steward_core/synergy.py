@@ -192,6 +192,162 @@ def synergy_pair(
     return segments
 
 
+# ─── 仓库容量→效率 ─────────────────────────────────────────────────
+
+def synergy_capacity_to_eff(
+    operators: list[Operator],
+    room_type: str,
+    product: str,
+) -> list[LinearSegment]:
+    """房间内仓库容量转化为效率加成
+
+    红云回收利用(每格+2%) / 泡泡大就是好！(≤16格 1%/格, >16格 3%/格)。
+    大就是好！与回收利用互斥，优先生效。
+    """
+    if room_type != "Mfg":
+        return []
+
+    names = {op.name for op in operators}
+    has_paopao = "泡泡" in names
+    has_hongyun = "红云" in names
+    if not has_paopao and not has_hongyun:
+        return []
+
+    total_cap = sum(sk.capacity_bonus for op in operators for sk in op.skills)
+
+    if has_paopao:
+        eff = min(total_cap, 16) * 1.0 + max(0, total_cap - 16) * 3.0
+    else:
+        eff = total_cap * 2.0
+
+    return [LinearSegment(a=eff, b=0.0, t_start=0.0, dt=T)] if eff > 0 else []
+
+
+# ─── 配合意识（效率放大器） ──────────────────────────────────────
+
+def synergy_efficiency_amplifier(
+    operators: list[Operator],
+    room_type: str,
+    product: str,
+) -> list[LinearSegment]:
+    """槐琥配合意识：其他干员每5%效率额外提供5%，上限40%
+
+    计算房间内除槐琥外干员的效率总和后取整。
+    """
+    if room_type != "Mfg":
+        return []
+
+    names = {op.name for op in operators}
+    if "槐琥" not in names:
+        return []
+
+    others_eff = sum(
+        op.best_efficiency(room_type, product)
+        for op in operators if op.name != "槐琥"
+    )
+    bonus = (int(others_eff) // 5) * 5
+    bonus = min(bonus, 40.0)
+
+    return [LinearSegment(a=bonus, b=0.0, t_start=0.0, dt=T)] if bonus > 0 else []
+
+
+# ─── 归零变体 ─────────────────────────────────────────────────────
+
+# 归零变体表: {buff_id前缀: (补偿效率%/人, 补偿容量/人, 归零他人)}
+_ZEROING_VARIANT_TABLE: dict[str, tuple[float, int, bool]] = {
+    "manu_prod_spd&manu[000]": (0.0, 0, True),   # 科学改造: 归零他人，每干员+5容量
+    "manu_prod_spd&manu[100]": (10.0, 0, True),   # 流程优化: 归零他人，每干员+10%效率
+}
+
+
+def synergy_zeroing_variant(
+    operators: list[Operator],
+    room_type: str,
+    product: str,
+) -> tuple[list[LinearSegment], set[str]]:
+    """归零变体：类似 A5 自动化但补偿机制不同
+
+    Returns:
+        (效率加成段列表, 需归零的干员名集合)
+    """
+    if room_type != "Mfg":
+        return [], set()
+
+    best_eff = 0.0
+    has_zeroing = False
+
+    for op in operators:
+        for sk in op.skills:
+            if sk.room_type != "Mfg":
+                continue
+            if sk.buff_id in _ZEROING_VARIANT_TABLE:
+                has_zeroing = True
+                peff, _, _ = _ZEROING_VARIANT_TABLE[sk.buff_id]
+                if peff > best_eff:
+                    best_eff = peff
+
+    if not has_zeroing:
+        return [], set()
+
+    head_count = len(operators)
+    bonus = best_eff * head_count
+    segments = [LinearSegment(a=bonus, b=0.0, t_start=0.0, dt=T)] if bonus > 0 else []
+
+    zero_names = set()
+    for op in operators:
+        has_holder = any(
+            sk.buff_id in _ZEROING_VARIANT_TABLE for sk in op.skills if sk.room_type == "Mfg"
+        )
+        if not has_holder:
+            zero_names.add(op.name)
+
+    return segments, zero_names
+
+
+# ─── 机械精通（作业平台） ──────────────────────────────────────────
+
+_OP_PLATFORM_NAMES: set[str] = {
+    "Lancet-2", "Castle-3", "THRM-EX", "正义骑士号",
+}
+
+# 机械精通表: {buff_id: 每台加成%}
+_TOKEN_PROD_TABLE: dict[str, float] = {
+    "manu_token_prod_spd[000]": 5.0,
+    "manu_token_prod_spd[010]": 10.0,
+}
+
+
+def synergy_token_prod(
+    operators: list[Operator],
+    room_type: str,
+    product: str,
+    power_platforms: dict[str, bool] | None = None,
+) -> list[LinearSegment]:
+    """阿兰娜机械精通：作业平台进驻发电站时提供贵金属加成
+
+    power_platforms: {名称: 是否在发电站}
+    """
+    if room_type != "Mfg":
+        return []
+    if product != "PureGold":
+        return []
+    if power_platforms is None:
+        power_platforms = {}
+
+    platform_count = sum(1 for name in _OP_PLATFORM_NAMES if power_platforms.get(name))
+
+    for op in operators:
+        for sk in op.skills:
+            if sk.room_type != "Mfg":
+                continue
+            if sk.buff_id in _TOKEN_PROD_TABLE:
+                bonus = platform_count * _TOKEN_PROD_TABLE[sk.buff_id]
+                if bonus > 0:
+                    return [LinearSegment(a=bonus, b=0.0, t_start=0.0, dt=T)]
+
+    return []
+
+
 # ─── 爬升型效率 ───────────────────────────────────────────────────
 
 # 爬升型技能表: {buffId: (首小时%, 增量%/h, 上限%)}

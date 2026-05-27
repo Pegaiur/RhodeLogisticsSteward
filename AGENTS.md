@@ -74,7 +74,7 @@ RhodeLogisticsSteward/
 |------|---------|----------|----------|-------------|
 | 骑士 | `tag.knight` | name 集合 + `nationId=="kazimierz"` + `groupId=="pinus"` | [solver.py](file:///d:/Dev/RhodeLogisticsSteward/steward_core/solver.py#L219-L232) `_KNIGHT_NAMES` | 新增卡西米尔骑士干员 |
 | 杜林族 | `tag.durin` | `raceId == "DURIN"` | 由 `character_table.json` 自动推导 | — |
-| 作业平台 | `tag.op` | 特定 profession | 尚未建模 | — |
+| 作业平台 | `tag.op` | 特定 profession | `synergy.py` `_OP_PLATFORM_NAMES` 硬编码 4 台 | 新增机器人/作业平台干员 |
 | 怪物猎人小队 | `tag.mh` | 联动限定干员 | 尚未建模 | — |
 | 莱欧斯小队 | `tag.dungeon` | 联动限定干员 | 尚未建模 | — |
 
@@ -97,6 +97,9 @@ RhodeLogisticsSteward/
 | `_B_LAYER_CONSUMER_TABLE` | B 层点数消费者 | 新增 buff 池消费者 |
 | `ROSEMARY_SUPPORT` | 迷迭香支撑干员 | 新增迷迭香联动链参与者 |
 | `_RAMPING_SKILL_TABLE` | 爬升型效率技能参数 | 新增 manu_prod_spd_addition[*] 爬升型技能 |
+| `_ZEROING_VARIANT_TABLE` | 归零变体（科学改造/流程优化） | 新增归零型变体 buff |
+| `_TOKEN_PROD_TABLE` | 机械精通加成映射 | 新增作业平台联动 buff |
+| `_OP_PLATFORM_NAMES` | 作业平台干员名称 | 新增机器人/作业平台干员 |
 
 ### 维护流程
 

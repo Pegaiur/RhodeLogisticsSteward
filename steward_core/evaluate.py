@@ -10,6 +10,8 @@ from steward_core.synergy import (
     synergy_pair, synergy_skill_count, synergy_skill_alias, synergy_automation,
     synergy_facility_count, synergy_buff_pool_consumer,
     operator_ramp_segments,
+    synergy_capacity_to_eff, synergy_efficiency_amplifier,
+    synergy_zeroing_variant, synergy_token_prod,
     GlobalBonus,
 )
 
@@ -26,6 +28,7 @@ def evaluate_room(
     buff_pool = None,
     ctrl_per_op_bonus: float = 0.0,
     layout: LayoutConfig | None = None,
+    power_platforms: dict[str, bool] | None = None,
 ) -> float:
     """评估一个房间组合的 T 小时总效率积分 Σ∫e(t)dt
 
@@ -52,6 +55,10 @@ def evaluate_room(
     auto_segs, zero_set = synergy_automation(operators, room_type, power_count)
     total += integrate_segments(auto_segs, T)
 
+    zero_segs, zero_set2 = synergy_zeroing_variant(operators, room_type, product)
+    total += integrate_segments(zero_segs, T)
+    zero_set |= zero_set2
+
     total += ctrl_per_op_bonus * T
 
     for op in operators:
@@ -65,9 +72,17 @@ def evaluate_room(
             if eff > 0:
                 total += integrate_segments(constant_efficiency(eff, mood_burn=0.0, T=T), T)
 
+    # 容量→效率（仅未归零干员的容量参与计算）
+    non_zero_ops = [op for op in operators if op.name not in zero_set]
+    total += integrate_segments(synergy_capacity_to_eff(non_zero_ops, room_type, product), T)
+
+    # 效率放大器（仅未归零干员的效率参与计算）
+    total += integrate_segments(synergy_efficiency_amplifier(non_zero_ops, room_type, product), T)
+
+    # 机械精通（作业平台在发电站）
+    total += integrate_segments(synergy_token_prod(non_zero_ops, room_type, product, power_platforms), T)
+
     if buff_pool is not None:
-        # 自动化归零也适用于 B 层消费者（B3/B4 等非设施数量型加成）
-        non_zero_ops = [op for op in operators if op.name not in zero_set]
         total += integrate_segments(
             synergy_buff_pool_consumer(non_zero_ops, room_type, product, buff_pool), T,
         )

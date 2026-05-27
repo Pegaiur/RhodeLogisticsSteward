@@ -17,13 +17,15 @@ def _mk_op(name: str = "测试", skills: list[Skill] | None = None,
 
 
 def _mk_skill(buff_id: str, room_type: str, buff_name: str = "测试技能",
-              efficient: dict[str, float] | None = None) -> Skill:
+              efficient: dict[str, float] | None = None,
+              capacity: int = 0) -> Skill:
     return Skill(
         buff_id=buff_id,
         buff_name=buff_name,
         skill_icon=buff_id,
         room_type=room_type,
         efficient=EfficiencyMap(raw=efficient or {"all": 0.0}),
+        capacity_bonus=capacity,
     )
 
 
@@ -1065,3 +1067,210 @@ class TestRampingOperator:
 
         segs = operator_ramp_segments(aluoma, "Trade", "Money", T=12.0)
         assert segs is None
+
+
+# ─── 仓库容量→效率 ──────────────────────────────────────────────────
+
+class TestCapacityToEff:
+    """容量→效率转换: synergy_capacity_to_eff — 红云/泡泡"""
+
+    def test_回收利用_总容量16_效率加32(self):
+        """红云在场，房间内容量总和 16 → 16×2% = 32%"""
+        from steward_core.synergy import synergy_capacity_to_eff
+
+        hongyun = _mk_op("红云")
+        op1 = _mk_op("拾荒者")
+        op1.skills.append(_mk_skill("m_limit", "Mfg", "拾荒者", {"all": 0.0}, capacity=8))
+        op2 = _mk_op("囤积者")
+        op2.skills.append(_mk_skill("m_limit2", "Mfg", "囤积者", {"all": 0.0}, capacity=8))
+
+        segs = synergy_capacity_to_eff([hongyun, op1, op2], "Mfg", "PureGold")
+        assert len(segs) == 1
+        assert segs[0].a == 32.0
+
+    def test_回收利用_无红云_返回空(self):
+        """房间无红云/泡泡 → 容量不转化效率"""
+        from steward_core.synergy import synergy_capacity_to_eff
+
+        op1 = _mk_op("拾荒者")
+        op1.skills.append(_mk_skill("m_limit", "Mfg", "拾荒者", {"all": 0.0}, capacity=8))
+
+        segs = synergy_capacity_to_eff([op1], "Mfg", "PureGold")
+        assert segs == []
+
+    def test_大就是好_小于16格_每格1percent(self):
+        """泡泡在场，总容量 10 → 10×1% = 10%"""
+        from steward_core.synergy import synergy_capacity_to_eff
+
+        paopao = _mk_op("泡泡")
+        op1 = _mk_op("拾荒者")
+        op1.skills.append(_mk_skill("m_limit", "Mfg", "拾荒者", {"all": 0.0}, capacity=10))
+
+        segs = synergy_capacity_to_eff([paopao, op1], "Mfg", "PureGold")
+        assert len(segs) == 1
+        assert segs[0].a == 10.0
+
+    def test_大就是好_超过16格_分段费率(self):
+        """泡泡在场，总容量 20 → 16×1% + 4×3% = 28%"""
+        from steward_core.synergy import synergy_capacity_to_eff
+
+        paopao = _mk_op("泡泡")
+        op1 = _mk_op("探险者")
+        op1.skills.append(_mk_skill("m_limit", "Mfg", "探险者", {"all": 0.0}, capacity=20))
+
+        segs = synergy_capacity_to_eff([paopao, op1], "Mfg", "PureGold")
+        assert len(segs) == 1
+        assert segs[0].a == 28.0  # 16×1 + 4×3
+
+    def test_泡泡和红云同时在场_仅泡泡生效(self):
+        """泡泡/红云共存 → 大就是好！优先，回收利用被屏蔽"""
+        from steward_core.synergy import synergy_capacity_to_eff
+
+        paopao = _mk_op("泡泡")
+        hongyun = _mk_op("红云")
+        op1 = _mk_op("拾荒者")
+        op1.skills.append(_mk_skill("m_limit", "Mfg", "拾荒者", {"all": 0.0}, capacity=8))
+
+        segs = synergy_capacity_to_eff([paopao, hongyun, op1], "Mfg", "PureGold")
+        assert len(segs) == 1
+        assert segs[0].a == 8.0  # 泡泡费率 8×1%，非红云 8×2%
+
+
+# ─── 配合意识 ──────────────────────────────────────────────────────
+
+class TestAmplifier:
+    """效率放大器: synergy_efficiency_amplifier — 槐琥"""
+
+    def test_配合意识_他人提供30percent_额外加30(self):
+        """槐琥在场，其他干员效率总和 30% → 30/5×5 = 30%，上限 40% → 30%"""
+        from steward_core.synergy import synergy_efficiency_amplifier
+
+        huaigu = _mk_op("槐琥")
+        op1 = _mk_op("高效果")
+        op1.skills.append(_mk_skill("m_eff", "Mfg", "高效", {"all": 25.0}))
+        op2 = _mk_op("中效果")
+        op2.skills.append(_mk_skill("m_eff2", "Mfg", "中效", {"all": 5.0}))
+
+        segs = synergy_efficiency_amplifier([huaigu, op1, op2], "Mfg", "PureGold")
+        assert len(segs) == 1
+        assert segs[0].a == 30.0  # (25+5)//5 × 5
+
+    def test_配合意识_触发上限40(self):
+        """他人效率 50% → 50/5×5=50 → clamp 40%"""
+        from steward_core.synergy import synergy_efficiency_amplifier
+
+        huaigu = _mk_op("槐琥")
+        op1 = _mk_op("超高效")
+        op1.skills.append(_mk_skill("m_eff", "Mfg", "超高效", {"all": 50.0}))
+
+        segs = synergy_efficiency_amplifier([huaigu, op1], "Mfg", "PureGold")
+        assert len(segs) == 1
+        assert segs[0].a == 40.0
+
+    def test_配合意识_无槐琥_返回空(self):
+        """房间无槐琥 → 空"""
+        from steward_core.synergy import synergy_efficiency_amplifier
+
+        op1 = _mk_op("高效")
+        op1.skills.append(_mk_skill("m_eff", "Mfg", "高效", {"all": 25.0}))
+
+        segs = synergy_efficiency_amplifier([op1], "Mfg", "PureGold")
+        assert segs == []
+
+
+# ─── 归零变体 ──────────────────────────────────────────────────────
+
+class TestZeroingVariant:
+    """归零变体: synergy_zeroing_variant — 科学改造/流程优化"""
+
+    def test_科学改造_归零他人_补偿容量(self):
+        """科学改造：归零他人效率，每干员+5容量。效率加成由 capacity_to_eff 计算"""
+        from steward_core.synergy import synergy_zeroing_variant
+
+        holder = _mk_op("科学改造干员")
+        holder.skills.append(_mk_skill("manu_prod_spd&manu[000]", "Mfg", "科学改造", {"all": 0.0}))
+
+        other = _mk_op("其他人")
+
+        segs, zero = synergy_zeroing_variant([holder, other], "Mfg", "PureGold")
+        assert len(segs) == 0  # 无效率加成，纯补偿容量
+        assert zero == {"其他人"}
+
+    def test_流程优化_归零他人_补偿效率(self):
+        """流程优化：归零他人效率，每干员+10%效率"""
+        from steward_core.synergy import synergy_zeroing_variant
+
+        holder = _mk_op("流程优化干员")
+        holder.skills.append(_mk_skill("manu_prod_spd&manu[100]", "Mfg", "流程优化", {"all": 0.0}))
+
+        other = _mk_op("其他人")
+
+        segs, zero = synergy_zeroing_variant([holder, other], "Mfg", "PureGold")
+        assert len(segs) == 1
+        assert segs[0].a == 20.0  # 2人(含持有者) × 10%
+        assert zero == {"其他人"}
+
+    def test_无归零变体_返回空(self):
+        """普通房间 → 空"""
+        from steward_core.synergy import synergy_zeroing_variant
+
+        op1 = _mk_op("普通A")
+        op2 = _mk_op("普通B")
+
+        segs, zero = synergy_zeroing_variant([op1, op2], "Mfg", "PureGold")
+        assert segs == []
+        assert zero == set()
+
+
+# ─── 机械精通（作业平台） ────────────────────────────────────────────
+
+class TestTokenProd:
+    """作业平台联动: synergy_token_prod — 机械精通α/β"""
+
+    def test_机械精通α_2台作业平台_贵金属加10(self):
+        """阿兰娜机械精通α: 2台作业平台在发电站 → +10%"""
+        from steward_core.synergy import synergy_token_prod
+
+        alanna = _mk_op("阿兰娜")
+        alanna.skills.append(_mk_skill("manu_token_prod_spd[000]", "Mfg", "机械精通·α", {"all": 0.0}))
+
+        platforms = {"Lancet-2": True, "Castle-3": True}
+
+        segs = synergy_token_prod([alanna], "Mfg", "PureGold", platforms)
+        assert len(segs) == 1
+        assert segs[0].a == 10.0
+
+    def test_机械精通α_贵金属专属_作战记录不触发(self):
+        """α仅在贵金属配方生效"""
+        from steward_core.synergy import synergy_token_prod
+
+        alanna = _mk_op("阿兰娜")
+        alanna.skills.append(_mk_skill("manu_token_prod_spd[000]", "Mfg", "机械精通·α", {"all": 0.0}))
+
+        platforms = {"Lancet-2": True}
+
+        segs = synergy_token_prod([alanna], "Mfg", "CombatRecord", platforms)
+        assert segs == []
+
+    def test_机械精通β_3台作业平台_贵金属加30(self):
+        """β: 每台+10%，3台 → 30%"""
+        from steward_core.synergy import synergy_token_prod
+
+        alanna = _mk_op("阿兰娜")
+        alanna.skills.append(_mk_skill("manu_token_prod_spd[010]", "Mfg", "机械精通·β", {"all": 0.0}))
+
+        platforms = {"Lancet-2": True, "Castle-3": True, "THRM-EX": True}
+
+        segs = synergy_token_prod([alanna], "Mfg", "PureGold", platforms)
+        assert len(segs) == 1
+        assert segs[0].a == 30.0
+
+    def test_无机械精通技能_返回空(self):
+        """普通干员无机械精通 → 空"""
+        from steward_core.synergy import synergy_token_prod
+
+        op = _mk_op("普通")
+        platforms = {"Lancet-2": True}
+
+        segs = synergy_token_prod([op], "Mfg", "PureGold", platforms)
+        assert segs == []
