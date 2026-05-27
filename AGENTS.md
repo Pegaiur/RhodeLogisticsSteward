@@ -86,6 +86,7 @@ RhodeLogisticsSteward/
 
 | 表名 | 维护内容 | 触发条件 |
 |------|----------|----------|
+| `_SYSTEM_CONTRIBUTORS` | 系统贡献者注册表（含锚点/全局/buff生成/设施修改器） | 新增效率为0但有系统贡献的干员 |
 | `_A1_PAIR_TABLE` | 干员配对组合 | 新增配对型联动 buff |
 | `_A3_COUNTER_TABLE` | 技能类型计数锚点 | 新增计数型联动 buff |
 | `_A5_AUTO_NAMES` | 自动化干员名称 | 新增自动化干员 |
@@ -100,9 +101,6 @@ RhodeLogisticsSteward/
 | 表名 | 维护内容 | 触发条件 |
 |------|----------|----------|
 | `_KNIGHT_NAMES` | 骑士干员名称 | 新增卡西米尔但不属于 kazimierz 势力/pinus 组织的骑士 |
-| `_DORM_PRIORITY` | 宿舍填充优先级（B 层生成者） | 新增宿舍 buff 生成者干员（感知/魔物料理/无声共鸣） |
-| `_POWER_PRIORITY` | 发电站优先级（设施数量修改器） | 新增发电站设施数量修改器持有者 |
-| `_C1_PRIORITY_CONTROL` | 中枢全局加成优先选取 | 新增中枢全局效率提供者 |
 
 ### 维护流程
 

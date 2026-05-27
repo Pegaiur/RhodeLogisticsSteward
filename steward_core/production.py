@@ -13,11 +13,12 @@ from typing import Optional
 
 from steward_core.models import Operator, ShiftPlan, LayoutConfig
 from steward_core.synergy import (
-    GlobalBonus, compute_control_global_bonus, compute_buff_pool,
+    compute_control_global_bonus, compute_buff_pool,
     compute_effective_power_count,
 )
 from steward_core.constants import FIXED_CONTROL, BASE_POWER_COUNT
 from steward_core.solver import control_per_operator_bonus
+from steward_core.evaluate import evaluate_room
 
 # ─── 制造站 Lv3 基础参数 ────────────────────────────────────────
 # 作战记录：基础 1个/3h → 0.333 个/h
@@ -106,22 +107,6 @@ class DailyProduction:
 
 def _operator_lookup(operators: list[Operator]) -> dict[str, Operator]:
     return {op.name: op for op in operators}
-
-
-def _room_efficiency_integral(
-    operators: list[Operator],
-    room_type: str,
-    product: str,
-    power_count: int = 3,
-    T: float = 12.0,
-    global_bonus: GlobalBonus | None = None,
-    buff_pool = None,
-) -> float:
-    """[已废弃] 请使用 steward_core.evaluate.evaluate_room 替代"""
-    from steward_core.evaluate import evaluate_room
-    return evaluate_room(operators, room_type, product, power_count, T, global_bonus, buff_pool)
-
-
 
 
 def _calc_drone_daily(
@@ -234,7 +219,7 @@ def calculate(plan: ShiftPlan, operators: list[Operator], hours: float = 24.0) -
 
         if assignment.room_type == "Mfg" and assignment.product == "CombatRecord":
             ctrl_bonus = control_per_operator_bonus(plan_ctrl_ops, ops, "CombatRecord")
-            eff_int = _room_efficiency_integral(ops, "Mfg", "CombatRecord", power_count, hours, global_bonus, buff_pool) + ctrl_bonus * hours
+            eff_int = evaluate_room(ops, "Mfg", "CombatRecord", power_count, hours, global_bonus, buff_pool, ctrl_per_op_bonus=ctrl_bonus)
             productivity_int = hours * (1.0 + 0.01 * n) + eff_int / 100.0
             display_productivity = 1.0 + eff_int / (100.0 * hours)
             drone_boost = 0.0
@@ -252,7 +237,7 @@ def calculate(plan: ShiftPlan, operators: list[Operator], hours: float = 24.0) -
 
         elif assignment.room_type == "Mfg" and assignment.product == "PureGold":
             ctrl_bonus = control_per_operator_bonus(plan_ctrl_ops, ops, "PureGold")
-            eff_int = _room_efficiency_integral(ops, "Mfg", "PureGold", power_count, hours, global_bonus, buff_pool) + ctrl_bonus * hours
+            eff_int = evaluate_room(ops, "Mfg", "PureGold", power_count, hours, global_bonus, buff_pool, ctrl_per_op_bonus=ctrl_bonus)
             productivity_int = hours * (1.0 + 0.01 * n) + eff_int / 100.0
             display_productivity = 1.0 + eff_int / (100.0 * hours)
             drone_boost = 0.0
@@ -269,7 +254,7 @@ def calculate(plan: ShiftPlan, operators: list[Operator], hours: float = 24.0) -
             production.total_gold_produced_per_day += output_per_day
 
         elif assignment.room_type == "Trade":
-            eff_int = _room_efficiency_integral(ops, "Trade", "Money", power_count, hours, global_bonus, buff_pool)
+            eff_int = evaluate_room(ops, "Trade", "Money", power_count, hours, global_bonus, buff_pool)
             efficiency_integrated = hours * (1.0 + 0.01 * n) + eff_int / 100.0
             display_productivity = 1.0 + eff_int / (100.0 * hours)
             drone_boost = 0.0

@@ -15,6 +15,7 @@ from steward_core.synergy import (
     compute_control_global_bonus,
     compute_buff_pool, ROSEMARY_SUPPORT,
     compute_effective_power_count, _has_power_count_modifier,
+    get_system_contributors,
     _B_LAYER_CONSUMER_TABLE, _A6_FACILITY_TABLE,
 )
 from steward_core.evaluate import evaluate_room
@@ -22,23 +23,22 @@ from steward_core.constants import BASE_POWER_COUNT
 
 T = 12.0
 
-ANCHOR_NAMES = {
-    "水月", "多萝西", "苍苔", "海沫",
-    "森蚺", "温蒂", "掠风", "异客",
-    "阿兰娜", "Miss.Christine", "怒潮凛冬",
-}
+ANCHOR_NAMES = set(get_system_contributors("Mfg", "anchor"))
+
+# 系统贡献者按设施索引（由 synergy.py 注册表生成）
+_CTRL_GLOBAL_NAMES = set(get_system_contributors("Control", "global_bonus"))
+_DORM_NAMES = get_system_contributors("Dormitory")
+_POWER_NAMES = set(get_system_contributors("Power", "facility_modifier"))
 
 
 # ─── 角色分类 ───────────────────────────────────────────────────
 
-# C1 全局加成提供者，中枢填充时优先选取
-_C1_PRIORITY_CONTROL: set[str] = {"凯尔希"}
-
-# 宿舍填充优先级（B 层感知/魔物料理/无声共鸣生成者）
-_DORM_PRIORITY: list[str] = ["森西", "爱丽丝", "车尔尼", "塑心"]
-
-# 发电站优先级（设施数量修改器持有者，个人效率为0但影响全局）
-_POWER_PRIORITY: set[str] = {"承曦格雷伊"}
+# 系统贡献者优先级（由 synergy.py 注册表统一管理）
+# 查询方式: get_system_contributors(facility, contribution_type)
+#  - Control+global_bonus → 中枢全局加成
+#  - Dormitory → 宿舍 B 层生成者
+#  - Power+facility_modifier → 发电站修改器
+#  - Mfg+anchor → 制造站联动锚点（ANCHOR_NAMES）
 
 
 @dataclass
@@ -484,7 +484,7 @@ def solve_mvp(operators: list[Operator]) -> SolveResult:
             if not op.has_skill_for("Control"):
                 continue
             eff = max(op.best_efficiency("Control"), 0.0)
-            if op.name in _C1_PRIORITY_CONTROL:
+            if op.name in _CTRL_GLOBAL_NAMES:
                 eff += 1000.0
             remaining_ctrl.append((eff, op))
         remaining_ctrl.sort(key=lambda x: -x[0])
@@ -505,7 +505,7 @@ def solve_mvp(operators: list[Operator]) -> SolveResult:
         if name in op_lookup:
             assigned_ids.discard(op_lookup[name].char_id)
     # 合并 Trade 支撑 + Power 优先级（设施数量修改器持有者）
-    priority = locked_support["Trade"] | _POWER_PRIORITY
+    priority = locked_support["Trade"] | _POWER_NAMES
     remaining = _greedy_remaining(assigned_ids, operators, priority)
     assignments.extend(remaining)
     autofill_count += sum(1 for a in remaining if a.autofill)
@@ -514,7 +514,7 @@ def solve_mvp(operators: list[Operator]) -> SolveResult:
     # locked_support["Dormitory"] 中的干员已在 Phase 1 锁入 assigned_ids
     dorm_names: list[str] = list(locked_support["Dormitory"])
 
-    for name in _DORM_PRIORITY:
+    for name in _DORM_NAMES:
         if name not in dorm_names and name in op_lookup and op_lookup[name].char_id not in assigned_ids:
             dorm_names.append(name)
             assigned_ids.add(op_lookup[name].char_id)
