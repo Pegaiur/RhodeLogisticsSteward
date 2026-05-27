@@ -1,8 +1,8 @@
 """排班求解器
 
-MV3: 制造站穷举(含联动) + 剪枝 + 贪心分配。
-剩余设施（Trade/Power/Reception/Office）用支配偏序贪心。
-Control 固定为社区最优方案。
+Mfg 和 Trade 均使用 C(n,3) 穷举（含联动）+ 贪心分配。
+剩余设施（Power/Reception/Office）用支配偏序贪心。
+Control 由制造站 combo 的支撑需求动态决定。
 """
 
 import itertools
@@ -14,8 +14,9 @@ from steward_core.synergy import (
     compute_control_global_bonus,
     compute_buff_pool, ROSEMARY_SUPPORT,
     compute_effective_power_count, _has_power_count_modifier,
-    get_system_contributors, get_trade_order_equivalent_efficiency,
+    get_system_contributors,
     classify_mfg_operators, prune_equivalent, build_candidate_pool,
+    classify_trade_operators,
     control_per_operator_bonus, _is_knight, _PINUS_GROUP,
     _B3_ROSEMARY, _B5_EBNHLZ, _is_glasgow,
 )
@@ -58,6 +59,31 @@ def _generate_combos(pool: list[Operator], k: int = 3) -> list[list[Operator]]:
     if len(pool) < k:
         return [list(pool)]
     return [list(combo) for combo in itertools.combinations(pool, k)]
+
+
+def _evaluate_trade_combo(
+    combo_ops: list[Operator],
+    power_count: int,
+    hours: float,
+    global_bonus,
+    buff_pool,
+    ctrl_per_op_bonus: float = 0.0,
+) -> float:
+    """评估 Trade 三人组合的 LMD 日产
+
+    evaluate_room（效率积分） + _get_trade_order_multiplier（订单机制）双通道精确计算。
+    返回该组合在给定条件下的一日 LMD 产出。
+    """
+    from steward_core.production import _get_trade_order_multiplier
+
+    n = len(combo_ops)
+    eff_int = evaluate_room(
+        combo_ops, "Trade", "Money", power_count, hours,
+        global_bonus, buff_pool, ctrl_per_op_bonus=ctrl_per_op_bonus,
+    )
+    efficiency_integrated = hours * (1.0 + 0.01 * n) + eff_int / 100.0
+    lmd_per_day, _gold, _equiv = _get_trade_order_multiplier(combo_ops, hours)
+    return efficiency_integrated / 24.0 * lmd_per_day
 
 
 # ─── 跨间贪心分配 ──────────────────────────────────────────────
@@ -193,7 +219,7 @@ def _greedy_remaining(
 
     results = []
     for room in _LAYOUT_243.rooms:
-        if room.room_type in ("Mfg", "Control", "Dormitory"):
+        if room.room_type not in ("Power", "Reception", "Office"):
             continue
 
         taken = []
@@ -219,20 +245,12 @@ def _greedy_remaining(
         for op in operators:
             if op.char_id in assigned_ids:
                 continue
-            # A7 订单机制干员特殊处理：
-            # 但书/龙舌兰/可露希尔等 buff_id 为 trade_ord_* 的干员，
-            # has_skill_for("Trade", "Money") 可能返回 False（机制技能无 product 绑定），
-            # 但其订单倍数对产出有实质性贡献，必须允许进入候选池
-            a7_eff = get_trade_order_equivalent_efficiency(op, assigned_ids, op_lookup)
-            if room.room_type != "Trade" or a7_eff <= 0:
-                if not op.has_skill_for(room.room_type, room.product):
-                    continue
+            if not op.has_skill_for(room.room_type, room.product):
+                continue
             eff = op.best_efficiency(room.room_type, room.product)
             if eff <= 0:
                 a6_segs = synergy_facility_count([op], room.room_type, room.product, _LAYOUT_243, T=T)
                 eff = sum(s.a for s in a6_segs)
-            if eff <= 0:
-                eff = a7_eff
             if eff <= 0:
                 continue
             seg = constant_efficiency(eff, mood_burn=0.0, T=T)
@@ -502,13 +520,85 @@ def solve_mvp(operators: list[Operator]) -> SolveResult:
         room_type="Control", room_index=0, operators=ctrl_names,
     ))
 
-    # Phase 3: 剩余设施贪心
+    # Phase 3a: Trade 穷举（与 Mfg 同架构）
     # 释放 locked Trade 支撑干员（已在 Phase 1 锁入 assigned_ids 但尚未写入房间）
     for name in locked_support["Trade"]:
         if name in op_lookup:
             assigned_ids.discard(op_lookup[name].char_id)
-    # 合并 Trade 支撑 + Power 优先级（设施数量修改器持有者）
-    priority = locked_support["Trade"] | _POWER_NAMES
+            assigned_names.discard(name)
+
+    trade_ops = [op for op in operators if op.char_id not in assigned_ids
+                 and op.has_skill_for("Trade", "Money")]
+    # 订单机制干员 has_skill_for 可能为 False，补充加入
+    for op in operators:
+        if op.char_id in assigned_ids:
+            continue
+        if op in trade_ops:
+            continue
+        if any(s.buff_id.startswith(("trade_ord_law", "trade_ord_long",
+                                      "trade_ord_closure", "trade_ord_vodfox"))
+               for s in op.skills):
+            trade_ops.append(op)
+
+    if trade_ops:
+        TRADE_ANCHOR_NAMES = set(get_system_contributors("Trade", "anchor"))
+        classification = classify_trade_operators(trade_ops, TRADE_ANCHOR_NAMES)
+        pool = build_candidate_pool(trade_ops, classification)
+        pool = [op for op in pool if op.char_id not in assigned_ids]
+        combos = _generate_combos(pool, min(3, len(pool)))
+
+        # 构建全局上下文（Phase 2 中枢已确定）
+        ctrl_ops = [op_lookup[n] for n in ctrl_names if n in op_lookup]
+        global_bonus = compute_control_global_bonus(ctrl_ops)
+        effective_power = BASE_POWER_COUNT + sum(
+            1 for op in operators if op.name not in assigned_names
+            and _has_power_count_modifier(op)
+        )
+
+        # 评估所有组合
+        evaluated = []
+        for combo_ops in combos:
+            ctrl_bonus = control_per_operator_bonus(
+                ctrl_ops, combo_ops, "Money", room_type="Trade",
+            )
+            lmd = _evaluate_trade_combo(
+                combo_ops, effective_power, T, global_bonus,
+                compute_buff_pool(ctrl_ops, suich_count=5), ctrl_bonus,
+            )
+            combo_names = [op.name for op in combo_ops]
+            evaluated.append((lmd, combo_names))
+        evaluated.sort(key=lambda x: -x[0])
+
+        # 贪心分配（2 间 Trade）
+        allocated = _greedy_allocate(evaluated, room_count=2)
+        for names in allocated:
+            for op in pool:
+                if op.name in names:
+                    assigned_ids.add(op.char_id)
+                    assigned_names.add(op.name)
+            room_idx = len([a for a in assignments if a.room_type == "Trade"])
+            assignments.append(RoomAssignment(
+                room_type="Trade", room_index=room_idx,
+                operators=names, product="Money",
+            ))
+        if len(allocated) < 2:
+            for _ in range(2 - len(allocated)):
+                assignments.append(RoomAssignment(
+                    room_type="Trade",
+                    room_index=len([a for a in assignments if a.room_type == "Trade"]),
+                    operators=[], product="Money", autofill=True,
+                ))
+                autofill_count += 1
+    else:
+        for i in range(2):
+            assignments.append(RoomAssignment(
+                room_type="Trade", room_index=i,
+                operators=[], product="Money", autofill=True,
+            ))
+            autofill_count += 1
+
+    # Phase 3b: 剩余设施（Power/Reception/Office）贪心
+    priority = _POWER_NAMES
     remaining = _greedy_remaining(assigned_ids, operators, priority)
     assignments.extend(remaining)
     autofill_count += sum(1 for a in remaining if a.autofill)
