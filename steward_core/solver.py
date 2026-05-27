@@ -30,6 +30,9 @@ _CTRL_GLOBAL_NAMES = set(get_system_contributors("Control", "global_bonus"))
 _DORM_NAMES = get_system_contributors("Dormitory")
 _POWER_NAMES = set(get_system_contributors("Power", "facility_modifier"))
 
+# 中枢全局加成在控制中枢填充中的排序偏置
+_CTRL_GLOBAL_SORT_BIAS = 1000.0
+
 
 # ─── 角色分类 ───────────────────────────────────────────────────
 
@@ -485,7 +488,7 @@ def solve_mvp(operators: list[Operator]) -> SolveResult:
                 continue
             eff = max(op.best_efficiency("Control"), 0.0)
             if op.name in _CTRL_GLOBAL_NAMES:
-                eff += 1000.0
+                eff += _CTRL_GLOBAL_SORT_BIAS
             remaining_ctrl.append((eff, op))
         remaining_ctrl.sort(key=lambda x: -x[0])
         for _eff, op in remaining_ctrl:
