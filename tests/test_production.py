@@ -555,3 +555,75 @@ class TestTradeOrderMultiplier:
         base_orders = 24 / 3.39
         assert lmd_per_day == pytest.approx(base_orders * expected_lmd, rel=0.002)
         assert gold_per_day == pytest.approx(base_orders * expected_gold, rel=0.002)
+
+
+# ─── 等效效率自动量化（A7 层回退）────────────────────────────
+
+class TestTradeOrderEquivalentEfficiency:
+    """验证 get_trade_order_equivalent_efficiency 从倍数自动推算偏置"""
+
+    def test_普通干员_返回零(self):
+        """无 A7 机制的普通干员 → 0（无偏置）"""
+        from steward_core.synergy import get_trade_order_equivalent_efficiency
+
+        op = _mk_op("商人", [_mk_skill("Trade", {"Money": 30})])
+
+        assert get_trade_order_equivalent_efficiency(op) == 0.0
+
+    def test_但书_等效效率约90(self):
+        """但书 1.55× 倍数 → 等效 ~90%"""
+        from steward_core.synergy import get_trade_order_equivalent_efficiency
+
+        butler = _mk_op("但书", [
+            Skill(buff_id="trade_ord_law[000]", buff_name="合同法", skill_icon="test",
+                  room_type="Trade", efficient=EfficiencyMap(raw={"Money": 0})),
+            Skill(buff_id="trade_ord_against[010]", buff_name="违约索赔·β", skill_icon="test",
+                  room_type="Trade", efficient=EfficiencyMap(raw={"Money": 0})),
+        ])
+
+        eff = get_trade_order_equivalent_efficiency(butler)
+        assert eff == pytest.approx(89.9, rel=0.05)
+
+    def test_龙舌兰_等效效率约11(self):
+        """龙舌兰 1.07× 倍数（无裁缝）→ 等效 ~11%"""
+        from steward_core.synergy import get_trade_order_equivalent_efficiency
+
+        tequila = _mk_op("龙舌兰", [
+            Skill(buff_id="trade_ord_long[010]", buff_name="投资·β", skill_icon="test",
+                  room_type="Trade", efficient=EfficiencyMap(raw={"Money": 0})),
+        ])
+
+        eff = get_trade_order_equivalent_efficiency(tequila)
+        assert eff == pytest.approx(11.2, rel=0.1)
+
+    def test_可露希尔_等效效率约28(self):
+        """可露希尔 1.17× 倍数 → 等效 ~28%"""
+        from steward_core.synergy import get_trade_order_equivalent_efficiency
+
+        closure = _mk_op("可露希尔", [
+            Skill(buff_id="trade_ord_closure[000]", buff_name="特别订单", skill_icon="test",
+                  room_type="Trade", efficient=EfficiencyMap(raw={"Money": 10})),
+        ])
+
+        eff = get_trade_order_equivalent_efficiency(closure)
+        assert eff == pytest.approx(27.6, rel=0.1)
+
+    def test_裁缝α_等效效率约4(self):
+        """裁缝α 1.02× 倍数 → 等效 ~4%"""
+        from steward_core.synergy import get_trade_order_equivalent_efficiency
+
+        tailor = _mk_op("明椒", [
+            Skill(buff_id="trade_ord_wt&cost[000]", buff_name="裁缝·α", skill_icon="test",
+                  room_type="Trade", efficient=EfficiencyMap(raw={"Money": 0})),
+        ])
+
+        eff = get_trade_order_equivalent_efficiency(tailor)
+        assert eff == pytest.approx(3.9, rel=0.15)
+
+    def test_裁员后仍可import_无循环依赖(self):
+        """验证 synergy.py 不依赖 _SYSTEM_CONTRIBUTORS 中的 order_mechanism 注册"""
+        from steward_core.synergy import get_system_contributors
+
+        names = get_system_contributors("Trade", "order_mechanism")
+        # 自动量化后不再需要注册表
+        assert len(names) == 0

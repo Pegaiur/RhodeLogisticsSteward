@@ -8,6 +8,7 @@ A2/A7/B 层在后续迭代补充。
 from dataclasses import dataclass
 
 from steward_core.models import LinearSegment, Operator, LayoutConfig
+from steward_core.efficiency_fn import ramping_efficiency
 
 T = 12.0  # MVP 固定 12h 排班
 
@@ -18,7 +19,7 @@ class SystemContributor:
     """个人效率为0但对排班系统有非零贡献的干员"""
     name: str
     facility_types: list[str]      # 贡献的目标设施
-    contribution_type: str          # "global_bonus" | "b_generator" | "facility_modifier" | "anchor" | "order_mechanism"
+    contribution_type: str          # "global_bonus" | "b_generator" | "facility_modifier" | "anchor"
 
 
 _SYSTEM_CONTRIBUTORS: list[SystemContributor] = [
@@ -43,10 +44,6 @@ _SYSTEM_CONTRIBUTORS: list[SystemContributor] = [
     SystemContributor("阿兰娜", ["Mfg"], "anchor"),
     SystemContributor("Miss.Christine", ["Mfg"], "anchor"),
     SystemContributor("怒潮凛冬", ["Mfg"], "anchor"),
-    # 贸易站订单机制（A7）
-    SystemContributor("但书", ["Trade"], "order_mechanism"),
-    SystemContributor("龙舌兰", ["Trade"], "order_mechanism"),
-    SystemContributor("可露希尔", ["Trade"], "order_mechanism"),
 ]
 
 
@@ -64,25 +61,29 @@ def get_system_contributors(
 
 
 def get_trade_order_equivalent_efficiency(op: "Operator") -> float:
-    """A7 订单机制干员的贪心排序等效个人效率
+    """A7 订单机制干员的贪心排序等效个人效率（自动量化）
 
-    对照 _CTRL_GLOBAL_SORT_BIAS 模式，将订单机制带来的 LMD 倍数
-    折算为"等效个人效率"。当 best_efficiency() 返回 0 时，
-    _greedy_remaining() 用此值作为回退，确保 A7 干员不被过滤。
+    假设该体系核心以自身机制最大化效率（类比迷迭香≈70%），
+    从 _get_trade_order_multiplier([op]) 获取实际 LMD 倍数，
+    折算为等效个人效率供贪心排序。实际回落在 _calc_trade() 完成。
 
-    等效效率 = (倍数 - 1.0) × (基础 100% + 2 名平均室友 60%)
+    公式: (lmd_mult - 1.0) × (1.03 基础 + 0.60 两名平均室友)
     """
-    for sk in op.skills:
-        bid = sk.buff_id
-        if bid.startswith("trade_ord_law"):
-            return 85.0
-        if bid.startswith("trade_ord_closure"):
-            return 30.0
-        if bid.startswith("trade_ord_long"):
-            return 15.0
-        if bid.startswith("trade_ord_wt&cost"):
-            return 8.0
-    return 0.0
+    has_a7 = any(
+        s.buff_id.startswith(("trade_ord_law", "trade_ord_closure",
+                              "trade_ord_long", "trade_ord_wt&cost"))
+        for s in op.skills
+    )
+    if not has_a7:
+        return 0.0
+
+    from steward_core.production import _get_trade_order_multiplier
+
+    lmd_per_day, _ = _get_trade_order_multiplier([op])
+    multiplier = lmd_per_day / 10265.0
+    if multiplier <= 1.001:
+        return 0.0
+    return (multiplier - 1.0) * 1.63 * 100
 
 
 # ─── A1 干员配对 ─────────────────────────────────────────────────
@@ -115,6 +116,33 @@ def synergy_pair(
             segments.append(LinearSegment(a=bonus, b=0.0, t_start=0.0, dt=T))
 
     return segments
+
+
+# ─── 爬升型效率 ───────────────────────────────────────────────────
+
+# 爬升型技能表: {buffId: (首小时%, 增量%/h, 上限%)}
+_RAMPING_SKILL_TABLE: dict[str, tuple[float, float, float]] = {
+    "manu_prod_spd_addition[100]": (0.0, 2.0, 20.0),  # 例行清扫: 0→20%@2%/h
+}
+
+
+def operator_ramp_segments(
+    op: Operator,
+    room_type: str,
+    product: str,
+    T: float = 12.0,
+) -> list[LinearSegment] | None:
+    """检查干员是否持有爬升型技能，返回 ramping_efficiency 段
+
+    返回值约定: 有爬升技能 → 分段列表，无 → None（由调用方回退到 constant_efficiency）。
+    """
+    for sk in op.skills:
+        if sk.room_type != room_type:
+            continue
+        if sk.buff_id in _RAMPING_SKILL_TABLE:
+            k0, r, ceiling = _RAMPING_SKILL_TABLE[sk.buff_id]
+            return ramping_efficiency(k0=k0, r=r, ceiling=ceiling, mood_burn=0.0, T=T)
+    return None
 
 
 # ─── A3 技能类型计数 ─────────────────────────────────────────────
