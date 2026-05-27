@@ -6,17 +6,16 @@ Control 固定为社区最优方案。
 """
 
 import itertools
-from dataclasses import dataclass, field
 
 from steward_core.models import LayoutConfig, Operator, RoomAssignment, ShiftPlan, SolveResult
 from steward_core.efficiency_fn import constant_efficiency, rank_by_dominance
 from steward_core.synergy import (
-    synergy_facility_count, skill_class,
+    synergy_facility_count,
     compute_control_global_bonus,
     compute_buff_pool, ROSEMARY_SUPPORT,
     compute_effective_power_count, _has_power_count_modifier,
     get_system_contributors,
-    _B_LAYER_CONSUMER_TABLE, _A6_FACILITY_TABLE,
+    classify_mfg_operators, prune_equivalent, build_candidate_pool,
 )
 from steward_core.evaluate import evaluate_room
 from steward_core.constants import BASE_POWER_COUNT
@@ -42,70 +41,6 @@ _CTRL_GLOBAL_SORT_BIAS = 1000.0
 #  - Dormitory → 宿舍 B 层生成者
 #  - Power+facility_modifier → 发电站修改器
 #  - Mfg+anchor → 制造站联动锚点（ANCHOR_NAMES）
-
-
-@dataclass
-class MfgClassification:
-    pure_efficiency: list[Operator] = field(default_factory=list)
-    anchors: list[Operator] = field(default_factory=list)
-    providers: list[Operator] = field(default_factory=list)
-
-
-def _classify_mfg_operators(
-    operators: list[Operator], product: str,
-) -> MfgClassification:
-    """将制造站干员分类为 纯效率/联动锚点/技能提供者"""
-    result = MfgClassification()
-    for op in operators:
-        is_anchor = op.name in ANCHOR_NAMES
-
-        has_skill_label = False
-        for sk in op.skills:
-            if sk.room_type != "Mfg":
-                continue
-            if skill_class(sk.buff_name):
-                has_skill_label = True
-                break
-
-        if is_anchor:
-            result.anchors.append(op)
-        elif has_skill_label:
-            result.providers.append(op)
-        elif op.name in _B_LAYER_CONSUMER_TABLE and _B_LAYER_CONSUMER_TABLE[op.name][0] == "Mfg":
-            result.providers.append(op)
-        elif op.name in _A6_FACILITY_TABLE and _A6_FACILITY_TABLE[op.name][2] == "Mfg":
-            result.providers.append(op)
-        else:
-            result.pure_efficiency.append(op)
-
-    return result
-
-
-def _prune_equivalent(pure_ops: list[Operator], top_k: int = 3) -> list[Operator]:
-    """规则1: 等价类合并 — 纯效率只保留 top_k 名"""
-    sorted_ops = sorted(pure_ops, key=lambda op: -op.best_efficiency("Mfg"))
-    return sorted_ops[:top_k]
-
-
-def _build_candidate_pool(
-    all_ops: list[Operator], classification: MfgClassification,
-) -> list[Operator]:
-    """规则2: 锚点池筛选 — anchors + providers + top_k 纯效率"""
-    seen = {op.char_id for op in classification.anchors}
-    pool = list(classification.anchors)
-
-    for op in classification.providers:
-        if op.char_id not in seen:
-            seen.add(op.char_id)
-            pool.append(op)
-
-    top_pure = _prune_equivalent(classification.pure_efficiency, top_k=5)
-    for op in top_pure:
-        if op.char_id not in seen:
-            seen.add(op.char_id)
-            pool.append(op)
-
-    return pool
 
 
 def _upper_bound_ok(total_eff: float, best_known: float, threshold: float = 0.95) -> bool:
@@ -426,8 +361,8 @@ def solve_mvp(operators: list[Operator]) -> SolveResult:
                 autofill_count += 1
             continue
 
-        classification = _classify_mfg_operators(mfg_ops, product)
-        pool = _build_candidate_pool(mfg_ops, classification)
+        classification = classify_mfg_operators(mfg_ops, product, ANCHOR_NAMES)
+        pool = build_candidate_pool(mfg_ops, classification)
         pool = [op for op in pool if op.char_id not in assigned_ids]
         combos = _generate_combos(pool, 3)
 

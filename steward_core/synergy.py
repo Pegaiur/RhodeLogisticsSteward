@@ -573,3 +573,74 @@ def compute_global_burn(
 
     burn = max(0.0, _BASE_BURN_3 - recovery)
     return burn
+
+
+# ─── 制造站干员分类（供 solver 使用） ────────────────────────────
+
+from dataclasses import dataclass as dc_field, field
+from steward_core.models import Operator as OpModel
+
+
+@dataclass
+class MfgClassification:
+    """制造站干员分类结果"""
+    pure_efficiency: list = field(default_factory=list)
+    anchors: list = field(default_factory=list)
+    providers: list = field(default_factory=list)
+
+
+def classify_mfg_operators(
+    operators: list, product: str, anchor_names: set[str],
+) -> "MfgClassification":
+    """将制造站干员分类为 纯效率/联动锚点/技能提供者"""
+    result = MfgClassification()
+    for op in operators:
+        is_anchor = op.name in anchor_names
+
+        has_skill_label = False
+        for sk in op.skills:
+            if sk.room_type != "Mfg":
+                continue
+            if skill_class(sk.buff_name):
+                has_skill_label = True
+                break
+
+        if is_anchor:
+            result.anchors.append(op)
+        elif has_skill_label:
+            result.providers.append(op)
+        elif op.name in _B_LAYER_CONSUMER_TABLE and _B_LAYER_CONSUMER_TABLE[op.name][0] == "Mfg":
+            result.providers.append(op)
+        elif op.name in _A6_FACILITY_TABLE and _A6_FACILITY_TABLE[op.name][2] == "Mfg":
+            result.providers.append(op)
+        else:
+            result.pure_efficiency.append(op)
+
+    return result
+
+
+def prune_equivalent(pure_ops: list, top_k: int = 3) -> list:
+    """等价类合并 — 纯效率只保留 top_k 名"""
+    sorted_ops = sorted(pure_ops, key=lambda op: -op.best_efficiency("Mfg"))
+    return sorted_ops[:top_k]
+
+
+def build_candidate_pool(
+    all_ops: list, classification: "MfgClassification",
+) -> list:
+    """锚点池筛选 — anchors + providers + top_k 纯效率"""
+    seen = {op.char_id for op in classification.anchors}
+    pool = list(classification.anchors)
+
+    for op in classification.providers:
+        if op.char_id not in seen:
+            seen.add(op.char_id)
+            pool.append(op)
+
+    top_pure = prune_equivalent(classification.pure_efficiency, top_k=5)
+    for op in top_pure:
+        if op.char_id not in seen:
+            seen.add(op.char_id)
+            pool.append(op)
+
+    return pool

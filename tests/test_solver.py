@@ -28,12 +28,14 @@ def _mk_mfg_skill(buff_name: str, efficiency: float, buff_id: str = "test",
 
 # ─── 干员角色分类 ───────────────────────────────────────────────
 
+_TEST_ANCHORS = {"水月", "海沫", "森蚺", "温蒂", "多萝西", "苍苔", "掠风", "异客"}
+
 class TestClassifyOperators:
     """分类制造站干员: 纯效率 / 联动锚点 / 技能提供者"""
 
     def test_普通干员_归为纯效率(self):
         """无联动角色 → 归入纯效率池"""
-        from steward_core.solver import _classify_mfg_operators
+        from steward_core.synergy import classify_mfg_operators
 
         # Arrange: 使用无技能类别标签的干员名，技能名不含标准化/莱茵等关键词
         ops = [
@@ -43,7 +45,7 @@ class TestClassifyOperators:
         ]
 
         # Act
-        result = _classify_mfg_operators(ops, "CombatRecord")
+        result = classify_mfg_operators(ops, "CombatRecord", _TEST_ANCHORS)
 
         # Assert: 全部归入 pure
         names = {op.name for op in result.pure_efficiency}
@@ -52,7 +54,7 @@ class TestClassifyOperators:
 
     def test_联动锚点_正确识别(self):
         """水月(计数锚点) → anchors, 海沫(别名锚点) → anchors"""
-        from steward_core.solver import _classify_mfg_operators
+        from steward_core.synergy import classify_mfg_operators
 
         # Arrange
         shuiyue = _mk_op("水月", [_mk_mfg_skill("标准化·α", 25.0)])
@@ -60,7 +62,7 @@ class TestClassifyOperators:
         filler = _mk_op("白雪", [_mk_mfg_skill("高效生产", 30.0)])
 
         # Act
-        result = _classify_mfg_operators([shuiyue, haimo, filler], "CombatRecord")
+        result = classify_mfg_operators([shuiyue, haimo, filler], "CombatRecord", _TEST_ANCHORS)
 
         # Assert
         anchor_names = {op.name for op in result.anchors}
@@ -70,14 +72,14 @@ class TestClassifyOperators:
 
     def test_技能提供者_正确识别(self):
         """杰西卡有标准化技能 → providers"""
-        from steward_core.solver import _classify_mfg_operators
+        from steward_core.synergy import classify_mfg_operators
 
         # Arrange
         jessica = _mk_op("杰西卡", [_mk_mfg_skill("标准化·β", 25.0)])
         filler = _mk_op("白雪", [_mk_mfg_skill("高效生产", 30.0)])
 
         # Act
-        result = _classify_mfg_operators([jessica, filler], "CombatRecord")
+        result = classify_mfg_operators([jessica, filler], "CombatRecord", _TEST_ANCHORS)
 
         # Assert: 杰西卡有标准化标签 → provider, 白雪无标签 → pure
         provider_names = {op.name for op in result.providers}
@@ -113,14 +115,14 @@ class TestClassifyOperators:
 
     def test_B层消费者_归为providers(self):
         """黍(raw eff=0,B1消费者) → 应归入 providers 而非被剪枝"""
-        from steward_core.solver import _classify_mfg_operators
+        from steward_core.synergy import classify_mfg_operators
 
         # Arrange: 黍持有 Mfg 条件型 buff (eff=0)
         shu = _mk_op("黍", [_mk_mfg_skill("人间烟火·α", 0.0, "b1")])
         filler = _mk_op("白雪", [_mk_mfg_skill("高效生产", 30.0)])
 
         # Act
-        result = _classify_mfg_operators([shu, filler], "CombatRecord")
+        result = classify_mfg_operators([shu, filler], "CombatRecord", _TEST_ANCHORS)
 
         # Assert: 黍 → providers（不被剪枝）
         provider_names = {op.name for op in result.providers}
@@ -130,14 +132,14 @@ class TestClassifyOperators:
 
     def test_B层消费者_桑葚归为providers(self):
         """桑葚(raw eff=0,B1消费者) → providers"""
-        from steward_core.solver import _classify_mfg_operators
+        from steward_core.synergy import classify_mfg_operators
 
         # Arrange
         sangshen = _mk_op("桑葚", [_mk_mfg_skill("人间烟火·α", 0.0, "b1")])
         filler = _mk_op("白雪", [_mk_mfg_skill("高效生产", 30.0)])
 
         # Act
-        result = _classify_mfg_operators([sangshen, filler], "CombatRecord")
+        result = classify_mfg_operators([sangshen, filler], "CombatRecord", _TEST_ANCHORS)
 
         # Assert
         provider_names = {op.name for op in result.providers}
@@ -145,7 +147,7 @@ class TestClassifyOperators:
 
     def test_B层消费者_乌有在Trade_不影响Mfg分类(self):
         """乌有是 Trade 消费者，在 Mfg 分类中不应出现"""
-        from steward_core.solver import _classify_mfg_operators
+        from steward_core.synergy import classify_mfg_operators
 
         # Arrange: 乌有有 Trade skill，但在 Mfg 分类上下文中
         wuyou = _mk_op("乌有", [
@@ -154,7 +156,7 @@ class TestClassifyOperators:
         filler = _mk_op("白雪", [_mk_mfg_skill("高效生产", 30.0)])
 
         # Act
-        result = _classify_mfg_operators([wuyou, filler], "CombatRecord")
+        result = classify_mfg_operators([wuyou, filler], "CombatRecord", _TEST_ANCHORS)
 
         # Assert: 乌有不应出现在 Mfg providers 中（他是 Trade 专属）
         provider_names = {op.name for op in result.providers}
@@ -169,7 +171,7 @@ class TestPruning:
     def test_等价类合并_纯效率只保留代表(self):
         """三个无联动干员 → 组合数从 C(3,3)=1 缩到 1（已经是1）"""
         # 构造更大池验证: 5个纯效率干员 → 仅需保留前3名最高效的组合
-        from steward_core.solver import _prune_equivalent
+        from steward_core.synergy import prune_equivalent
 
         # Arrange: 5个纯效率干员
         ops = [
@@ -181,7 +183,7 @@ class TestPruning:
         ]
 
         # Act: 等价类合并后，纯效率仅保留 Top-3
-        pure_pool = _prune_equivalent(ops, top_k=3)
+        pure_pool = prune_equivalent(ops, top_k=3)
 
         # Assert: 只保留前3名
         assert len(pure_pool) == 3
@@ -191,7 +193,7 @@ class TestPruning:
 
     def test_锚点池筛选_保留锚点加配套(self):
         """水月+海沫+3个标准化提供者 vs 纯效率池 → 锚点池包含锚点和配套"""
-        from steward_core.solver import _classify_mfg_operators, _build_candidate_pool
+        from steward_core.synergy import classify_mfg_operators, build_candidate_pool
 
         # Arrange
         shuiyue = _mk_op("水月", [_mk_mfg_skill("标准化·α", 25.0, "s1")])
@@ -203,10 +205,10 @@ class TestPruning:
         bo = _mk_op("薄绿", [_mk_mfg_skill("标准化·β", 25.0, "s6")])
         all_ops = [shuiyue, haimo, jessica, perfumer, bai, bo]
 
-        classification = _classify_mfg_operators(all_ops, "CombatRecord")
+        classification = classify_mfg_operators(all_ops, "CombatRecord", _TEST_ANCHORS)
 
         # Act
-        pool = _build_candidate_pool(all_ops, classification)
+        pool = build_candidate_pool(all_ops, classification)
 
         # Assert: 池包含所有锚点+配套
         pool_names = {op.name for op in pool}
@@ -384,7 +386,7 @@ class TestRealDataEndToEnd:
     def test_制造站候选人数_匹配文档预期(self):
         """从真数据加载后，CR=60, PG=56 与文档一致"""
         from steward_core.data_loader import load_operators_v2, ROOM_TYPE_MAP
-        from steward_core.solver import _classify_mfg_operators
+        from steward_core.synergy import classify_mfg_operators
 
         project_root = Path(__file__).resolve().parent.parent
         ci_path = project_root / "character_identity.json"
@@ -404,13 +406,13 @@ class TestRealDataEndToEnd:
         assert 70 <= len(pg) <= 90
 
         # 分类验证
-        classification = _classify_mfg_operators(cr, "CombatRecord")
+        classification = classify_mfg_operators(cr, "CombatRecord", _TEST_ANCHORS)
         assert len(classification.anchors) >= 3  # 至少水月/多萝西/海沫
 
     def test_end_to_end_纯内存_无崩溃(self):
         """端到端求解不崩溃"""
         # 此测试用纯内存数据跑通路径，不验证结果正确性
-        from steward_core.solver import _classify_mfg_operators, _build_candidate_pool
+        from steward_core.synergy import classify_mfg_operators, build_candidate_pool
         from steward_core.solver import _generate_combos, _greedy_allocate
         from steward_core.evaluate import evaluate_room
 
@@ -424,8 +426,8 @@ class TestRealDataEndToEnd:
             _mk_op("白雪", [_mk_mfg_skill("标准化·α", 30.0, "s4")]),
         ]
 
-        classification = _classify_mfg_operators(ops, "CombatRecord")
-        pool = _build_candidate_pool(ops, classification)
+        classification = classify_mfg_operators(ops, "CombatRecord", _TEST_ANCHORS)
+        pool = build_candidate_pool(ops, classification)
         combos = _generate_combos(pool, 3)
 
         evaluated = []

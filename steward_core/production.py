@@ -11,9 +11,9 @@
 from dataclasses import dataclass, field
 from typing import Optional
 
-from steward_core.models import Operator, ShiftPlan, LayoutConfig
+from steward_core.models import Operator, ShiftPlan, LayoutConfig, RoomAssignment
 from steward_core.synergy import (
-    compute_control_global_bonus, compute_buff_pool,
+    GlobalBonus, compute_control_global_bonus, compute_buff_pool,
     compute_effective_power_count,
 )
 from steward_core.constants import FIXED_CONTROL, BASE_POWER_COUNT
@@ -140,6 +140,94 @@ def _drone_multiplier(daily_drones: float, minutes_per_drone: float, hours: floa
     return accelerated_minutes / period_minutes
 
 
+# ─── 房间产出计算上下文 ──────────────────────────────────────────
+
+@dataclass
+class _CalcCtx:
+    """房间产出计算所需的全局上下文（避免参数传递冗长）"""
+    op_lookup: dict[str, Operator]
+    plan_ctrl_ops: list[Operator]
+    global_bonus: "GlobalBonus"
+    buff_pool: object
+    power_count: int
+    hours: float
+    daily_drones: float
+    drone_room_type: str
+    drone_room_index: int
+
+
+def _drone_boost(assignment: RoomAssignment, ctx: _CalcCtx, minutes_per_drone: float) -> float:
+    """计算该房间的无人机加速倍率"""
+    if assignment.room_type == ctx.drone_room_type and assignment.room_index == ctx.drone_room_index:
+        return _drone_multiplier(ctx.daily_drones, minutes_per_drone, ctx.hours) - 1.0
+    return 0.0
+
+
+def _calc_mfg_record(
+    ctx: _CalcCtx, assignment: RoomAssignment, ops: list[Operator], production: DailyProduction,
+) -> None:
+    """制造站作战记录产出计算"""
+    n = len(ops)
+    ctrl_bonus = control_per_operator_bonus(ctx.plan_ctrl_ops, ops, "CombatRecord")
+    eff_int = evaluate_room(ops, "Mfg", "CombatRecord", ctx.power_count, ctx.hours,
+                            ctx.global_bonus, ctx.buff_pool, ctrl_per_op_bonus=ctrl_bonus)
+    productivity_int = ctx.hours * (1.0 + 0.01 * n) + eff_int / 100.0
+    display_productivity = 1.0 + eff_int / (100.0 * ctx.hours)
+    drone_boost = _drone_boost(assignment, ctx, _DRONE_MINUTES_MFG)
+    output_per_day = _RECORD_BASE_PER_HOUR * productivity_int * (1.0 + drone_boost)
+    production.record_rooms.append(RoomOutput(
+        room_type="Mfg", room_index=assignment.room_index,
+        product="CombatRecord", operators=assignment.operators,
+        productivity=display_productivity, output_per_day=output_per_day,
+        drone_boost_pct=drone_boost, output_unit="个",
+    ))
+    production.total_records_per_day += output_per_day
+
+
+def _calc_mfg_gold(
+    ctx: _CalcCtx, assignment: RoomAssignment, ops: list[Operator], production: DailyProduction,
+) -> None:
+    """制造站赤金产出计算"""
+    n = len(ops)
+    ctrl_bonus = control_per_operator_bonus(ctx.plan_ctrl_ops, ops, "PureGold")
+    eff_int = evaluate_room(ops, "Mfg", "PureGold", ctx.power_count, ctx.hours,
+                            ctx.global_bonus, ctx.buff_pool, ctrl_per_op_bonus=ctrl_bonus)
+    productivity_int = ctx.hours * (1.0 + 0.01 * n) + eff_int / 100.0
+    display_productivity = 1.0 + eff_int / (100.0 * ctx.hours)
+    drone_boost = _drone_boost(assignment, ctx, _DRONE_MINUTES_MFG)
+    output_per_day = _GOLD_BASE_PER_HOUR * productivity_int * (1.0 + drone_boost)
+    production.gold_rooms.append(RoomOutput(
+        room_type="Mfg", room_index=assignment.room_index,
+        product="PureGold", operators=assignment.operators,
+        productivity=display_productivity, output_per_day=output_per_day,
+        drone_boost_pct=drone_boost, output_unit="个",
+    ))
+    production.total_gold_produced_per_day += output_per_day
+
+
+def _calc_trade(
+    ctx: _CalcCtx, assignment: RoomAssignment, ops: list[Operator], production: DailyProduction,
+) -> None:
+    """贸易站产出计算"""
+    n = len(ops)
+    eff_int = evaluate_room(ops, "Trade", "Money", ctx.power_count, ctx.hours,
+                            ctx.global_bonus, ctx.buff_pool)
+    efficiency_integrated = ctx.hours * (1.0 + 0.01 * n) + eff_int / 100.0
+    display_productivity = 1.0 + eff_int / (100.0 * ctx.hours)
+    drone_boost = _drone_boost(assignment, ctx, _DRONE_MINUTES_TRADE)
+    orders_per_day = efficiency_integrated / _TRADE_AVG_TIME_HOURS * (1.0 + drone_boost)
+    gold_consumed = orders_per_day * _TRADE_AVG_GOLD_PER_ORDER
+    lmd_output = orders_per_day * _TRADE_AVG_LMD_PER_ORDER
+    production.trade_rooms.append(RoomOutput(
+        room_type="Trade", room_index=assignment.room_index,
+        product="Money", operators=assignment.operators,
+        productivity=display_productivity, output_per_day=lmd_output,
+        drone_boost_pct=drone_boost, output_unit="LMD",
+    ))
+    production.total_gold_consumed_per_day += gold_consumed
+    production.total_lmd_per_day += lmd_output
+
+
 def calculate(plan: ShiftPlan, operators: list[Operator], hours: float = 24.0) -> DailyProduction:
     """计算排班方案的精确产出（含无人机加速）
 
@@ -210,68 +298,31 @@ def calculate(plan: ShiftPlan, operators: list[Operator], hours: float = 24.0) -
 
     # 3. 计算各设施产出（走 efficiency_fn 积分，含联动）
     power_count = compute_effective_power_count(power_ops, BASE_POWER_COUNT)
+    ctx = _CalcCtx(
+        op_lookup=op_lookup,
+        plan_ctrl_ops=plan_ctrl_ops,
+        global_bonus=global_bonus,
+        buff_pool=buff_pool,
+        power_count=power_count,
+        hours=hours,
+        daily_drones=production.daily_drones,
+        drone_room_type=drone_room_type,
+        drone_room_index=drone_room_index,
+    )
 
     for assignment in plan.assignments:
+        if not assignment.operators:
+            continue
         ops = [op_lookup[n] for n in assignment.operators if n in op_lookup]
         if not ops:
             continue
-        n = len(ops)
 
         if assignment.room_type == "Mfg" and assignment.product == "CombatRecord":
-            ctrl_bonus = control_per_operator_bonus(plan_ctrl_ops, ops, "CombatRecord")
-            eff_int = evaluate_room(ops, "Mfg", "CombatRecord", power_count, hours, global_bonus, buff_pool, ctrl_per_op_bonus=ctrl_bonus)
-            productivity_int = hours * (1.0 + 0.01 * n) + eff_int / 100.0
-            display_productivity = 1.0 + eff_int / (100.0 * hours)
-            drone_boost = 0.0
-            if assignment.room_type == drone_room_type and assignment.room_index == drone_room_index:
-                drone_boost = _drone_multiplier(production.daily_drones, _DRONE_MINUTES_MFG, hours) - 1.0
-            output_per_day = _RECORD_BASE_PER_HOUR * productivity_int * (1.0 + drone_boost)
-            room = RoomOutput(
-                room_type="Mfg", room_index=assignment.room_index,
-                product="CombatRecord", operators=assignment.operators,
-                productivity=display_productivity, output_per_day=output_per_day,
-                drone_boost_pct=drone_boost, output_unit="个",
-            )
-            production.record_rooms.append(room)
-            production.total_records_per_day += output_per_day
-
+            _calc_mfg_record(ctx, assignment, ops, production)
         elif assignment.room_type == "Mfg" and assignment.product == "PureGold":
-            ctrl_bonus = control_per_operator_bonus(plan_ctrl_ops, ops, "PureGold")
-            eff_int = evaluate_room(ops, "Mfg", "PureGold", power_count, hours, global_bonus, buff_pool, ctrl_per_op_bonus=ctrl_bonus)
-            productivity_int = hours * (1.0 + 0.01 * n) + eff_int / 100.0
-            display_productivity = 1.0 + eff_int / (100.0 * hours)
-            drone_boost = 0.0
-            if assignment.room_type == drone_room_type and assignment.room_index == drone_room_index:
-                drone_boost = _drone_multiplier(production.daily_drones, _DRONE_MINUTES_MFG, hours) - 1.0
-            output_per_day = _GOLD_BASE_PER_HOUR * productivity_int * (1.0 + drone_boost)
-            room = RoomOutput(
-                room_type="Mfg", room_index=assignment.room_index,
-                product="PureGold", operators=assignment.operators,
-                productivity=display_productivity, output_per_day=output_per_day,
-                drone_boost_pct=drone_boost, output_unit="个",
-            )
-            production.gold_rooms.append(room)
-            production.total_gold_produced_per_day += output_per_day
-
+            _calc_mfg_gold(ctx, assignment, ops, production)
         elif assignment.room_type == "Trade":
-            eff_int = evaluate_room(ops, "Trade", "Money", power_count, hours, global_bonus, buff_pool)
-            efficiency_integrated = hours * (1.0 + 0.01 * n) + eff_int / 100.0
-            display_productivity = 1.0 + eff_int / (100.0 * hours)
-            drone_boost = 0.0
-            if assignment.room_type == drone_room_type and assignment.room_index == drone_room_index:
-                drone_boost = _drone_multiplier(production.daily_drones, _DRONE_MINUTES_TRADE, hours) - 1.0
-            orders_per_day = efficiency_integrated / _TRADE_AVG_TIME_HOURS * (1.0 + drone_boost)
-            gold_consumed = orders_per_day * _TRADE_AVG_GOLD_PER_ORDER
-            lmd_output = orders_per_day * _TRADE_AVG_LMD_PER_ORDER
-            room = RoomOutput(
-                room_type="Trade", room_index=assignment.room_index,
-                product="Money", operators=assignment.operators,
-                productivity=display_productivity, output_per_day=lmd_output,
-                drone_boost_pct=drone_boost, output_unit="LMD",
-            )
-            production.trade_rooms.append(room)
-            production.total_gold_consumed_per_day += gold_consumed
-            production.total_lmd_per_day += lmd_output
+            _calc_trade(ctx, assignment, ops, production)
 
     # 4. 赤金供需平衡
     production.gold_surplus = (
