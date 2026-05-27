@@ -9,6 +9,7 @@ from steward_core.efficiency_fn import constant_efficiency, integrate_segments
 from steward_core.synergy import (
     synergy_pair, synergy_skill_count, synergy_skill_alias, synergy_automation,
     synergy_facility_count, synergy_buff_pool_consumer,
+    operator_ramp_segments,
     GlobalBonus,
 )
 
@@ -56,9 +57,13 @@ def evaluate_room(
     for op in operators:
         if op.name in zero_set:
             continue
-        eff = op.best_efficiency(room_type, product)
-        if eff > 0:
-            total += integrate_segments(constant_efficiency(eff, mood_burn=0.0, T=T), T)
+        ramp_segs = operator_ramp_segments(op, room_type, product, T)
+        if ramp_segs is not None:
+            total += integrate_segments(ramp_segs, T)
+        else:
+            eff = op.best_efficiency(room_type, product)
+            if eff > 0:
+                total += integrate_segments(constant_efficiency(eff, mood_burn=0.0, T=T), T)
 
     if buff_pool is not None:
         # 自动化归零也适用于 B 层消费者（B3/B4 等非设施数量型加成）

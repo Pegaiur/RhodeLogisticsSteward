@@ -1022,3 +1022,46 @@ class TestCrossRoomPair:
 
         segs = synergy_cross_room_pair([a, b], "Mfg", "CombatRecord", all_assignments)
         assert segs == []
+
+
+# ─── 爬升型效率 ────────────────────────────────────────────────────
+
+class TestRampingOperator:
+    """爬升型效率技能: operator_ramp_segments → ramping_efficiency"""
+
+    def test_例行清扫_阿罗玛_返回爬升段(self):
+        """阿罗玛持有 例行清扫(0→20%@2%/h) → 爬升段(0→10h ramp + 10→12h 常数20%)"""
+        from steward_core.synergy import operator_ramp_segments
+
+        aluoma = _mk_op("阿罗玛")
+        aluoma.skills.append(_mk_skill(
+            "manu_prod_spd_addition[100]", "Mfg", "例行清扫", {"all": 0.0},
+        ))
+
+        segs = operator_ramp_segments(aluoma, "Mfg", "PureGold", T=12.0)
+        assert segs is not None
+        assert len(segs) == 2
+        assert segs[0].a == 0.0 and segs[0].b == 2.0  # ramp
+        assert segs[1].a == 20.0 and segs[1].b == 0.0  # saturated
+
+    def test_非爬升技能干员_返回None(self):
+        """普通干员无爬升技能 → None"""
+        from steward_core.synergy import operator_ramp_segments
+
+        op = _mk_op("普通")
+        op.skills.append(_mk_skill("manu_prod_spd[001]", "Mfg", "普通技能", {"all": 25.0}))
+
+        segs = operator_ramp_segments(op, "Mfg", "PureGold", T=12.0)
+        assert segs is None
+
+    def test_例行清扫_非Mfg房间_返回None(self):
+        """例行清扫技能在 Trade 房间不适用 → 返回 None（函数按 room_type 过滤）"""
+        from steward_core.synergy import operator_ramp_segments
+
+        aluoma = _mk_op("阿罗玛")
+        aluoma.skills.append(_mk_skill(
+            "manu_prod_spd_addition[100]", "Mfg", "例行清扫", {"all": 0.0},
+        ))
+
+        segs = operator_ramp_segments(aluoma, "Trade", "Money", T=12.0)
+        assert segs is None

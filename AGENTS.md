@@ -96,12 +96,7 @@ RhodeLogisticsSteward/
 | `_KNIGHT_NAMES` | 骑士干员名称（安全网补全） | 新增卡西米尔但不属于 kazimierz 势力/pinus 组织的骑士 |
 | `_B_LAYER_CONSUMER_TABLE` | B 层点数消费者 | 新增 buff 池消费者 |
 | `ROSEMARY_SUPPORT` | 迷迭香支撑干员 | 新增迷迭香联动链参与者 |
-
-**`steward_core/solver.py`** — 求解器分类表
-
-| 表名 | 维护内容 | 触发条件 |
-|------|----------|----------|
-| `_KNIGHT_NAMES` | 骑士干员名称 | 新增卡西米尔但不属于 kazimierz 势力/pinus 组织的骑士 |
+| `_RAMPING_SKILL_TABLE` | 爬升型效率技能参数 | 新增 manu_prod_spd_addition[*] 爬升型技能 |
 
 ### 维护流程
 
