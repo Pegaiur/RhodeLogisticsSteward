@@ -228,7 +228,7 @@ _A6_FACILITY_TABLE: dict[str, tuple[str, float, str, str | None, float | None]] 
 # 设施等级 Lv3
 _FACILITY_LEVEL = 3
 # 243 布局默认宿舍等级（4 间 × Lv3）
-_DEFAULT_DORM_LEVELS = 12
+_DEFAULT_DORM_LEVELS = 20  # 4 间 Lv5 宿舍
 
 
 def synergy_facility_count(

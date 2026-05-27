@@ -358,7 +358,7 @@ class TestSynergyFacilityCount:
         assert segs == []
 
     def test_空弦_每宿舍等级加2贸易(self):
-        """空弦 (β) 在 Trade，4 间宿舍 × Lv3 → +24%"""
+        """空弦 (β) 在 Trade，4 间宿舍 × Lv5 → +40%"""
         from steward_core.synergy import synergy_facility_count
         from steward_core.models import LayoutConfig
 
@@ -366,12 +366,12 @@ class TestSynergyFacilityCount:
         kongxian = _mk_op("空弦")
         layout = LayoutConfig(rooms=[])
 
-        # Act: dorm_levels 默认 12
+        # Act: dorm_levels 默认 20 (4×Lv5)
         segs = synergy_facility_count([kongxian], "Trade", "Money", layout)
 
-        # Assert: +24%
+        # Assert: +40%
         assert len(segs) == 1
-        assert segs[0].a == 24.0
+        assert segs[0].a == 40.0
 
     def test_伺夜_每会客室等级加5_上限40(self):
         """伺夜在 Trade，Meeting Lv3 → +15%（未触上限）"""
@@ -445,7 +445,7 @@ class TestSynergyFacilityCount:
         assert segs == []
 
     def test_娜仁图亚_赤金加宿舍等级(self):
-        """娜仁图亚在 Mfg PureGold，12 宿舍等级 → +12%"""
+        """娜仁图亚在 Mfg PureGold，20 宿舍等级 → +20%"""
         from steward_core.synergy import synergy_facility_count
         from steward_core.models import LayoutConfig
 
@@ -453,12 +453,12 @@ class TestSynergyFacilityCount:
         narentuya = _mk_op("娜仁图亚")
         layout = LayoutConfig(rooms=[])
 
-        # Act: dorm_levels 默认 12
+        # Act: dorm_levels 默认 20 (4×Lv5)
         segs = synergy_facility_count([narentuya], "Mfg", "PureGold", layout)
 
-        # Assert: +12%
+        # Assert: +20%
         assert len(segs) == 1
-        assert segs[0].a == 12.0
+        assert segs[0].a == 20.0
 
 
 # ─── C1 中枢全局效率 ─────────────────────────────────────────────
