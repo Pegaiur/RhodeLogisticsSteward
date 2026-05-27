@@ -200,7 +200,7 @@ def compute_effective_power_count(
     """计算有效发电站数量（含设施数量修改器）
 
     承曦格雷伊"晨曦"（power_count[000]）：发电站额外+1（仅影响设施数量）。
-    Lancet-2 + 森蚺中枢"我寻思能行"（control_pow_bot[000]）：发电站额外+2。
+    TODO: Lancet-2 + 森蚺中枢"我寻思能行"（control_pow_bot[000]）：发电站额外+2。
     """
     count = physical_count
     for op in power_operators:
