@@ -117,7 +117,7 @@ def get_trade_order_equivalent_efficiency(
             if "par[001]" in bid:
                 return 30.0  # 新约能天使: 3拉特兰×15%，但有配对风险
             if "par[000]" in bid:
-                return 35.0  # 摩根: 推王+1格帮，保守估计
+                return 20.0  # 摩根: 需格帮室友，贪心无法保证房间内配对 → 保守
 
     # 3. 同室人数/效率反馈型 — 假设最优室友
     for sk in op.skills:

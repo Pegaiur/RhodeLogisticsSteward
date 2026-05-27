@@ -767,4 +767,4 @@ class TestTradeContextualEfficiency:
                   room_type="Trade", efficient=EfficiencyMap(raw={"Money": 0})),
         ])
         eff = get_trade_order_equivalent_efficiency(op, set(), {op.char_id: op})
-        assert eff == pytest.approx(35, rel=0.15)  # 保守偏置
+        assert eff == pytest.approx(20, rel=0.15)  # 保守偏置
