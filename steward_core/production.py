@@ -288,8 +288,10 @@ class DailyProduction:
             f"作战记录产出: {self.total_records_per_day * _RECORD_EXP_PER_UNIT:,.0f} 经验/天 ({self.total_records_per_day:.1f} 个)",
             f"赤金制造: {self.total_gold_produced_per_day * _GOLD_LMD_PER_UNIT:,.0f} LMD等值/天 ({self.total_gold_produced_per_day:.1f} 个)",
             f"赤金消耗: {self.total_gold_consumed_per_day * _GOLD_LMD_PER_UNIT:,.0f} LMD等值/天 ({self.total_gold_consumed_per_day:.1f} 个)",
-            f"龙门币产出: {self.effective_lmd_per_day:,.0f} /天",
         ])
+        if self.equivalent_gold_from_mechanism > 0:
+            lines.append(f"订单等效赤金: +{self.equivalent_gold_from_mechanism:.1f} 个/天 ({self.equivalent_gold_from_mechanism * _GOLD_LMD_PER_UNIT:,.0f} LMD等值)")
+        lines.append(f"龙门币产出: {self.effective_lmd_per_day:,.0f} /天")
         if self.gold_surplus > 0:
             lines.append(f"赤金盈余: +{self.gold_surplus:.1f} 个 ({self.gold_surplus * _GOLD_LMD_PER_UNIT:,.0f} LMD等值)")
         elif self.gold_surplus < 0:

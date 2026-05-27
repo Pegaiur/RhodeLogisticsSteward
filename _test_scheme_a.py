@@ -82,7 +82,6 @@ def main():
             break
     print(f"[当前] 个人偏置 top3: {taken_cur}")
 
-    from steward_core.production import _get_trade_order_multiplier
     taken_cur_ops = [op for op in pool if op.name in taken_cur]
     lmd_cur = lmd_12h(taken_cur_ops)
     print(f"       12h LMD = {lmd_cur:.0f}")
