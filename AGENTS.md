@@ -100,6 +100,8 @@ RhodeLogisticsSteward/
 | 表名 | 维护内容 | 触发条件 |
 |------|----------|----------|
 | `_KNIGHT_NAMES` | 骑士干员名称 | 新增卡西米尔但不属于 kazimierz 势力/pinus 组织的骑士 |
+| `_DORM_PRIORITY` | 宿舍填充优先级（B 层生成者） | 新增宿舍 buff 生成者干员（感知/魔物料理/无声共鸣） |
+| `_C1_PRIORITY_CONTROL` | 中枢全局加成优先选取 | 新增中枢全局效率提供者 |
 
 ### 维护流程
 

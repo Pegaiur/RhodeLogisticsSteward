@@ -33,6 +33,9 @@ ANCHOR_NAMES = {
 # C1 全局加成提供者，中枢填充时优先选取
 _C1_PRIORITY_CONTROL: set[str] = {"凯尔希"}
 
+# 宿舍填充优先级（B 层感知/魔物料理/无声共鸣生成者）
+_DORM_PRIORITY: list[str] = ["森西", "爱丽丝", "车尔尼", "塑心"]
+
 
 @dataclass
 class MfgClassification:
@@ -464,13 +467,10 @@ def solve_mvp(operators: list[Operator]) -> SolveResult:
     autofill_count += sum(1 for a in remaining if a.autofill)
 
     # Phase 4: 宿舍填充（优先B层生成者 → 任意填充至20人）
+    # locked_support["Dormitory"] 中的干员已在 Phase 1 锁入 assigned_ids
     dorm_names: list[str] = list(locked_support["Dormitory"])
 
-    for n in dorm_names:
-        if n in op_lookup:
-            assigned_ids.add(op_lookup[n].char_id)
-
-    for name in ["森西", "爱丽丝", "车尔尼", "塑心"]:
+    for name in _DORM_PRIORITY:
         if name not in dorm_names and name in op_lookup and op_lookup[name].char_id not in assigned_ids:
             dorm_names.append(name)
             assigned_ids.add(op_lookup[name].char_id)

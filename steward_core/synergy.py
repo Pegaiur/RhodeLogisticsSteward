@@ -316,7 +316,7 @@ class BuffPool:
     perception: int = 0        # 感知信息
     wushu_crystal: int = 0     # 巫术结晶
     thought_chains: int = 0    # 思维链环 (B3)
-    silent_resonance: int = 0  # 无声共鸣 (B5)
+    silent_resonance: int = 0  # 无声共鸣 (B5) TODO: B5 生成待实现
     engineering_robots: int = 0  # 工程机器人 (B2)
     monster_cuisine: int = 0     # 魔物料理 (B4)
 
@@ -431,7 +431,7 @@ _B_LAYER_CONSUMER_TABLE: dict[str, tuple[str, str, int, float]] = {
     "迷迭香": ("Mfg", "thought_chains", 1, 1.0),      # β: 每1链环+1%
     # B4 魔物料理消费者
     "玛露西尔": ("Mfg", "monster_cuisine", 1, 1.0),
-    # B5 无声共鸣消费者
+    # B5 无声共鸣消费者 TODO: B5 生成待实现（塑心宿舍 → 无声共鸣 → 黑键贸易消费）
     "黑键": ("Trade", "silent_resonance", 2, 1.0),    # β: 每2共鸣+1%
 }
 
