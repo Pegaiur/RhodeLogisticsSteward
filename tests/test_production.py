@@ -627,3 +627,144 @@ class TestTradeOrderEquivalentEfficiency:
         names = get_system_contributors("Trade", "order_mechanism")
         # 自动量化后不再需要注册表
         assert len(names) == 0
+
+
+# ─── 配对验证 + 回溯场景 ──────────────────────────────────────
+
+class TestTradePairingVerification:
+    """验证配对型干员的偏置验证逻辑（次优/回溯）"""
+
+    @staticmethod
+    def _mk_texas():
+        return _mk_op("德克萨斯", [
+            Skill(buff_id="trade_ord_spd&cost_P[000]", buff_name="恩怨", skill_icon="test",
+                  room_type="Trade", efficient=EfficiencyMap(raw={"Money": 0})),
+        ])
+
+    @staticmethod
+    def _mk_lappy():
+        return _mk_op("拉普兰德", [
+            Skill(buff_id="trade_ord_limit&cost_P[001]", buff_name="醉翁之意·β", skill_icon="test",
+                  room_type="Trade", efficient=EfficiencyMap(raw={"Money": 0})),
+        ])
+
+    def test_德克萨斯_配对可用_返回正常偏置(self):
+        """拉普兰德未被占用 → 德克萨斯偏置正常"""
+        from steward_core.synergy import get_trade_order_equivalent_efficiency
+
+        texas = self._mk_texas()
+        lappy = self._mk_lappy()
+        assigned = set()
+        op_lookup = {op.char_id: op for op in [texas, lappy]}
+
+        eff = get_trade_order_equivalent_efficiency(texas, assigned, op_lookup)
+        assert eff == pytest.approx(30, rel=0.1)  # 配对可兑现
+
+    def test_拉普兰德已分配_德克萨斯偏置归零(self):
+        """拉普兰德被制造站占用 → 德克萨斯偏置 = 0（配对不可兑现）"""
+        from steward_core.synergy import get_trade_order_equivalent_efficiency
+
+        texas = self._mk_texas()
+        lappy = self._mk_lappy()
+        assigned = {lappy.char_id}  # 拉普兰德已被制造站占用
+        op_lookup = {op.char_id: op for op in [texas, lappy]}
+
+        eff = get_trade_order_equivalent_efficiency(texas, assigned, op_lookup)
+        assert eff == 0.0  # 配对不可兑现，退化为无贡献
+
+    def test_拉普兰德不在池中_德克萨斯偏置归零(self):
+        """拉普兰德根本不在干员池 → 德克萨斯偏置 = 0"""
+        from steward_core.synergy import get_trade_order_equivalent_efficiency
+
+        texas = self._mk_texas()
+        assigned = set()
+        op_lookup = {texas.char_id: texas}  # 只有德克萨斯
+
+        eff = get_trade_order_equivalent_efficiency(texas, assigned, op_lookup)
+        assert eff == 0.0
+
+    def test_德克萨斯配对_拉普兰德也可选_两者均入池(self):
+        """德克萨斯+拉普兰德都未被占用 → 两者都应进入候选池"""
+        from steward_core.synergy import get_trade_order_equivalent_efficiency
+
+        texas = self._mk_texas()
+        lappy = self._mk_lappy()
+        assigned = set()
+        op_lookup = {op.char_id: op for op in [texas, lappy]}
+
+        t_eff = get_trade_order_equivalent_efficiency(texas, assigned, op_lookup)
+        l_eff = get_trade_order_equivalent_efficiency(lappy, assigned, op_lookup)
+        assert t_eff == pytest.approx(30, rel=0.1)
+        assert l_eff > 0
+
+
+# ─── 同室人数型 + 效率反馈型 ──────────────────────────────────
+
+class TestTradeContextualEfficiency:
+    """验证同室人数 / 效率反馈 / 低语型干员的偏置"""
+
+    def test_巫恋低语_3人房假设_偏置约75(self):
+        """巫恋低语：归零他人，自身每人+45% → 3人房=135%"""
+        from steward_core.synergy import get_trade_order_equivalent_efficiency
+
+        op = _mk_op("巫恋", [
+            Skill(buff_id="trade_ord_vodfox[000]", buff_name="低语", skill_icon="test",
+                  room_type="Trade", efficient=EfficiencyMap(raw={"Money": 0})),
+        ])
+        eff = get_trade_order_equivalent_efficiency(op, set(), {op.char_id: op})
+        assert eff == pytest.approx(75, rel=0.15)
+
+    def test_火哨_2室友_偏置约30(self):
+        """火哨代为说项：2名室友各+15% → +30%"""
+        from steward_core.synergy import get_trade_order_equivalent_efficiency
+
+        op = _mk_op("火哨", [
+            Skill(buff_id="trade_ord_spd&share[000]", buff_name="代为说项", skill_icon="test",
+                  room_type="Trade", efficient=EfficiencyMap(raw={"Money": 0})),
+        ])
+        eff = get_trade_order_equivalent_efficiency(op, set(), {op.char_id: op})
+        assert eff == pytest.approx(30, rel=0.15)
+
+    def test_吉星β_2室友_偏置约40(self):
+        """吉星勤俭经营·β：2名室友各+20% → +40%"""
+        from steward_core.synergy import get_trade_order_equivalent_efficiency
+
+        op = _mk_op("吉星", [
+            Skill(buff_id="trade_ord_spd&share[002]", buff_name="勤俭经营·β", skill_icon="test",
+                  room_type="Trade", efficient=EfficiencyMap(raw={"Money": 0})),
+        ])
+        eff = get_trade_order_equivalent_efficiency(op, set(), {op.char_id: op})
+        assert eff == pytest.approx(40, rel=0.15)
+
+    def test_雪雉β_效率反馈_偏置约35(self):
+        """雪雉天道酬勤·β：每5%→+5%，上限35%"""
+        from steward_core.synergy import get_trade_order_equivalent_efficiency
+
+        op = _mk_op("雪雉", [
+            Skill(buff_id="trade_ord_spd_variable2[001]", buff_name="天道酬勤·β", skill_icon="test",
+                  room_type="Trade", efficient=EfficiencyMap(raw={"Money": 0})),
+        ])
+        eff = get_trade_order_equivalent_efficiency(op, set(), {op.char_id: op})
+        assert eff == pytest.approx(35, rel=0.15)
+
+    def test_新约能天使_拉特兰配对_偏置约45(self):
+        """新约能天使同城加急单：3拉特兰各+15% → 保守偏置30"""
+        from steward_core.synergy import get_trade_order_equivalent_efficiency
+
+        op = _mk_op("新约能天使", [
+            Skill(buff_id="trade_ord_spd_par[001]", buff_name="同城加急单", skill_icon="test",
+                  room_type="Trade", efficient=EfficiencyMap(raw={"Money": 0})),
+        ])
+        eff = get_trade_order_equivalent_efficiency(op, set(), {op.char_id: op})
+        assert eff == pytest.approx(30, rel=0.1)
+
+    def test_摩根_格帮配对_偏置约35(self):
+        """摩根帮派指南针：推王+1格帮各+20%+额外35% → 保守偏置35"""
+        from steward_core.synergy import get_trade_order_equivalent_efficiency
+
+        op = _mk_op("摩根", [
+            Skill(buff_id="trade_ord_spd_par[000]", buff_name="帮派指南针", skill_icon="test",
+                  room_type="Trade", efficient=EfficiencyMap(raw={"Money": 0})),
+        ])
+        eff = get_trade_order_equivalent_efficiency(op, set(), {op.char_id: op})
+        assert eff == pytest.approx(35, rel=0.15)  # 保守偏置

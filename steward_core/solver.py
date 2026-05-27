@@ -120,6 +120,7 @@ def _greedy_remaining(
             assigned_ids.add(op.char_id)
 
         # 剩余工位走正常支配偏序贪心
+        op_lookup = {op.char_id: op for op in operators}
         candidates = []
         for op in operators:
             if op.char_id in assigned_ids:
@@ -128,7 +129,7 @@ def _greedy_remaining(
             # 但书/龙舌兰/可露希尔等 buff_id 为 trade_ord_* 的干员，
             # has_skill_for("Trade", "Money") 可能返回 False（机制技能无 product 绑定），
             # 但其订单倍数对产出有实质性贡献，必须允许进入候选池
-            a7_eff = get_trade_order_equivalent_efficiency(op)
+            a7_eff = get_trade_order_equivalent_efficiency(op, assigned_ids, op_lookup)
             if a7_eff <= 0:
                 if not op.has_skill_for(room.room_type, room.product):
                     continue

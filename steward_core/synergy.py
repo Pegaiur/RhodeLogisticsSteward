@@ -60,30 +60,97 @@ def get_system_contributors(
     return result
 
 
-def get_trade_order_equivalent_efficiency(op: "Operator") -> float:
-    """A7 订单机制干员的贪心排序等效个人效率（自动量化）
+def get_trade_order_equivalent_efficiency(
+    op: "Operator",
+    assigned_ids: set | None = None,
+    op_lookup: dict | None = None,
+) -> float:
+    """A7 订单机制干员的贪心排序等效个人效率（自动量化 + 配对验证）
 
-    假设该体系核心以自身机制最大化效率（类比迷迭香≈70%），
-    从 _get_trade_order_multiplier([op]) 获取实际 LMD 倍数，
-    折算为等效个人效率供贪心排序。实际回落在 _calc_trade() 完成。
+    核心假设：该体系核心以自身机制最大化效率（类比迷迭香≈70%），
+    偏置用于贪心排序，实际回落在 _calc_trade() 完成。
+    如果最优配置不可兑现（配对目标被占用等），偏置归零→自然回溯。
 
-    公式: (lmd_mult - 1.0) × (1.03 基础 + 0.60 两名平均室友)
+    三类处理：
+    1. 订单倍数型（但书/龙舌兰/可露希尔/裁缝）：_get_trade_order_multiplier 自动算
+    2. 配对型（德克萨斯/摩根/新约能天使）：验证配对目标可用性
+    3. 同室人数/效率反馈型（巫恋/火哨/吉星/雪雉）：假设最优室友配置
     """
-    has_a7 = any(
+    if assigned_ids is None:
+        assigned_ids = set()
+    if op_lookup is None:
+        op_lookup = {}
+
+    # 1. 订单倍数型 — 自动量化
+    has_multiplier = any(
         s.buff_id.startswith(("trade_ord_law", "trade_ord_closure",
                               "trade_ord_long", "trade_ord_wt&cost"))
         for s in op.skills
     )
-    if not has_a7:
-        return 0.0
+    if has_multiplier:
+        from steward_core.production import _get_trade_order_multiplier
+        lmd_per_day, _ = _get_trade_order_multiplier([op])
+        multiplier = lmd_per_day / 10265.0
+        if multiplier <= 1.001:
+            return 0.0
+        return (multiplier - 1.0) * 1.63 * 100
 
-    from steward_core.production import _get_trade_order_multiplier
+    # 2. 配对型 — 验证配对目标
+    for sk in op.skills:
+        bid = sk.buff_id
 
-    lmd_per_day, _ = _get_trade_order_multiplier([op])
-    multiplier = lmd_per_day / 10265.0
-    if multiplier <= 1.001:
-        return 0.0
-    return (multiplier - 1.0) * 1.63 * 100
+        if bid.startswith("trade_ord_spd&cost_P"):
+            # 德克萨斯(+65% w/ 拉普兰德) — 验证拉普兰德可用
+            partner = "拉普兰德"
+            if _partner_available(partner, assigned_ids, op_lookup):
+                return 30.0  # 配对可兑现，但贪心无房间内回溯 → 保守偏置
+            return 0.0
+
+        if bid.startswith("trade_ord_limit&cost_P"):
+            # 拉普兰德(+4 limit w/ 德克萨斯) — 验证德克萨斯可用
+            partner = "德克萨斯"
+            if _partner_available(partner, assigned_ids, op_lookup):
+                return 10.0  # 上限修改器，保守偏置
+            return 0.0
+
+        if bid.startswith("trade_ord_spd_par"):
+            if "par[001]" in bid:
+                return 30.0  # 新约能天使: 3拉特兰×15%，但有配对风险
+            if "par[000]" in bid:
+                return 35.0  # 摩根: 推王+1格帮，保守估计
+
+    # 3. 同室人数/效率反馈型 — 假设最优室友
+    for sk in op.skills:
+        bid = sk.buff_id
+
+        if bid.startswith("trade_ord_vodfox"):
+            # 巫恋低语: 归零他人，每人+45% → 3人房=135%
+            return 75.0
+
+        if bid.startswith("trade_ord_spd&share"):
+            # 火哨/吉星: 除自身外每人+15%/+20%
+            if "share[002]" in bid:
+                return 40.0  # 吉星β: 2人×20%
+            if "share[001]" in bid:
+                return 20.0  # 吉星α: 2人×10%
+            if "share[000]" in bid:
+                return 30.0  # 火哨: 2人×15%
+
+        if bid.startswith("trade_ord_spd_variable2"):
+            # 雪雉天道酬勤: 他人每5%→额外+5%, 上限25%/35%
+            if "variable2[001]" in bid:
+                return 35.0  # β: 上限35%
+            return 25.0      # α: 上限25%
+
+    return 0.0
+
+
+def _partner_available(name: str, assigned_ids: set, op_lookup: dict) -> bool:
+    """检查配对目标是否在干员池中且未被其他设施占用"""
+    for op in op_lookup.values():
+        if op.name == name and op.char_id not in assigned_ids:
+            return True
+    return False
 
 
 # ─── A1 干员配对 ─────────────────────────────────────────────────
