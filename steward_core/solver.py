@@ -7,9 +7,8 @@ Control 固定为社区最优方案。
 
 import itertools
 from dataclasses import dataclass, field
-from typing import Optional
 
-from steward_core.models import LayoutConfig, Operator, RoomAssignment, RoomConfig, ShiftPlan, SolveResult
+from steward_core.models import LayoutConfig, Operator, RoomAssignment, ShiftPlan, SolveResult
 from steward_core.efficiency_fn import constant_efficiency, integrate_segments, rank_by_dominance
 from steward_core.synergy import (
     synergy_pair, synergy_skill_count, synergy_skill_alias, synergy_automation,

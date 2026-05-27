@@ -9,11 +9,7 @@ from pathlib import Path
 
 import pytest
 
-from steward_core.models import EfficiencyMap, LinearSegment, Operator, RoomConfig, Skill
-from steward_core.efficiency_fn import constant_efficiency, integrate_segments
-from steward_core.synergy import (
-    synergy_pair, synergy_skill_count, synergy_skill_alias, synergy_automation,
-)
+from steward_core.models import EfficiencyMap, Operator, Skill
 
 
 def _mk_op(name: str = "测试", skills: list[Skill] | None = None,
