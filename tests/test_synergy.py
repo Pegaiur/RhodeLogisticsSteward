@@ -883,3 +883,142 @@ class TestFullBuffPool:
 
         assert pool.yanhuo == 15
         assert pool.perception == 10  # 仅夕
+
+
+# ─── A2 阵营计数（同房） ──────────────────────────────────────────
+
+class TestSynergyFactionRoom:
+    """A2: synergy_faction_room — 同房间阵营干员计数"""
+
+    def test_重聚时光_A1小队两名干员_加20(self):
+        """历阵锐枪芬在 Mfg，房间含 2 名 A1小队(reserve1)干员 → +20%"""
+        from steward_core.synergy import synergy_faction_room
+
+        fen2 = _mk_op("历阵锐枪芬")
+        fen = _mk_op("芬", team_id="reserve1")
+        melantha = _mk_op("玫兰莎", team_id="reserve1")
+
+        segs = synergy_faction_room([fen2, fen, melantha], "Mfg", "PureGold")
+
+        assert len(segs) == 1
+        assert segs[0].a == 20.0  # 2人 × 10%
+
+    def test_重聚时光_无A1小队_不加成(self):
+        """历阵锐枪芬在 Mfg，但房间无 A1小队干员 → 空"""
+        from steward_core.synergy import synergy_faction_room
+
+        fen2 = _mk_op("历阵锐枪芬")
+        other = _mk_op("其他")
+
+        segs = synergy_faction_room([fen2, other], "Mfg", "PureGold")
+
+        assert segs == []
+
+    def test_重聚时光_非Mfg房间_不触发(self):
+        """历阵锐枪芬在 Trade → 不触发阵营计数"""
+        from steward_core.synergy import synergy_faction_room
+
+        fen2 = _mk_op("历阵锐枪芬")
+        fen = _mk_op("芬", team_id="reserve1")
+
+        segs = synergy_faction_room([fen2, fen], "Trade", "Money")
+
+        assert segs == []
+
+    def test_无A2干员_返回空(self):
+        """房间无 A2 锚点干员 → 空列表"""
+        from steward_core.synergy import synergy_faction_room
+
+        a = _mk_op("填位A")
+        b = _mk_op("填位B", team_id="reserve1")
+
+        segs = synergy_faction_room([a, b], "Mfg", "PureGold")
+
+        assert segs == []
+
+
+# ─── A6 扩展：手艺人 ───────────────────────────────────────────────
+
+class TestTrainingRoomA6:
+    """A6 扩展: synergy_facility_count — 训练室等级联动"""
+
+    def test_手艺人_训练室Lv3_加30percent(self):
+        """维伊在 Mfg，1间 Lv3 训练室 → +30%"""
+        from steward_core.synergy import synergy_facility_count
+        from steward_core.models import LayoutConfig, RoomConfig
+
+        weiyi = _mk_op("维伊")
+        layout = LayoutConfig(rooms=[
+            RoomConfig("Training", 0, 1),
+        ])
+
+        segs = synergy_facility_count([weiyi], "Mfg", "PureGold", layout)
+        assert len(segs) == 1
+        assert segs[0].a == 30.0  # 3级 × 10% = 30%
+
+    def test_手艺人_触发上限30(self):
+        """维伊在 Mfg，2间 Lv3 训练室 → 受上限 30% 限制"""
+        from steward_core.synergy import synergy_facility_count
+        from steward_core.models import LayoutConfig, RoomConfig
+
+        weiyi = _mk_op("维伊")
+        layout = LayoutConfig(rooms=[
+            RoomConfig("Training", 0, 1),
+            RoomConfig("Training", 1, 1),
+        ])
+
+        segs = synergy_facility_count([weiyi], "Mfg", "PureGold", layout)
+        assert len(segs) == 1
+        assert segs[0].a == 30.0  # 6级 × 10% = 60% → clamp 30%
+
+
+# ─── B7 跨房间配对 ──────────────────────────────────────────────────
+
+class TestCrossRoomPair:
+    """B7: synergy_cross_room_pair — 跨设施干员条件配对"""
+
+    def test_患难拍档_古米在贸易站_作战记录加35(self):
+        """烈夏在 Mfg CR，古米在 Trade → CR +35%"""
+        from steward_core.synergy import synergy_cross_room_pair
+
+        liexia = _mk_op("烈夏")
+        gumi = _mk_op("古米")
+
+        all_assignments = {"Trade": [gumi]}
+
+        segs = synergy_cross_room_pair([liexia], "Mfg", "CombatRecord", all_assignments)
+        assert len(segs) == 1
+        assert segs[0].a == 35.0
+
+    def test_患难拍档_古米不在贸易站_不加成(self):
+        """烈夏在 Mfg，古米不在 Trade → 空"""
+        from steward_core.synergy import synergy_cross_room_pair
+
+        liexia = _mk_op("烈夏")
+
+        segs = synergy_cross_room_pair([liexia], "Mfg", "CombatRecord", {})
+        assert segs == []
+
+    def test_患难拍档_产物不匹配_不触发(self):
+        """烈夏在 Mfg PureGold，古米在 Trade → 不触发（仅作战记录）"""
+        from steward_core.synergy import synergy_cross_room_pair
+
+        liexia = _mk_op("烈夏")
+        gumi = _mk_op("古米")
+
+        all_assignments = {"Trade": [gumi]}
+
+        segs = synergy_cross_room_pair([liexia], "Mfg", "PureGold", all_assignments)
+        assert segs == []
+
+    def test_无B7干员_返回空(self):
+        """房间无 B7 锚点干员 → 空列表"""
+        from steward_core.synergy import synergy_cross_room_pair
+
+        a = _mk_op("填位A")
+        b = _mk_op("填位B")
+
+        all_assignments = {"Trade": [_mk_op("古米")]}
+
+        segs = synergy_cross_room_pair([a, b], "Mfg", "CombatRecord", all_assignments)
+        assert segs == []

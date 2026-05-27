@@ -161,6 +161,7 @@ class LayoutConfig:
             RoomConfig("Power", 2, 1),
             RoomConfig("Reception", 0, 2, "General"),
             RoomConfig("Office", 0, 1, "HR"),
+            RoomConfig("Training", 0, 1),
             RoomConfig("Dormitory", 0, 5, "Rest"),
             RoomConfig("Dormitory", 1, 5, "Rest"),
             RoomConfig("Dormitory", 2, 5, "Rest"),

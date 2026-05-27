@@ -299,6 +299,7 @@ _A6_FACILITY_TABLE: dict[str, tuple[str, float, str, str | None, float | None]] 
     "伺夜": ("meeting_level", 5.0, "Trade", "Money", 40.0),
     "渡桥": ("meeting_level", 5.0, "Trade", "Money", 30.0),
     "石英": ("mfg_recipe_types", 2.0, "Trade", "Money", None),
+    "维伊": ("train_level", 10.0, "Mfg", None, 30.0),
 }
 
 # 设施等级 （Mfg/Trade/Meeting 默认 Lv3，宿舍 Lv5 见 _DEFAULT_DORM_LEVELS）
@@ -332,6 +333,9 @@ def synergy_facility_count(
         if r.room_type == "Mfg" and r.product is not None
     }
     mfg_recipe_types = len(mfg_products)
+    train_level = sum(
+        _FACILITY_LEVEL for r in layout.rooms if r.room_type == "Training"
+    )
 
     for name in names:
         if name not in _A6_FACILITY_TABLE:
@@ -351,6 +355,8 @@ def synergy_facility_count(
             count = meeting_level
         elif count_key == "mfg_recipe_types":
             count = mfg_recipe_types
+        elif count_key == "train_level":
+            count = train_level
         else:
             continue
 
@@ -720,3 +726,76 @@ def build_candidate_pool(
             pool.append(op)
 
     return pool
+
+
+# ─── A2 阵营计数（同房） ─────────────────────────────────────────
+
+# 阵营计数表: {持有者名: (字段名, 匹配值, 每人加成%, 产物或None, 设施类型)}
+_A2_FACTION_TABLE: dict[str, tuple[str, str, float, str | None, str | None]] = {
+    "历阵锐枪芬": ("team_id", "reserve1", 10.0, None, "Mfg"),
+}
+
+
+def synergy_faction_room(
+    operators: list[Operator],
+    room_type: str,
+    product: str,
+) -> list[LinearSegment]:
+    """统计同房间内特定阵营/队伍干员数量，为持有者提供效率加成
+
+    A2 体系：持有者根据同房间内匹配阵营的干员数量获得加成。
+    """
+    names = {op.name for op in operators}
+    segments = []
+
+    for holder_name, (field, value, bonus_per, target_product, target_room) in _A2_FACTION_TABLE.items():
+        if holder_name not in names:
+            continue
+        if target_room is not None and room_type != target_room:
+            continue
+        if target_product is not None and product != target_product:
+            continue
+
+        count = sum(1 for op in operators if getattr(op, field, None) == value)
+        bonus = count * bonus_per
+        if bonus > 0:
+            segments.append(LinearSegment(a=bonus, b=0.0, t_start=0.0, dt=T))
+
+    return segments
+
+
+# ─── B7 跨房间配对 ───────────────────────────────────────────────
+
+# 跨房间配对表: {持有者名: (目标名, 目标设施, 加成%, 产物或None, 当前设施)}
+_B7_CROSS_PAIR_TABLE: dict[str, tuple[str, str, float, str | None, str | None]] = {
+    "烈夏": ("古米", "Trade", 35.0, "CombatRecord", "Mfg"),
+}
+
+
+def synergy_cross_room_pair(
+    operators: list[Operator],
+    room_type: str,
+    product: str,
+    all_assignments: dict[str, list[Operator]],
+) -> list[LinearSegment]:
+    """检查跨设施干员条件配对，为持有者提供效率加成
+
+    B7 体系：干员 A 在某设施时，若干员 B 在另一设施则触发加成。
+    """
+    names = {op.name for op in operators}
+    segments = []
+
+    for holder_name, (target_name, target_facility, bonus_per, target_product, target_room) in _B7_CROSS_PAIR_TABLE.items():
+        if holder_name not in names:
+            continue
+        if target_room is not None and room_type != target_room:
+            continue
+        if target_product is not None and product != target_product:
+            continue
+
+        target_ops = all_assignments.get(target_facility, [])
+        target_names = {op.name for op in target_ops}
+        if target_name in target_names:
+            segments.append(LinearSegment(a=bonus_per, b=0.0, t_start=0.0, dt=T))
+
+    return segments
