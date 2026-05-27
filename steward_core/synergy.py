@@ -10,8 +10,6 @@ from dataclasses import dataclass
 from steward_core.models import LinearSegment, Operator, LayoutConfig
 from steward_core.efficiency_fn import ramping_efficiency
 
-T = 12.0  # MVP 固定 12h 排班
-
 # ─── 系统贡献者注册表 ────────────────────────────────────────────
 
 @dataclass
@@ -180,6 +178,7 @@ def synergy_pair(
     operators: list[Operator],
     room_type: str,
     product: str,
+    T: float,
 ) -> list[LinearSegment]:
     """识别同房间干员配对组合，输出聚合常数段"""
     if room_type != "Mfg":
@@ -203,6 +202,7 @@ def synergy_capacity_to_eff(
     operators: list[Operator],
     room_type: str,
     product: str,
+    T: float,
 ) -> list[LinearSegment]:
     """房间内仓库容量转化为效率加成
 
@@ -234,6 +234,7 @@ def synergy_efficiency_amplifier(
     operators: list[Operator],
     room_type: str,
     product: str,
+    T: float,
 ) -> list[LinearSegment]:
     """槐琥配合意识：其他干员每5%效率额外提供5%，上限40%
 
@@ -269,6 +270,7 @@ def synergy_zeroing_variant(
     operators: list[Operator],
     room_type: str,
     product: str,
+    T: float,
 ) -> tuple[list[LinearSegment], set[str]]:
     """归零变体：类似 A5 自动化但补偿机制不同
 
@@ -327,6 +329,7 @@ def synergy_token_prod(
     room_type: str,
     product: str,
     power_platforms: dict[str, bool] | None = None,
+    T: float = 12.0,
 ) -> list[LinearSegment]:
     """阿兰娜机械精通：作业平台进驻发电站时提供贵金属加成
 
@@ -403,6 +406,7 @@ def synergy_skill_count(
     operators: list[Operator],
     room_type: str,
     alias: dict[str, list[str]] | None = None,
+    T: float = 12.0,
 ) -> list[LinearSegment]:
     """统计同房间内技能类型数量，为持有者提供效率加成"""
     if room_type != "Mfg":
@@ -498,6 +502,7 @@ def synergy_automation(
     operators: list[Operator],
     room_type: str,
     power_count: int,
+    T: float,
 ) -> tuple[list[LinearSegment], set[str]]:
     """若房间有自动化干员，返回 (自动化产出段, 需归零的干员名集合)
 
@@ -530,6 +535,7 @@ def synergy_automation(
 def synergy_whisper(
     operators: list[Operator],
     room_type: str,
+    T: float,
 ) -> tuple[list[LinearSegment], set[str]]:
     """巫恋低语 (trade_ord_vodfox): 归零其他干员效率，自身每人+45%
 
@@ -609,6 +615,7 @@ def synergy_facility_count(
     product: str,
     layout: LayoutConfig,
     dorm_levels: int = _DEFAULT_DORM_LEVELS,
+    T: float = 12.0,
 ) -> list[LinearSegment]:
     """根据全基建设施数量/等级为当前房间提供联动加成
 
@@ -958,6 +965,7 @@ def synergy_buff_pool_consumer(
     room_type: str,
     product: str,
     buff_pool: BuffPool,
+    T: float,
 ) -> list[LinearSegment]:
     """B 层消费者：将 BuffPool 中的点数转化为房间效率加成
 
@@ -1097,6 +1105,7 @@ def synergy_trade_gold_lines(
     product: str,
     layout: LayoutConfig,
     durin_names: set[str] | None = None,
+    T: float = 12.0,
 ) -> list[LinearSegment]:
     """鸿雪销路宣发(每赤金线+5%) + 际崖居民(杜林族→额外赤金线，上限4)
 
@@ -1131,6 +1140,7 @@ def synergy_faction_room(
     operators: list[Operator],
     room_type: str,
     product: str,
+    T: float,
 ) -> list[LinearSegment]:
     """统计同房间内特定阵营/队伍干员数量，为持有者提供效率加成
 
@@ -1168,6 +1178,7 @@ def synergy_cross_room_pair(
     room_type: str,
     product: str,
     all_assignments: dict[str, list[Operator]],
+    T: float,
 ) -> list[LinearSegment]:
     """检查跨设施干员条件配对，为持有者提供效率加成
 

@@ -229,7 +229,7 @@ def _greedy_remaining(
                     continue
             eff = op.best_efficiency(room.room_type, room.product)
             if eff <= 0:
-                a6_segs = synergy_facility_count([op], room.room_type, room.product, _LAYOUT_243)
+                a6_segs = synergy_facility_count([op], room.room_type, room.product, _LAYOUT_243, T=T)
                 eff = sum(s.a for s in a6_segs)
             if eff <= 0:
                 eff = a7_eff

@@ -48,26 +48,26 @@ def evaluate_room(
     if layout is None:
         layout = _LAYOUT_243
 
-    total = integrate_segments(synergy_pair(operators, room_type, product), T)
-    total += integrate_segments(synergy_faction_room(operators, room_type, product), T)
+    total = integrate_segments(synergy_pair(operators, room_type, product, T), T)
+    total += integrate_segments(synergy_faction_room(operators, room_type, product, T), T)
 
     alias = synergy_skill_alias(operators)
-    total += integrate_segments(synergy_skill_count(operators, room_type, alias), T)
+    total += integrate_segments(synergy_skill_count(operators, room_type, alias, T), T)
     total += integrate_segments(synergy_facility_count(
-        operators, room_type, product, layout,
+        operators, room_type, product, layout, T=T,
     ), T)
     total += integrate_segments(synergy_trade_gold_lines(
-        operators, room_type, product, layout,
+        operators, room_type, product, layout, T=T,
     ), T)
 
-    auto_segs, zero_set = synergy_automation(operators, room_type, power_count)
+    auto_segs, zero_set = synergy_automation(operators, room_type, power_count, T)
     total += integrate_segments(auto_segs, T)
 
-    whisper_segs, whisper_zero = synergy_whisper(operators, room_type)
+    whisper_segs, whisper_zero = synergy_whisper(operators, room_type, T)
     total += integrate_segments(whisper_segs, T)
     zero_set |= whisper_zero
 
-    zero_segs, zero_set2 = synergy_zeroing_variant(operators, room_type, product)
+    zero_segs, zero_set2 = synergy_zeroing_variant(operators, room_type, product, T)
     total += integrate_segments(zero_segs, T)
     zero_set |= zero_set2
 
@@ -86,23 +86,23 @@ def evaluate_room(
 
     # 容量→效率（仅未归零干员的容量参与计算）
     non_zero_ops = [op for op in operators if op.name not in zero_set]
-    total += integrate_segments(synergy_capacity_to_eff(non_zero_ops, room_type, product), T)
+    total += integrate_segments(synergy_capacity_to_eff(non_zero_ops, room_type, product, T), T)
 
     # 效率放大器（仅未归零干员的效率参与计算）
-    total += integrate_segments(synergy_efficiency_amplifier(non_zero_ops, room_type, product), T)
+    total += integrate_segments(synergy_efficiency_amplifier(non_zero_ops, room_type, product, T), T)
 
     # 机械精通（作业平台在发电站）
-    total += integrate_segments(synergy_token_prod(non_zero_ops, room_type, product, power_platforms), T)
+    total += integrate_segments(synergy_token_prod(non_zero_ops, room_type, product, power_platforms, T), T)
 
     # B7 跨房间配对
     if all_assignments is not None:
         total += integrate_segments(
-            synergy_cross_room_pair(non_zero_ops, room_type, product, all_assignments), T,
+            synergy_cross_room_pair(non_zero_ops, room_type, product, all_assignments, T), T,
         )
 
     if buff_pool is not None:
         total += integrate_segments(
-            synergy_buff_pool_consumer(non_zero_ops, room_type, product, buff_pool), T,
+            synergy_buff_pool_consumer(non_zero_ops, room_type, product, buff_pool, T), T,
         )
 
     if room_type == "Mfg":

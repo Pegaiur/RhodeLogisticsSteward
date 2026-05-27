@@ -44,7 +44,7 @@ class TestSynergyPair:
         filler = _mk_op("填位")
 
         # Act
-        segs = synergy_pair([christine, wine, filler], "Mfg", "CombatRecord")
+        segs = synergy_pair([christine, wine, filler], "Mfg", "CombatRecord", 12.0)
 
         # Assert: 应输出一个 +30% 的常数段
         assert len(segs) == 1
@@ -61,7 +61,7 @@ class TestSynergyPair:
         filler2 = _mk_op("B")
 
         # Act
-        segs = synergy_pair([wine, filler1, filler2], "Mfg", "CombatRecord")
+        segs = synergy_pair([wine, filler1, filler2], "Mfg", "CombatRecord", 12.0)
 
         # Assert
         assert segs == []
@@ -76,7 +76,7 @@ class TestSynergyPair:
         filler = _mk_op("填位")
 
         # Act
-        segs = synergy_pair([alana, wenmi, filler], "Mfg", "PureGold")
+        segs = synergy_pair([alana, wenmi, filler], "Mfg", "PureGold", 12.0)
 
         # Assert
         assert len(segs) == 1
@@ -92,7 +92,7 @@ class TestSynergyPair:
         filler = _mk_op("填位")
 
         # Act
-        segs = synergy_pair([alana, wenmi, filler], "Mfg", "CombatRecord")
+        segs = synergy_pair([alana, wenmi, filler], "Mfg", "CombatRecord", 12.0)
 
         # Assert
         assert segs == []
@@ -118,7 +118,7 @@ class TestSynergySkillCount:
 
         # Act
         alias = synergy_skill_alias([shuiyue, jessica, perfumer])
-        segs = synergy_skill_count([shuiyue, jessica, perfumer], "Mfg", alias)
+        segs = synergy_skill_count([shuiyue, jessica, perfumer], "Mfg", alias, 12.0)
 
         # Assert: 2个标准化提供者 + 水月自身 → 但水月不算提供者(他是计数者)
         # 实际上计数逻辑: 统计同房标准化技能数，水月自身无标准化技能
@@ -135,7 +135,7 @@ class TestSynergySkillCount:
         alias = synergy_skill_alias(ops)
 
         # Act
-        segs = synergy_skill_count(ops, "Mfg", alias)
+        segs = synergy_skill_count(ops, "Mfg", alias, 12.0)
 
         # Assert
         assert segs == []
@@ -158,7 +158,7 @@ class TestSynergySkillCount:
         alias = synergy_skill_alias(ops)
 
         # Act
-        segs = synergy_skill_count(ops, "Mfg", alias)
+        segs = synergy_skill_count(ops, "Mfg", alias, 12.0)
 
         # Assert: 3个莱茵科技 → 多萝西 +3×5% = +15%
         assert len(segs) == 1
@@ -180,7 +180,7 @@ class TestSynergySkillCount:
         alias = synergy_skill_alias(ops)
 
         # Act
-        segs = synergy_skill_count(ops, "Mfg", alias)
+        segs = synergy_skill_count(ops, "Mfg", alias, 12.0)
 
         # Assert: 苍苔 + 引星棘刺 + 砾 = 3 × 5% = 15%
         assert len(segs) == 1
@@ -236,7 +236,7 @@ class TestSynergySkillAlias:
         alias = synergy_skill_alias(ops)
 
         # Act
-        segs = synergy_skill_count(ops, "Mfg", alias)
+        segs = synergy_skill_count(ops, "Mfg", alias, 12.0)
 
         # Assert: 白面鸮被别名视为标准化 → 水月 +1×5%
         assert len(segs) == 1
@@ -258,7 +258,7 @@ class TestSynergyAutomation:
         filler2 = _mk_op("B")
 
         # Act
-        segs, zero_set = synergy_automation([wenti, filler1, filler2], "Mfg", power_count=3)
+        segs, zero_set = synergy_automation([wenti, filler1, filler2], "Mfg", power_count=3, T=12.0)
 
         # Assert
         assert len(segs) == 1
@@ -279,7 +279,7 @@ class TestSynergyAutomation:
         filler2 = _mk_op("B")
 
         # Act
-        segs, zero_set = synergy_automation([senran, filler1, filler2], "Mfg", power_count=3)
+        segs, zero_set = synergy_automation([senran, filler1, filler2], "Mfg", power_count=3, T=12.0)
 
         # Assert: 3 发电站 × 10%(β) = 30%
         assert len(segs) == 1
@@ -296,7 +296,7 @@ class TestSynergyAutomation:
         filler2 = _mk_op("B")
 
         # Act
-        segs, zero_set = synergy_automation([luefeng, filler1, filler2], "Mfg", power_count=3)
+        segs, zero_set = synergy_automation([luefeng, filler1, filler2], "Mfg", power_count=3, T=12.0)
 
         # Assert: 3 发电站 × 5%(α) = 15%
         assert len(segs) == 1
@@ -310,7 +310,7 @@ class TestSynergyAutomation:
         ops = [_mk_op("A"), _mk_op("B"), _mk_op("C")]
 
         # Act
-        segs, zero_set = synergy_automation(ops, "Mfg", power_count=3)
+        segs, zero_set = synergy_automation(ops, "Mfg", power_count=3, T=12.0)
 
         # Assert
         assert segs == []
@@ -335,7 +335,7 @@ class TestSynergyFacilityCount:
         ])
 
         # Act
-        segs = synergy_facility_count([qingliu], "Mfg", "PureGold", layout)
+        segs = synergy_facility_count([qingliu], "Mfg", "PureGold", layout, T=12.0)
 
         # Assert: +40% 常数段
         assert len(segs) == 1
@@ -354,7 +354,7 @@ class TestSynergyFacilityCount:
         ])
 
         # Act
-        segs = synergy_facility_count([qingliu], "Mfg", "CombatRecord", layout)
+        segs = synergy_facility_count([qingliu], "Mfg", "CombatRecord", layout, T=12.0)
 
         # Assert
         assert segs == []
@@ -369,7 +369,7 @@ class TestSynergyFacilityCount:
         layout = LayoutConfig(rooms=[])
 
         # Act: dorm_levels 默认 20 (4×Lv5)
-        segs = synergy_facility_count([kongxian], "Trade", "Money", layout)
+        segs = synergy_facility_count([kongxian], "Trade", "Money", layout, T=12.0)
 
         # Assert: +40%
         assert len(segs) == 1
@@ -387,7 +387,7 @@ class TestSynergyFacilityCount:
         ])
 
         # Act: 1间 Reception × Lv3 = 3 × 5% = 15%
-        segs = synergy_facility_count([siye], "Trade", "Money", layout)
+        segs = synergy_facility_count([siye], "Trade", "Money", layout, T=12.0)
 
         # Assert
         assert len(segs) == 1
@@ -407,7 +407,7 @@ class TestSynergyFacilityCount:
         ])
 
         # Act: 3间 Meeting × Lv3 = 9 × 5% = 45% → clamp to 40%
-        segs = synergy_facility_count([siye], "Trade", "Money", layout)
+        segs = synergy_facility_count([siye], "Trade", "Money", layout, T=12.0)
 
         # Assert
         assert segs[0].a == 40.0
@@ -425,7 +425,7 @@ class TestSynergyFacilityCount:
         ])
 
         # Act: 2 种配方类型 × 2% = 4%
-        segs = synergy_facility_count([shiying], "Trade", "Money", layout)
+        segs = synergy_facility_count([shiying], "Trade", "Money", layout, T=12.0)
 
         # Assert
         assert len(segs) == 1
@@ -441,7 +441,7 @@ class TestSynergyFacilityCount:
         layout = LayoutConfig(rooms=[])
 
         # Act
-        segs = synergy_facility_count([filler], "Mfg", "PureGold", layout)
+        segs = synergy_facility_count([filler], "Mfg", "PureGold", layout, T=12.0)
 
         # Assert
         assert segs == []
@@ -456,7 +456,7 @@ class TestSynergyFacilityCount:
         layout = LayoutConfig(rooms=[])
 
         # Act: dorm_levels 默认 20 (4×Lv5)
-        segs = synergy_facility_count([narentuya], "Mfg", "PureGold", layout)
+        segs = synergy_facility_count([narentuya], "Mfg", "PureGold", layout, T=12.0)
 
         # Assert: +20%
         assert len(segs) == 1
@@ -497,7 +497,7 @@ class TestBLayer:
         miluoxiang = _mk_op("迷迭香")
         pool = BuffPool(perception=10, thought_chains=10)
 
-        segs = synergy_buff_pool_consumer([miluoxiang], "Mfg", "PureGold", pool)
+        segs = synergy_buff_pool_consumer([miluoxiang], "Mfg", "PureGold", pool, 12.0)
         assert len(segs) == 1
         assert segs[0].a == 10.0
 
@@ -508,7 +508,7 @@ class TestBLayer:
         heijian = _mk_op("黑键")
         pool = BuffPool(silent_resonance=15)
 
-        segs = synergy_buff_pool_consumer([heijian], "Trade", "Money", pool)
+        segs = synergy_buff_pool_consumer([heijian], "Trade", "Money", pool, 12.0)
         assert len(segs) == 1
         assert segs[0].a == 7.0  # 15//2 = 7
 
@@ -519,7 +519,7 @@ class TestBLayer:
         zhijian = _mk_op("至简")
         pool = BuffPool(engineering_robots=42)
 
-        segs = synergy_buff_pool_consumer([zhijian], "Mfg", "PureGold", pool)
+        segs = synergy_buff_pool_consumer([zhijian], "Mfg", "PureGold", pool, 12.0)
         assert len(segs) == 1
         assert segs[0].a == 25.0  # 42//8*5 = 25
 
@@ -530,7 +530,7 @@ class TestBLayer:
         maluxier = _mk_op("玛露西尔")
         pool = BuffPool(monster_cuisine=3)
 
-        segs = synergy_buff_pool_consumer([maluxier], "Mfg", "PureGold", pool)
+        segs = synergy_buff_pool_consumer([maluxier], "Mfg", "PureGold", pool, 12.0)
         assert len(segs) == 1
         assert segs[0].a == 3.0
 
@@ -588,7 +588,7 @@ class TestBuffPool:
         shu = _mk_op("黍")
         pool = BuffPool(yanhuo=40, perception=0)
 
-        segs = synergy_buff_pool_consumer([shu], "Mfg", "PureGold", pool)
+        segs = synergy_buff_pool_consumer([shu], "Mfg", "PureGold", pool, 12.0)
         assert len(segs) == 1
         assert segs[0].a == 13.0  # 40//3 = 13
 
@@ -599,7 +599,7 @@ class TestBuffPool:
         wuyou = _mk_op("乌有")
         pool = BuffPool(yanhuo=40, perception=0)
 
-        segs = synergy_buff_pool_consumer([wuyou], "Trade", "Money", pool)
+        segs = synergy_buff_pool_consumer([wuyou], "Trade", "Money", pool, 12.0)
         assert len(segs) == 1
         assert segs[0].a == 40.0
 
@@ -610,7 +610,7 @@ class TestBuffPool:
         jieyun = _mk_op("截云")
         pool = BuffPool(yanhuo=40, perception=0, wushu_crystal=8)  # 40//5=8
 
-        segs = synergy_buff_pool_consumer([jieyun], "Mfg", "PureGold", pool)
+        segs = synergy_buff_pool_consumer([jieyun], "Mfg", "PureGold", pool, 12.0)
         assert len(segs) == 1
         assert segs[0].a == 16.0  # 8 × 2%
 
@@ -621,7 +621,7 @@ class TestBuffPool:
         shu = _mk_op("黍")
         pool = BuffPool(yanhuo=0, perception=0)
 
-        segs = synergy_buff_pool_consumer([shu], "Mfg", "PureGold", pool)
+        segs = synergy_buff_pool_consumer([shu], "Mfg", "PureGold", pool, 12.0)
         assert segs == []
 
     def test_非目标房间_不触发(self):
@@ -631,7 +631,7 @@ class TestBuffPool:
         shu = _mk_op("黍")
         pool = BuffPool(yanhuo=40, perception=0)
 
-        segs = synergy_buff_pool_consumer([shu], "Trade", "Money", pool)
+        segs = synergy_buff_pool_consumer([shu], "Trade", "Money", pool, 12.0)
         assert segs == []
 
 
@@ -900,7 +900,7 @@ class TestSynergyFactionRoom:
         fen = _mk_op("芬", team_id="reserve1")
         melantha = _mk_op("玫兰莎", team_id="reserve1")
 
-        segs = synergy_faction_room([fen2, fen, melantha], "Mfg", "PureGold")
+        segs = synergy_faction_room([fen2, fen, melantha], "Mfg", "PureGold", 12.0)
 
         assert len(segs) == 1
         assert segs[0].a == 20.0  # 2人 × 10%
@@ -912,7 +912,7 @@ class TestSynergyFactionRoom:
         fen2 = _mk_op("历阵锐枪芬")
         other = _mk_op("其他")
 
-        segs = synergy_faction_room([fen2, other], "Mfg", "PureGold")
+        segs = synergy_faction_room([fen2, other], "Mfg", "PureGold", 12.0)
 
         assert segs == []
 
@@ -923,7 +923,7 @@ class TestSynergyFactionRoom:
         fen2 = _mk_op("历阵锐枪芬")
         fen = _mk_op("芬", team_id="reserve1")
 
-        segs = synergy_faction_room([fen2, fen], "Trade", "Money")
+        segs = synergy_faction_room([fen2, fen], "Trade", "Money", 12.0)
 
         assert segs == []
 
@@ -934,7 +934,7 @@ class TestSynergyFactionRoom:
         a = _mk_op("填位A")
         b = _mk_op("填位B", team_id="reserve1")
 
-        segs = synergy_faction_room([a, b], "Mfg", "PureGold")
+        segs = synergy_faction_room([a, b], "Mfg", "PureGold", 12.0)
 
         assert segs == []
 
@@ -954,7 +954,7 @@ class TestTrainingRoomA6:
             RoomConfig("Training", 0, 1),
         ])
 
-        segs = synergy_facility_count([weiyi], "Mfg", "PureGold", layout)
+        segs = synergy_facility_count([weiyi], "Mfg", "PureGold", layout, T=12.0)
         assert len(segs) == 1
         assert segs[0].a == 30.0  # 3级 × 10% = 30%
 
@@ -969,7 +969,7 @@ class TestTrainingRoomA6:
             RoomConfig("Training", 1, 1),
         ])
 
-        segs = synergy_facility_count([weiyi], "Mfg", "PureGold", layout)
+        segs = synergy_facility_count([weiyi], "Mfg", "PureGold", layout, T=12.0)
         assert len(segs) == 1
         assert segs[0].a == 30.0  # 6级 × 10% = 60% → clamp 30%
 
@@ -988,7 +988,7 @@ class TestCrossRoomPair:
 
         all_assignments = {"Trade": [gumi]}
 
-        segs = synergy_cross_room_pair([liexia], "Mfg", "CombatRecord", all_assignments)
+        segs = synergy_cross_room_pair([liexia], "Mfg", "CombatRecord", all_assignments, 12.0)
         assert len(segs) == 1
         assert segs[0].a == 35.0
 
@@ -998,7 +998,7 @@ class TestCrossRoomPair:
 
         liexia = _mk_op("烈夏")
 
-        segs = synergy_cross_room_pair([liexia], "Mfg", "CombatRecord", {})
+        segs = synergy_cross_room_pair([liexia], "Mfg", "CombatRecord", {}, 12.0)
         assert segs == []
 
     def test_患难拍档_产物不匹配_不触发(self):
@@ -1010,7 +1010,7 @@ class TestCrossRoomPair:
 
         all_assignments = {"Trade": [gumi]}
 
-        segs = synergy_cross_room_pair([liexia], "Mfg", "PureGold", all_assignments)
+        segs = synergy_cross_room_pair([liexia], "Mfg", "PureGold", all_assignments, 12.0)
         assert segs == []
 
     def test_无B7干员_返回空(self):
@@ -1022,7 +1022,7 @@ class TestCrossRoomPair:
 
         all_assignments = {"Trade": [_mk_op("古米")]}
 
-        segs = synergy_cross_room_pair([a, b], "Mfg", "CombatRecord", all_assignments)
+        segs = synergy_cross_room_pair([a, b], "Mfg", "CombatRecord", all_assignments, 12.0)
         assert segs == []
 
 
@@ -1084,7 +1084,7 @@ class TestCapacityToEff:
         op2 = _mk_op("囤积者")
         op2.skills.append(_mk_skill("m_limit2", "Mfg", "囤积者", {"all": 0.0}, capacity=8))
 
-        segs = synergy_capacity_to_eff([hongyun, op1, op2], "Mfg", "PureGold")
+        segs = synergy_capacity_to_eff([hongyun, op1, op2], "Mfg", "PureGold", 12.0)
         assert len(segs) == 1
         assert segs[0].a == 32.0
 
@@ -1095,7 +1095,7 @@ class TestCapacityToEff:
         op1 = _mk_op("拾荒者")
         op1.skills.append(_mk_skill("m_limit", "Mfg", "拾荒者", {"all": 0.0}, capacity=8))
 
-        segs = synergy_capacity_to_eff([op1], "Mfg", "PureGold")
+        segs = synergy_capacity_to_eff([op1], "Mfg", "PureGold", 12.0)
         assert segs == []
 
     def test_大就是好_小于16格_每格1percent(self):
@@ -1106,7 +1106,7 @@ class TestCapacityToEff:
         op1 = _mk_op("拾荒者")
         op1.skills.append(_mk_skill("m_limit", "Mfg", "拾荒者", {"all": 0.0}, capacity=10))
 
-        segs = synergy_capacity_to_eff([paopao, op1], "Mfg", "PureGold")
+        segs = synergy_capacity_to_eff([paopao, op1], "Mfg", "PureGold", 12.0)
         assert len(segs) == 1
         assert segs[0].a == 10.0
 
@@ -1118,7 +1118,7 @@ class TestCapacityToEff:
         op1 = _mk_op("探险者")
         op1.skills.append(_mk_skill("m_limit", "Mfg", "探险者", {"all": 0.0}, capacity=20))
 
-        segs = synergy_capacity_to_eff([paopao, op1], "Mfg", "PureGold")
+        segs = synergy_capacity_to_eff([paopao, op1], "Mfg", "PureGold", 12.0)
         assert len(segs) == 1
         assert segs[0].a == 28.0  # 16×1 + 4×3
 
@@ -1131,7 +1131,7 @@ class TestCapacityToEff:
         op1 = _mk_op("拾荒者")
         op1.skills.append(_mk_skill("m_limit", "Mfg", "拾荒者", {"all": 0.0}, capacity=8))
 
-        segs = synergy_capacity_to_eff([paopao, hongyun, op1], "Mfg", "PureGold")
+        segs = synergy_capacity_to_eff([paopao, hongyun, op1], "Mfg", "PureGold", 12.0)
         assert len(segs) == 1
         assert segs[0].a == 8.0  # 泡泡费率 8×1%，非红云 8×2%
 
@@ -1151,7 +1151,7 @@ class TestAmplifier:
         op2 = _mk_op("中效果")
         op2.skills.append(_mk_skill("m_eff2", "Mfg", "中效", {"all": 5.0}))
 
-        segs = synergy_efficiency_amplifier([huaigu, op1, op2], "Mfg", "PureGold")
+        segs = synergy_efficiency_amplifier([huaigu, op1, op2], "Mfg", "PureGold", 12.0)
         assert len(segs) == 1
         assert segs[0].a == 30.0  # (25+5)//5 × 5
 
@@ -1163,7 +1163,7 @@ class TestAmplifier:
         op1 = _mk_op("超高效")
         op1.skills.append(_mk_skill("m_eff", "Mfg", "超高效", {"all": 50.0}))
 
-        segs = synergy_efficiency_amplifier([huaigu, op1], "Mfg", "PureGold")
+        segs = synergy_efficiency_amplifier([huaigu, op1], "Mfg", "PureGold", 12.0)
         assert len(segs) == 1
         assert segs[0].a == 40.0
 
@@ -1174,7 +1174,7 @@ class TestAmplifier:
         op1 = _mk_op("高效")
         op1.skills.append(_mk_skill("m_eff", "Mfg", "高效", {"all": 25.0}))
 
-        segs = synergy_efficiency_amplifier([op1], "Mfg", "PureGold")
+        segs = synergy_efficiency_amplifier([op1], "Mfg", "PureGold", 12.0)
         assert segs == []
 
 
@@ -1192,7 +1192,7 @@ class TestZeroingVariant:
 
         other = _mk_op("其他人")
 
-        segs, zero = synergy_zeroing_variant([holder, other], "Mfg", "PureGold")
+        segs, zero = synergy_zeroing_variant([holder, other], "Mfg", "PureGold", 12.0)
         assert len(segs) == 0  # 无效率加成，纯补偿容量
         assert zero == {"其他人"}
 
@@ -1205,7 +1205,7 @@ class TestZeroingVariant:
 
         other = _mk_op("其他人")
 
-        segs, zero = synergy_zeroing_variant([holder, other], "Mfg", "PureGold")
+        segs, zero = synergy_zeroing_variant([holder, other], "Mfg", "PureGold", 12.0)
         assert len(segs) == 1
         assert segs[0].a == 20.0  # 2人(含持有者) × 10%
         assert zero == {"其他人"}
@@ -1217,7 +1217,7 @@ class TestZeroingVariant:
         op1 = _mk_op("普通A")
         op2 = _mk_op("普通B")
 
-        segs, zero = synergy_zeroing_variant([op1, op2], "Mfg", "PureGold")
+        segs, zero = synergy_zeroing_variant([op1, op2], "Mfg", "PureGold", 12.0)
         assert segs == []
         assert zero == set()
 
@@ -1236,7 +1236,7 @@ class TestTokenProd:
 
         platforms = {"Lancet-2": True, "Castle-3": True}
 
-        segs = synergy_token_prod([alanna], "Mfg", "PureGold", platforms)
+        segs = synergy_token_prod([alanna], "Mfg", "PureGold", platforms, 12.0)
         assert len(segs) == 1
         assert segs[0].a == 10.0
 
@@ -1249,7 +1249,7 @@ class TestTokenProd:
 
         platforms = {"Lancet-2": True}
 
-        segs = synergy_token_prod([alanna], "Mfg", "CombatRecord", platforms)
+        segs = synergy_token_prod([alanna], "Mfg", "CombatRecord", platforms, 12.0)
         assert segs == []
 
     def test_机械精通β_3台作业平台_贵金属加30(self):
@@ -1261,7 +1261,7 @@ class TestTokenProd:
 
         platforms = {"Lancet-2": True, "Castle-3": True, "THRM-EX": True}
 
-        segs = synergy_token_prod([alanna], "Mfg", "PureGold", platforms)
+        segs = synergy_token_prod([alanna], "Mfg", "PureGold", platforms, 12.0)
         assert len(segs) == 1
         assert segs[0].a == 30.0
 
@@ -1272,7 +1272,7 @@ class TestTokenProd:
         op = _mk_op("普通")
         platforms = {"Lancet-2": True}
 
-        segs = synergy_token_prod([op], "Mfg", "PureGold", platforms)
+        segs = synergy_token_prod([op], "Mfg", "PureGold", platforms, 12.0)
         assert segs == []
 
 
@@ -1318,7 +1318,7 @@ class TestEngineeringRobots:
         zhijian = _mk_op("至简")
         pool = BuffPool(engineering_robots=42)
 
-        segs = synergy_buff_pool_consumer([zhijian], "Mfg", "PureGold", pool)
+        segs = synergy_buff_pool_consumer([zhijian], "Mfg", "PureGold", pool, 12.0)
         assert segs[0].a == 25.0  # β: 42//8*5 = 25 (β 比 α 优，取 β)
 
 
@@ -1401,7 +1401,7 @@ class TestGoldLineSynergy:
             RoomConfig("Mfg", 1, 3, "PureGold"),
         ])
 
-        segs = synergy_trade_gold_lines([hongxue], "Trade", "Money", layout)
+        segs = synergy_trade_gold_lines([hongxue], "Trade", "Money", layout, T=12.0)
         assert len(segs) == 1
         assert segs[0].a == 10.0
 
@@ -1411,7 +1411,7 @@ class TestGoldLineSynergy:
         from steward_core.models import LayoutConfig
 
         op = _mk_op("其他")
-        segs = synergy_trade_gold_lines([op], "Trade", "Money", LayoutConfig(rooms=[]))
+        segs = synergy_trade_gold_lines([op], "Trade", "Money", LayoutConfig(rooms=[]), 12.0)
         assert segs == []
 
     def test_销路宣发_非Trade_返回空(self):
@@ -1420,7 +1420,7 @@ class TestGoldLineSynergy:
         from steward_core.models import LayoutConfig
 
         hongxue = _mk_op("鸿雪")
-        segs = synergy_trade_gold_lines([hongxue], "Mfg", "PureGold", LayoutConfig(rooms=[]))
+        segs = synergy_trade_gold_lines([hongxue], "Mfg", "PureGold", LayoutConfig(rooms=[]), 12.0)
         assert segs == []
 
     def test_际崖居民_2杜林族_加2赤金线(self):
@@ -1435,7 +1435,7 @@ class TestGoldLineSynergy:
         ])
         durin_names = {"桃金娘", "褐果"}
 
-        segs = synergy_trade_gold_lines([hongxue], "Trade", "Money", layout, durin_names)
+        segs = synergy_trade_gold_lines([hongxue], "Trade", "Money", layout, durin_names, 12.0)
         assert len(segs) == 1
         assert segs[0].a == 20.0  # (2基础+2杜林) × 5%
 
@@ -1451,6 +1451,6 @@ class TestGoldLineSynergy:
         ])
         durin_names = {"杜林", "桃金娘", "褐果", "至简", "多萝西"}
 
-        segs = synergy_trade_gold_lines([hongxue], "Trade", "Money", layout, durin_names)
+        segs = synergy_trade_gold_lines([hongxue], "Trade", "Money", layout, durin_names, 12.0)
         assert len(segs) == 1
         assert segs[0].a == 30.0  # (2基础+min(5,4)) × 5%

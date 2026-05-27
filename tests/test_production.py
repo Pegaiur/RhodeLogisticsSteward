@@ -488,7 +488,7 @@ class TestTradeOrderMultiplier:
         assert gold_per_day == pytest.approx(24 / 2.4 * 2.0, rel=0.01)  # 20
 
     def test_龙舌兰加裁缝β_高品质投资倍数(self):
-        """龙舌兰投资β + 裁缝β(巫恋/柏喙) → LMD 1.24×"""
+        """龙舌兰投资β + 裁缝β → LMD 约12669，文档基准12740"""
         from steward_core.production import _get_trade_order_multiplier
 
         # Arrange
@@ -504,12 +504,9 @@ class TestTradeOrderMultiplier:
         # Act
         lmd_per_day, gold_per_day = _get_trade_order_multiplier([tequila, tailor])
 
-        # Assert: 文档 LMD=12740, +500 per 4-gold(30%概率)
-        # 裁缝β: 4-gold prob=30%, LMD/order=1668.75, gold/order=3.0375
-        expected_lmd = 10265 * (1668.75 / 1450.0)
-        expected_gold = 24 * 3.0375 / 3.39
-        assert lmd_per_day == pytest.approx(expected_lmd, rel=0.01)
-        assert gold_per_day == pytest.approx(expected_gold, rel=0.01)
+        # Assert: 24h 等效 P4≈0.816，加权平均订单耗时~4.32h
+        assert lmd_per_day == pytest.approx(12669.2, rel=0.01)
+        assert gold_per_day == pytest.approx(20.82, rel=0.01)
 
     def test_但书加龙舌兰_互动倍数(self):
         """但书+龙舌兰 → 2,3触发但书, 4触发龙舌兰"""
@@ -537,7 +534,7 @@ class TestTradeOrderMultiplier:
         assert gold_per_day == pytest.approx(24 * 2.9 / 3.39 * expected_gold_mult, rel=0.002)
 
     def test_裁缝α_高品质小幅倍数(self):
-        """裁缝·α 单独 → 高品 +5%, LMD +25/单"""
+        """裁缝·α 单独 → 24h等效P4≈0.509，加权平均耗时~3.86h"""
         from steward_core.production import _get_trade_order_multiplier
 
         # Arrange
@@ -549,12 +546,9 @@ class TestTradeOrderMultiplier:
         # Act
         lmd_per_day, gold_per_day = _get_trade_order_multiplier([tailor_a])
 
-        # Assert: 4-gold prob=25%, LMD=1484.375/订单, gold=2.96875/订单
-        expected_lmd = 1000 * 0.28125 + 1500 * 0.46875 + 2000 * 0.25
-        expected_gold = 2 * 0.28125 + 3 * 0.46875 + 4 * 0.25
-        base_orders = 24 / 3.39
-        assert lmd_per_day == pytest.approx(base_orders * expected_lmd, rel=0.002)
-        assert gold_per_day == pytest.approx(base_orders * expected_gold, rel=0.002)
+        # Assert: 时变模型 + 加权时间修正
+        assert lmd_per_day == pytest.approx(10343.5, rel=0.002)
+        assert gold_per_day == pytest.approx(20.69, rel=0.002)
 
 
 # ─── 等效效率自动量化（A7 层回退）────────────────────────────
@@ -608,8 +602,8 @@ class TestTradeOrderEquivalentEfficiency:
         eff = get_trade_order_equivalent_efficiency(closure)
         assert eff == pytest.approx(27.6, rel=0.1)
 
-    def test_裁缝α_等效效率约4(self):
-        """裁缝α 1.02× 倍数 → 等效 ~4%"""
+    def test_裁缝α_等效效率约1_2(self):
+        """裁缝α 时变模型 1.01× 倍数 → 等效 ~1.3%"""
         from steward_core.synergy import get_trade_order_equivalent_efficiency
 
         tailor = _mk_op("明椒", [
@@ -618,7 +612,7 @@ class TestTradeOrderEquivalentEfficiency:
         ])
 
         eff = get_trade_order_equivalent_efficiency(tailor)
-        assert eff == pytest.approx(3.9, rel=0.15)
+        assert eff == pytest.approx(1.25, rel=0.15)
 
     def test_裁员后仍可import_无循环依赖(self):
         """验证 synergy.py 不依赖 _SYSTEM_CONTRIBUTORS 中的 order_mechanism 注册"""

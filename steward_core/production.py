@@ -38,6 +38,10 @@ _TRADE_AVG_GOLD_PER_ORDER = 2.9
 _TRADE_AVG_LMD_PER_ORDER = 1450.0
 _TRADE_AVG_TIME_HOURS = (144 * 0.3 + 210 * 0.5 + 276 * 0.2) / 60.0  # 3.39h
 
+_ORDER_TIME_2G = 144.0 / 60.0   # 2.4h
+_ORDER_TIME_3G = 210.0 / 60.0   # 3.5h
+_ORDER_TIME_4G = 276.0 / 60.0   # 4.6h
+
 # ─── 发电站 / 无人机 基础参数 ──────────────────────────────────
 # 基础恢复：6 min/架 → 240 架/天
 _DRONE_BASE_PER_DAY = 240.0
@@ -55,7 +59,7 @@ _TRADE_BASE_GOLD_PER_DAY = 24.0 * _TRADE_AVG_GOLD_PER_ORDER / _TRADE_AVG_TIME_HO
 
 
 def _extract_tailor_level(ops: list[Operator]) -> int:
-    """从裁缝/手工艺品系列 buff_id 提取最高等级
+    """从裁缝/手工艺品系列 buff_id 提取等级
 
     裁缝·α (trade_ord_wt&cost[x0x]): 小幅提升4-gold概率
     裁缝·β (trade_ord_wt&cost[x1x]): 提升4-gold概率
@@ -63,8 +67,15 @@ def _extract_tailor_level(ops: list[Operator]) -> int:
     手工艺品·β (trade_ord_wt&cost[x1x]): 提升（同β）
 
     buff_id 格式为 trade_ord_wt&cost[ABC]，B=0表示α级，B=1表示β级。
+
+    Returns:
+        0: 无裁缝
+        1: 仅α（一个或多个）
+        2: 仅β（一个或多个）
+        3: α+β 叠加
     """
-    max_level = 0
+    has_alpha = False
+    has_beta = False
     for op in ops:
         for s in op.skills:
             bid = s.buff_id
@@ -75,17 +86,76 @@ def _extract_tailor_level(ops: list[Operator]) -> int:
                 continue
             tier = bid[lb + 2]  # [ABC] 第二位
             if tier == "1":
-                max_level = 2
-            elif tier == "0" and max_level < 1:
-                max_level = 1
-    return max_level
+                has_beta = True
+            elif tier == "0":
+                has_alpha = True
+    if has_beta and has_alpha:
+        return 3
+    if has_beta:
+        return 2
+    if has_alpha:
+        return 1
+    return 0
 
 
-def _get_trade_order_multiplier(ops: list[Operator]) -> tuple[float, float]:
+# ─── 裁缝时变P4参数 ────────────────────────────────────────────
+# 裁缝技能机制：权重0-3h线性爬升，3h后饱和。4赤金订单触发权重清零，
+# 稳态下P4呈爬升→震荡模式。以下取班次时间的加权平均等效P4。
+# 数据来源：裁缝时变.md 实验数据拟合
+
+_TAILOR_STEADY_P4 = {
+    0: 0.20,   # 无裁缝 = 基准概率
+    1: 0.53,   # 裁缝α：3h+ 稳态P4（裁缝时变.md 实验数据均值，单α爬升基线0.20）
+    2: 0.85,   # 裁缝β：3h+ 稳态P4（龙舌兰相关.md 确认值85%，裁缝时变.md 实验均值83%）
+    3: 0.88,   # α+β叠加：裁缝时变.md 6h单点88.1%（N=134），稳态天花板
+}
+_TAILOR_P4_FLOOR = {
+    0: 0.20,
+    1: 0.20,   # α从基线0.20开始爬升
+    2: 0.30,   # β有地板加成，起点0.30
+    3: 0.30,   # α+β：β地板主导
+}
+_RAMP_HOURS = 3.0  # 裁缝权重爬升上限（小时）
+
+
+def _effective_tailor_p4(hours: float, tailor_level: int) -> float:
+    """裁缝技能的等效4-gold概率（班次时间平均）
+
+    0-3h线性爬升，3h后饱和。取爬升段（梯形面积）+ 稳态段（矩形面积）
+    的加权平均，等价于匀化后的班次期望值。
+
+    Args:
+        hours: 班次持续时间（小时）
+        tailor_level: _extract_tailor_level 返回值 (0/1/2/3)
+    """
+    p4_floor = _TAILOR_P4_FLOOR.get(tailor_level, 0.20)
+    p4_max = _TAILOR_STEADY_P4.get(tailor_level, 0.20)
+
+    if p4_max <= p4_floor:
+        return p4_floor
+
+    if hours <= _RAMP_HOURS:
+        return p4_floor + (p4_max - p4_floor) * hours / (2.0 * _RAMP_HOURS)
+
+    ramp_area = (p4_floor + p4_max) / 2.0 * _RAMP_HOURS
+    steady_area = p4_max * (hours - _RAMP_HOURS)
+    return (ramp_area + steady_area) / hours
+
+
+def _weighted_avg_order_time(p2: float, p3: float, p4: float) -> float:
+    """根据实际P2/P3/P4分布计算加权平均订单耗时（小时）"""
+    return _ORDER_TIME_2G * p2 + _ORDER_TIME_3G * p3 + _ORDER_TIME_4G * p4
+
+
+def _get_trade_order_multiplier(ops: list[Operator], hours: float = 24.0) -> tuple[float, float]:
     """贸易站订单机制倍数查询
 
     检测干员组合中的特殊订单机制（但书违约、龙舌兰投资、
     裁缝品质、可露希尔独占），返回加强后的每日产出。
+
+    Args:
+        ops: 贸易站干员列表
+        hours: 班次持续时间（小时），用于裁缝时变P4计算
 
     Returns:
         (lmd_per_day, gold_per_day): 100%效率 24h 的 LMD 日产和赤金消耗
@@ -102,43 +172,52 @@ def _get_trade_order_multiplier(ops: list[Operator]) -> tuple[float, float]:
         # 可露希尔特别订单：固定 2赤金/1200LMD, 2.4h/单
         return (12000.0, 24.0 / 2.4 * 2.0)
 
+    # 裁缝时变等效P4（仅在有效时计算）
+    p4 = _effective_tailor_p4(hours, tailor_level) if has_tequila or tailor_level > 0 else 0.20
+
     if has_law and has_tequila:
         # 但书+龙舌兰：2,3→但书(+2gold), 4→龙舌兰(+bonus LMD)
-        # 裁缝同时影响4-gold概率
-        p4 = 0.20 + tailor_level * 0.05
         p2 = (1 - p4) * 3 / 8
         p3 = (1 - p4) * 5 / 8
         lmd_per_order = 2000 * p2 + 2500 * p3 + (2000 + tequila_bonus) * p4
         gold_per_order = 4 * p2 + 5 * p3 + 4 * p4
-        base_orders = 24.0 / _TRADE_AVG_TIME_HOURS
-        return (base_orders * lmd_per_order, base_orders * gold_per_order)
+        avg_order_hours = _weighted_avg_order_time(p2, p3, p4)
+        return (24.0 / avg_order_hours * lmd_per_order,
+                24.0 / avg_order_hours * gold_per_order)
 
     if has_tequila:
         # 龙舌兰（可能+裁缝）：仅4-gold订单触发投资
-        p4 = 0.20 + tailor_level * 0.05
         p2 = (1 - p4) * 3 / 8
         p3 = (1 - p4) * 5 / 8
         lmd_per_order = 1000 * p2 + 1500 * p3 + (2000 + tequila_bonus) * p4
         gold_per_order = 2 * p2 + 3 * p3 + 4 * p4
-        base_orders = 24.0 / _TRADE_AVG_TIME_HOURS
-        return (base_orders * lmd_per_order, base_orders * gold_per_order)
+        avg_order_hours = _weighted_avg_order_time(p2, p3, p4)
+        return (24.0 / avg_order_hours * lmd_per_order,
+                24.0 / avg_order_hours * gold_per_order)
 
     if has_law:
         # 但书：2,3-gold → 违约+2, LMD加倍
-        lmd_per_order = 2250.0
-        gold_per_order = 4.9
-        base_orders = 24.0 / _TRADE_AVG_TIME_HOURS
-        return (base_orders * lmd_per_order, base_orders * gold_per_order)
+        if tailor_level > 0:
+            p2 = (1 - p4) * 3 / 8
+            p3 = (1 - p4) * 5 / 8
+            lmd_per_order = 2000 * p2 + 2500 * p3 + 2000 * p4
+            gold_per_order = 4 * p2 + 5 * p3 + 4 * p4
+        else:
+            lmd_per_order = 2250.0
+            gold_per_order = 4.9
+        avg_order_hours = _weighted_avg_order_time(p2, p3, p4) if tailor_level > 0 else _TRADE_AVG_TIME_HOURS
+        return (24.0 / avg_order_hours * lmd_per_order,
+                24.0 / avg_order_hours * gold_per_order)
 
     if tailor_level > 0:
         # 裁缝单独（无投资）：提升4-gold概率
-        p4 = 0.20 + tailor_level * 0.05
         p2 = (1 - p4) * 3 / 8
         p3 = (1 - p4) * 5 / 8
         lmd_per_order = 1000 * p2 + 1500 * p3 + 2000 * p4
         gold_per_order = 2 * p2 + 3 * p3 + 4 * p4
-        base_orders = 24.0 / _TRADE_AVG_TIME_HOURS
-        return (base_orders * lmd_per_order, base_orders * gold_per_order)
+        avg_order_hours = _weighted_avg_order_time(p2, p3, p4)
+        return (24.0 / avg_order_hours * lmd_per_order,
+                24.0 / avg_order_hours * gold_per_order)
 
     return (_TRADE_BASE_LMD_PER_DAY, _TRADE_BASE_GOLD_PER_DAY)
 
@@ -323,7 +402,7 @@ def _calc_trade(
     display_productivity = 1.0 + eff_int / (100.0 * ctx.hours)
     drone_boost = _drone_boost(assignment, ctx, _DRONE_MINUTES_TRADE)
 
-    lmd_per_day, gold_per_day = _get_trade_order_multiplier(ops)
+    lmd_per_day, gold_per_day = _get_trade_order_multiplier(ops, ctx.hours)
     base_factor = efficiency_integrated / 24.0
     lmd_output = base_factor * lmd_per_day * (1.0 + drone_boost)
     gold_consumed = base_factor * gold_per_day * (1.0 + drone_boost)
