@@ -374,6 +374,52 @@ def compute_control_global_bonus(
     return GlobalBonus(mfg_bonus=best_mfg, trade_bonus=best_trade)
 
 
+# ─── C1 扩展：中枢 per-operator 条件型加成 ───────────────────────
+
+# 红松骑士团 group_id
+_PINUS_GROUP = "pinus"
+
+# 骑士标签持有者（name 集合作为数据驱动判定的安全网）
+_KNIGHT_NAMES: set[str] = {
+    "砾", "野鬃", "白金", "鞭刃", "暴雨", "耀骑士临光",
+    "瑕光", "临光", "远牙", "灰毫", "焰尾", "薇薇安娜",
+}
+
+
+def _is_knight(op: "Operator") -> bool:
+    """游戏内骑士 = kazimierz 势力 + 红松骑士团 + 硬编码补全"""
+    return op.name in _KNIGHT_NAMES or op.nation_id == "kazimierz" or op.group_id == _PINUS_GROUP
+
+
+def control_per_operator_bonus(
+    control_ops: list["Operator"],
+    room_ops: list["Operator"],
+    product: str,
+) -> float:
+    """中枢干员对当前房间的条件型 per-operator 加成（百分值）
+
+    焰尾: 每个红松骑士团 Mfg 干员 → CR+10%, PG-10%
+    薇薇安娜: 每个骑士 Mfg 干员 → +7%
+    """
+    bonus = 0.0
+    control_names = {op.name for op in control_ops}
+
+    if "焰尾" in control_names:
+        for op in room_ops:
+            if op.group_id == _PINUS_GROUP:
+                if product == "CombatRecord":
+                    bonus += 10.0
+                elif product == "PureGold":
+                    bonus -= 10.0
+
+    if "薇薇安娜" in control_names:
+        for op in room_ops:
+            if _is_knight(op):
+                bonus += 7.0
+
+    return bonus
+
+
 # ─── B1 人间烟火 / 感知信息 / 巫术结晶 ──────────────────────────
 
 @dataclass
@@ -512,6 +558,10 @@ ROSEMARY_SUPPORT: dict[str, list[str]] = {
     "Trade": ["黑键"],
     "Dormitory": ["爱丽丝", "车尔尼", "森西"],
 }
+
+# B 层关键干员名称（避免多处字符串硬编码）
+_B3_ROSEMARY = "迷迭香"
+_B5_EBNHLZ = "黑键"
 
 
 def synergy_buff_pool_consumer(

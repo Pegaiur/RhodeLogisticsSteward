@@ -15,16 +15,19 @@ from steward_core.models import Operator, ShiftPlan, LayoutConfig, RoomAssignmen
 from steward_core.synergy import (
     GlobalBonus, compute_control_global_bonus, compute_buff_pool,
     compute_effective_power_count,
+    control_per_operator_bonus,
+    _B3_ROSEMARY, _B5_EBNHLZ,
 )
 from steward_core.constants import FIXED_CONTROL, BASE_POWER_COUNT
-from steward_core.solver import control_per_operator_bonus
 from steward_core.evaluate import evaluate_room
 
 # ─── 制造站 Lv3 基础参数 ────────────────────────────────────────
-# 作战记录：基础 1个/3h → 0.333 个/h
+# 作战记录：基础 1个/3h → 0.333 个/h，每中级经验书=1000经验
 _RECORD_BASE_PER_HOUR = 1.0 / 3.0
-# 赤金：基础 1个/1.2h → 0.833 个/h
+_RECORD_EXP_PER_UNIT = 1000.0
+# 赤金：基础 1个/1.2h → 0.833 个/h，每赤金=500龙门币
 _GOLD_BASE_PER_HOUR = 1.0 / 1.2
+_GOLD_LMD_PER_UNIT = 500.0
 
 # ─── 贸易站 Lv3 基础参数（龙门商法） ────────────────────────────
 # 订单概率与参数
@@ -53,6 +56,7 @@ class RoomOutput:
     room_index: int
     product: Optional[str]
     operators: list[str] = field(default_factory=list)
+    head_count: int = 0
     productivity: float = 0.0
     output_per_day: float = 0.0
     drone_boost_pct: float = 0.0
@@ -60,11 +64,14 @@ class RoomOutput:
 
     def __repr__(self) -> str:
         drone_str = f" (含无人机+{self.drone_boost_pct:.0%})" if self.drone_boost_pct > 0 else ""
+        head_base = 100 + self.head_count
+        skill_pct = (self.productivity - 1.0) * 100
+        eff_str = f"基础{head_base}%+{skill_pct:.0f}%"
         return (
             f"{self.room_type}[{self.room_index}]"
             f"({self.product}): {self.operators}"
             f" → {self.output_per_day:.1f} {self.output_unit}/天"
-            f"{drone_str}"
+            f" (效率{eff_str}){drone_str}"
         )
 
 
@@ -93,15 +100,15 @@ class DailyProduction:
         if self.drone_target:
             lines.append(f"无人机加速目标: {self.drone_target}")
         lines.extend([
-            f"作战记录产出: {self.total_records_per_day:.1f} 个/天",
-            f"赤金制造: {self.total_gold_produced_per_day:.1f} 个/天",
-            f"赤金消耗: {self.total_gold_consumed_per_day:.1f} 个/天",
+            f"作战记录产出: {self.total_records_per_day * _RECORD_EXP_PER_UNIT:,.0f} 经验/天 ({self.total_records_per_day:.1f} 个)",
+            f"赤金制造: {self.total_gold_produced_per_day * _GOLD_LMD_PER_UNIT:,.0f} LMD等值/天 ({self.total_gold_produced_per_day:.1f} 个)",
+            f"赤金消耗: {self.total_gold_consumed_per_day * _GOLD_LMD_PER_UNIT:,.0f} LMD等值/天 ({self.total_gold_consumed_per_day:.1f} 个)",
             f"龙门币产出: {self.effective_lmd_per_day:,.0f} /天",
         ])
         if self.gold_surplus > 0:
-            lines.append(f"赤金盈余: +{self.gold_surplus:.1f} 个/天")
+            lines.append(f"赤金盈余: +{self.gold_surplus:.1f} 个 ({self.gold_surplus * _GOLD_LMD_PER_UNIT:,.0f} LMD等值)")
         elif self.gold_surplus < 0:
-            lines.append(f"赤金缺口: {self.gold_surplus:.1f} 个/天（贸易站开工率 {self.effective_lmd_per_day/self.total_lmd_per_day:.0%}）")
+            lines.append(f"赤金缺口: {abs(self.gold_surplus):.1f} 个 ({abs(self.gold_surplus) * _GOLD_LMD_PER_UNIT:,.0f} LMD等值)（贸易站开工率 {self.effective_lmd_per_day/self.total_lmd_per_day:.0%}）")
         return "\n".join(lines)
 
 
@@ -178,7 +185,8 @@ def _calc_mfg_record(
     production.record_rooms.append(RoomOutput(
         room_type="Mfg", room_index=assignment.room_index,
         product="CombatRecord", operators=assignment.operators,
-        productivity=display_productivity, output_per_day=output_per_day,
+        head_count=n, productivity=display_productivity,
+        output_per_day=output_per_day,
         drone_boost_pct=drone_boost, output_unit="个",
     ))
     production.total_records_per_day += output_per_day
@@ -199,7 +207,8 @@ def _calc_mfg_gold(
     production.gold_rooms.append(RoomOutput(
         room_type="Mfg", room_index=assignment.room_index,
         product="PureGold", operators=assignment.operators,
-        productivity=display_productivity, output_per_day=output_per_day,
+        head_count=n, productivity=display_productivity,
+        output_per_day=output_per_day,
         drone_boost_pct=drone_boost, output_unit="个",
     ))
     production.total_gold_produced_per_day += output_per_day
@@ -221,7 +230,8 @@ def _calc_trade(
     production.trade_rooms.append(RoomOutput(
         room_type="Trade", room_index=assignment.room_index,
         product="Money", operators=assignment.operators,
-        productivity=display_productivity, output_per_day=lmd_output,
+        head_count=n, productivity=display_productivity,
+        output_per_day=lmd_output,
         drone_boost_pct=drone_boost, output_unit="LMD",
     ))
     production.total_gold_consumed_per_day += gold_consumed
@@ -261,11 +271,11 @@ def calculate(plan: ShiftPlan, operators: list[Operator], hours: float = 24.0) -
 
     # 检测 B1 感知信息生成者是否在工作设施中
     has_rosmontis_in_mfg = any(
-        "迷迭香" in a.operators and a.room_type == "Mfg"
+        _B3_ROSEMARY in a.operators and a.room_type == "Mfg"
         for a in plan.assignments
     )
     has_ebnhlz_in_trade = any(
-        "黑键" in a.operators and a.room_type == "Trade"
+        _B5_EBNHLZ in a.operators and a.room_type == "Trade"
         for a in plan.assignments
     )
 

@@ -16,6 +16,8 @@ from steward_core.synergy import (
     compute_effective_power_count, _has_power_count_modifier,
     get_system_contributors,
     classify_mfg_operators, prune_equivalent, build_candidate_pool,
+    control_per_operator_bonus, _is_knight, _PINUS_GROUP,
+    _B3_ROSEMARY, _B5_EBNHLZ,
 )
 from steward_core.evaluate import evaluate_room
 from steward_core.constants import BASE_POWER_COUNT
@@ -30,6 +32,7 @@ _DORM_NAMES = get_system_contributors("Dormitory")
 _POWER_NAMES = set(get_system_contributors("Power", "facility_modifier"))
 
 # 中枢全局加成在控制中枢填充中的排序偏置
+# 中枢填充时按 best_efficiency 排序，C1 全局加成者个人效率=0，需大偏置强制排前
 _CTRL_GLOBAL_SORT_BIAS = 1000.0
 
 
@@ -49,37 +52,6 @@ def _upper_bound_ok(total_eff: float, best_known: float, threshold: float = 0.95
 
 
 # ─── 房间评估 ───────────────────────────────────────────────────
-
-def control_per_operator_bonus(
-    control_ops: list[Operator],
-    room_ops: list[Operator],
-    product: str,
-) -> float:
-    """中枢干员对当前房间的条件型 per-operator 加成（百分值）
-
-    焰尾: 每个红松骑士团 Mfg 干员 → CR+10%, PG-10%
-    薇薇安娜: 每个骑士 Mfg 干员 → +7%
-    """
-    bonus = 0.0
-    control_names = {op.name for op in control_ops}
-
-    # 焰尾: 红松骑士团
-    if "焰尾" in control_names:
-        for op in room_ops:
-            if op.group_id == _PINUS_GROUP:
-                if product == "CombatRecord":
-                    bonus += 10.0
-                elif product == "PureGold":
-                    bonus -= 10.0
-
-    # 薇薇安娜: 骑士（含红松骑士团）
-    if "薇薇安娜" in control_names:
-        for op in room_ops:
-            if _is_knight(op):
-                bonus += 7.0
-
-    return bonus
-
 
 def _generate_combos(pool: list[Operator], k: int = 3) -> list[list[Operator]]:
     """生成 k 人组合"""
@@ -190,24 +162,6 @@ def _greedy_remaining(
 
 # ─── 最优支撑函数 ─────────────────────────────────────────────────
 
-# 红松骑士团 group_id。游戏内"骑士"标签覆盖红松骑士团全体。
-_PINUS_GROUP = "pinus"
-
-# 骑士标签持有者（name 推导 + kazimierz 势力 + 红松骑士团）
-# 游戏内骑士 = kazimierz 势力干员 + 红松骑士团干员，但 character_identity
-# 无独立骑士 tag 字段，部分骑士（如薇薇安娜）不属于 kazimierz 也不属于 pinus，
-# 因此 name 集合作为安全网补全数据驱动判定的缺口。
-_KNIGHT_NAMES: set[str] = {
-    "砾", "野鬃", "白金", "鞭刃", "暴雨", "耀骑士临光",
-    "瑕光", "临光", "远牙", "灰毫", "焰尾", "薇薇安娜",
-}
-
-
-def _is_knight(op: Operator) -> bool:
-    """游戏内骑士 = kazimierz 势力干员 + 红松骑士团干员"""
-    return op.name in _KNIGHT_NAMES or op.nation_id == "kazimierz" or op.group_id == _PINUS_GROUP
-
-
 def compute_optimal_support(
     combo_ops: list[Operator],
 ) -> dict[str, list[str]]:
@@ -228,7 +182,7 @@ def compute_optimal_support(
     names = {op.name for op in combo_ops}
 
     # 迷迭香包
-    if "迷迭香" in names:
+    if _B3_ROSEMARY in names:
         for facility, ops in ROSEMARY_SUPPORT.items():
             support[facility].update(ops)
 
@@ -281,8 +235,8 @@ def _evaluate_with_support(
     dorm_names = available_support.get("Dormitory", [])
     dorm_ops = [op_lookup[n] for n in dorm_names if n in op_lookup]
 
-    has_rosmontis = any(op.name == "迷迭香" for op in combo_ops)
-    has_ebnhlz = "黑键" in available_support.get("Trade", [])
+    has_rosmontis = any(op.name == _B3_ROSEMARY for op in combo_ops)
+    has_ebnhlz = _B5_EBNHLZ in available_support.get("Trade", [])
 
     buff_pool = compute_buff_pool(
         control_ops, suich_count=5,

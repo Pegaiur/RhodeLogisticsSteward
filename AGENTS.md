@@ -93,6 +93,7 @@ RhodeLogisticsSteward/
 | `_POWER_BUFF_BONUS` | 自动化 buff_id→加成映射 | 新增 manu_prod_spd&power[*] 类型 buff |
 | `_A6_FACILITY_TABLE` | 设施数量联动表 | 新增设施联动 buff |
 | `_C1_GLOBAL_TABLE` | 中枢全局效率 | 新增中枢全局 buff |
+| `_KNIGHT_NAMES` | 骑士干员名称（安全网补全） | 新增卡西米尔但不属于 kazimierz 势力/pinus 组织的骑士 |
 | `_B_LAYER_CONSUMER_TABLE` | B 层点数消费者 | 新增 buff 池消费者 |
 | `ROSEMARY_SUPPORT` | 迷迭香支撑干员 | 新增迷迭香联动链参与者 |
 

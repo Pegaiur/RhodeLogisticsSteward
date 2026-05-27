@@ -13,6 +13,7 @@ from steward_core.data_loader import load_operators_v2
 from steward_core.output import save_json
 from steward_core.solver import solve_mvp
 from steward_core import production
+from steward_core.production import _RECORD_EXP_PER_UNIT, _GOLD_LMD_PER_UNIT
 
 
 def main():
@@ -54,22 +55,32 @@ def main():
     print("── 作战记录（经验）──")
     for room in dp.record_rooms:
         drone = f" (含无人机+{room.drone_boost_pct:.0%})" if room.drone_boost_pct > 0 else ""
-        print(f"  Mfg[{room.room_index}]: {room.operators} → {room.output_per_day:.1f} 个/12h (效率{room.productivity*100:.0f}%){drone}")
-    print(f"  合计: {dp.total_records_per_day:.1f} 个/12h\n")
+        head_base = 100 + room.head_count
+        skill_pct = (room.productivity - 1.0) * 100
+        exp_value = room.output_per_day * _RECORD_EXP_PER_UNIT
+        print(f"  Mfg[{room.room_index}]: {room.operators} → {exp_value:,.0f} 经验/12h (基础{head_base}%+{skill_pct:.0f}%){drone}")
+    total_exp = dp.total_records_per_day * _RECORD_EXP_PER_UNIT
+    print(f"  合计: {total_exp:,.0f} 经验/12h\n")
 
     print("── 赤金制造 ──")
     for room in dp.gold_rooms:
         drone = f" (含无人机+{room.drone_boost_pct:.0%})" if room.drone_boost_pct > 0 else ""
-        print(f"  Mfg[{room.room_index}]: {room.operators} → {room.output_per_day:.1f} 个/12h (效率{room.productivity*100:.0f}%){drone}")
-    print(f"  合计: {dp.total_gold_produced_per_day:.1f} 个/12h\n")
+        head_base = 100 + room.head_count
+        skill_pct = (room.productivity - 1.0) * 100
+        lmd_value = room.output_per_day * _GOLD_LMD_PER_UNIT
+        print(f"  Mfg[{room.room_index}]: {room.operators} → {lmd_value:,.0f} LMD等值/12h (基础{head_base}%+{skill_pct:.0f}%){drone}")
+    total_gold_lmd = dp.total_gold_produced_per_day * _GOLD_LMD_PER_UNIT
+    print(f"  合计: {total_gold_lmd:,.0f} LMD等值/12h\n")
 
     print("── 贸易站（龙门币）──")
     for room in dp.trade_rooms:
         drone = f" (含无人机+{room.drone_boost_pct:.0%})" if room.drone_boost_pct > 0 else ""
+        head_base = 100 + room.head_count
+        skill_pct = (room.productivity - 1.0) * 100
         gold_use = room.output_per_day / dp.total_lmd_per_day * dp.total_gold_consumed_per_day
-        print(f"  Trade[{room.room_index}]: {room.operators} → {room.output_per_day:,.0f} LMD/12h{drone}  |  消耗赤金 {gold_use:.1f}/12h")
+        print(f"  Trade[{room.room_index}]: {room.operators} → {room.output_per_day:,.0f} LMD/12h (基础{head_base}%+{skill_pct:.0f}%){drone}  |  消耗赤金 {gold_use:.1f}/12h")
     print(f"  合计: {dp.total_lmd_per_day:,.0f} LMD/12h")
-    print(f"  赤金消耗: {dp.total_gold_consumed_per_day:.1f} 个/12h")
+    print(f"  赤金消耗: {dp.total_gold_consumed_per_day:.1f} 个/12h (等值 {dp.total_gold_consumed_per_day * _GOLD_LMD_PER_UNIT:,.0f} LMD)")
     if dp.gold_surplus < 0:
         print(f"  赤金缺口 {abs(dp.gold_surplus):.1f} 个 → 有效收入 {dp.effective_lmd_per_day:,.0f} LMD/12h")
 
