@@ -227,7 +227,7 @@ def calculate(plan: ShiftPlan, operators: list[Operator], hours: float = 24.0) -
     # B1: 人间烟火 + 宿舍感知信息预计算
     buff_pool = compute_buff_pool(
         control_ops, suich_count=5,
-        dorm_operators=dorm_ops, dorm_level=3,
+        dorm_operators=dorm_ops, dorm_level=5,
         has_rosmontis_in_mfg=has_rosmontis_in_mfg,
         has_ebnhlz_in_trade=has_ebnhlz_in_trade,
     )
