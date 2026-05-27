@@ -5,7 +5,7 @@
 
 import json
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 
 from steward_core.models import SolveResult, ShiftPlan, RoomAssignment
 
@@ -17,6 +17,7 @@ _ROOM_TO_JSON_KEY: dict[str, str] = {
     "Power": "power",
     "Reception": "meeting",
     "Office": "hire",
+    "Dormitory": "dormitory",
 }
 
 # 产物名 → MAA JSON product 值映射

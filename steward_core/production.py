@@ -165,9 +165,17 @@ def calculate(plan: ShiftPlan, operators: list[Operator], hours: float = 24.0) -
     op_lookup = _operator_lookup(operators)
     production = DailyProduction()
 
-    # C1: 全局效率加成
-    control_ops = [op for op in operators if op.name in FIXED_CONTROL]
-    global_bonus = compute_control_global_bonus(control_ops)
+    # 从 plan 获取中枢干员（若未指定则回退 FIXED_CONTROL）
+    plan_ctrl_ops: list[Operator] = []
+    for assignment in plan.assignments:
+        if assignment.room_type == "Control":
+            plan_ctrl_ops = [op_lookup[n] for n in assignment.operators if n in op_lookup]
+            break
+    if not plan_ctrl_ops:
+        plan_ctrl_ops = [op_lookup[n] for n in FIXED_CONTROL if n in op_lookup]
+
+    # C1: 全局效率加成（使用实际中枢干员）
+    global_bonus = compute_control_global_bonus(plan_ctrl_ops)
 
     # 收集宿舍干员
     dorm_ops: list[Operator] = []
@@ -187,12 +195,15 @@ def calculate(plan: ShiftPlan, operators: list[Operator], hours: float = 24.0) -
         for a in plan.assignments
     )
 
-    # B1: 人间烟火 + 宿舍感知信息预计算
+    # B1: 人间烟火 + 宿舍感知信息预计算（使用实际中枢干员）
+    # 当迷迭香在制造站时，求解器假设令 mood<12 以产出感知信息（非烟火）
+    ling_mood_below_12 = has_rosmontis_in_mfg
     buff_pool = compute_buff_pool(
-        control_ops, suich_count=5,
+        plan_ctrl_ops, suich_count=5,
         dorm_operators=dorm_ops, dorm_level=5,
         has_rosmontis_in_mfg=has_rosmontis_in_mfg,
         has_ebnhlz_in_trade=has_ebnhlz_in_trade,
+        ling_mood_below_12=ling_mood_below_12,
     )
 
     # 1. 收集发电站干员，计算无人机产量（按工期比例缩放）
@@ -210,15 +221,6 @@ def calculate(plan: ShiftPlan, operators: list[Operator], hours: float = 24.0) -
     # 3. 计算各设施产出（走 efficiency_fn 积分，含联动）
     power_count = sum(1 for a in plan.assignments if a.room_type == "Power" and a.operators)
 
-    # 从 plan 获取中枢干员（若未指定则回退 FIXED_CONTROL）
-    plan_ctrl_ops: list[Operator] = []
-    for assignment in plan.assignments:
-        if assignment.room_type == "Control":
-            plan_ctrl_ops = [op_lookup[n] for n in assignment.operators if n in op_lookup]
-            break
-    if not plan_ctrl_ops:
-        plan_ctrl_ops = [op_lookup[n] for n in FIXED_CONTROL if n in op_lookup]
-
     for assignment in plan.assignments:
         ops = [op_lookup[n] for n in assignment.operators if n in op_lookup]
         if not ops:
@@ -229,7 +231,7 @@ def calculate(plan: ShiftPlan, operators: list[Operator], hours: float = 24.0) -
             ctrl_bonus = control_per_operator_bonus(plan_ctrl_ops, ops, "CombatRecord")
             eff_int = _room_efficiency_integral(ops, "Mfg", "CombatRecord", power_count, hours, global_bonus, buff_pool) + ctrl_bonus * hours
             productivity_int = hours * (1.0 + 0.01 * n) + eff_int / 100.0
-            avg_prod = productivity_int / hours
+            display_productivity = 1.0 + eff_int / (100.0 * hours)
             drone_boost = 0.0
             if assignment.room_type == drone_room_type and assignment.room_index == drone_room_index:
                 drone_boost = _drone_multiplier(production.daily_drones, _DRONE_MINUTES_MFG, hours) - 1.0
@@ -237,7 +239,7 @@ def calculate(plan: ShiftPlan, operators: list[Operator], hours: float = 24.0) -
             room = RoomOutput(
                 room_type="Mfg", room_index=assignment.room_index,
                 product="CombatRecord", operators=assignment.operators,
-                productivity=avg_prod, output_per_day=output_per_day,
+                productivity=display_productivity, output_per_day=output_per_day,
                 drone_boost_pct=drone_boost, output_unit="个",
             )
             production.record_rooms.append(room)
@@ -247,7 +249,7 @@ def calculate(plan: ShiftPlan, operators: list[Operator], hours: float = 24.0) -
             ctrl_bonus = control_per_operator_bonus(plan_ctrl_ops, ops, "PureGold")
             eff_int = _room_efficiency_integral(ops, "Mfg", "PureGold", power_count, hours, global_bonus, buff_pool) + ctrl_bonus * hours
             productivity_int = hours * (1.0 + 0.01 * n) + eff_int / 100.0
-            avg_prod = productivity_int / hours
+            display_productivity = 1.0 + eff_int / (100.0 * hours)
             drone_boost = 0.0
             if assignment.room_type == drone_room_type and assignment.room_index == drone_room_index:
                 drone_boost = _drone_multiplier(production.daily_drones, _DRONE_MINUTES_MFG, hours) - 1.0
@@ -255,7 +257,7 @@ def calculate(plan: ShiftPlan, operators: list[Operator], hours: float = 24.0) -
             room = RoomOutput(
                 room_type="Mfg", room_index=assignment.room_index,
                 product="PureGold", operators=assignment.operators,
-                productivity=avg_prod, output_per_day=output_per_day,
+                productivity=display_productivity, output_per_day=output_per_day,
                 drone_boost_pct=drone_boost, output_unit="个",
             )
             production.gold_rooms.append(room)
@@ -264,7 +266,7 @@ def calculate(plan: ShiftPlan, operators: list[Operator], hours: float = 24.0) -
         elif assignment.room_type == "Trade":
             eff_int = _room_efficiency_integral(ops, "Trade", "Money", power_count, hours, global_bonus, buff_pool)
             efficiency_integrated = hours * (1.0 + 0.01 * n) + eff_int / 100.0
-            avg_eff = efficiency_integrated / hours
+            display_productivity = 1.0 + eff_int / (100.0 * hours)
             drone_boost = 0.0
             if assignment.room_type == drone_room_type and assignment.room_index == drone_room_index:
                 drone_boost = _drone_multiplier(production.daily_drones, _DRONE_MINUTES_TRADE, hours) - 1.0
@@ -274,7 +276,7 @@ def calculate(plan: ShiftPlan, operators: list[Operator], hours: float = 24.0) -
             room = RoomOutput(
                 room_type="Trade", room_index=assignment.room_index,
                 product="Money", operators=assignment.operators,
-                productivity=avg_eff, output_per_day=lmd_output,
+                productivity=display_productivity, output_per_day=lmd_output,
                 drone_boost_pct=drone_boost, output_unit="LMD",
             )
             production.trade_rooms.append(room)

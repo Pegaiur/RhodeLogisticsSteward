@@ -146,6 +146,7 @@ class LayoutConfig:
         - 经验几乎完全依赖基建产出，赤金超出贸易站消耗则价值归零
           → 制造站内部 经验 > 赤金
         - 控制中枢/发电站不与生产设施竞争干员，位置不影响结果
+        - 宿舍 4×5人，不参与生产竞争，排在本配置末尾由求解器单独填充
         """
         rooms = [
             RoomConfig("Mfg", 0, 3, "CombatRecord"),
@@ -160,6 +161,10 @@ class LayoutConfig:
             RoomConfig("Power", 2, 1),
             RoomConfig("Reception", 0, 2, "General"),
             RoomConfig("Office", 0, 1, "HR"),
+            RoomConfig("Dormitory", 0, 5, "Rest"),
+            RoomConfig("Dormitory", 1, 5, "Rest"),
+            RoomConfig("Dormitory", 2, 5, "Rest"),
+            RoomConfig("Dormitory", 3, 5, "Rest"),
         ]
         return LayoutConfig(rooms=rooms)
 

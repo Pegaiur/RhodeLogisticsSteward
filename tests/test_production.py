@@ -76,7 +76,7 @@ def _plan_mfg_trade(mfg_ops: list[str], trade_ops: list[str]) -> ShiftPlan:
 # ─── 制造站基线产出 ────────────────────────────────────────────
 
 class TestMfgBaseline:
-    """验证制造站 PRTS 公式：生产力 = 1 + 0.01×人数 + Σ(技能/100)"""
+    """验证制造站 PRTS 公式：实际产出 = 1 + 0.01×人数 + Σ(技能/100)；显示效率不含裸加成"""
 
     def test_单无技能干员_赤金基线(self):
         """一名无技能干员进驻制造站 — 仅有基础 1% 加成"""
@@ -87,7 +87,8 @@ class TestMfgBaseline:
         # Act
         result = calculate(plan, [op])
 
-        # Assert: 生产力 = 1.01, 赤金 = 0.833×1.01×24 = 20.2
+        # Assert: 显示效率=1.0, 实际产出=0.833×(1+0.01×1)×24=20.2
+        assert result.gold_rooms[0].productivity == 1.0
         assert pytest.approx(result.total_gold_produced_per_day, rel=0.01) == 20.2
 
     def test_单干员_25percent技能_赤金(self):
@@ -100,7 +101,8 @@ class TestMfgBaseline:
         # Act
         result = calculate(plan, [op])
 
-        # Assert: 生产力 = 1.01 + 25/100 = 1.26, 赤金 = 0.833×1.26×24 = 25.2
+        # Assert: 显示效率=1.25, 实际产出=0.833×(1.01+0.25)×24=25.2
+        assert pytest.approx(result.gold_rooms[0].productivity, rel=0.001) == 1.25
         assert pytest.approx(result.total_gold_produced_per_day, rel=0.01) == 25.2
 
     def test_三干员_技能累加(self):
@@ -116,7 +118,8 @@ class TestMfgBaseline:
         # Act
         result = calculate(plan, ops)
 
-        # Assert: 生产力 = 1.03 + (30+25+10)/100 = 1.68, 赤金 = 0.833×1.68×24 = 33.6
+        # Assert: 显示效率=1.65, 实际产出=0.833×(1.03+0.65)×24=33.6
+        assert pytest.approx(result.gold_rooms[0].productivity, rel=0.001) == 1.65
         assert pytest.approx(result.total_gold_produced_per_day, rel=0.01) == 33.6
 
     def test_作战记录_30percent技能(self):

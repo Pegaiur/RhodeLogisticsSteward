@@ -54,8 +54,8 @@ _A3_COUNTER_TABLE: dict[str, str] = {
 _A3_BONUS_PER = 5.0  # 每个该类技能 +5%
 
 
-def _skill_class(buff_name: str) -> str | None:
-    """从 buff 名称提取技能类别"""
+def skill_class(buff_name: str) -> str | None:
+    """从 buff 名称提取技能类别，供 solver 制造站干员分类和 A3 体系使用"""
     for cls_name in ("标准化", "莱茵科技", "金属工艺", "红松骑士团"):
         if cls_name in buff_name:
             return cls_name
@@ -81,7 +81,7 @@ def synergy_skill_count(
         for sk in op.skills:
             if sk.room_type != "Mfg":
                 continue
-            sc = _skill_class(sk.buff_name)
+            sc = skill_class(sk.buff_name)
             if sc:
                 classes.add(sc)
                 for aliased in alias.get(sc, []):

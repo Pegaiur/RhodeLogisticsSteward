@@ -62,6 +62,53 @@ RhodeLogisticsSteward/
 6. **新文件创建**前检查现有文件是否可复用，避免重复。
 7. **不引入非必要依赖**。能用标准库解决的不引入第三方包。
 
+## 人工维护数据
+
+以下分类数据无法从 ArknightsGameData 直接提取，需手动维护。每次游戏更新新增此类干员/buff 时，须同步更新对应代码或本表。
+
+### 基建分类标签
+
+游戏基建 buff 描述中引用的 `<cc.tag.xxx>` 标签（如"骑士"、"杜林族"、"作业平台"等）**并非** `character_table.json` 的 `tagList` 字段（那是公招标签），而是由游戏引擎根据多个字段组合推导。推导规则无法从解包数据中自动化提取，因此本项目采用硬编码 + 推导回退的策略。
+
+| 标签 | 游戏 ref | 判定逻辑 | 维护位置 | 更新触发条件 |
+|------|---------|----------|----------|-------------|
+| 骑士 | `tag.knight` | name 集合 + `nationId=="kazimierz"` + `groupId=="pinus"` | [solver.py](file:///d:/Dev/RhodeLogisticsSteward/steward_core/solver.py#L219-L232) `_KNIGHT_NAMES` | 新增卡西米尔骑士干员 |
+| 杜林族 | `tag.durin` | `raceId == "DURIN"` | 由 `character_table.json` 自动推导 | — |
+| 作业平台 | `tag.op` | 特定 profession | 尚未建模 | — |
+| 怪物猎人小队 | `tag.mh` | 联动限定干员 | 尚未建模 | — |
+| 莱欧斯小队 | `tag.dungeon` | 联动限定干员 | 尚未建模 | — |
+
+### 硬编码表清单
+
+以下模块包含不受 ArknightsGameData 驱动的硬编码映射表，每次游戏版本更新需人工审查：
+
+**`steward_core/synergy.py`** — 联动体系表
+
+| 表名 | 维护内容 | 触发条件 |
+|------|----------|----------|
+| `_A1_PAIR_TABLE` | 干员配对组合 | 新增配对型联动 buff |
+| `_A3_COUNTER_TABLE` | 技能类型计数锚点 | 新增计数型联动 buff |
+| `_A5_AUTO_NAMES` | 自动化干员名称 | 新增自动化干员 |
+| `_A5_AUTO_FALLBACK` | 自动化回退值 | 自动化干员 buff 变更 |
+| `_A6_FACILITY_TABLE` | 设施数量联动表 | 新增设施联动 buff |
+| `_C1_GLOBAL_TABLE` | 中枢全局效率 | 新增中枢全局 buff |
+| `_B_LAYER_CONSUMER_TABLE` | B 层点数消费者 | 新增 buff 池消费者 |
+| `ROSEMARY_SUPPORT` | 迷迭香支撑干员 | 新增迷迭香联动链参与者 |
+
+**`steward_core/solver.py`** — 求解器分类表
+
+| 表名 | 维护内容 | 触发条件 |
+|------|----------|----------|
+| `_KNIGHT_NAMES` | 骑士干员名称 | 新增卡西米尔但不属于 kazimierz 势力/pinus 组织的骑士 |
+
+### 维护流程
+
+1. 游戏版本更新后，查阅 [PRTS Wiki 基建页面](https://prts.wiki/w/基建) 确认新增干员/技能
+2. 对照上表逐项检查是否需要更新硬编码数据
+3. 更新代码后运行 `python -m pytest tests/ -v` 确保现有测试通过
+4. 提交时在 commit message 中注明更新了哪些表
+
+
 ## AI Agent 发现流程
 
 当 AI Agent 进入本项目工作区时，按以下顺序发现上下文：
@@ -84,6 +131,7 @@ RhodeLogisticsSteward/
 | 联动/体系建模 | `docs/synergy-systems.md` |
 | 设施容量/约束/多班次 | `docs/strategy-brief.md` §设施容量/§约束/§策略 |
 | 干员/buff 数据查询 | `scripts/query_data.py` (通过 `data-query` skill) |
+| 人工维护/硬编码数据/更新 | AGENTS.md §人工维护数据 |
 
 ## 技能 (Skills)
 

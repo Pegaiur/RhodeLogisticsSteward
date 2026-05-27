@@ -11,8 +11,8 @@ from dataclasses import dataclass, field
 from steward_core.models import LayoutConfig, Operator, RoomAssignment, ShiftPlan, SolveResult
 from steward_core.efficiency_fn import constant_efficiency, rank_by_dominance
 from steward_core.synergy import (
-    synergy_facility_count, _skill_class,
-    GlobalBonus, compute_control_global_bonus,
+    synergy_facility_count, skill_class,
+    compute_control_global_bonus,
     compute_buff_pool, ROSEMARY_SUPPORT,
     _B_LAYER_CONSUMER_TABLE,
 )
@@ -29,6 +29,10 @@ ANCHOR_NAMES = {
 
 
 # ─── 角色分类 ───────────────────────────────────────────────────
+
+# C1 全局加成提供者，中枢填充时优先选取
+_C1_PRIORITY_CONTROL: set[str] = {"凯尔希"}
+
 
 @dataclass
 class MfgClassification:
@@ -49,7 +53,7 @@ def _classify_mfg_operators(
         for sk in op.skills:
             if sk.room_type != "Mfg":
                 continue
-            if _skill_class(sk.buff_name):
+            if skill_class(sk.buff_name):
                 has_skill_label = True
                 break
 
@@ -168,7 +172,7 @@ def _greedy_remaining(
     """剩余设施（Trade/Power/Reception/Office）支配偏序贪心"""
     results = []
     for room in _LAYOUT_243.rooms:
-        if room.room_type in ("Mfg", "Control"):
+        if room.room_type in ("Mfg", "Control", "Dormitory"):
             continue
 
         candidates = []
@@ -312,7 +316,7 @@ def _evaluate_with_support(
         dorm_operators=dorm_ops, dorm_level=5,
         has_rosmontis_in_mfg=has_rosmontis,
         has_ebnhlz_in_trade=has_ebnhlz,
-        ling_mood_below_12=True,
+        ling_mood_below_12=has_rosmontis,
     )
 
     ctrl_bonus = control_per_operator_bonus(control_ops, combo_ops, product)
@@ -430,6 +434,7 @@ def solve_mvp(operators: list[Operator]) -> SolveResult:
             assigned_ids.add(op_lookup[n].char_id)
 
     # 补满中枢至 5 人：从未分配的 Control 技能持有者中贪心选取
+    # C1 全局加成提供者优先
     if len(ctrl_names) < 5:
         remaining_ctrl = []
         for op in operators:
@@ -437,7 +442,9 @@ def solve_mvp(operators: list[Operator]) -> SolveResult:
                 continue
             if not op.has_skill_for("Control"):
                 continue
-            eff = op.best_efficiency("Control")
+            eff = max(op.best_efficiency("Control"), 0.0)
+            if op.name in _C1_PRIORITY_CONTROL:
+                eff += 1000.0
             remaining_ctrl.append((eff, op))
         remaining_ctrl.sort(key=lambda x: -x[0])
         for _eff, op in remaining_ctrl:
@@ -455,6 +462,35 @@ def solve_mvp(operators: list[Operator]) -> SolveResult:
     remaining = _greedy_remaining(assigned_ids, operators)
     assignments.extend(remaining)
     autofill_count += sum(1 for a in remaining if a.autofill)
+
+    # Phase 4: 宿舍填充（优先B层生成者 → 任意填充至20人）
+    dorm_names: list[str] = list(locked_support["Dormitory"])
+
+    for n in dorm_names:
+        if n in op_lookup:
+            assigned_ids.add(op_lookup[n].char_id)
+
+    for name in ["森西", "爱丽丝", "车尔尼", "塑心"]:
+        if name not in dorm_names and name in op_lookup and op_lookup[name].char_id not in assigned_ids:
+            dorm_names.append(name)
+            assigned_ids.add(op_lookup[name].char_id)
+
+    for op in operators:
+        if len(dorm_names) >= 20:
+            break
+        if op.char_id not in assigned_ids:
+            dorm_names.append(op.name)
+            assigned_ids.add(op.char_id)
+
+    for room_idx in range(4):
+        start = room_idx * 5
+        room_ops = dorm_names[start:start + 5] if start < len(dorm_names) else []
+        assignments.append(RoomAssignment(
+            room_type="Dormitory", room_index=room_idx,
+            operators=room_ops, autofill=(len(room_ops) < 5),
+        ))
+        if len(room_ops) < 5:
+            autofill_count += 1
 
     plan = ShiftPlan(
         name="MVP-12h",
