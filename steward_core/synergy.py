@@ -436,6 +436,17 @@ _B_LAYER_CONSUMER_TABLE: dict[str, tuple[str, str, int, float]] = {
 }
 
 
+# ─── 加成包（跨设施联动的最优支撑干员集） ───────────────────────
+
+# 迷迭香联动链所需支撑干员
+# 迷迭香超感(B3) → 需要 B1 感知信息生成者（令/夕/爱丽丝/车尔尼/黑键）+ 宿舍满员
+ROSEMARY_SUPPORT: dict[str, list[str]] = {
+    "Control": ["令", "夕"],
+    "Trade": ["黑键"],
+    "Dormitory": ["爱丽丝", "车尔尼", "森西"],
+}
+
+
 def synergy_buff_pool_consumer(
     operators: list[Operator],
     room_type: str,

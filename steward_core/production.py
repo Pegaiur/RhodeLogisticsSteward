@@ -19,6 +19,8 @@ from steward_core.synergy import (
     GlobalBonus, compute_control_global_bonus, compute_buff_pool,
 )
 from steward_core.constants import FIXED_CONTROL
+from steward_core.evaluate import evaluate_room
+from steward_core.solver import _control_per_operator_bonus
 
 # ─── 制造站 Lv3 基础参数 ────────────────────────────────────────
 # 作战记录：基础 1个/3h → 0.333 个/h
@@ -118,46 +120,11 @@ def _room_efficiency_integral(
     global_bonus: GlobalBonus | None = None,
     buff_pool = None,
 ) -> float:
-    """返回房间总效率积分 Σ∫e(t)dt（含联动+全局加成+烟火）
+    """[已废弃] 请使用 steward_core.evaluate.evaluate_room 替代"""
+    from steward_core.evaluate import evaluate_room
+    return evaluate_room(operators, room_type, product, power_count, T, global_bonus, buff_pool)
 
-    与 solver._evaluate_room_combo 使用相同的积分逻辑，
-    确保排班评分与产出报告一致。
-    """
-    if not operators:
-        return 0.0
 
-    if global_bonus is None:
-        global_bonus = GlobalBonus()
-
-    total = integrate_segments(synergy_pair(operators, room_type, product), T)
-
-    alias = synergy_skill_alias(operators)
-    total += integrate_segments(synergy_skill_count(operators, room_type, alias), T)
-    total += integrate_segments(synergy_facility_count(
-        operators, room_type, product, _LAYOUT_243,
-    ), T)
-
-    auto_segs, zero_set = synergy_automation(operators, room_type, power_count)
-    total += integrate_segments(auto_segs, T)
-
-    for op in operators:
-        if op.name in zero_set:
-            continue
-        eff = op.best_efficiency(room_type, product)
-        if eff > 0:
-            total += integrate_segments(constant_efficiency(eff, mood_burn=0.0, T=T), T)
-
-    if buff_pool is not None:
-        total += integrate_segments(
-            synergy_buff_pool_consumer(operators, room_type, product, buff_pool), T,
-        )
-
-    if room_type == "Mfg":
-        total += global_bonus.mfg_bonus * T
-    elif room_type == "Trade":
-        total += global_bonus.trade_bonus * T
-
-    return total
 
 
 def _calc_drone_daily(
@@ -246,6 +213,16 @@ def calculate(plan: ShiftPlan, operators: list[Operator], hours: float = 24.0) -
 
     # 3. 计算各设施产出（走 efficiency_fn 积分，含联动）
     power_count = sum(1 for a in plan.assignments if a.room_type == "Power" and a.operators)
+
+    # 从 plan 获取中枢干员（若未指定则回退 FIXED_CONTROL）
+    plan_ctrl_ops: list[Operator] = []
+    for assignment in plan.assignments:
+        if assignment.room_type == "Control":
+            plan_ctrl_ops = [op_lookup[n] for n in assignment.operators if n in op_lookup]
+            break
+    if not plan_ctrl_ops:
+        plan_ctrl_ops = [op_lookup[n] for n in FIXED_CONTROL if n in op_lookup]
+
     for assignment in plan.assignments:
         ops = [op_lookup[n] for n in assignment.operators if n in op_lookup]
         if not ops:
@@ -253,7 +230,8 @@ def calculate(plan: ShiftPlan, operators: list[Operator], hours: float = 24.0) -
         n = len(ops)
 
         if assignment.room_type == "Mfg" and assignment.product == "CombatRecord":
-            eff_int = _room_efficiency_integral(ops, "Mfg", "CombatRecord", power_count, hours, global_bonus, buff_pool)
+            ctrl_bonus = _control_per_operator_bonus(plan_ctrl_ops, ops, "CombatRecord")
+            eff_int = _room_efficiency_integral(ops, "Mfg", "CombatRecord", power_count, hours, global_bonus, buff_pool) + ctrl_bonus * hours
             productivity_int = hours * (1.0 + 0.01 * n) + eff_int / 100.0
             avg_prod = productivity_int / hours
             drone_boost = 0.0
@@ -270,7 +248,8 @@ def calculate(plan: ShiftPlan, operators: list[Operator], hours: float = 24.0) -
             production.total_records_per_day += output_per_day
 
         elif assignment.room_type == "Mfg" and assignment.product == "PureGold":
-            eff_int = _room_efficiency_integral(ops, "Mfg", "PureGold", power_count, hours, global_bonus, buff_pool)
+            ctrl_bonus = _control_per_operator_bonus(plan_ctrl_ops, ops, "PureGold")
+            eff_int = _room_efficiency_integral(ops, "Mfg", "PureGold", power_count, hours, global_bonus, buff_pool) + ctrl_bonus * hours
             productivity_int = hours * (1.0 + 0.01 * n) + eff_int / 100.0
             avg_prod = productivity_int / hours
             drone_boost = 0.0

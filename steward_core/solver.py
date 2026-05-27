@@ -14,9 +14,10 @@ from steward_core.synergy import (
     synergy_pair, synergy_skill_count, synergy_skill_alias, synergy_automation,
     synergy_facility_count, synergy_buff_pool_consumer, _skill_class,
     GlobalBonus, compute_control_global_bonus,
-    compute_buff_pool,
+    compute_buff_pool, ROSEMARY_SUPPORT,
     _B_LAYER_CONSUMER_TABLE,
 )
+from steward_core.evaluate import evaluate_room
 
 T = 12.0
 POWER_COUNT = 3
@@ -130,56 +131,6 @@ def _control_per_operator_bonus(
     return bonus
 
 
-def _evaluate_room_combo(
-    operators: list[Operator],
-    room_type: str,
-    product: str,
-    power_count: int = POWER_COUNT,
-    global_bonus: GlobalBonus | None = None,
-    buff_pool = None,
-    ctrl_per_op_bonus: float = 0.0,
-) -> float:
-    """评估一个房间组合的 12h 总积分（含联动+全局加成+烟火+中枢条件加成）"""
-    if not operators:
-        return 0.0
-
-    if global_bonus is None:
-        global_bonus = GlobalBonus()
-
-    total = 0.0
-
-    alias = synergy_skill_alias(operators)
-    total += integrate_segments(synergy_pair(operators, room_type, product), T)
-    total += integrate_segments(synergy_skill_count(operators, room_type, alias), T)
-    total += integrate_segments(synergy_facility_count(
-        operators, room_type, product, _LAYOUT_243,
-    ), T)
-    auto_segs, zero_set = synergy_automation(operators, room_type, power_count)
-    total += integrate_segments(auto_segs, T)
-
-    total += ctrl_per_op_bonus * T  # 中枢条件型加成：焰尾/薇薇安娜
-
-    for op in operators:
-        if op.name in zero_set:
-            continue
-        eff = op.best_efficiency(room_type, product)
-        if eff > 0:
-            seg = constant_efficiency(eff, mood_burn=0.0, T=T)
-            total += integrate_segments(seg, T)
-
-    if buff_pool is not None:
-        total += integrate_segments(
-            synergy_buff_pool_consumer(operators, room_type, product, buff_pool), T,
-        )
-
-    if room_type == "Mfg":
-        total += global_bonus.mfg_bonus * T
-    elif room_type == "Trade":
-        total += global_bonus.trade_bonus * T
-
-    return total
-
-
 def _generate_combos(pool: list[Operator], k: int = 3) -> list[list[Operator]]:
     """生成 k 人组合"""
     if len(pool) < k:
@@ -263,19 +214,13 @@ def _greedy_remaining(
 
 # ─── 最优支撑函数 ─────────────────────────────────────────────────
 
-# 制造站干员类型 → 所需支撑干员映射
-# 支撑集格式: {设施类型: [干员名, ...]}
-_ROSEMARY_SUPPORT: dict[str, list[str]] = {
-    "Control": ["令", "夕"],
-    "Trade": ["黑键"],
-    "Dormitory": ["爱丽丝", "车尔尼", "森西"],
-}
-
 # 红松骑士团 group_id。游戏内"骑士"标签覆盖红松骑士团全体。
 _PINUS_GROUP = "pinus"
 
 # 骑士标签持有者（name 推导 + kazimierz 势力 + 红松骑士团）
-# 游戏内骑士 = kazimierz 势力干员 + 红松骑士团干员，两者有重叠
+# 游戏内骑士 = kazimierz 势力干员 + 红松骑士团干员，但 character_identity
+# 无独立骑士 tag 字段，部分骑士（如薇薇安娜）不属于 kazimierz 也不属于 pinus，
+# 因此 name 集合作为安全网补全数据驱动判定的缺口。
 _KNIGHT_NAMES: set[str] = {
     "砾", "野鬃", "白金", "鞭刃", "暴雨", "耀骑士临光",
     "瑕光", "临光", "远牙", "灰毫", "焰尾", "薇薇安娜",
@@ -308,7 +253,7 @@ def compute_optimal_support(
 
     # 迷迭香包
     if "迷迭香" in names:
-        for facility, ops in _ROSEMARY_SUPPORT.items():
+        for facility, ops in ROSEMARY_SUPPORT.items():
             support[facility].update(ops)
 
     # 骑士包（含红松骑士团，游戏内骑士标签覆盖全体）
@@ -373,8 +318,8 @@ def _evaluate_with_support(
 
     ctrl_bonus = _control_per_operator_bonus(control_ops, combo_ops, product)
 
-    score = _evaluate_room_combo(
-        combo_ops, room_type, product, POWER_COUNT, global_bonus, buff_pool,
+    score = evaluate_room(
+        combo_ops, room_type, product, POWER_COUNT, T, global_bonus, buff_pool,
         ctrl_per_op_bonus=ctrl_bonus,
     )
 

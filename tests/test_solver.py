@@ -252,7 +252,7 @@ class TestRoomEvaluation:
 
     def test_纯效率评估_个体效率求和(self):
         """三干员无联动 → 产出 = Σ个体效率"""
-        from steward_core.solver import _evaluate_room_combo
+        from steward_core.evaluate import evaluate_room
 
         # Arrange
         ops = [
@@ -262,14 +262,14 @@ class TestRoomEvaluation:
         ]
 
         # Act
-        score = _evaluate_room_combo(ops, "Mfg", "CombatRecord", power_count=3)
+        score = evaluate_room(ops, "Mfg", "CombatRecord", power_count=3)
 
         # Assert: 30+25+20=75 → 积分 75×12=900
         assert pytest.approx(score) == 900.0
 
     def test_含联动评估_超出个体效率之和(self):
         """水月+2个标准化干员 → 联动加成 +10% → 产出 > 个体之和"""
-        from steward_core.solver import _evaluate_room_combo
+        from steward_core.evaluate import evaluate_room
 
         # Arrange
         shuiyue = _mk_op("水月", [_mk_mfg_skill("标准化·α", 25.0, "s1")])
@@ -278,17 +278,17 @@ class TestRoomEvaluation:
         perfumer = _mk_op("调香师", [_mk_mfg_skill("标准化·β", 25.0, "s3")])
 
         # Act: 含联动
-        score_with = _evaluate_room_combo([shuiyue, jessica, perfumer], "Mfg", "CombatRecord", power_count=3)
+        score_with = evaluate_room([shuiyue, jessica, perfumer], "Mfg", "CombatRecord", power_count=3)
         # Act: 不含联动（把水月换成普通25干员）
         filler = _mk_op("填位", [_mk_mfg_skill("标准化·α", 25.0, "s4")])
-        score_without = _evaluate_room_combo([filler, jessica, perfumer], "Mfg", "CombatRecord", power_count=3)
+        score_without = evaluate_room([filler, jessica, perfumer], "Mfg", "CombatRecord", power_count=3)
 
         # Assert: 联动版 > 无联动版
         assert score_with > score_without
 
     def test_自动化房间_非自动化干员归零(self):
         """温蒂自动化 → 其他2人效率归零，仅计温蒂的发电站加成"""
-        from steward_core.solver import _evaluate_room_combo
+        from steward_core.evaluate import evaluate_room
 
         # Arrange: 温蒂(自动化15%/站) + 2个高效干员
         wenti = _mk_op("温蒂")
@@ -296,7 +296,7 @@ class TestRoomEvaluation:
         high_eff_b = _mk_op("炎熔", [_mk_mfg_skill("高效生产", 35.0, "b")])
 
         # Act
-        score = _evaluate_room_combo([wenti, high_eff_a, high_eff_b], "Mfg", "CombatRecord", power_count=3)
+        score = evaluate_room([wenti, high_eff_a, high_eff_b], "Mfg", "CombatRecord", power_count=3)
 
         # Assert: 温蒂个体效率为0(无制造技能)，地灵和炎熔归零
         # 仅自动化加成: 3×15×12 = 540
@@ -304,7 +304,7 @@ class TestRoomEvaluation:
 
     def test_自动化房间_自动化干员自身不被归零(self):
         """森蚺+温蒂共存 → 两者都不在 zero_set 中"""
-        from steward_core.solver import _evaluate_room_combo
+        from steward_core.evaluate import evaluate_room
 
         # Arrange: 森蚺(5%/站) + 温蒂(15%/站) + 填位
         senia = _mk_op("森蚺")
@@ -312,7 +312,7 @@ class TestRoomEvaluation:
         filler = _mk_op("填位", [_mk_mfg_skill("高效生产", 30.0, "f")])
 
         # Act
-        score = _evaluate_room_combo([senia, wenti, filler], "Mfg", "CombatRecord", power_count=3)
+        score = evaluate_room([senia, wenti, filler], "Mfg", "CombatRecord", power_count=3)
 
         # Assert: filler归零，取最高等级自动化=温蒂15%/站×3=45
         # 积分 = 45×12 = 540
@@ -411,7 +411,8 @@ class TestRealDataEndToEnd:
         """端到端求解不崩溃"""
         # 此测试用纯内存数据跑通路径，不验证结果正确性
         from steward_core.solver import _classify_mfg_operators, _build_candidate_pool
-        from steward_core.solver import _generate_combos, _evaluate_room_combo, _greedy_allocate
+        from steward_core.solver import _generate_combos, _greedy_allocate
+        from steward_core.evaluate import evaluate_room
 
         # Arrange: 构造 6 个制造站干员（模拟真实分布）
         ops = [
@@ -429,7 +430,7 @@ class TestRealDataEndToEnd:
 
         evaluated = []
         for combo_ops in combos:
-            score = _evaluate_room_combo(combo_ops, "Mfg", "CombatRecord", power_count=3)
+            score = evaluate_room(combo_ops, "Mfg", "CombatRecord", power_count=3)
             evaluated.append((score, [op.name for op in combo_ops]))
 
         evaluated.sort(key=lambda x: -x[0])
