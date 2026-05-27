@@ -13,6 +13,7 @@ from steward_core.synergy import (
     synergy_capacity_to_eff, synergy_efficiency_amplifier,
     synergy_zeroing_variant, synergy_token_prod,
     synergy_faction_room, synergy_cross_room_pair,
+    synergy_trade_gold_lines,
     synergy_whisper,
     GlobalBonus,
 )
@@ -53,6 +54,9 @@ def evaluate_room(
     alias = synergy_skill_alias(operators)
     total += integrate_segments(synergy_skill_count(operators, room_type, alias), T)
     total += integrate_segments(synergy_facility_count(
+        operators, room_type, product, layout,
+    ), T)
+    total += integrate_segments(synergy_trade_gold_lines(
         operators, room_type, product, layout,
     ), T)
 

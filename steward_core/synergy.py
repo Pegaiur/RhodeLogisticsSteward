@@ -1080,6 +1080,40 @@ def build_candidate_pool(
     return pool
 
 
+# ─── 鸿雪销路宣发 + 际崖居民 ────────────────────────────────────
+
+# 杜林族干员名（硬编码，character_identity.json 无 raceId 字段）
+_DURIN_NAMES: set[str] = {"杜林", "桃金娘", "褐果", "至简"}
+
+
+def synergy_trade_gold_lines(
+    operators: list[Operator],
+    room_type: str,
+    product: str,
+    layout: LayoutConfig,
+    durin_names: set[str] | None = None,
+) -> list[LinearSegment]:
+    """鸿雪销路宣发(每赤金线+5%) + 际崖居民(杜林族→额外赤金线，上限4)
+
+    赤金线 = Mfg PureGold 房间数 + min(杜林族干员数, 4)
+    """
+    if room_type != "Trade":
+        return []
+
+    names = {op.name for op in operators}
+    if "鸿雪" not in names:
+        return []
+
+    gold_lines = sum(1 for r in layout.rooms if r.room_type == "Mfg" and r.product == "PureGold")
+
+    if durin_names:
+        durin_count = len(durin_names)
+        gold_lines += min(durin_count, 4)
+
+    bonus = gold_lines * 5.0
+    return [LinearSegment(a=bonus, b=0.0, t_start=0.0, dt=T)] if bonus > 0 else []
+
+
 # ─── A2 阵营计数（同房） ─────────────────────────────────────────
 
 # 阵营计数表: {持有者名: (字段名, 匹配值, 每人加成%, 产物或None, 设施类型)}

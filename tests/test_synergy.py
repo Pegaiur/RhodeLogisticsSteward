@@ -1383,3 +1383,74 @@ class TestControlGlobalExtended:
         bonus = compute_control_global_bonus([xingxiong, chen])
 
         assert bonus.mfg_bonus == 3.0
+
+
+# ─── 鸿雪销路宣发 + 际崖居民 ─────────────────────────────────────
+
+class TestGoldLineSynergy:
+    """鸿雪双技能: synergy_trade_gold_lines — 销路宣发+际崖居民"""
+
+    def test_销路宣发_2赤金线_加10percent(self):
+        """鸿雪在 Trade，无杜林族 → 基础 2 赤金线 × 5% = 10%"""
+        from steward_core.synergy import synergy_trade_gold_lines
+        from steward_core.models import LayoutConfig, RoomConfig
+
+        hongxue = _mk_op("鸿雪")
+        layout = LayoutConfig(rooms=[
+            RoomConfig("Mfg", 0, 3, "PureGold"),
+            RoomConfig("Mfg", 1, 3, "PureGold"),
+        ])
+
+        segs = synergy_trade_gold_lines([hongxue], "Trade", "Money", layout)
+        assert len(segs) == 1
+        assert segs[0].a == 10.0
+
+    def test_销路宣发_无鸿雪_返回空(self):
+        """房间无鸿雪 → 空"""
+        from steward_core.synergy import synergy_trade_gold_lines
+        from steward_core.models import LayoutConfig
+
+        op = _mk_op("其他")
+        segs = synergy_trade_gold_lines([op], "Trade", "Money", LayoutConfig(rooms=[]))
+        assert segs == []
+
+    def test_销路宣发_非Trade_返回空(self):
+        """鸿雪在 Mfg → 不触发"""
+        from steward_core.synergy import synergy_trade_gold_lines
+        from steward_core.models import LayoutConfig
+
+        hongxue = _mk_op("鸿雪")
+        segs = synergy_trade_gold_lines([hongxue], "Mfg", "PureGold", LayoutConfig(rooms=[]))
+        assert segs == []
+
+    def test_际崖居民_2杜林族_加2赤金线(self):
+        """2 杜林族 + 2 基础赤金线 = 4 赤金线 × 5% = 20%"""
+        from steward_core.synergy import synergy_trade_gold_lines
+        from steward_core.models import LayoutConfig, RoomConfig
+
+        hongxue = _mk_op("鸿雪")
+        layout = LayoutConfig(rooms=[
+            RoomConfig("Mfg", 0, 3, "PureGold"),
+            RoomConfig("Mfg", 1, 3, "PureGold"),
+        ])
+        durin_names = {"桃金娘", "褐果"}
+
+        segs = synergy_trade_gold_lines([hongxue], "Trade", "Money", layout, durin_names)
+        assert len(segs) == 1
+        assert segs[0].a == 20.0  # (2基础+2杜林) × 5%
+
+    def test_际崖居民_超过4杜林_上限4(self):
+        """5 杜林族 → 上限 4 赤金线额外 → 总 6 线 × 5% = 30%"""
+        from steward_core.synergy import synergy_trade_gold_lines
+        from steward_core.models import LayoutConfig, RoomConfig
+
+        hongxue = _mk_op("鸿雪")
+        layout = LayoutConfig(rooms=[
+            RoomConfig("Mfg", 0, 3, "PureGold"),
+            RoomConfig("Mfg", 1, 3, "PureGold"),
+        ])
+        durin_names = {"杜林", "桃金娘", "褐果", "至简", "多萝西"}
+
+        segs = synergy_trade_gold_lines([hongxue], "Trade", "Money", layout, durin_names)
+        assert len(segs) == 1
+        assert segs[0].a == 30.0  # (2基础+min(5,4)) × 5%
