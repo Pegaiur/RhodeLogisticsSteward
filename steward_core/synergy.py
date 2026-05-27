@@ -126,7 +126,7 @@ def get_trade_order_equivalent_efficiency(
         bid = sk.buff_id
 
         if bid.startswith("trade_ord_vodfox"):
-            # 巫恋低语: 归零他人，每人+45% → 3人房=135%
+            # 巫恋低语: 归零其他干员效率，"其他干员每人"为自身+45% → 2室友=90%
             return 75.0
 
         if bid.startswith("trade_ord_spd&share"):
@@ -520,6 +520,38 @@ def synergy_automation(
     return segments, zero_set
 
 
+# ─── A5b 低语（秩序低语/归零反馈型）───────────────────────────────
+
+def synergy_whisper(
+    operators: list[Operator],
+    room_type: str,
+) -> tuple[list[LinearSegment], set[str]]:
+    """巫恋低语 (trade_ord_vodfox): 归零其他干员效率，自身每人+45%
+
+    Returns:
+        (效率加成段, 被归零的干员名集合)
+    """
+    if room_type != "Trade":
+        return [], set()
+
+    whisper_ops = []
+    for op in operators:
+        for sk in op.skills:
+            if sk.buff_id.startswith("trade_ord_vodfox"):
+                whisper_ops.append(op)
+                break
+
+    if not whisper_ops:
+        return [], set()
+
+    whisper_names = {op.name for op in whisper_ops}
+    zero_set = {op.name for op in operators if op.name not in whisper_names}
+    total_bonus = sum(len(operators) - 1 for _ in whisper_ops) * 45.0
+
+    segments = [LinearSegment(a=total_bonus, b=0.0, t_start=0.0, dt=T)]
+    return segments, zero_set
+
+
 def compute_effective_power_count(
     power_operators: list[Operator],
     physical_count: int,
@@ -638,6 +670,12 @@ _C1_GLOBAL_TABLE: dict[str, tuple[float, float]] = {
     "Mon3tr": (2.0, 0.0),
 }
 
+# 怪物猎人小队干员名（中枢条件型加成判定用）
+_MH_NAMES: set[str] = {"麒麟R夜刀", "炼金术士"}
+
+# 龙门近卫局干员名（中枢条件型加成判定用）
+_LUNG_MEN_GUARD_NAMES: set[str] = {"陈", "星熊", "诗怀雅", "斩业星熊"}
+
 
 @dataclass
 class GlobalBonus:
@@ -648,19 +686,46 @@ class GlobalBonus:
 
 def compute_control_global_bonus(
     control_operators: list[Operator],
+    power_platforms: dict[str, bool] | None = None,
 ) -> GlobalBonus:
     """计算中枢干员提供的全局制造/贸易加成
 
     同种效果取最高值（游戏内描述"同种效果取最高"）。
     """
+    if power_platforms is None:
+        power_platforms = {}
+
     names = {op.name for op in control_operators}
     best_mfg = 0.0
     best_trade = 0.0
+
     for name in names:
         if name in _C1_GLOBAL_TABLE:
             m, t = _C1_GLOBAL_TABLE[name]
             best_mfg = max(best_mfg, m)
             best_trade = max(best_trade, t)
+
+    # 布丁超频: ≥2 作业平台在发电站 → 制造+2%
+    if "布丁" in names:
+        platform_count = sum(1 for n in _OP_PLATFORM_NAMES if power_platforms.get(n))
+        if platform_count >= 2:
+            best_mfg = max(best_mfg, 2.0)
+
+    # 麒麟R夜刀以身作则: 怪物猎人小队同中枢 → 制造+2%
+    if "麒麟R夜刀" in names:
+        if any(n in _MH_NAMES and n != "麒麟R夜刀" for n in names):
+            best_mfg = max(best_mfg, 2.0)
+
+    # 炼金术士秘传交涉术: 怪物猎人小队同中枢 → 贸易+7%
+    if "炼金术士" in names:
+        if any(n in _MH_NAMES and n != "炼金术士" for n in names):
+            best_trade = max(best_trade, 7.0)
+
+    # 斩业星熊共事情谊: 龙门近卫局同中枢 → 制造+3%
+    if "斩业星熊" in names:
+        if any(n in _LUNG_MEN_GUARD_NAMES and n != "斩业星熊" for n in names):
+            best_mfg = max(best_mfg, 3.0)
+
     return GlobalBonus(mfg_bonus=best_mfg, trade_bonus=best_trade)
 
 
@@ -732,6 +797,7 @@ def compute_buff_pool(
     has_rosmontis_in_mfg: bool = False,
     has_ebnhlz_in_trade: bool = False,
     ling_mood_below_12: bool = False,
+    layout: LayoutConfig | None = None,
 ) -> BuffPool:
     """计算全局 buff 点数池（Phase 1 预计算）
 
@@ -804,10 +870,12 @@ def compute_buff_pool(
     # 12h 班次 mood 不衰减（令杯莫停消除岁干员消耗）
     wushu_crystal = yanhuo // 5  # 烟火→巫术结晶（截云消费）
     thought_chains = perception  # B3: 感知信息→思维链环（1:1，迷迭香消费）
+    eng_robots = compute_engineering_robots(layout) if layout is not None else 0
     return BuffPool(
         yanhuo=yanhuo, perception=perception,
         wushu_crystal=wushu_crystal, thought_chains=thought_chains,
         monster_cuisine=monster_cuisine,
+        engineering_robots=eng_robots,
     )
 
 
@@ -818,6 +886,14 @@ def _dorm_has_buff(dorm_operators: list[Operator], buff_id: str) -> bool:
             if sk.buff_id == buff_id:
                 return True
     return False
+
+
+def compute_engineering_robots(layout: LayoutConfig) -> int:
+    """计算工程机器人总数 = Σ(每间设施 × 等级)，上限 64
+
+    243 布局 14 间设施 Lv3 → 42 机器人
+    """
+    return sum(_FACILITY_LEVEL for _ in layout.rooms)
 
 
 # B 层 buff 池消费者表: {干员名: (设施类型, pool_key, 每单位, 每单位加成%)}

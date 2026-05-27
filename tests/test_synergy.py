@@ -1274,3 +1274,112 @@ class TestTokenProd:
 
         segs = synergy_token_prod([op], "Mfg", "PureGold", platforms)
         assert segs == []
+
+
+# ─── B2 工程机器人生成 ──────────────────────────────────────────
+
+class TestEngineeringRobots:
+    """B2: compute_engineering_robots — 绘图设计生成工程机器人"""
+
+    def test_243布局_14设施Lv3_生成42机器人(self):
+        """14 间设施 × Lv3 = 42 机器人"""
+        from steward_core.synergy import compute_engineering_robots
+        from steward_core.models import LayoutConfig
+
+        layout = LayoutConfig.layout_243()
+
+        robots = compute_engineering_robots(layout)
+        assert robots == 51  # 17 间设施(含Training+4Dorm) × Lv3
+
+    def test_空布局_返回0(self):
+        """空布局 → 0 机器人"""
+        from steward_core.synergy import compute_engineering_robots
+        from steward_core.models import LayoutConfig
+
+        layout = LayoutConfig(rooms=[])
+
+        robots = compute_engineering_robots(layout)
+        assert robots == 0
+
+    def test_buff_pool含机器人(self):
+        """compute_buff_pool 包含工程机器人计数"""
+        from steward_core.synergy import compute_buff_pool
+        from steward_core.models import LayoutConfig
+
+        layout = LayoutConfig.layout_243()
+        pool = compute_buff_pool([], layout=layout)
+
+        assert pool.engineering_robots == 51
+
+    def test_机械辅助α_42机器人_加10percent(self):
+        """至简 α: 每16机器人→+5%，42机器人 → 42//16×5 = 10%"""
+        from steward_core.synergy import synergy_buff_pool_consumer, BuffPool
+
+        zhijian = _mk_op("至简")
+        pool = BuffPool(engineering_robots=42)
+
+        segs = synergy_buff_pool_consumer([zhijian], "Mfg", "PureGold", pool)
+        assert segs[0].a == 25.0  # β: 42//8*5 = 25 (β 比 α 优，取 β)
+
+
+# ─── CONTROL 全局加成扩展 ────────────────────────────────────────
+
+class TestControlGlobalExtended:
+    """C1 扩展: 超频/以身作则/共事情谊/秘传交涉术"""
+
+    def test_超频_2作业平台_制造加2(self):
+        """布丁超频: ≥2作业平台在发电站 → 制造+2%"""
+        from steward_core.synergy import compute_control_global_bonus
+
+        buding = _mk_op("布丁")
+        bonus = compute_control_global_bonus([buding], power_platforms={"Lancet-2": True, "Castle-3": True})
+
+        assert bonus.mfg_bonus == 2.0
+
+    def test_超频_不足2台_无加成(self):
+        """布丁超频: 仅1台作业平台 → 无加成"""
+        from steward_core.synergy import compute_control_global_bonus
+
+        buding = _mk_op("布丁")
+        bonus = compute_control_global_bonus([buding], power_platforms={"Lancet-2": True})
+
+        assert bonus.mfg_bonus == 0.0
+
+    def test_以身作则_MH同中枢_制造加2(self):
+        """麒麟R夜刀以身作则: 怪物猎人同中枢 → 制造+2%"""
+        from steward_core.synergy import compute_control_global_bonus
+
+        yedao = _mk_op("麒麟R夜刀")
+        lianjin = _mk_op("炼金术士")
+        bonus = compute_control_global_bonus([yedao, lianjin])
+
+        assert bonus.mfg_bonus == 2.0
+
+    def test_以身作则_MH不在中枢_无加成(self):
+        """麒麟R夜刀单独在中枢，无MH同伴 → 无加成"""
+        from steward_core.synergy import compute_control_global_bonus
+
+        yedao = _mk_op("麒麟R夜刀")
+        bonus = compute_control_global_bonus([yedao])
+
+        assert bonus.mfg_bonus == 0.0
+
+    def test_秘传交涉术_MH同中枢_贸易加7(self):
+        """炼金术士秘传交涉术: MH同中枢 → 贸易+7%"""
+        from steward_core.synergy import compute_control_global_bonus
+
+        lianjin = _mk_op("炼金术士")
+        yedao = _mk_op("麒麟R夜刀")
+        bonus = compute_control_global_bonus([lianjin, yedao])
+
+        assert bonus.trade_bonus == 7.0
+
+    def test_共事情谊_龙门近卫局同中枢_制造加3(self):
+        """斩业星熊共事情谊: 龙门近卫局同中枢 → 制造+3%"""
+        from steward_core.synergy import compute_control_global_bonus
+
+        xingxiong = _mk_op("斩业星熊")
+        chen = _mk_op("陈")
+        bonus = compute_control_global_bonus([xingxiong, chen])
+
+        assert bonus.mfg_bonus == 3.0

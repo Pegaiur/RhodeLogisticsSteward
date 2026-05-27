@@ -100,6 +100,8 @@ RhodeLogisticsSteward/
 | `_ZEROING_VARIANT_TABLE` | 归零变体（科学改造/流程优化） | 新增归零型变体 buff |
 | `_TOKEN_PROD_TABLE` | 机械精通加成映射 | 新增作业平台联动 buff |
 | `_OP_PLATFORM_NAMES` | 作业平台干员名称 | 新增机器人/作业平台干员 |
+| `_MH_NAMES` | 怪物猎人小队干员名 | 新增怪物猎人联动干员 |
+| `_LUNG_MEN_GUARD_NAMES` | 龙门近卫局干员名 | 新增龙门近卫局干员 |
 
 ### 维护流程
 

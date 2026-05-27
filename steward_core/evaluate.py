@@ -12,6 +12,7 @@ from steward_core.synergy import (
     operator_ramp_segments,
     synergy_capacity_to_eff, synergy_efficiency_amplifier,
     synergy_zeroing_variant, synergy_token_prod,
+    synergy_whisper,
     GlobalBonus,
 )
 
@@ -54,6 +55,10 @@ def evaluate_room(
 
     auto_segs, zero_set = synergy_automation(operators, room_type, power_count)
     total += integrate_segments(auto_segs, T)
+
+    whisper_segs, whisper_zero = synergy_whisper(operators, room_type)
+    total += integrate_segments(whisper_segs, T)
+    zero_set |= whisper_zero
 
     zero_segs, zero_set2 = synergy_zeroing_variant(operators, room_type, product)
     total += integrate_segments(zero_segs, T)
