@@ -306,6 +306,7 @@ def compute_optimal_support(
         "Control": set(),
         "Trade": set(),
         "Dormitory": set(),
+        "Office": set(),
     }
 
     names = {op.name for op in combo_ops}
@@ -367,12 +368,18 @@ def _evaluate_with_support(
     has_rosmontis = any(op.name == _B3_ROSEMARY for op in combo_ops)
     has_ebnhlz = _B5_EBNHLZ in available_support.get("Trade", [])
 
+    # 絮雨在办公室时提供 +20 感知信息（243 Lv3 Office: 2额外招募位×10=20）
+    office_perception = 0
+    if "絮雨" in available_support.get("Office", []):
+        office_perception = 20
+
     buff_pool = compute_buff_pool(
         control_ops, suich_count=5,
         dorm_operators=dorm_ops, dorm_level=5,
         has_rosmontis_in_mfg=has_rosmontis,
         has_ebnhlz_in_trade=has_ebnhlz,
         ling_mood_below_12=has_rosmontis,
+        perception_from_office=office_perception,
     )
 
     ctrl_bonus = control_per_operator_bonus(control_ops, combo_ops, product)
@@ -429,7 +436,7 @@ def solve_mvp(operators: list[Operator]) -> SolveResult:
     op_lookup = {op.name: op for op in operators}
     # 累计所有已选中 combo 的支撑干员（用于最终填充 Control/Trade/Dorm）
     locked_support: dict[str, set[str]] = {
-        "Control": set(), "Trade": set(), "Dormitory": set(),
+        "Control": set(), "Trade": set(), "Dormitory": set(), "Office": set(),
     }
 
     # Phase 1: 制造站穷举（CR 2间 + PG 2间）—— 共享 assigned_ids 防跨产物冲突
@@ -598,7 +605,7 @@ def solve_mvp(operators: list[Operator]) -> SolveResult:
             autofill_count += 1
 
     # Phase 3b: 剩余设施（Power/Reception/Office）贪心
-    priority = _POWER_NAMES
+    priority = _POWER_NAMES | locked_support["Office"]
     remaining = _greedy_remaining(assigned_ids, operators, priority)
     assignments.extend(remaining)
     autofill_count += sum(1 for a in remaining if a.autofill)
