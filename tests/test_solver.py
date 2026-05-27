@@ -478,6 +478,84 @@ class TestGreedyRemainingA6:
         assert len(all_trade_names) == 6
 
 
+# ─── 中枢条件型 per-operator 加成 ─────────────────────────────────
+
+def _mk_ctrl_op(name: str, group_id: str | None = None,
+               nation_id: str | None = None) -> Operator:
+    return Operator(char_id=name, name=name, group_id=group_id, nation_id=nation_id)
+
+
+class TestControlPerOperatorBonus:
+    """_control_per_operator_bonus: 焰尾/薇薇安娜 中枢条件型加成"""
+
+    def test_焰尾_红松骑士团_CR加10每人(self):
+        """焰尾在 Control，3 名红松骑士团在 Mfg CR → +30%"""
+        from steward_core.solver import _control_per_operator_bonus
+
+        control = [_mk_ctrl_op("焰尾", group_id="pinus")]
+        room = [
+            _mk_ctrl_op("灰毫", group_id="pinus"),
+            _mk_ctrl_op("野鬃", group_id="pinus"),
+            _mk_ctrl_op("远牙", group_id="pinus"),
+        ]
+
+        bonus = _control_per_operator_bonus(control, room, "CombatRecord")
+        assert bonus == 30.0
+
+    def test_焰尾_红松骑士团_PG减10每人(self):
+        """焰尾在 Control，红松骑士团在 Mfg PG → -10%/人"""
+        from steward_core.solver import _control_per_operator_bonus
+
+        control = [_mk_ctrl_op("焰尾", group_id="pinus")]
+        room = [_mk_ctrl_op("灰毫", group_id="pinus")]
+
+        bonus = _control_per_operator_bonus(control, room, "PureGold")
+        assert bonus == -10.0
+
+    def test_薇薇安娜_骑士加7每人(self):
+        """薇薇安娜在 Control，骑士在 Mfg → +7%/人"""
+        from steward_core.solver import _control_per_operator_bonus
+
+        control = [_mk_ctrl_op("薇薇安娜")]
+        room = [
+            _mk_ctrl_op("砾", group_id="pinus"),      # 红松骑士团=骑士
+            _mk_ctrl_op("鞭刃", nation_id="kazimierz"),  # kazimierz=骑士
+        ]
+
+        bonus = _control_per_operator_bonus(control, room, "CombatRecord")
+        assert bonus == 14.0  # 7+7
+
+    def test_焰尾和薇薇安娜同时在场(self):
+        """焰尾(红松+10) + 薇薇安娜(骑士+7) → 叠加"""
+        from steward_core.solver import _control_per_operator_bonus
+
+        control = [
+            _mk_ctrl_op("焰尾", group_id="pinus"),
+            _mk_ctrl_op("薇薇安娜"),
+        ]
+        room = [_mk_ctrl_op("灰毫", group_id="pinus")]  # 既红松又骑士
+
+        bonus = _control_per_operator_bonus(control, room, "CombatRecord")
+        assert bonus == 17.0  # 10+7
+
+    def test_无焰尾薇薇安娜_返回0(self):
+        """中枢无焰尾也无薇薇安娜 → 0"""
+        from steward_core.solver import _control_per_operator_bonus
+
+        control = [_mk_ctrl_op("凯尔希")]
+        room = [_mk_ctrl_op("灰毫", group_id="pinus")]
+
+        bonus = _control_per_operator_bonus(control, room, "CombatRecord")
+        assert bonus == 0.0
+
+    def test_空中枢_空房间_不崩溃(self):
+        """空参数不崩溃"""
+        from steward_core.solver import _control_per_operator_bonus
+
+        assert _control_per_operator_bonus([], [], "CombatRecord") == 0.0
+        assert _control_per_operator_bonus([], [_mk_ctrl_op("灰毫")], "CombatRecord") == 0.0
+
+
 # ─── 最优支撑函数 ────────────────────────────────────────────────
 
 class TestOptimalSupport:

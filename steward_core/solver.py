@@ -100,6 +100,37 @@ def _upper_bound_ok(total_eff: float, best_known: float, threshold: float = 0.95
 
 # ─── 房间评估 ───────────────────────────────────────────────────
 
+def _control_per_operator_bonus(
+    control_ops: list[Operator],
+    room_ops: list[Operator],
+    product: str,
+) -> float:
+    """中枢干员对当前房间的条件型 per-operator 加成（百分值）
+
+    焰尾: 每个红松骑士团 Mfg 干员 → CR+10%, PG-10%
+    薇薇安娜: 每个骑士 Mfg 干员 → +7%
+    """
+    bonus = 0.0
+    control_names = {op.name for op in control_ops}
+
+    # 焰尾: 红松骑士团
+    if "焰尾" in control_names:
+        for op in room_ops:
+            if op.group_id == _PINUS_GROUP:
+                if product == "CombatRecord":
+                    bonus += 10.0
+                elif product == "PureGold":
+                    bonus -= 10.0
+
+    # 薇薇安娜: 骑士（含红松骑士团）
+    if "薇薇安娜" in control_names:
+        for op in room_ops:
+            if _is_knight(op):
+                bonus += 7.0
+
+    return bonus
+
+
 def _evaluate_room_combo(
     operators: list[Operator],
     room_type: str,
@@ -107,8 +138,9 @@ def _evaluate_room_combo(
     power_count: int = POWER_COUNT,
     global_bonus: GlobalBonus | None = None,
     buff_pool = None,
+    ctrl_per_op_bonus: float = 0.0,
 ) -> float:
-    """评估一个房间组合的 12h 总积分（含联动+全局加成+烟火）"""
+    """评估一个房间组合的 12h 总积分（含联动+全局加成+烟火+中枢条件加成）"""
     if not operators:
         return 0.0
 
@@ -125,6 +157,8 @@ def _evaluate_room_combo(
     ), T)
     auto_segs, zero_set = synergy_automation(operators, room_type, power_count)
     total += integrate_segments(auto_segs, T)
+
+    total += ctrl_per_op_bonus * T  # 中枢条件型加成：焰尾/薇薇安娜
 
     for op in operators:
         if op.name in zero_set:
@@ -238,14 +272,20 @@ _ROSEMARY_SUPPORT: dict[str, list[str]] = {
     "Dormitory": ["爱丽丝", "车尔尼", "森西"],
 }
 
-# 红松骑士团 group_id
+# 红松骑士团 group_id。游戏内"骑士"标签覆盖红松骑士团全体。
 _PINUS_GROUP = "pinus"
 
-# 骑士标签持有者（name 推导，后期改为 nation/group 查询）
+# 骑士标签持有者（name 推导 + kazimierz 势力 + 红松骑士团）
+# 游戏内骑士 = kazimierz 势力干员 + 红松骑士团干员，两者有重叠
 _KNIGHT_NAMES: set[str] = {
     "砾", "野鬃", "白金", "鞭刃", "暴雨", "耀骑士临光",
     "瑕光", "临光", "远牙", "灰毫", "焰尾", "薇薇安娜",
 }
+
+
+def _is_knight(op: Operator) -> bool:
+    """游戏内骑士 = kazimierz 势力干员 + 红松骑士团干员"""
+    return op.name in _KNIGHT_NAMES or op.nation_id == "kazimierz" or op.group_id == _PINUS_GROUP
 
 
 def compute_optimal_support(
@@ -272,15 +312,13 @@ def compute_optimal_support(
         for facility, ops in _ROSEMARY_SUPPORT.items():
             support[facility].update(ops)
 
-    # 骑士包
-    has_knight = any(
-        op.name in _KNIGHT_NAMES or op.group_id == "pinus"
-        for op in combo_ops
-    )
+    # 骑士包（含红松骑士团，游戏内骑士标签覆盖全体）
+    has_knight = any(_is_knight(op) for op in combo_ops)
     if has_knight:
         support["Control"].add("薇薇安娜")
+        support["Control"].add("焰尾")  # 骑士中枢天然伴随焰尾
 
-    # 红松骑士团包
+    # 红松骑士团包（已包含在骑士包中，此处显式标注确保焰尾）
     has_pinus = any(op.group_id == _PINUS_GROUP for op in combo_ops)
     if has_pinus:
         support["Control"].add("焰尾")
@@ -334,8 +372,11 @@ def _evaluate_with_support(
         ling_mood_below_12=True,
     )
 
+    ctrl_bonus = _control_per_operator_bonus(control_ops, combo_ops, product)
+
     score = _evaluate_room_combo(
         combo_ops, room_type, product, POWER_COUNT, global_bonus, buff_pool,
+        ctrl_per_op_bonus=ctrl_bonus,
     )
 
     return score, available_support
