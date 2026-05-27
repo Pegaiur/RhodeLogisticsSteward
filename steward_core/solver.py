@@ -68,6 +68,7 @@ def _evaluate_trade_combo(
     global_bonus,
     buff_pool,
     ctrl_per_op_bonus: float = 0.0,
+    all_operators: list[Operator] | None = None,
 ) -> float:
     """评估 Trade 三人组合的 LMD 日产
 
@@ -80,6 +81,7 @@ def _evaluate_trade_combo(
     eff_int = evaluate_room(
         combo_ops, "Trade", "Money", power_count, hours,
         global_bonus, buff_pool, ctrl_per_op_bonus=ctrl_per_op_bonus,
+        all_operators=all_operators,
     )
     efficiency_integrated = hours * (1.0 + 0.01 * n) + eff_int / 100.0
     lmd_per_day, _gold, _equiv = _get_trade_order_multiplier(combo_ops, hours)
@@ -379,6 +381,7 @@ def _evaluate_with_support(
     score = evaluate_room(
         combo_ops, room_type, product, effective_power, T, global_bonus, buff_pool,
         ctrl_per_op_bonus=ctrl_bonus,
+        all_operators=all_operators,
     )
 
     return score, available_support
@@ -571,6 +574,7 @@ def solve_mvp(operators: list[Operator]) -> SolveResult:
                     has_ebnhlz_in_trade=has_ebnhlz,
                     has_wuyou_in_trade=has_wuyou,
                 ), ctrl_bonus,
+                all_operators=operators,
             )
             evaluated.append((lmd, combo_names))
         evaluated.sort(key=lambda x: -x[0])

@@ -15,6 +15,7 @@ from steward_core.synergy import (
     synergy_faction_room, synergy_cross_room_pair,
     synergy_trade_gold_lines,
     synergy_whisper,
+    synergy_global_faction,
     GlobalBonus,
 )
 
@@ -33,12 +34,12 @@ def evaluate_room(
     layout: LayoutConfig | None = None,
     power_platforms: dict[str, bool] | None = None,
     all_assignments: dict[str, list[Operator]] | None = None,
+    all_operators: list[Operator] | None = None,
 ) -> float:
     """评估一个房间组合的 T 小时总效率积分 Σ∫e(t)dt
 
-    含联动(A1/A3/A4/A5/A6) + 个人效率 + B层消费 + 全局加成(C1) + 中枢条件加成。
-
-    solver 与 production 统一调用此函数，确保排班评分与产出报告一致。
+    含联动(A1/A3/A4/A5/A6) + 个人效率 + B层消费(B1-B5) + 全局阵营计数(B6)
+    + 跨房间配对(B7) + 全局加成(C1) + 中枢条件加成。
     """
     if not operators:
         return 0.0
@@ -98,6 +99,12 @@ def evaluate_room(
     if all_assignments is not None:
         total += integrate_segments(
             synergy_cross_room_pair(non_zero_ops, room_type, product, all_assignments, T), T,
+        )
+
+    # B6 全局阵营计数
+    if all_operators is not None:
+        total += integrate_segments(
+            synergy_global_faction(non_zero_ops, room_type, product, all_operators, T), T,
         )
 
     if buff_pool is not None:

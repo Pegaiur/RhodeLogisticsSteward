@@ -588,6 +588,7 @@ def synergy_facility_count(
 _C1_GLOBAL_TABLE: dict[str, tuple[float, float]] = {
     "凯尔希": (2.0, 0.0),
     "Mon3tr": (2.0, 0.0),
+    "望": (2.0, 7.0),
 }
 
 # 怪物猎人小队干员名（中枢条件型加成判定用）
@@ -1149,8 +1150,10 @@ def synergy_faction_room(
 # ─── B7 跨房间配对 ───────────────────────────────────────────────
 
 # 跨房间配对表: {持有者名: (目标名, 目标设施, 加成%, 产物或None, 当前设施)}
-_B7_CROSS_PAIR_TABLE: dict[str, tuple[str, str, float, str | None, str | None]] = {
+_B7_CROSS_PAIR_TABLE: dict[str, tuple[str, str | None, float, str | None, str | None]] = {
     "烈夏": ("古米", "Trade", 35.0, "CombatRecord", "Mfg"),
+    "深巡": ("乌尔比安", None, 10.0, "Money", "Trade"),
+    "贝洛内": ("伺夜", None, 10.0, "Money", "Trade"),
 }
 
 
@@ -1176,9 +1179,56 @@ def synergy_cross_room_pair(
         if target_product is not None and product != target_product:
             continue
 
-        target_ops = all_assignments.get(target_facility, [])
-        target_names = {op.name for op in target_ops}
+        if target_facility is None:
+            # 任意设施：扫描所有设施
+            target_names: set[str] = set()
+            for ops in all_assignments.values():
+                target_names.update(op.name for op in ops)
+        else:
+            target_ops = all_assignments.get(target_facility, [])
+            target_names = {op.name for op in target_ops}
+
         if target_name in target_names:
             segments.append(LinearSegment(a=bonus_per, b=0.0, t_start=0.0, dt=T))
+
+    return segments
+
+
+# ─── B6 全局阵营计数 ─────────────────────────────────────────────
+
+# 全局阵营计数表: {持有者名: (字段名, 匹配值, 每人加成%, 产物, 设施, 上限, 是否除自身)}
+_B6_GLOBAL_TABLE: dict[str, tuple[str, str, float, str | None, str, int, bool]] = {
+    "缪尔赛思": ("group_id", "rhine", 3.0, None, "Power", 5, True),
+    "杏仁": ("group_id", "blacksteel", 2.0, "PureGold", "Mfg", 3, False),
+    "娜斯提": ("group_id", "rhine", 3.0, "PureGold", "Mfg", 5, False),
+}
+
+
+def synergy_global_faction(
+    operators: list[Operator],
+    room_type: str,
+    product: str,
+    all_operators: list[Operator],
+    T: float,
+) -> list[LinearSegment]:
+    """B6: 统计全基建范围内特定阵营的干员数量，为持有者提供效率加成"""
+    names = {op.name for op in operators}
+    segments = []
+
+    for holder_name, (field, value, bonus_per, target_product, target_room, cap, exclude_self) in _B6_GLOBAL_TABLE.items():
+        if holder_name not in names:
+            continue
+        if room_type != target_room:
+            continue
+        if target_product is not None and product != target_product:
+            continue
+
+        count = sum(1 for op in all_operators if getattr(op, field, None) == value)
+        if exclude_self:
+            count = max(0, count - 1)
+        count = min(count, cap)
+        bonus = count * bonus_per
+        if bonus > 0:
+            segments.append(LinearSegment(a=bonus, b=0.0, t_start=0.0, dt=T))
 
     return segments
