@@ -109,6 +109,11 @@ def get_trade_order_equivalent_efficiency(
             return 0.0
 
         if bid.startswith("trade_ord_limit&cost_P"):
+            if "cost_P[020]" in bid:
+                partner = "伺夜"
+                if _partner_available(partner, assigned_ids, op_lookup):
+                    return 10.0  # 贝洛内未偿还的债务: +2 limit w/ 伺夜
+                return 0.0
             # 拉普兰德(+4 limit w/ 德克萨斯) — 验证德克萨斯可用
             partner = "德克萨斯"
             if _partner_available(partner, assigned_ids, op_lookup):
