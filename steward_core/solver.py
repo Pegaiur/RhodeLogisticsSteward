@@ -128,15 +128,8 @@ def _room_conditions_satisfiable(
         bid = sk.buff_id
 
         if bid.startswith("trade_ord_spd_par[000]"):
-            # 摩根：需要至少 1 名格拉斯哥帮干员同房
-            existing = sum(1 for n in taken_names
-                          if _is_glasgow(op_lookup.get(n, None)))
-            if existing > 0:
-                return True  # 已有格帮室友
-            need = 1
-            available = sum(1 for c in remaining
-                          if _is_glasgow(c) and c.name != op.name)
-            return available >= need and remaining_slots >= need
+            # 摩根：格拉斯哥帮计数加成。摩根本人即格帮成员，条件总是满足
+            return True
 
         if bid.startswith("trade_ord_spd&cost_P[000]"):
             # 德克萨斯：需要拉普兰德同房
@@ -147,15 +140,8 @@ def _room_conditions_satisfiable(
             return available >= 1 and remaining_slots >= 1
 
         if bid.startswith("trade_ord_spd_par[001]"):
-            # 新约能天使：需要拉特兰干员（简化：检查 nation_id）
-            existing_laterano = sum(1 for n in taken_names
-                                   if getattr(op_lookup.get(n, None), "nation_id", None) == "laterano")
-            if existing_laterano > 0:
-                return True
-            available = sum(1 for c in remaining
-                          if getattr(c, "nation_id", None) == "laterano"
-                          and c.name != op.name)
-            return available >= 1 and remaining_slots >= 1
+            # 新约能天使：拉特兰计数加成。新约能天使本人 nation_id=laterano，条件总是满足
+            return True
 
     return True  # 无条件限制
 
@@ -174,15 +160,15 @@ def _operator_conditions_met(
         bid = sk.buff_id
 
         if bid.startswith("trade_ord_spd_par[000]"):
-            return any(_is_glasgow(op_lookup.get(n))
-                      for n in taken_names if n != name)
+            # 摩根：格帮计数含自身，条件总是满足
+            return True
 
         if bid.startswith("trade_ord_spd&cost_P[000]"):
             return "拉普兰德" in taken_names
 
         if bid.startswith("trade_ord_spd_par[001]"):
-            return any(getattr(op_lookup.get(n), "nation_id", None) == "laterano"
-                      for n in taken_names if n != name)
+            # 新约能天使：拉特兰计数含自身，条件总是满足
+            return True
 
     return True
 

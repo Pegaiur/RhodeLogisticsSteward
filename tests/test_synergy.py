@@ -1610,3 +1610,73 @@ class TestRosemarySupportExtension:
         from steward_core.synergy import ROSEMARY_SUPPORT
 
         assert "塑心" in ROSEMARY_SUPPORT["Dormitory"]
+
+
+# ─── A2 阵营计数扩展（Trade: 摩根/新约能天使） ─────────────────────
+
+class TestA2TradeFaction:
+    """A2: synergy_faction_room — Trade 设施阵营计数"""
+
+    def test_摩根_格拉斯哥帮_含自身_加40(self):
+        """摩根 + 推王(格帮) → 2名格帮 × 20% = 40%"""
+        from steward_core.synergy import synergy_faction_room
+
+        morgan = _mk_op("摩根", group_id="glasgow")
+        sieger = _mk_op("推进之王", group_id="glasgow")
+
+        segs = synergy_faction_room([morgan, sieger], "Trade", "Money", 12.0)
+
+        assert len(segs) == 1
+        assert segs[0].a == 40.0  # 2人 × 20%
+
+    def test_摩根_仅自身_格拉斯哥帮_加20(self):
+        """摩根独自在场 → 1名格帮(自身) × 20% = 20%"""
+        from steward_core.synergy import synergy_faction_room
+
+        morgan = _mk_op("摩根", group_id="glasgow")
+
+        segs = synergy_faction_room([morgan], "Trade", "Money", 12.0)
+
+        assert len(segs) == 1
+        assert segs[0].a == 20.0  # 自身 1人 × 20%
+
+    def test_新约能天使_拉特兰_含自身_加30(self):
+        """新约能天使 + 1名 Laterano → 2名 × 15% = 30%"""
+        from steward_core.synergy import synergy_faction_room
+
+        neoexu = _mk_op("新约能天使", nation_id="laterano")
+        other = _mk_op("拉特兰干员", nation_id="laterano")
+
+        segs = synergy_faction_room([neoexu, other], "Trade", "Money", 12.0)
+
+        assert len(segs) == 1
+        assert segs[0].a == 30.0  # 2人 × 15%
+
+    def test_新约能天使_仅自身_拉特兰_加15(self):
+        """新约能天使独自在场 → 1名(自身) × 15% = 15%"""
+        from steward_core.synergy import synergy_faction_room
+
+        neoexu = _mk_op("新约能天使", nation_id="laterano")
+
+        segs = synergy_faction_room([neoexu], "Trade", "Money", 12.0)
+
+        assert len(segs) == 1
+        assert segs[0].a == 15.0
+
+    def test_摩根_非Trade房间_不触发(self):
+        """摩根在 Mfg → 不触发 A2 贸易加成"""
+        from steward_core.synergy import synergy_faction_room
+
+        morgan = _mk_op("摩根", group_id="glasgow")
+
+        segs = synergy_faction_room([morgan], "Mfg", "PureGold", 12.0)
+        assert segs == []
+
+    def test_新约能天使_非Trade房间_不触发(self):
+        """新约能天使在 Mfg → 不触发"""
+        from steward_core.synergy import synergy_faction_room
+
+        neoexu = _mk_op("新约能天使", nation_id="laterano")
+
+        segs = synergy_faction_room([neoexu], "Mfg", "PureGold", 12.0)
+        assert segs == []

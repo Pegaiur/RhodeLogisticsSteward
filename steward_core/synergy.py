@@ -1112,6 +1112,8 @@ def synergy_trade_gold_lines(
 # 阵营计数表: {持有者名: (字段名, 匹配值, 每人加成%, 产物或None, 设施类型)}
 _A2_FACTION_TABLE: dict[str, tuple[str, str, float, str | None, str | None]] = {
     "历阵锐枪芬": ("team_id", "reserve1", 10.0, None, "Mfg"),
+    "摩根": ("group_id", "glasgow", 20.0, "Money", "Trade"),
+    "新约能天使": ("nation_id", "laterano", 15.0, "Money", "Trade"),
 }
 
 
