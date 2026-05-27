@@ -87,7 +87,7 @@ def get_trade_order_equivalent_efficiency(
     )
     if has_multiplier:
         from steward_core.production import _get_trade_order_multiplier
-        lmd_per_day, _ = _get_trade_order_multiplier([op])
+        lmd_per_day, _, _ = _get_trade_order_multiplier([op])
         multiplier = lmd_per_day / 10265.0
         if multiplier <= 1.001:
             return 0.0

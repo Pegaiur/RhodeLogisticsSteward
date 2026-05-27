@@ -429,7 +429,7 @@ class TestTradeOrderMultiplier:
         from steward_core.production import _get_trade_order_multiplier
 
         # Act
-        lmd_per_day, gold_per_day = _get_trade_order_multiplier([])
+        lmd_per_day, gold_per_day, _ = _get_trade_order_multiplier([])
 
         # Assert: 默认三级站日产
         assert lmd_per_day == 10265.0
@@ -443,7 +443,7 @@ class TestTradeOrderMultiplier:
         op = _mk_op("商人", [_mk_skill("Trade", {"Money": 30})])
 
         # Act
-        lmd_per_day, gold_per_day = _get_trade_order_multiplier([op])
+        lmd_per_day, gold_per_day, _ = _get_trade_order_multiplier([op])
 
         # Assert
         assert lmd_per_day == 10265.0
@@ -462,7 +462,7 @@ class TestTradeOrderMultiplier:
         ])
 
         # Act
-        lmd_per_day, gold_per_day = _get_trade_order_multiplier([butler])
+        lmd_per_day, gold_per_day, _ = _get_trade_order_multiplier([butler])
 
         # Assert: 2,3→违约+2, LMD=2250/订单; gold=4.9/订单
         expected_lmd_mult = 2250.0 / 1450.0  # 1.5517
@@ -481,7 +481,7 @@ class TestTradeOrderMultiplier:
         ])
 
         # Act
-        lmd_per_day, gold_per_day = _get_trade_order_multiplier([closure])
+        lmd_per_day, gold_per_day, _ = _get_trade_order_multiplier([closure])
 
         # Assert: 12000 LMD/天 (文档), 20 赤金消耗/天
         assert lmd_per_day == pytest.approx(12000.0, rel=0.01)
@@ -502,7 +502,7 @@ class TestTradeOrderMultiplier:
         ])
 
         # Act
-        lmd_per_day, gold_per_day = _get_trade_order_multiplier([tequila, tailor])
+        lmd_per_day, gold_per_day, _ = _get_trade_order_multiplier([tequila, tailor])
 
         # Assert: 24h 等效 P4≈0.816，加权平均订单耗时~4.32h
         assert lmd_per_day == pytest.approx(12669.2, rel=0.01)
@@ -525,7 +525,7 @@ class TestTradeOrderMultiplier:
         ])
 
         # Act
-        lmd_per_day, gold_per_day = _get_trade_order_multiplier([butler, tequila])
+        lmd_per_day, gold_per_day, _ = _get_trade_order_multiplier([butler, tequila])
 
         # Assert: LMD=2350/订单(文档~16637), gold=4.5/订单
         expected_lmd_mult = 2350.0 / 1450.0
@@ -544,7 +544,7 @@ class TestTradeOrderMultiplier:
         ])
 
         # Act
-        lmd_per_day, gold_per_day = _get_trade_order_multiplier([tailor_a])
+        lmd_per_day, gold_per_day, _ = _get_trade_order_multiplier([tailor_a])
 
         # Assert: 时变模型 + 加权时间修正
         assert lmd_per_day == pytest.approx(10343.5, rel=0.002)
@@ -621,6 +621,81 @@ class TestTradeOrderEquivalentEfficiency:
         names = get_system_contributors("Trade", "order_mechanism")
         # 自动量化后不再需要注册表
         assert len(names) == 0
+
+
+# ─── 订单机制等效产金 ────────────────────────────────────────
+
+class TestTradeEquivalentGold:
+    """验证 _get_trade_order_multiplier 的等效赤金产出"""
+
+    def test_无机制_等效产金为零(self):
+        """普通贸易干员 → 等效赤金 = 0"""
+        from steward_core.production import _get_trade_order_multiplier
+
+        op = _mk_op("商人", [_mk_skill("Trade", {"Money": 30})])
+        _, _, equiv_gold = _get_trade_order_multiplier([op])
+        assert equiv_gold == 0.0
+
+    def test_但书_等效产金为零(self):
+        """但书以金换金 → 等效赤金 = 0"""
+        from steward_core.production import _get_trade_order_multiplier
+
+        butler = _mk_op("但书", [
+            Skill(buff_id="trade_ord_law[000]", buff_name="合同法", skill_icon="test",
+                  room_type="Trade", efficient=EfficiencyMap(raw={"Money": 0})),
+            Skill(buff_id="trade_ord_against[010]", buff_name="违约索赔·β", skill_icon="test",
+                  room_type="Trade", efficient=EfficiencyMap(raw={"Money": 0})),
+        ])
+        _, _, equiv_gold = _get_trade_order_multiplier([butler])
+        assert equiv_gold == 0.0
+
+    def test_可露希尔_等效产金约4每天(self):
+        """可露希尔 特别订单 → 等效赤金 ~4/天"""
+        from steward_core.production import _get_trade_order_multiplier
+
+        closure = _mk_op("可露希尔", [
+            Skill(buff_id="trade_ord_closure[000]", buff_name="特别订单", skill_icon="test",
+                  room_type="Trade", efficient=EfficiencyMap(raw={"Money": 10})),
+        ])
+        _, _, equiv_gold = _get_trade_order_multiplier([closure])
+        assert equiv_gold == pytest.approx(4.0, rel=0.01)
+
+    def test_龙舌兰加裁缝β_等效产金(self):
+        """龙舌兰+裁缝β → 等效赤金 = 4赤金订单×1赤金/单"""
+        from steward_core.production import _get_trade_order_multiplier
+
+        tequila = _mk_op("龙舌兰", [
+            Skill(buff_id="trade_ord_long[010]", buff_name="投资·β", skill_icon="test",
+                  room_type="Trade", efficient=EfficiencyMap(raw={"Money": 0})),
+        ])
+        tailor = _mk_op("柏喙", [
+            Skill(buff_id="trade_ord_wt&cost[010]", buff_name="裁缝·β", skill_icon="test",
+                  room_type="Trade", efficient=EfficiencyMap(raw={"Money": 0})),
+        ])
+        _, _, equiv_gold = _get_trade_order_multiplier([tequila, tailor])
+        assert equiv_gold > 0
+        assert equiv_gold == pytest.approx(4.53, rel=0.05)
+
+    def test_DailyProduction_含等效产金字段(self):
+        """DailyProduction 应有 equivalent_gold_from_mechanism 字段"""
+        from steward_core.production import DailyProduction
+
+        dp = DailyProduction()
+        assert hasattr(dp, 'equivalent_gold_from_mechanism')
+        assert dp.equivalent_gold_from_mechanism == 0.0
+
+    def test_等效产金不影响物理盈余(self):
+        """gold_surplus 保持物理语义，不受等效产金影响"""
+        from steward_core.production import DailyProduction
+
+        dp = DailyProduction(
+            total_gold_produced_per_day=50.0,
+            total_gold_consumed_per_day=40.0,
+            gold_surplus=10.0,  # 传入值直接设置
+        )
+        assert dp.gold_surplus == 10.0
+        dp.equivalent_gold_from_mechanism = 5.0
+        assert dp.gold_surplus == 10.0  # 不因等效产金改变
 
 
 # ─── 配对验证 + 回溯场景 ──────────────────────────────────────
