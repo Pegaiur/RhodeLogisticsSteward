@@ -196,7 +196,7 @@ def synergy_automation(
 
 def compute_effective_power_count(
     power_operators: list[Operator],
-    physical_count: int = 3,
+    physical_count: int,
 ) -> int:
     """计算有效发电站数量（含设施数量修改器）
 
@@ -205,10 +205,17 @@ def compute_effective_power_count(
     """
     count = physical_count
     for op in power_operators:
-        for sk in op.skills:
-            if sk.buff_id == "power_count[000]":
-                count += 1
+        if _has_power_count_modifier(op):
+            count += 1
     return count
+
+
+def _has_power_count_modifier(op: Operator) -> bool:
+    """检查干员是否持有发电站数量修改器（如承曦格雷伊"晨曦"）"""
+    for sk in op.skills:
+        if sk.buff_id == "power_count[000]":
+            return True
+    return False
 
 
 # ─── A6 设施数量联动 ─────────────────────────────────────────────

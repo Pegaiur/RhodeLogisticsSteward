@@ -14,13 +14,13 @@ from steward_core.synergy import (
     synergy_facility_count, skill_class,
     compute_control_global_bonus,
     compute_buff_pool, ROSEMARY_SUPPORT,
-    compute_effective_power_count,
+    compute_effective_power_count, _has_power_count_modifier,
     _B_LAYER_CONSUMER_TABLE, _A6_FACILITY_TABLE,
 )
 from steward_core.evaluate import evaluate_room
+from steward_core.constants import BASE_POWER_COUNT
 
 T = 12.0
-_BASE_POWER_COUNT = 3  # 243 布局物理发电站数
 
 ANCHOR_NAMES = {
     "水月", "多萝西", "苍苔", "海沫",
@@ -356,10 +356,11 @@ def _evaluate_with_support(
 
     ctrl_bonus = control_per_operator_bonus(control_ops, combo_ops, product)
 
-    # 计算有效发电站数（承曦格雷伊"晨曦"使发电站+1）
-    effective_power = _BASE_POWER_COUNT
-    if "承曦格雷伊" not in assigned_ids and "承曦格雷伊" in op_lookup:
-        effective_power += 1
+    # 计算有效发电站数：扫描所有可用干员中持有 power_count 修改器的
+    effective_power = BASE_POWER_COUNT + sum(
+        1 for op in all_operators
+        if op.name not in assigned_ids and _has_power_count_modifier(op)
+    )
 
     score = evaluate_room(
         combo_ops, room_type, product, effective_power, T, global_bonus, buff_pool,

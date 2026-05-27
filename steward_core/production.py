@@ -16,7 +16,7 @@ from steward_core.synergy import (
     GlobalBonus, compute_control_global_bonus, compute_buff_pool,
     compute_effective_power_count,
 )
-from steward_core.constants import FIXED_CONTROL
+from steward_core.constants import FIXED_CONTROL, BASE_POWER_COUNT
 from steward_core.solver import control_per_operator_bonus
 
 # ─── 制造站 Lv3 基础参数 ────────────────────────────────────────
@@ -224,7 +224,7 @@ def calculate(plan: ShiftPlan, operators: list[Operator], hours: float = 24.0) -
     production.drone_target = f"{drone_room_type}[{drone_room_index}]"
 
     # 3. 计算各设施产出（走 efficiency_fn 积分，含联动）
-    power_count = compute_effective_power_count(power_ops)
+    power_count = compute_effective_power_count(power_ops, BASE_POWER_COUNT)
 
     for assignment in plan.assignments:
         ops = [op_lookup[n] for n in assignment.operators if n in op_lookup]
