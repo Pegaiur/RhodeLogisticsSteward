@@ -94,6 +94,8 @@ def get_trade_order_equivalent_efficiency(
         if multiplier <= 1.001:
             return 0.0
         return (multiplier - 1.0) * 1.63 * 100
+        # 系数 1.63 = 1.0(base) + 0.03(head×3) + 0.60(2名室友各30%)
+        # 推导: docs/synergy-systems.md §贪心偏置系数 1.63 推导
 
     # 2. 配对型 — 验证配对目标
     for sk in op.skills:

@@ -134,6 +134,50 @@ def _room_conditions_satisfiable(
     return True  # 无条件限制
 
 
+def _operator_conditions_met(
+    name: str,
+    taken_names: list[str],
+    op_lookup: dict[str, Operator],
+) -> bool:
+    """后验：已入槽干员的机制条件是否在房间内实际兑现"""
+    op = op_lookup.get(name)
+    if op is None:
+        return True
+
+    for sk in op.skills:
+        bid = sk.buff_id
+
+        if bid.startswith("trade_ord_spd_par[000]"):
+            return any(_is_glasgow(op_lookup.get(n))
+                      for n in taken_names if n != name)
+
+        if bid.startswith("trade_ord_spd&cost_P[000]"):
+            return "拉普兰德" in taken_names
+
+        if bid.startswith("trade_ord_spd_par[001]"):
+            return any(getattr(op_lookup.get(n), "nation_id", None) == "laterano"
+                      for n in taken_names if n != name)
+
+    return True
+
+
+def _post_fill_verify(
+    taken_names: list[str],
+    all_operators: list[Operator],
+    assigned_ids: set[str],
+) -> None:
+    """后验验证：填充完毕后，确认条件型干员的机制实际兑现。
+    未兑现的干员从房间中移除，释放槽位（autofill 兜底）。
+    """
+    op_lookup = {o.name: o for o in all_operators}
+    for name in list(taken_names):
+        if not _operator_conditions_met(name, taken_names, op_lookup):
+            taken_names.remove(name)
+            op = op_lookup.get(name)
+            if op:
+                assigned_ids.discard(op.char_id)
+
+
 def _greedy_remaining(
     assigned_ids: set[str],
     operators: list[Operator],
@@ -214,6 +258,9 @@ def _greedy_remaining(
                     continue  # 条件不可满足 → 跳过此候选人，试下一个
                 taken.append(op.name)
                 assigned_ids.add(op.char_id)
+
+            # 后验验证：确认条件型干员的机制实际兑现
+            _post_fill_verify(taken, operators, assigned_ids)
 
         results.append(RoomAssignment(
             room_type=room.room_type, room_index=room.room_index,
