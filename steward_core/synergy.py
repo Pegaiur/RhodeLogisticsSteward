@@ -115,9 +115,9 @@ def get_trade_order_equivalent_efficiency(
 
         if bid.startswith("trade_ord_spd_par"):
             if "par[001]" in bid:
-                return 30.0  # 新约能天使: 3拉特兰×15%，但有配对风险
+                return 25.0  # 新约能天使: 每拉特兰+15% — 机制未在 evaluate_room 实现，保守
             if "par[000]" in bid:
-                return 20.0  # 摩根: 需格帮室友，贪心无法保证房间内配对 → 保守
+                return 55.0  # 摩根: 推王+2格帮+额外35% — 迭代验证处理可兑现性
 
     # 3. 同室人数/效率反馈型 — 假设最优室友
     for sk in op.skills:
@@ -151,6 +151,11 @@ def _partner_available(name: str, assigned_ids: set, op_lookup: dict) -> bool:
         if op.name == name and op.char_id not in assigned_ids:
             return True
     return False
+
+
+def _is_glasgow(op: "Operator") -> bool:
+    """判定干员是否属于格拉斯哥帮（通过 group_id）"""
+    return getattr(op, "group_id", None) == "glasgow"
 
 
 # ─── A1 干员配对 ─────────────────────────────────────────────────

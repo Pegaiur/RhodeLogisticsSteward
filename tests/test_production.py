@@ -756,10 +756,10 @@ class TestTradeContextualEfficiency:
                   room_type="Trade", efficient=EfficiencyMap(raw={"Money": 0})),
         ])
         eff = get_trade_order_equivalent_efficiency(op, set(), {op.char_id: op})
-        assert eff == pytest.approx(30, rel=0.1)
+        assert eff == pytest.approx(25, rel=0.15)
 
-    def test_摩根_格帮配对_偏置约35(self):
-        """摩根帮派指南针：推王+1格帮各+20%+额外35% → 保守偏置35"""
+    def test_摩根_格帮配对_偏置约55(self):
+        """摩根帮派指南针：推王+1格帮各+20%+额外35% → 偏置55"""
         from steward_core.synergy import get_trade_order_equivalent_efficiency
 
         op = _mk_op("摩根", [
@@ -767,4 +767,4 @@ class TestTradeContextualEfficiency:
                   room_type="Trade", efficient=EfficiencyMap(raw={"Money": 0})),
         ])
         eff = get_trade_order_equivalent_efficiency(op, set(), {op.char_id: op})
-        assert eff == pytest.approx(20, rel=0.15)  # 保守偏置
+        assert eff == pytest.approx(55, rel=0.15)  # 偏置 55

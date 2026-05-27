@@ -17,7 +17,7 @@ from steward_core.synergy import (
     get_system_contributors, get_trade_order_equivalent_efficiency,
     classify_mfg_operators, prune_equivalent, build_candidate_pool,
     control_per_operator_bonus, _is_knight, _PINUS_GROUP,
-    _B3_ROSEMARY, _B5_EBNHLZ,
+    _B3_ROSEMARY, _B5_EBNHLZ, _is_glasgow,
 )
 from steward_core.evaluate import evaluate_room
 from steward_core.constants import BASE_POWER_COUNT
@@ -82,6 +82,56 @@ def _greedy_allocate(
 # ─── 剩余设施贪心 ──────────────────────────────────────────────
 
 _LAYOUT_243 = LayoutConfig.layout_243()
+
+
+def _room_conditions_satisfiable(
+    op: Operator,
+    taken_names: list[str],
+    remaining: list[Operator],
+    room_slots: int,
+    all_operators: list[Operator],
+) -> bool:
+    """迭代验证：将此干员加入后，剩余槽位能否满足其机制条件"""
+    remaining_slots = room_slots - len(taken_names) - 1
+    if remaining_slots < 0:
+        return False
+
+    op_lookup = {o.name: o for o in all_operators}
+
+    for sk in op.skills:
+        bid = sk.buff_id
+
+        if bid.startswith("trade_ord_spd_par[000]"):
+            # 摩根：需要至少 1 名格拉斯哥帮干员同房
+            existing = sum(1 for n in taken_names
+                          if _is_glasgow(op_lookup.get(n, None)))
+            if existing > 0:
+                return True  # 已有格帮室友
+            need = 1
+            available = sum(1 for c in remaining
+                          if _is_glasgow(c) and c.name != op.name)
+            return available >= need and remaining_slots >= need
+
+        if bid.startswith("trade_ord_spd&cost_P[000]"):
+            # 德克萨斯：需要拉普兰德同房
+            existing = sum(1 for n in taken_names if n == "拉普兰德")
+            if existing > 0:
+                return True
+            available = sum(1 for c in remaining if c.name == "拉普兰德")
+            return available >= 1 and remaining_slots >= 1
+
+        if bid.startswith("trade_ord_spd_par[001]"):
+            # 新约能天使：需要拉特兰干员（简化：检查 nation_id）
+            existing_laterano = sum(1 for n in taken_names
+                                   if getattr(op_lookup.get(n, None), "nation_id", None) == "laterano")
+            if existing_laterano > 0:
+                return True
+            available = sum(1 for c in remaining
+                          if getattr(c, "nation_id", None) == "laterano"
+                          and c.name != op.name)
+            return available >= 1 and remaining_slots >= 1
+
+    return True  # 无条件限制
 
 
 def _greedy_remaining(
@@ -153,12 +203,17 @@ def _greedy_remaining(
 
         if candidates:
             ranked = rank_by_dominance(candidates, T)
-            for op in ranked:
-                if len(taken) >= room.slots:
-                    break
-                if op.char_id not in assigned_ids:
-                    taken.append(op.name)
-                    assigned_ids.add(op.char_id)
+            remaining = [op for op in ranked if op.char_id not in assigned_ids]
+
+            # 迭代填充：每个槽位"尝试→验证条件→接受或跳过"
+            while len(taken) < room.slots and remaining:
+                op = remaining.pop(0)
+                if op.char_id in assigned_ids:
+                    continue
+                if not _room_conditions_satisfiable(op, taken, remaining, room.slots, operators):
+                    continue  # 条件不可满足 → 跳过此候选人，试下一个
+                taken.append(op.name)
+                assigned_ids.add(op.char_id)
 
         results.append(RoomAssignment(
             room_type=room.room_type, room_index=room.room_index,
