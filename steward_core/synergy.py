@@ -676,6 +676,13 @@ _MH_NAMES: set[str] = {"麒麟R夜刀", "炼金术士"}
 # 龙门近卫局干员名（中枢条件型加成判定用）
 _LUNG_MEN_GUARD_NAMES: set[str] = {"陈", "星熊", "诗怀雅", "斩业星熊"}
 
+# 黑钢国际 group_id 与持有者（老友相聚）
+_BLACKSTEEL_GROUP = "blacksteel"
+_BLACKSTEEL_HOLDERS: set[str] = {"涤火杰西卡"}
+
+# 格拉斯哥帮 group_id（运筹好手，已在 get_trade_order_equivalent_efficiency 中建模）
+_GLASGOW_GROUP = "glasgow"
+
 
 @dataclass
 class GlobalBonus:
@@ -750,11 +757,13 @@ def control_per_operator_bonus(
     control_ops: list["Operator"],
     room_ops: list["Operator"],
     product: str,
+    room_type: str = "Mfg",
 ) -> float:
     """中枢干员对当前房间的条件型 per-operator 加成（百分值）
 
     焰尾: 每个红松骑士团 Mfg 干员 → CR+10%, PG-10%
     薇薇安娜: 每个骑士 Mfg 干员 → +7%
+    老友相聚: 每黑钢国际 Mfg 干员 → +5%
     """
     bonus = 0.0
     control_names = {op.name for op in control_ops}
@@ -771,6 +780,15 @@ def control_per_operator_bonus(
         for op in room_ops:
             if _is_knight(op):
                 bonus += 7.0
+
+    # 老友相聚: 每黑钢国际干员在制造站 → +5%
+    if room_type == "Mfg":
+        for name in control_names:
+            if name in _BLACKSTEEL_HOLDERS:
+                for op in room_ops:
+                    if op.group_id == _BLACKSTEEL_GROUP:
+                        bonus += 5.0
+                break
 
     return bonus
 
