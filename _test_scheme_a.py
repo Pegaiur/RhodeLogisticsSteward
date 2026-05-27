@@ -7,7 +7,6 @@ sys.path.insert(0, str(Path(__file__).parent))
 from steward_core.data_loader import load_operators_v2
 from steward_core.evaluate import evaluate_room
 from steward_core.production import _get_trade_order_multiplier
-from steward_core.synergy import get_trade_order_equivalent_efficiency
 
 
 def lmd_12h(ops, hours=12.0):
@@ -47,7 +46,8 @@ def main():
     a7_names = {"但书", "龙舌兰", "巫恋", "柏喙", "卡夫卡", "可露希尔"}
     for op in all_ops:
         if op.name in a7_names and op not in trade_ops:
-            if get_trade_order_equivalent_efficiency(op, set(), {}) > 0:
+            lmd_per_day, _, _ = _get_trade_order_multiplier([op])
+            if lmd_per_day > 10265.0:
                 trade_ops.append(op)
 
     pool_names = {
@@ -60,8 +60,8 @@ def main():
     print("─── 个人偏置排行 ───")
     ranked = []
     for op in pool:
-        a7 = get_trade_order_equivalent_efficiency(op, set(),
-            {o.char_id: o for o in all_ops})
+        lmd, _, _ = _get_trade_order_multiplier([op])
+        a7 = (lmd / 10265.0 - 1.0) * 100  # LMD倍数→等效效率
         be = op.best_efficiency("Trade", "Money")
         eff = be if be > 0 else a7
         ranked.append((eff, a7, be, op))

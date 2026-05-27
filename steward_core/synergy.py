@@ -42,6 +42,14 @@ _SYSTEM_CONTRIBUTORS: list[SystemContributor] = [
     SystemContributor("阿兰娜", ["Mfg"], "anchor"),
     SystemContributor("Miss.Christine", ["Mfg"], "anchor"),
     SystemContributor("怒潮凛冬", ["Mfg"], "anchor"),
+    # 贸易站联动锚点（A7 反馈型 + 配对型）
+    SystemContributor("巫恋", ["Trade"], "anchor"),
+    SystemContributor("火哨", ["Trade"], "anchor"),
+    SystemContributor("吉星", ["Trade"], "anchor"),
+    SystemContributor("雪雉", ["Trade"], "anchor"),
+    SystemContributor("德克萨斯", ["Trade"], "anchor"),
+    SystemContributor("摩根", ["Trade"], "anchor"),
+    SystemContributor("新约能天使", ["Trade"], "anchor"),
 ]
 
 
@@ -56,106 +64,6 @@ def get_system_contributors(
             if contribution_type is None or c.contribution_type == contribution_type:
                 result.append(c.name)
     return result
-
-
-def get_trade_order_equivalent_efficiency(
-    op: "Operator",
-    assigned_ids: set | None = None,
-    op_lookup: dict | None = None,
-) -> float:
-    """A7 订单机制干员的贪心排序等效个人效率（自动量化 + 配对验证）
-
-    核心假设：该体系核心以自身机制最大化效率（类比迷迭香≈70%），
-    偏置用于贪心排序，实际回落在 _calc_trade() 完成。
-    如果最优配置不可兑现（配对目标被占用等），偏置归零→自然回溯。
-
-    三类处理：
-    1. 订单倍数型（但书/龙舌兰/可露希尔/裁缝）：_get_trade_order_multiplier 自动算
-    2. 配对型（德克萨斯/摩根/新约能天使）：验证配对目标可用性
-    3. 同室人数/效率反馈型（巫恋/火哨/吉星/雪雉）：假设最优室友配置
-    """
-    if assigned_ids is None:
-        assigned_ids = set()
-    if op_lookup is None:
-        op_lookup = {}
-
-    # 1. 订单倍数型 — 自动量化
-    has_multiplier = any(
-        s.buff_id.startswith(("trade_ord_law", "trade_ord_closure",
-                              "trade_ord_long", "trade_ord_wt&cost"))
-        for s in op.skills
-    )
-    if has_multiplier:
-        from steward_core.production import _get_trade_order_multiplier
-        lmd_per_day, _, _ = _get_trade_order_multiplier([op])
-        multiplier = lmd_per_day / 10265.0
-        if multiplier <= 1.001:
-            return 0.0
-        return (multiplier - 1.0) * 1.63 * 100
-        # 系数 1.63 = 1.0(base) + 0.03(head×3) + 0.60(2名室友各30%)
-        # 推导: docs/synergy-systems.md §贪心偏置系数 1.63 推导
-
-    # 2. 配对型 — 验证配对目标
-    for sk in op.skills:
-        bid = sk.buff_id
-
-        if bid.startswith("trade_ord_spd&cost_P"):
-            # 德克萨斯(+65% w/ 拉普兰德) — 验证拉普兰德可用
-            partner = "拉普兰德"
-            if _partner_available(partner, assigned_ids, op_lookup):
-                return 30.0  # 配对可兑现，但贪心无房间内回溯 → 保守偏置
-            return 0.0
-
-        if bid.startswith("trade_ord_limit&cost_P"):
-            if "cost_P[020]" in bid:
-                partner = "伺夜"
-                if _partner_available(partner, assigned_ids, op_lookup):
-                    return 10.0  # 贝洛内未偿还的债务: +2 limit w/ 伺夜
-                return 0.0
-            # 拉普兰德(+4 limit w/ 德克萨斯) — 验证德克萨斯可用
-            partner = "德克萨斯"
-            if _partner_available(partner, assigned_ids, op_lookup):
-                return 10.0  # 上限修改器，保守偏置
-            return 0.0
-
-        if bid.startswith("trade_ord_spd_par"):
-            if "par[001]" in bid:
-                return 25.0  # 新约能天使: 每拉特兰+15% — 机制未在 evaluate_room 实现，保守
-            if "par[000]" in bid:
-                return 55.0  # 摩根: 推王+2格帮+额外35% — 迭代验证处理可兑现性
-
-    # 3. 同室人数/效率反馈型 — 假设最优室友
-    for sk in op.skills:
-        bid = sk.buff_id
-
-        if bid.startswith("trade_ord_vodfox"):
-            # 巫恋低语: 归零其他干员效率，"其他干员每人"为自身+45% → 2室友=90%
-            return 75.0
-
-        if bid.startswith("trade_ord_spd&share"):
-            # 火哨/吉星: 除自身外每人+15%/+20%
-            if "share[002]" in bid:
-                return 40.0  # 吉星β: 2人×20%
-            if "share[001]" in bid:
-                return 20.0  # 吉星α: 2人×10%
-            if "share[000]" in bid:
-                return 30.0  # 火哨: 2人×15%
-
-        if bid.startswith("trade_ord_spd_variable2"):
-            # 雪雉天道酬勤: 他人每5%→额外+5%, 上限25%/35%
-            if "variable2[001]" in bid:
-                return 35.0  # β: 上限35%
-            return 25.0      # α: 上限25%
-
-    return 0.0
-
-
-def _partner_available(name: str, assigned_ids: set, op_lookup: dict) -> bool:
-    """检查配对目标是否在干员池中且未被其他设施占用"""
-    for op in op_lookup.values():
-        if op.name == name and op.char_id not in assigned_ids:
-            return True
-    return False
 
 
 def _is_glasgow(op: "Operator") -> bool:
@@ -692,8 +600,10 @@ _LUNG_MEN_GUARD_NAMES: set[str] = {"陈", "星熊", "诗怀雅", "斩业星熊"}
 _BLACKSTEEL_GROUP = "blacksteel"
 _BLACKSTEEL_HOLDERS: set[str] = {"涤火杰西卡"}
 
-# 格拉斯哥帮 group_id（运筹好手，已在 get_trade_order_equivalent_efficiency 中建模）
 _GLASGOW_GROUP = "glasgow"
+
+# Trade 订单机制型锚点的 buff_id 前缀（classify_trade_operators 内联检测）
+_ORDER_ANCHOR_PREFIXES = ("trade_ord_law", "trade_ord_long", "trade_ord_closure")
 
 
 @dataclass
@@ -1091,6 +1001,36 @@ def build_candidate_pool(
             pool.append(op)
 
     return pool
+
+
+def classify_trade_operators(
+    operators: list, anchor_names: set[str],
+) -> "MfgClassification":
+    """将 Trade 干员分类为 纯效率/联动锚点/技能提供者
+
+    与 Mfg 同架构，复用 MfgClassification。
+    锚点包含注册锚点（反馈型/配对型）+ 订单机制型（但书/龙舌兰/可露希尔）。
+    裁缝 (trade_ord_wt&cost) 不视为锚点——裁缝是支撑工具人。
+    """
+    result = MfgClassification()
+
+    for op in operators:
+        is_registered = op.name in anchor_names
+        is_order_anchor = any(
+            s.room_type == "Trade" and s.buff_id.startswith(_ORDER_ANCHOR_PREFIXES)
+            for s in op.skills
+        )
+
+        if is_registered or is_order_anchor:
+            result.anchors.append(op)
+        elif op.name in _B_LAYER_CONSUMER_TABLE and _B_LAYER_CONSUMER_TABLE[op.name][0] == "Trade":
+            result.providers.append(op)
+        elif op.name in _A6_FACILITY_TABLE and _A6_FACILITY_TABLE[op.name][2] == "Trade":
+            result.providers.append(op)
+        else:
+            result.pure_efficiency.append(op)
+
+    return result
 
 
 # ─── 鸿雪销路宣发 + 际崖居民 ────────────────────────────────────
