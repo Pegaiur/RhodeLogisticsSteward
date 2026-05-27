@@ -61,8 +61,10 @@ def evaluate_room(
             total += integrate_segments(constant_efficiency(eff, mood_burn=0.0, T=T), T)
 
     if buff_pool is not None:
+        # 自动化归零也适用于 B 层消费者（B3/B4 等非设施数量型加成）
+        non_zero_ops = [op for op in operators if op.name not in zero_set]
         total += integrate_segments(
-            synergy_buff_pool_consumer(operators, room_type, product, buff_pool), T,
+            synergy_buff_pool_consumer(non_zero_ops, room_type, product, buff_pool), T,
         )
 
     if room_type == "Mfg":
