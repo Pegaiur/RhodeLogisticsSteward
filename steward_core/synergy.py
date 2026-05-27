@@ -324,18 +324,37 @@ class BuffPool:
 def compute_buff_pool(
     control_operators: list[Operator],
     suich_count: int = 5,
+    dorm_operators: list[Operator] | None = None,
+    dorm_level: int = 3,
+    has_rosmontis_in_mfg: bool = False,
+    has_ebnhlz_in_trade: bool = False,
 ) -> BuffPool:
     """计算全局 buff 点数池（Phase 1 预计算）
 
-    固定中枢方案：令+重岳+夕+凯尔希+焰尾
+    中枢源：
     - 令(mood>12): +15 烟火
     - 重岳: 每个外部岁干员 +5 烟火（默认 5 名）
     - 夕(mood>12): +10 感知信息
-     - 烟火→巫术结晶: yanhuo // 5（截云消费链路）
-     """
+
+    宿舍源（B1 感知信息）：
+    - 迷迭香超感（在制造站）: 宿舍每有1名干员→感知+1
+    - 黑键乐感（在贸易站）: 宿舍每有1名干员→感知+1
+    - 爱丽丝梦境呓语: 宿舍每级→1梦境→1感知
+    - 车尔尼琴键漫步: 宿舍每级→1小节→1感知
+
+    宿舍源（B4 魔物料理）：
+    - 森西大食堂: 宿舍每级→1魔物料理
+
+    烟火→巫术结晶: yanhuo // 5（截云消费链路）
+    感知信息→思维链环: 1:1（迷迭香超感）
+    """
+    if dorm_operators is None:
+        dorm_operators = []
+
     names = {op.name for op in control_operators}
     yanhuo = 0
     perception = 0
+    monster_cuisine = 0
 
     # 令: mood>12 → +15 烟火
     if "令" in names:
@@ -349,13 +368,47 @@ def compute_buff_pool(
     if "夕" in names:
         perception += 10
 
+    # ─── 宿舍源感知信息 ───
+
+    # 迷迭香超感: 宿舍每有1名干员→感知+1
+    if has_rosmontis_in_mfg and dorm_operators:
+        perception += len(dorm_operators)
+
+    # 黑键乐感: 宿舍每有1名干员→感知+1
+    if has_ebnhlz_in_trade and dorm_operators:
+        perception += len(dorm_operators)
+
+    # 爱丽丝梦境呓语: 每梦境→1感知（梦境=宿舍等级）
+    if _dorm_has_buff(dorm_operators, "dorm_rec_bd_n1_n2[000]"):
+        perception += dorm_level
+
+    # 车尔尼琴键漫步: 每小节→1感知（小节=宿舍等级）
+    if _dorm_has_buff(dorm_operators, "dorm_rec_bd_n1_n3[000]"):
+        perception += dorm_level
+
+    # ─── 宿舍源魔物料理 ───
+
+    # 森西大食堂: 宿舍每级→1魔物料理
+    if _dorm_has_buff(dorm_operators, "dorm_rec_bd_dungeon[000]"):
+        monster_cuisine += dorm_level
+
     # 12h 班次 mood 不衰减（令杯莫停消除岁干员消耗）
     wushu_crystal = yanhuo // 5  # 烟火→巫术结晶（截云消费）
     thought_chains = perception  # B3: 感知信息→思维链环（1:1，迷迭香消费）
     return BuffPool(
         yanhuo=yanhuo, perception=perception,
         wushu_crystal=wushu_crystal, thought_chains=thought_chains,
+        monster_cuisine=monster_cuisine,
     )
+
+
+def _dorm_has_buff(dorm_operators: list[Operator], buff_id: str) -> bool:
+    """检查宿舍干员列表中是否存在持有指定 buff_id 的干员"""
+    for op in dorm_operators:
+        for sk in op.skills:
+            if sk.buff_id == buff_id:
+                return True
+    return False
 
 
 # B 层 buff 池消费者表: {干员名: (设施类型, pool_key, 每单位, 每单位加成%)}

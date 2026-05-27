@@ -673,3 +673,158 @@ class TestBuffPool:
         mon3tr = _mk_op("Mon3tr")
         bonus = compute_control_global_bonus([kalts, mon3tr])
         assert bonus.mfg_bonus == 2.0
+
+
+# ─── B1 宿舍感知信息生成器 ────────────────────────────────────────
+
+class TestDormPerception:
+    """B1: compute_buff_pool 扩展 — 宿舍干员生成感知信息"""
+
+    def test_迷迭香超感_宿舍每有干员_感知加一(self):
+        """迷迭香在制造站，4名宿舍干员 → +4 感知信息"""
+        from steward_core.synergy import compute_buff_pool
+
+        control = [_mk_op("令"), _mk_op("夕")]
+        dorm = [_mk_op("填位A"), _mk_op("填位B"), _mk_op("填位C"), _mk_op("填位D")]
+
+        pool = compute_buff_pool(control, dorm_operators=dorm,
+                                 has_rosmontis_in_mfg=True)
+
+        assert pool.perception == 10 + 4  # 夕(10) + 迷迭香超感(4)
+        assert pool.thought_chains == 14
+
+    def test_黑键乐感_宿舍每有干员_感知加一(self):
+        """黑键在贸易站，4名宿舍干员 → +4 感知信息"""
+        from steward_core.synergy import compute_buff_pool
+
+        control = [_mk_op("令"), _mk_op("夕")]
+        dorm = [_mk_op("A"), _mk_op("B"), _mk_op("C"), _mk_op("D")]
+
+        pool = compute_buff_pool(control, dorm_operators=dorm,
+                                 has_ebnhlz_in_trade=True)
+
+        assert pool.perception == 10 + 4  # 夕(10) + 黑键乐感(4)
+        assert pool.thought_chains == 14
+
+    def test_迷迭香和黑键同时在场_感知叠加(self):
+        """迷迭香在Mfg + 黑键在Trade → 各贡献宿舍数量感知"""
+        from steward_core.synergy import compute_buff_pool
+
+        control = [_mk_op("令"), _mk_op("夕")]
+        dorm = [_mk_op("A"), _mk_op("B"), _mk_op("C"), _mk_op("D")]
+
+        pool = compute_buff_pool(control, dorm_operators=dorm,
+                                 has_rosmontis_in_mfg=True,
+                                 has_ebnhlz_in_trade=True)
+
+        assert pool.perception == 10 + 4 + 4  # 夕(10) + 迷迭香(4) + 黑键(4)
+        assert pool.thought_chains == 18
+
+    def test_爱丽丝梦境呓语_宿舍等级转感知(self):
+        """爱丽丝在宿舍 Lv3 → 3梦境 → +3 感知信息"""
+        from steward_core.synergy import compute_buff_pool
+
+        alice = _mk_op("爱丽丝")
+        alice.skills.append(_mk_skill("dorm_rec_bd_n1_n2[000]", "Dormitory", "睡前故事"))
+        alice.skills.append(_mk_skill("dorm_rec_bd_n1[000]", "Dormitory", "梦境呓语"))
+
+        control = [_mk_op("夕")]  # 仅夕提供10感知
+        dorm = [alice]
+
+        pool = compute_buff_pool(control, dorm_operators=dorm, dorm_level=3)
+
+        assert pool.perception == 10 + 3  # 夕(10) + 爱丽丝梦境(3)
+        assert pool.thought_chains == 13
+
+    def test_车尔尼琴键漫步_宿舍等级转感知(self):
+        """车尔尼在宿舍 Lv3 → 3小节 → +3 感知信息"""
+        from steward_core.synergy import compute_buff_pool
+
+        cherni = _mk_op("车尔尼")
+        cherni.skills.append(_mk_skill("dorm_rec_bd_n1_n3[000]", "Dormitory", "慢板行歌"))
+        cherni.skills.append(_mk_skill("dorm_rec_bd_n1[100]", "Dormitory", "琴键漫步"))
+
+        control = [_mk_op("夕")]
+        dorm = [cherni]
+
+        pool = compute_buff_pool(control, dorm_operators=dorm, dorm_level=3)
+
+        assert pool.perception == 10 + 3  # 夕(10) + 车尔尼小节(3)
+
+    def test_无宿舍干员_无额外感知(self):
+        """空宿舍 → 仅中枢生成感知"""
+        from steward_core.synergy import compute_buff_pool
+
+        control = [_mk_op("令"), _mk_op("夕")]
+        pool = compute_buff_pool(control, dorm_operators=[])
+
+        assert pool.perception == 10  # 仅夕
+        assert pool.thought_chains == 10
+
+
+# ─── B4 魔物料理生成器 ────────────────────────────────────────────
+
+class TestMonsterCuisine:
+    """B4: compute_buff_pool 扩展 — 森西生成魔物料理"""
+
+    def test_森西大食堂_宿舍等级转魔物料理(self):
+        """森西在宿舍 Lv3 → +3 魔物料理"""
+        from steward_core.synergy import compute_buff_pool
+
+        sensi = _mk_op("森西")
+        sensi.skills.append(_mk_skill("dorm_rec_bd_dungeon[000]", "Dormitory", "森西大食堂"))
+
+        control = [_mk_op("令"), _mk_op("夕")]
+        dorm = [sensi]
+
+        pool = compute_buff_pool(control, dorm_operators=dorm, dorm_level=3)
+
+        assert pool.monster_cuisine == 3
+
+    def test_无森西_无魔物料理(self):
+        """无森西在宿舍 → monster_cuisine = 0"""
+        from steward_core.synergy import compute_buff_pool
+
+        control = [_mk_op("令"), _mk_op("夕")]
+        dorm = [_mk_op("填位")]
+
+        pool = compute_buff_pool(control, dorm_operators=dorm)
+
+        assert pool.monster_cuisine == 0
+
+
+# ─── 完整 BuffPool 集成测试 ────────────────────────────────────────
+
+class TestFullBuffPool:
+    """集成：控制中枢 + 宿舍干员 → 完整 BuffPool"""
+
+    def test_完整BuffPool_含所有宿舍生成器(self):
+        """令+夕中枢，迷迭香Mfg+黑键Trade，爱丽丝+车尔尼+塑心+森西宿舍"""
+        from steward_core.synergy import compute_buff_pool
+
+        control = [_mk_op("令"), _mk_op("夕")]
+
+        alice = _mk_op("爱丽丝")
+        alice.skills.append(_mk_skill("dorm_rec_bd_n1_n2[000]", "Dormitory", "睡前故事"))
+        alice.skills.append(_mk_skill("dorm_rec_bd_n1[000]", "Dormitory", "梦境呓语"))
+
+        cherni = _mk_op("车尔尼")
+        cherni.skills.append(_mk_skill("dorm_rec_bd_n1_n3[000]", "Dormitory", "慢板行歌"))
+        cherni.skills.append(_mk_skill("dorm_rec_bd_n1[100]", "Dormitory", "琴键漫步"))
+
+        suxin = _mk_op("塑心")
+
+        sensi = _mk_op("森西")
+        sensi.skills.append(_mk_skill("dorm_rec_bd_dungeon[000]", "Dormitory", "森西大食堂"))
+
+        dorm = [alice, cherni, suxin, sensi]
+
+        pool = compute_buff_pool(
+            control, dorm_operators=dorm, dorm_level=3,
+            has_rosmontis_in_mfg=True, has_ebnhlz_in_trade=True,
+        )
+
+        # 夕(10) + 迷迭香超感(4) + 黑键乐感(4) + 爱丽丝梦境(3) + 车尔尼小节(3) = 24
+        assert pool.perception == 24
+        assert pool.thought_chains == 24
+        assert pool.monster_cuisine == 3  # 森西 Lv3

@@ -206,8 +206,31 @@ def calculate(plan: ShiftPlan, operators: list[Operator], hours: float = 24.0) -
     control_ops = [op for op in operators if op.name in FIXED_CONTROL]
     global_bonus = compute_control_global_bonus(control_ops)
 
-    # B1: 人间烟火预计算
-    buff_pool = compute_buff_pool(control_ops, suich_count=5)
+    # 收集宿舍干员
+    dorm_ops: list[Operator] = []
+    for assignment in plan.assignments:
+        if assignment.room_type in ("Dormitory", "Dorm"):
+            for n in assignment.operators:
+                if n in op_lookup:
+                    dorm_ops.append(op_lookup[n])
+
+    # 检测 B1 感知信息生成者是否在工作设施中
+    has_rosmontis_in_mfg = any(
+        "迷迭香" in a.operators and a.room_type == "Mfg"
+        for a in plan.assignments
+    )
+    has_ebnhlz_in_trade = any(
+        "黑键" in a.operators and a.room_type == "Trade"
+        for a in plan.assignments
+    )
+
+    # B1: 人间烟火 + 宿舍感知信息预计算
+    buff_pool = compute_buff_pool(
+        control_ops, suich_count=5,
+        dorm_operators=dorm_ops, dorm_level=3,
+        has_rosmontis_in_mfg=has_rosmontis_in_mfg,
+        has_ebnhlz_in_trade=has_ebnhlz_in_trade,
+    )
 
     # 1. 收集发电站干员，计算无人机产量（按工期比例缩放）
     for assignment in plan.assignments:
