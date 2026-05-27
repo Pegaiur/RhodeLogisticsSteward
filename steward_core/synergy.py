@@ -325,14 +325,15 @@ def compute_buff_pool(
     control_operators: list[Operator],
     suich_count: int = 5,
     dorm_operators: list[Operator] | None = None,
-    dorm_level: int = 3,
+    dorm_level: int = 5,
     has_rosmontis_in_mfg: bool = False,
     has_ebnhlz_in_trade: bool = False,
+    ling_mood_below_12: bool = False,
 ) -> BuffPool:
     """计算全局 buff 点数池（Phase 1 预计算）
 
     中枢源：
-    - 令(mood>12): +15 烟火
+    - 令(mood>12): +15 烟火；令(mood≤12): +10 感知信息
     - 重岳: 每个外部岁干员 +5 烟火（默认 5 名）
     - 夕(mood>12): +10 感知信息
 
@@ -347,6 +348,8 @@ def compute_buff_pool(
 
     烟火→巫术结晶: yanhuo // 5（截云消费链路）
     感知信息→思维链环: 1:1（迷迭香超感）
+
+    注：宿舍最高等级为 Lv5，默认以此计算。
     """
     if dorm_operators is None:
         dorm_operators = []
@@ -356,9 +359,12 @@ def compute_buff_pool(
     perception = 0
     monster_cuisine = 0
 
-    # 令: mood>12 → +15 烟火
+    # 令: mood>12 → +15 烟火；mood≤12 → +10 感知信息
     if "令" in names:
-        yanhuo += 15
+        if ling_mood_below_12:
+            perception += 10
+        else:
+            yanhuo += 15
 
     # 重岳: 每个外部岁干员 +5 烟火（上限 5 名）
     if "重岳" in names:

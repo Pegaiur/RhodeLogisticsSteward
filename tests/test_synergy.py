@@ -828,3 +828,58 @@ class TestFullBuffPool:
         assert pool.perception == 24
         assert pool.thought_chains == 24
         assert pool.monster_cuisine == 3  # 森西 Lv3
+
+    def test_完整BuffPool_宿舍等级5_满20人(self):
+        """令<12 + 宿舍 Lv5 + 满 20 人 → 感知=54（含4宿舍干员不含塑心）"""
+        from steward_core.synergy import compute_buff_pool
+
+        control = [_mk_op("令"), _mk_op("夕")]
+
+        alice = _mk_op("爱丽丝")
+        alice.skills.append(_mk_skill("dorm_rec_bd_n1_n2[000]", "Dormitory", "睡前故事"))
+        alice.skills.append(_mk_skill("dorm_rec_bd_n1[000]", "Dormitory", "梦境呓语"))
+
+        cherni = _mk_op("车尔尼")
+        cherni.skills.append(_mk_skill("dorm_rec_bd_n1_n3[000]", "Dormitory", "慢板行歌"))
+        cherni.skills.append(_mk_skill("dorm_rec_bd_n1[100]", "Dormitory", "琴键漫步"))
+
+        sensi = _mk_op("森西")
+        sensi.skills.append(_mk_skill("dorm_rec_bd_dungeon[000]", "Dormitory", "森西大食堂"))
+
+        suxin = _mk_op("塑心")
+
+        # 满 20 人宿舍：4 名指定 + 16 名填充
+        dorm = [alice, cherni, suxin, sensi] + [_mk_op(f"填位{i}") for i in range(16)]
+
+        pool = compute_buff_pool(
+            control, dorm_operators=dorm, dorm_level=5,
+            has_rosmontis_in_mfg=True, has_ebnhlz_in_trade=True,
+            ling_mood_below_12=True,
+        )
+
+        # 令<12(10) + 夕(10) + 迷迭香超感(20) + 黑键乐感(20)
+        # + 爱丽丝梦境(5) + 车尔尼小节(5) = 70
+        assert pool.perception == 70
+        assert pool.yanhuo == 0  # 令 mood<12 → 无烟火
+        assert pool.thought_chains == 70
+        assert pool.monster_cuisine == 5  # 森西 Lv5
+
+    def test_令心情低于12_产生感知而非烟火(self):
+        """令 mood<12 → +10 感知，不产生烟火"""
+        from steward_core.synergy import compute_buff_pool
+
+        control = [_mk_op("令"), _mk_op("夕")]
+        pool = compute_buff_pool(control, ling_mood_below_12=True)
+
+        assert pool.yanhuo == 0
+        assert pool.perception == 20  # 令(10) + 夕(10)
+
+    def test_令心情高于12_默认产生烟火(self):
+        """默认 ling_mood_below_12=False → 令产生烟火"""
+        from steward_core.synergy import compute_buff_pool
+
+        control = [_mk_op("令"), _mk_op("夕")]
+        pool = compute_buff_pool(control)
+
+        assert pool.yanhuo == 15
+        assert pool.perception == 10  # 仅夕
