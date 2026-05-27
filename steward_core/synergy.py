@@ -104,6 +104,79 @@ def synergy_pair(
     return segments
 
 
+# ─── A7 孑订单压缩机制 ───────────────────────────────────────────
+
+def synergy_jie_order(
+    operators: list[Operator],
+    room_type: str,
+    control_operators: list[Operator],
+    T: float,
+) -> list[LinearSegment]:
+    """孑市井之道/摊贩经济：订单上限压缩+每订单效率放大
+
+    精2（市井之道+摊贩经济）: 效率恒定 = 压缩后上限 × 4%
+    精1（仅市井之道）: ramp近似，订单随时间爬升
+    灵知在中枢时：每名谢拉格贸易站干员 → 订单上限+6
+    """
+    if room_type != "Trade":
+        return []
+
+    names = {op.name for op in operators}
+    if "孑" not in names:
+        return []
+
+    has_limit_count = False
+    has_limit_diff = False
+    for op in operators:
+        if op.name != "孑":
+            continue
+        for sk in op.skills:
+            if sk.buff_id == "trade_ord_limit_count[000]":
+                has_limit_count = True
+            if sk.buff_id == "trade_ord_limit_diff[000]":
+                has_limit_diff = True
+
+    if not has_limit_count:
+        return []
+
+    # 其他干员效率总和（用于压缩订单上限）
+    other_eff = 0.0
+    for op in operators:
+        if op.name == "孑":
+            continue
+        eff = op.best_efficiency(room_type, "Money")
+        if eff > 0:
+            other_eff += eff
+
+    # 订单上限 = 10 - floor(其他干员效率/10)，最低为1
+    order_limit = max(1, 10 - int(other_eff) // 10)
+
+    # 灵知精密计算: 每名谢拉格贸易站干员 → 上限+6
+    if control_operators:
+        ctrl_names = {op.name for op in control_operators}
+        if "灵知" in ctrl_names:
+            karlan_count = sum(
+                1 for op in operators
+                if op.group_id == "karlan"
+            )
+            order_limit += karlan_count * 6
+
+    ceiling = order_limit * 4.0
+
+    if has_limit_diff:
+        # 精2: 效率恒定
+        return [LinearSegment(a=ceiling, b=0.0, t_start=0.0, dt=T)]
+
+    # 精1: ramp近似，订单在3小时内线性爬升至稳态
+    ramp = ceiling / 3.0
+    if T <= 3.0:
+        return [LinearSegment(a=0.0, b=ramp, t_start=0.0, dt=T)]
+    return [
+        LinearSegment(a=0.0, b=ramp, t_start=0.0, dt=3.0),
+        LinearSegment(a=ceiling, b=0.0, t_start=3.0, dt=T - 3.0),
+    ]
+
+
 # ─── 仓库容量→效率 ─────────────────────────────────────────────────
 
 def synergy_capacity_to_eff(
@@ -604,7 +677,7 @@ _BLACKSTEEL_HOLDERS: set[str] = {"涤火杰西卡"}
 _GLASGOW_GROUP = "glasgow"
 
 # Trade 订单机制型锚点的 buff_id 前缀（classify_trade_operators 内联检测）
-_ORDER_ANCHOR_PREFIXES = ("trade_ord_law", "trade_ord_long", "trade_ord_closure")
+_ORDER_ANCHOR_PREFIXES = ("trade_ord_law", "trade_ord_long", "trade_ord_closure", "trade_ord_limit_count")
 
 
 @dataclass

@@ -16,6 +16,7 @@ from steward_core.synergy import (
     synergy_trade_gold_lines,
     synergy_whisper,
     synergy_global_faction,
+    synergy_jie_order,
     GlobalBonus,
 )
 
@@ -35,6 +36,7 @@ def evaluate_room(
     power_platforms: dict[str, bool] | None = None,
     all_assignments: dict[str, list[Operator]] | None = None,
     all_operators: list[Operator] | None = None,
+    control_operators: list[Operator] | None = None,
 ) -> float:
     """评估一个房间组合的 T 小时总效率积分 Σ∫e(t)dt
 
@@ -94,6 +96,12 @@ def evaluate_room(
 
     # 机械精通（作业平台在发电站）
     total += integrate_segments(synergy_token_prod(non_zero_ops, room_type, product, power_platforms, T), T)
+
+    # A7 孑订单压缩机制
+    if control_operators is not None and room_type == "Trade":
+        total += integrate_segments(
+            synergy_jie_order(non_zero_ops, room_type, control_operators, T), T,
+        )
 
     # B7 跨房间配对
     if all_assignments is not None:
