@@ -18,7 +18,7 @@ class SystemContributor:
     """个人效率为0但对排班系统有非零贡献的干员"""
     name: str
     facility_types: list[str]      # 贡献的目标设施
-    contribution_type: str          # "global_bonus" | "b_generator" | "facility_modifier" | "anchor"
+    contribution_type: str          # "global_bonus" | "b_generator" | "facility_modifier" | "anchor" | "order_mechanism"
 
 
 _SYSTEM_CONTRIBUTORS: list[SystemContributor] = [
@@ -43,6 +43,10 @@ _SYSTEM_CONTRIBUTORS: list[SystemContributor] = [
     SystemContributor("阿兰娜", ["Mfg"], "anchor"),
     SystemContributor("Miss.Christine", ["Mfg"], "anchor"),
     SystemContributor("怒潮凛冬", ["Mfg"], "anchor"),
+    # 贸易站订单机制（A7）
+    SystemContributor("但书", ["Trade"], "order_mechanism"),
+    SystemContributor("龙舌兰", ["Trade"], "order_mechanism"),
+    SystemContributor("可露希尔", ["Trade"], "order_mechanism"),
 ]
 
 
@@ -57,6 +61,28 @@ def get_system_contributors(
             if contribution_type is None or c.contribution_type == contribution_type:
                 result.append(c.name)
     return result
+
+
+def get_trade_order_equivalent_efficiency(op: "Operator") -> float:
+    """A7 订单机制干员的贪心排序等效个人效率
+
+    对照 _CTRL_GLOBAL_SORT_BIAS 模式，将订单机制带来的 LMD 倍数
+    折算为"等效个人效率"。当 best_efficiency() 返回 0 时，
+    _greedy_remaining() 用此值作为回退，确保 A7 干员不被过滤。
+
+    等效效率 = (倍数 - 1.0) × (基础 100% + 2 名平均室友 60%)
+    """
+    for sk in op.skills:
+        bid = sk.buff_id
+        if bid.startswith("trade_ord_law"):
+            return 85.0
+        if bid.startswith("trade_ord_closure"):
+            return 30.0
+        if bid.startswith("trade_ord_long"):
+            return 15.0
+        if bid.startswith("trade_ord_wt&cost"):
+            return 8.0
+    return 0.0
 
 
 # ─── A1 干员配对 ─────────────────────────────────────────────────

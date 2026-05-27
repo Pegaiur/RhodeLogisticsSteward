@@ -14,7 +14,7 @@ from steward_core.synergy import (
     compute_control_global_bonus,
     compute_buff_pool, ROSEMARY_SUPPORT,
     compute_effective_power_count, _has_power_count_modifier,
-    get_system_contributors,
+    get_system_contributors, get_trade_order_equivalent_efficiency,
     classify_mfg_operators, prune_equivalent, build_candidate_pool,
     control_per_operator_bonus, _is_knight, _PINUS_GROUP,
     _B3_ROSEMARY, _B5_EBNHLZ,
@@ -124,12 +124,20 @@ def _greedy_remaining(
         for op in operators:
             if op.char_id in assigned_ids:
                 continue
-            if not op.has_skill_for(room.room_type, room.product):
-                continue
+            # A7 订单机制干员特殊处理：
+            # 但书/龙舌兰/可露希尔等 buff_id 为 trade_ord_* 的干员，
+            # has_skill_for("Trade", "Money") 可能返回 False（机制技能无 product 绑定），
+            # 但其订单倍数对产出有实质性贡献，必须允许进入候选池
+            a7_eff = get_trade_order_equivalent_efficiency(op)
+            if a7_eff <= 0:
+                if not op.has_skill_for(room.room_type, room.product):
+                    continue
             eff = op.best_efficiency(room.room_type, room.product)
             if eff <= 0:
                 a6_segs = synergy_facility_count([op], room.room_type, room.product, _LAYOUT_243)
                 eff = sum(s.a for s in a6_segs)
+            if eff <= 0:
+                eff = a7_eff
             if eff <= 0:
                 continue
             seg = constant_efficiency(eff, mood_burn=0.0, T=T)
