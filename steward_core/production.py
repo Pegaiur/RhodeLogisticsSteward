@@ -48,6 +48,78 @@ _DRONE_MINUTES_TRADE = 1.5
 
 _LAYOUT_243 = LayoutConfig.layout_243()
 
+# ─── 贸易站订单机制（A7 层）─ 文档倍数法 ────────────────────────
+# 文档基准：Lv3 贸易站 100% 效率 24h
+_TRADE_BASE_LMD_PER_DAY = 10265.0
+_TRADE_BASE_GOLD_PER_DAY = 24.0 * _TRADE_AVG_GOLD_PER_ORDER / _TRADE_AVG_TIME_HOURS  # ≈ 20.53
+
+
+def _get_trade_order_multiplier(ops: list[Operator]) -> tuple[float, float]:
+    """贸易站订单机制倍数查询
+
+    检测干员组合中的特殊订单机制（但书违约、龙舌兰投资、
+    裁缝品质、可露希尔独占），返回加强后的每日产出。
+
+    Returns:
+        (lmd_per_day, gold_per_day): 100%效率 24h 的 LMD 日产和赤金消耗
+    """
+    has_law = any(s.buff_id.startswith("trade_ord_law") for op in ops for s in op.skills)
+    has_closure = any(s.buff_id.startswith("trade_ord_closure") for op in ops for s in op.skills)
+    has_tequila_beta = any(s.buff_id == "trade_ord_long[010]" for op in ops for s in op.skills)
+    has_tequila_alpha = any(s.buff_id == "trade_ord_long[000]" for op in ops for s in op.skills)
+    has_tequila = has_tequila_beta or has_tequila_alpha
+    has_tailor_beta = any(s.buff_id.startswith("trade_ord_wt&cost") and "[010]" in s.buff_id
+                          for op in ops for s in op.skills)
+    has_tailor_alpha = any(s.buff_id.startswith("trade_ord_wt&cost") and "[000]" in s.buff_id
+                           for op in ops for s in op.skills)
+    has_tailor = has_tailor_beta or has_tailor_alpha
+    tailor_level = 2 if has_tailor_beta else 1 if has_tailor_alpha else 0
+    tequila_bonus = 500 if has_tequila_beta else 250 if has_tequila_alpha else 0
+
+    if has_closure:
+        # 可露希尔特别订单：固定 2赤金/1200LMD, 2.4h/单
+        return (12000.0, 24.0 / 2.4 * 2.0)
+
+    if has_law and has_tequila:
+        # 但书+龙舌兰：2,3→但书(+2gold), 4→龙舌兰(+bonus LMD)
+        # 裁缝同时影响4-gold概率
+        p4 = 0.20 + tailor_level * 0.05
+        p2 = (1 - p4) * 3 / 8
+        p3 = (1 - p4) * 5 / 8
+        lmd_per_order = 2000 * p2 + 2500 * p3 + (2000 + tequila_bonus) * p4
+        gold_per_order = 4 * p2 + 5 * p3 + 4 * p4
+        base_orders = 24.0 / _TRADE_AVG_TIME_HOURS
+        return (base_orders * lmd_per_order, base_orders * gold_per_order)
+
+    if has_tequila:
+        # 龙舌兰（可能+裁缝）：仅4-gold订单触发投资
+        p4 = 0.20 + tailor_level * 0.05
+        p2 = (1 - p4) * 3 / 8
+        p3 = (1 - p4) * 5 / 8
+        lmd_per_order = 1000 * p2 + 1500 * p3 + (2000 + tequila_bonus) * p4
+        gold_per_order = 2 * p2 + 3 * p3 + 4 * p4
+        base_orders = 24.0 / _TRADE_AVG_TIME_HOURS
+        return (base_orders * lmd_per_order, base_orders * gold_per_order)
+
+    if has_law:
+        # 但书：2,3-gold → 违约+2, LMD加倍
+        lmd_per_order = 2250.0
+        gold_per_order = 4.9
+        base_orders = 24.0 / _TRADE_AVG_TIME_HOURS
+        return (base_orders * lmd_per_order, base_orders * gold_per_order)
+
+    if has_tailor:
+        # 裁缝单独（无投资）：提升4-gold概率
+        p4 = 0.20 + tailor_level * 0.05
+        p2 = (1 - p4) * 3 / 8
+        p3 = (1 - p4) * 5 / 8
+        lmd_per_order = 1000 * p2 + 1500 * p3 + 2000 * p4
+        gold_per_order = 2 * p2 + 3 * p3 + 4 * p4
+        base_orders = 24.0 / _TRADE_AVG_TIME_HOURS
+        return (base_orders * lmd_per_order, base_orders * gold_per_order)
+
+    return (_TRADE_BASE_LMD_PER_DAY, _TRADE_BASE_GOLD_PER_DAY)
+
 
 @dataclass
 class RoomOutput:
@@ -217,16 +289,23 @@ def _calc_mfg_gold(
 def _calc_trade(
     ctx: _CalcCtx, assignment: RoomAssignment, ops: list[Operator], production: DailyProduction,
 ) -> None:
-    """贸易站产出计算"""
+    """贸易站产出计算（文档倍数法）
+
+    lmd_output = efficiency_factor × hours/24 × lmd_per_day × (1 + drone)
+    """
     n = len(ops)
+    ctrl_bonus = control_per_operator_bonus(ctx.plan_ctrl_ops, ops, "Money")
     eff_int = evaluate_room(ops, "Trade", "Money", ctx.power_count, ctx.hours,
-                            ctx.global_bonus, ctx.buff_pool)
+                            ctx.global_bonus, ctx.buff_pool, ctrl_per_op_bonus=ctrl_bonus)
     efficiency_integrated = ctx.hours * (1.0 + 0.01 * n) + eff_int / 100.0
     display_productivity = 1.0 + eff_int / (100.0 * ctx.hours)
     drone_boost = _drone_boost(assignment, ctx, _DRONE_MINUTES_TRADE)
-    orders_per_day = efficiency_integrated / _TRADE_AVG_TIME_HOURS * (1.0 + drone_boost)
-    gold_consumed = orders_per_day * _TRADE_AVG_GOLD_PER_ORDER
-    lmd_output = orders_per_day * _TRADE_AVG_LMD_PER_ORDER
+
+    lmd_per_day, gold_per_day = _get_trade_order_multiplier(ops)
+    base_factor = efficiency_integrated / 24.0
+    lmd_output = base_factor * lmd_per_day * (1.0 + drone_boost)
+    gold_consumed = base_factor * gold_per_day * (1.0 + drone_boost)
+
     production.trade_rooms.append(RoomOutput(
         room_type="Trade", room_index=assignment.room_index,
         product="Money", operators=assignment.operators,
