@@ -54,6 +54,33 @@ _TRADE_BASE_LMD_PER_DAY = 10265.0
 _TRADE_BASE_GOLD_PER_DAY = 24.0 * _TRADE_AVG_GOLD_PER_ORDER / _TRADE_AVG_TIME_HOURS  # ≈ 20.53
 
 
+def _extract_tailor_level(ops: list[Operator]) -> int:
+    """从裁缝/手工艺品系列 buff_id 提取最高等级
+
+    裁缝·α (trade_ord_wt&cost[x0x]): 小幅提升4-gold概率
+    裁缝·β (trade_ord_wt&cost[x1x]): 提升4-gold概率
+    手工艺品·α (trade_ord_wt&cost[x0x]): 小幅提升（同α）
+    手工艺品·β (trade_ord_wt&cost[x1x]): 提升（同β）
+
+    buff_id 格式为 trade_ord_wt&cost[ABC]，B=0表示α级，B=1表示β级。
+    """
+    max_level = 0
+    for op in ops:
+        for s in op.skills:
+            bid = s.buff_id
+            if not bid.startswith("trade_ord_wt&cost"):
+                continue
+            lb = bid.rfind("[")
+            if lb < 0 or lb + 3 >= len(bid):
+                continue
+            tier = bid[lb + 2]  # [ABC] 第二位
+            if tier == "1":
+                max_level = 2
+            elif tier == "0" and max_level < 1:
+                max_level = 1
+    return max_level
+
+
 def _get_trade_order_multiplier(ops: list[Operator]) -> tuple[float, float]:
     """贸易站订单机制倍数查询
 
@@ -68,12 +95,7 @@ def _get_trade_order_multiplier(ops: list[Operator]) -> tuple[float, float]:
     has_tequila_beta = any(s.buff_id == "trade_ord_long[010]" for op in ops for s in op.skills)
     has_tequila_alpha = any(s.buff_id == "trade_ord_long[000]" for op in ops for s in op.skills)
     has_tequila = has_tequila_beta or has_tequila_alpha
-    has_tailor_beta = any(s.buff_id.startswith("trade_ord_wt&cost") and "[010]" in s.buff_id
-                          for op in ops for s in op.skills)
-    has_tailor_alpha = any(s.buff_id.startswith("trade_ord_wt&cost") and "[000]" in s.buff_id
-                           for op in ops for s in op.skills)
-    has_tailor = has_tailor_beta or has_tailor_alpha
-    tailor_level = 2 if has_tailor_beta else 1 if has_tailor_alpha else 0
+    tailor_level = _extract_tailor_level(ops)
     tequila_bonus = 500 if has_tequila_beta else 250 if has_tequila_alpha else 0
 
     if has_closure:
@@ -108,7 +130,7 @@ def _get_trade_order_multiplier(ops: list[Operator]) -> tuple[float, float]:
         base_orders = 24.0 / _TRADE_AVG_TIME_HOURS
         return (base_orders * lmd_per_order, base_orders * gold_per_order)
 
-    if has_tailor:
+    if tailor_level > 0:
         # 裁缝单独（无投资）：提升4-gold概率
         p4 = 0.20 + tailor_level * 0.05
         p2 = (1 - p4) * 3 / 8
