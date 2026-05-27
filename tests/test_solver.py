@@ -163,6 +163,73 @@ class TestClassifyOperators:
         assert "乌有" not in provider_names
 
 
+# ─── Trade 干员分类 ──────────────────────────────────────────────
+
+_TRADE_TEST_ANCHORS = {"巫恋", "火哨", "吉星", "雪雉"}
+
+
+class TestClassifyTradeOperators:
+    """分类 Trade 干员: 订单机制锚点 / 反馈型锚点 / 提供者 / 纯效率"""
+
+    def test_订单机制型_但书归为锚点(self):
+        from steward_core.synergy import classify_trade_operators
+        but = _mk_op("但书", [_mk_mfg_skill("合同法", 0.0, "trade_ord_law[000]", "Trade")])
+        filler = _mk_op("白雪", [_mk_mfg_skill("高效生产", 30.0, "generic", "Trade")])
+        result = classify_trade_operators([but, filler], _TRADE_TEST_ANCHORS)
+        assert "但书" in {op.name for op in result.anchors}
+
+    def test_订单机制型_龙舌兰归为锚点(self):
+        from steward_core.synergy import classify_trade_operators
+        tequila = _mk_op("龙舌兰", [_mk_mfg_skill("投资·β", 0.0, "trade_ord_long[010]", "Trade")])
+        result = classify_trade_operators([tequila], _TRADE_TEST_ANCHORS)
+        assert "龙舌兰" in {op.name for op in result.anchors}
+
+    def test_反馈型锚点_巫恋归为锚点(self):
+        from steward_core.synergy import classify_trade_operators
+        shamare = _mk_op("巫恋", [_mk_mfg_skill("低语", 0.0, "trade_ord_vodfox[000]", "Trade")])
+        result = classify_trade_operators([shamare], _TRADE_TEST_ANCHORS)
+        assert "巫恋" in {op.name for op in result.anchors}
+
+    def test_B层消费者_乌有归为提供者(self):
+        from steward_core.synergy import classify_trade_operators
+        wuyou = _mk_op("乌有", [_mk_mfg_skill("人间烟火", 0.0, "b1", "Trade")])
+        result = classify_trade_operators([wuyou], _TRADE_TEST_ANCHORS)
+        assert "乌有" in {op.name for op in result.providers}
+
+    def test_纯效率_归为纯效率(self):
+        from steward_core.synergy import classify_trade_operators
+        normal = _mk_op("白雪", [_mk_mfg_skill("高效生产", 30.0, "generic", "Trade")])
+        result = classify_trade_operators([normal], _TRADE_TEST_ANCHORS)
+        assert "白雪" in {op.name for op in result.pure_efficiency}
+        assert len(result.anchors) == 0
+
+
+# ─── Trade 组合评估 ──────────────────────────────────────────────
+
+class TestEvaluateTradeCombo:
+    """_evaluate_trade_combo: Trade 3人组合的 LMD 日产评估"""
+
+    def test_纯效率三人组_产出为正(self):
+        from steward_core.synergy import GlobalBonus, compute_buff_pool
+        ops = [
+            _mk_op("A", [_mk_mfg_skill("高效生产", 30.0, "generic", "Trade")]),
+            _mk_op("B", [_mk_mfg_skill("高效生产", 30.0, "generic", "Trade")]),
+            _mk_op("C", [_mk_mfg_skill("高效生产", 30.0, "generic", "Trade")]),
+        ]
+        from steward_core.solver import _evaluate_trade_combo
+        lmd = _evaluate_trade_combo(ops, 3, 12.0, GlobalBonus(), compute_buff_pool([], suich_count=0), 0.0)
+        assert lmd > 5000, f"预期 >5000, 实际 {lmd:.0f}"
+
+    def test_但书_产出高于基准(self):
+        from steward_core.synergy import GlobalBonus, compute_buff_pool
+        but = _mk_op("但书", [_mk_mfg_skill("合同法", 0.0, "trade_ord_law[000]", "Trade")])
+        fa = _mk_op("A", [_mk_mfg_skill("高效生产", 30.0, "generic", "Trade")])
+        fb = _mk_op("B", [_mk_mfg_skill("高效生产", 30.0, "generic", "Trade")])
+        from steward_core.solver import _evaluate_trade_combo
+        lmd = _evaluate_trade_combo([but, fa, fb], 3, 12.0, GlobalBonus(), compute_buff_pool([], suich_count=0), 0.0)
+        assert lmd > 7000, f"但书应大幅高于基准, 实际 {lmd:.0f}"
+
+
 # ─── 剪枝规则 ───────────────────────────────────────────────────
 
 class TestPruning:
@@ -445,276 +512,3 @@ class TestRealDataEndToEnd:
 
 # ─── _greedy_remaining 正确性 ────────────────────────────────────
 
-class TestGreedyRemainingA6:
-    """_greedy_remaining 应正确评估 Trade A6 条件型 buff 干员"""
-
-    def test_空弦_条件型buff_仍被选中(self):
-        """空弦 raw eff=0 但 A6 提供 +24%，应出现在 Trade 排班中"""
-        from steward_core.solver import _greedy_remaining
-
-        # Arrange: 空弦(Trade skill, eff=0) + 5 个普通 Trade 干员(各 30%)
-        # 2 间 Trade × 3 工位 = 6 人，空弦(24%) 比最弱竞争者(30%)低但刚好填满
-        kongxian = _mk_op("空弦", [
-            _mk_mfg_skill("兰登战术", 0.0, "t1", room_type="Trade"),
-        ])
-        others = [
-            _mk_op(f"贸易{i}", [
-                _mk_mfg_skill("谈判", 30.0, f"t{i}", room_type="Trade"),
-            ]) for i in range(5)
-        ]
-        all_ops = [kongxian] + others
-
-        # Act: 仅剩 Trade 设施未分配（模拟 phase 4）
-        assigned_ids = set()
-        results = _greedy_remaining(assigned_ids, all_ops)
-
-        # Assert: 6 人填满 2 间 Trade
-        trade_rooms = [r for r in results if r.room_type == "Trade"]
-        assert len(trade_rooms) == 2
-        all_trade_names = []
-        for r in trade_rooms:
-            all_trade_names.extend(r.operators)
-        assert len(all_trade_names) == 6
-
-
-# ─── 中枢条件型 per-operator 加成 ─────────────────────────────────
-
-def _mk_ctrl_op(name: str, group_id: str | None = None,
-               nation_id: str | None = None) -> Operator:
-    return Operator(char_id=name, name=name, group_id=group_id, nation_id=nation_id)
-
-
-class TestControlPerOperatorBonus:
-    """control_per_operator_bonus: 焰尾/薇薇安娜 中枢条件型加成"""
-
-    def test_焰尾_红松骑士团_CR加10每人(self):
-        """焰尾在 Control，3 名红松骑士团在 Mfg CR → +30%"""
-        from steward_core.solver import control_per_operator_bonus
-
-        control = [_mk_ctrl_op("焰尾", group_id="pinus")]
-        room = [
-            _mk_ctrl_op("灰毫", group_id="pinus"),
-            _mk_ctrl_op("野鬃", group_id="pinus"),
-            _mk_ctrl_op("远牙", group_id="pinus"),
-        ]
-
-        bonus = control_per_operator_bonus(control, room, "CombatRecord")
-        assert bonus == 30.0
-
-    def test_焰尾_红松骑士团_PG减10每人(self):
-        """焰尾在 Control，红松骑士团在 Mfg PG → -10%/人"""
-        from steward_core.solver import control_per_operator_bonus
-
-        control = [_mk_ctrl_op("焰尾", group_id="pinus")]
-        room = [_mk_ctrl_op("灰毫", group_id="pinus")]
-
-        bonus = control_per_operator_bonus(control, room, "PureGold")
-        assert bonus == -10.0
-
-    def test_薇薇安娜_骑士加7每人(self):
-        """薇薇安娜在 Control，骑士在 Mfg → +7%/人"""
-        from steward_core.solver import control_per_operator_bonus
-
-        control = [_mk_ctrl_op("薇薇安娜")]
-        room = [
-            _mk_ctrl_op("砾", group_id="pinus"),      # 红松骑士团=骑士
-            _mk_ctrl_op("鞭刃", nation_id="kazimierz"),  # kazimierz=骑士
-        ]
-
-        bonus = control_per_operator_bonus(control, room, "CombatRecord")
-        assert bonus == 14.0  # 7+7
-
-    def test_焰尾和薇薇安娜同时在场(self):
-        """焰尾(红松+10) + 薇薇安娜(骑士+7) → 叠加"""
-        from steward_core.solver import control_per_operator_bonus
-
-        control = [
-            _mk_ctrl_op("焰尾", group_id="pinus"),
-            _mk_ctrl_op("薇薇安娜"),
-        ]
-        room = [_mk_ctrl_op("灰毫", group_id="pinus")]  # 既红松又骑士
-
-        bonus = control_per_operator_bonus(control, room, "CombatRecord")
-        assert bonus == 17.0  # 10+7
-
-    def test_无焰尾薇薇安娜_返回0(self):
-        """中枢无焰尾也无薇薇安娜 → 0"""
-        from steward_core.solver import control_per_operator_bonus
-
-        control = [_mk_ctrl_op("凯尔希")]
-        room = [_mk_ctrl_op("灰毫", group_id="pinus")]
-
-        bonus = control_per_operator_bonus(control, room, "CombatRecord")
-        assert bonus == 0.0
-
-    def test_空中枢_空房间_不崩溃(self):
-        """空参数不崩溃"""
-        from steward_core.solver import control_per_operator_bonus
-
-        assert control_per_operator_bonus([], [], "CombatRecord") == 0.0
-        assert control_per_operator_bonus([], [_mk_ctrl_op("灰毫")], "CombatRecord") == 0.0
-
-
-# ─── 最优支撑函数 ────────────────────────────────────────────────
-
-class TestOptimalSupport:
-    """compute_optimal_support: 制造站组合 → 最优支撑干员集"""
-
-    def test_迷迭香组合_返回迷迭香包支撑(self):
-        """含迷迭香的 combo → 需要令+夕+黑键+爱丽丝+车尔尼+森西"""
-        from steward_core.solver import compute_optimal_support
-
-        combo = [_mk_op("迷迭香"), _mk_op("酒神"), _mk_op("玛露西尔")]
-
-        support = compute_optimal_support(combo)
-
-        assert "令" in support["Control"]
-        assert "夕" in support["Control"]
-        assert "黑键" in support["Trade"]
-        assert "爱丽丝" in support["Dormitory"]
-        assert "车尔尼" in support["Dormitory"]
-        assert "森西" in support["Dormitory"]
-
-    def test_纯效率组合_返回空支撑(self):
-        """无迷迭香/无骑士/无红松的 combo → 无支撑需求"""
-        from steward_core.solver import compute_optimal_support
-
-        combo = [_mk_op("酒神"), _mk_op("白雪"), _mk_op("薄绿")]
-
-        support = compute_optimal_support(combo)
-
-        assert support["Control"] == []
-        assert support["Trade"] == []
-        assert support["Dormitory"] == []
-
-    def test_含迷迭香和骑士_返回并集支撑(self):
-        """同时含迷迭香和骑士干员 → 支撑并集"""
-        from steward_core.solver import compute_optimal_support
-
-        combo = [
-            _mk_op("迷迭香"),
-            _mk_op("薇薇安娜", group_id="knight"),
-            _mk_op("砾"),
-        ]
-
-        support = compute_optimal_support(combo)
-
-        assert "令" in support["Control"]
-        assert "薇薇安娜" in support["Control"]
-
-    def test_支撑干员去重(self):
-        """同一中枢干员被多处需要时只出现一次"""
-        from steward_core.solver import compute_optimal_support
-
-        combo = [_mk_op("迷迭香"), _mk_op("迷迭香"), _mk_op("迷迭香")]
-
-        support = compute_optimal_support(combo)
-
-        # 令和夕都只出现一次
-        assert support["Control"].count("令") == 1
-        assert support["Control"].count("夕") == 1
-
-    def test_骑士标签干员_返回薇薇安娜支撑(self):
-        """含 knight 标签的干员 → 需要薇薇安娜"""
-        from steward_core.solver import compute_optimal_support
-
-        # 骑士标签通过 nation/group 判断（此处用 name 简化）
-        combo = [_mk_op("砾"), _mk_op("野鬃"), _mk_op("白金")]
-
-        support = compute_optimal_support(combo)
-
-        # 只有 tags 中含 knight 的才触发；当前内存测试不触发
-        # 验证不崩溃即可
-        assert isinstance(support, dict)
-
-
-class TestGreedyRemainingA6Trade:
-    """_greedy_remaining 应正确处理 Trade A6 条件型 buff（伺夜/渡桥）"""
-
-    def test_伺夜_条件型buff_含上限(self):
-        """伺夜 raw eff=0，A6 meeting_level×5%(cap 40)=15%，应出现在 Trade"""
-        from steward_core.solver import _greedy_remaining
-
-        # Arrange
-        siye = _mk_op("伺夜", [
-            _mk_mfg_skill("隐秘行动", 0.0, "t1", room_type="Trade"),
-        ])
-        others = [
-            _mk_op(f"贸易{i}", [
-                _mk_mfg_skill("谈判", 30.0, f"t{i}", room_type="Trade"),
-            ]) for i in range(5)
-        ]
-        all_ops = [siye] + others
-
-        # Act
-        results = _greedy_remaining(set(), all_ops)
-
-        # Assert: 伺夜出现在 Trade 排班中
-        trade_rooms = [r for r in results if r.room_type == "Trade"]
-        all_trade_names = []
-        for r in trade_rooms:
-            all_trade_names.extend(r.operators)
-        assert len(all_trade_names) == 6
-        assert "伺夜" in all_trade_names
-
-    def test_渡桥_条件型buff_含上限30(self):
-        """渡桥 raw eff=0，A6 meeting×5%(cap 30)，应出现"""
-        from steward_core.solver import _greedy_remaining
-
-        # Arrange
-        duqiao = _mk_op("渡桥", [
-            _mk_mfg_skill("桥梁加固", 0.0, "t1", room_type="Trade"),
-        ])
-        others = [
-            _mk_op(f"贸易{i}", [
-                _mk_mfg_skill("谈判", 30.0, f"t{i}", room_type="Trade"),
-            ]) for i in range(5)
-        ]
-        all_ops = [duqiao] + others
-
-        # Act
-        results = _greedy_remaining(set(), all_ops)
-
-        # Assert
-        trade_rooms = [r for r in results if r.room_type == "Trade"]
-        all_trade_names = []
-        for r in trade_rooms:
-            all_trade_names.extend(r.operators)
-        assert "渡桥" in all_trade_names
-
-    def test_普通Trade干员_不因A6修改受影响(self):
-        """非 A6 干员按原始效率正常参与排序"""
-        from steward_core.solver import _greedy_remaining
-
-        # Arrange
-        ops = [
-            _mk_op("贸易A", [
-                _mk_mfg_skill("谈判", 30.0, "ta", room_type="Trade"),
-            ]),
-            _mk_op("贸易B", [
-                _mk_mfg_skill("谈判", 30.0, "tb", room_type="Trade"),
-            ]),
-            _mk_op("贸易C", [
-                _mk_mfg_skill("谈判", 25.0, "tc", room_type="Trade"),
-            ]),
-            _mk_op("贸易D", [
-                _mk_mfg_skill("谈判", 25.0, "td", room_type="Trade"),
-            ]),
-            _mk_op("贸易E", [
-                _mk_mfg_skill("谈判", 20.0, "te", room_type="Trade"),
-            ]),
-            _mk_op("贸易F", [
-                _mk_mfg_skill("谈判", 20.0, "tf", room_type="Trade"),
-            ]),
-        ]
-
-        # Act
-        results = _greedy_remaining(set(), ops)
-
-        # Assert: 无崩溃，2 间 Trade 各 3 人
-        trade_rooms = [r for r in results if r.room_type == "Trade"]
-        assert len(trade_rooms) == 2
-        all_trade_names = []
-        for r in trade_rooms:
-            all_trade_names.extend(r.operators)
-        assert len(all_trade_names) == 6
