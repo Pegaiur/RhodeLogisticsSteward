@@ -226,9 +226,9 @@ _A6_FACILITY_TABLE: dict[str, tuple[str, float, str, str | None, float | None]] 
     "石英": ("mfg_recipe_types", 2.0, "Trade", "Money", None),
 }
 
-# 设施等级 Lv3
+# 设施等级 Lv3 (制造站/贸易站默认)
 _FACILITY_LEVEL = 3
-# 243 布局默认宿舍等级（4 间 × Lv3）
+# 243 布局默认宿舍等级总和（4 间 × Lv5 = 20）
 _DEFAULT_DORM_LEVELS = 20  # 4 间 Lv5 宿舍
 
 
