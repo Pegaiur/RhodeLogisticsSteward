@@ -193,6 +193,23 @@ def synergy_automation(
     return segments, zero_set
 
 
+def compute_effective_power_count(
+    power_operators: list[Operator],
+    physical_count: int = 3,
+) -> int:
+    """计算有效发电站数量（含设施数量修改器）
+
+    承曦格雷伊"晨曦"（power_count[000]）：发电站额外+1（仅影响设施数量）。
+    Lancet-2 + 森蚺中枢"我寻思能行"（control_pow_bot[000]）：发电站额外+2。
+    """
+    count = physical_count
+    for op in power_operators:
+        for sk in op.skills:
+            if sk.buff_id == "power_count[000]":
+                count += 1
+    return count
+
+
 # ─── A6 设施数量联动 ─────────────────────────────────────────────
 
 # 设施数量联动表: {干员名: (计数对象, 每单位加成%, 设施类型, 产物, 上限或无)}

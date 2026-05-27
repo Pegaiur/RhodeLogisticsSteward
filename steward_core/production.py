@@ -14,6 +14,7 @@ from typing import Optional
 from steward_core.models import Operator, ShiftPlan, LayoutConfig
 from steward_core.synergy import (
     GlobalBonus, compute_control_global_bonus, compute_buff_pool,
+    compute_effective_power_count,
 )
 from steward_core.constants import FIXED_CONTROL
 from steward_core.solver import control_per_operator_bonus
@@ -207,9 +208,13 @@ def calculate(plan: ShiftPlan, operators: list[Operator], hours: float = 24.0) -
     )
 
     # 1. 收集发电站干员，计算无人机产量（按工期比例缩放）
+    power_ops: list[Operator] = []
     for assignment in plan.assignments:
         if assignment.room_type == "Power":
             production.power_operators.extend(assignment.operators)
+            for n in assignment.operators:
+                if n in op_lookup:
+                    power_ops.append(op_lookup[n])
     daily_drones_full = _calc_drone_daily(production.power_operators, op_lookup)
     production.daily_drones = daily_drones_full * (hours / 24.0)
 
@@ -219,7 +224,7 @@ def calculate(plan: ShiftPlan, operators: list[Operator], hours: float = 24.0) -
     production.drone_target = f"{drone_room_type}[{drone_room_index}]"
 
     # 3. 计算各设施产出（走 efficiency_fn 积分，含联动）
-    power_count = sum(1 for a in plan.assignments if a.room_type == "Power" and a.operators)
+    power_count = compute_effective_power_count(power_ops)
 
     for assignment in plan.assignments:
         ops = [op_lookup[n] for n in assignment.operators if n in op_lookup]

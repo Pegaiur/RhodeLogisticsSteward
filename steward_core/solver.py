@@ -14,12 +14,13 @@ from steward_core.synergy import (
     synergy_facility_count, skill_class,
     compute_control_global_bonus,
     compute_buff_pool, ROSEMARY_SUPPORT,
-    _B_LAYER_CONSUMER_TABLE,
+    compute_effective_power_count,
+    _B_LAYER_CONSUMER_TABLE, _A6_FACILITY_TABLE,
 )
 from steward_core.evaluate import evaluate_room
 
 T = 12.0
-POWER_COUNT = 3
+_BASE_POWER_COUNT = 3  # 243 布局物理发电站数
 
 ANCHOR_NAMES = {
     "水月", "多萝西", "苍苔", "海沫",
@@ -35,6 +36,9 @@ _C1_PRIORITY_CONTROL: set[str] = {"凯尔希"}
 
 # 宿舍填充优先级（B 层感知/魔物料理/无声共鸣生成者）
 _DORM_PRIORITY: list[str] = ["森西", "爱丽丝", "车尔尼", "塑心"]
+
+# 发电站优先级（设施数量修改器持有者，个人效率为0但影响全局）
+_POWER_PRIORITY: set[str] = {"承曦格雷伊"}
 
 
 @dataclass
@@ -65,6 +69,8 @@ def _classify_mfg_operators(
         elif has_skill_label:
             result.providers.append(op)
         elif op.name in _B_LAYER_CONSUMER_TABLE and _B_LAYER_CONSUMER_TABLE[op.name][0] == "Mfg":
+            result.providers.append(op)
+        elif op.name in _A6_FACILITY_TABLE and _A6_FACILITY_TABLE[op.name][2] == "Mfg":
             result.providers.append(op)
         else:
             result.pure_efficiency.append(op)
@@ -350,8 +356,13 @@ def _evaluate_with_support(
 
     ctrl_bonus = control_per_operator_bonus(control_ops, combo_ops, product)
 
+    # 计算有效发电站数（承曦格雷伊"晨曦"使发电站+1）
+    effective_power = _BASE_POWER_COUNT
+    if "承曦格雷伊" not in assigned_ids and "承曦格雷伊" in op_lookup:
+        effective_power += 1
+
     score = evaluate_room(
-        combo_ops, room_type, product, POWER_COUNT, T, global_bonus, buff_pool,
+        combo_ops, room_type, product, effective_power, T, global_bonus, buff_pool,
         ctrl_per_op_bonus=ctrl_bonus,
     )
 
@@ -492,7 +503,9 @@ def solve_mvp(operators: list[Operator]) -> SolveResult:
     for name in locked_support["Trade"]:
         if name in op_lookup:
             assigned_ids.discard(op_lookup[name].char_id)
-    remaining = _greedy_remaining(assigned_ids, operators, locked_support["Trade"])
+    # 合并 Trade 支撑 + Power 优先级（设施数量修改器持有者）
+    priority = locked_support["Trade"] | _POWER_PRIORITY
+    remaining = _greedy_remaining(assigned_ids, operators, priority)
     assignments.extend(remaining)
     autofill_count += sum(1 for a in remaining if a.autofill)
 
