@@ -224,7 +224,7 @@ def _greedy_remaining(
             # has_skill_for("Trade", "Money") 可能返回 False（机制技能无 product 绑定），
             # 但其订单倍数对产出有实质性贡献，必须允许进入候选池
             a7_eff = get_trade_order_equivalent_efficiency(op, assigned_ids, op_lookup)
-            if a7_eff <= 0:
+            if room.room_type != "Trade" or a7_eff <= 0:
                 if not op.has_skill_for(room.room_type, room.product):
                     continue
             eff = op.best_efficiency(room.room_type, room.product)
