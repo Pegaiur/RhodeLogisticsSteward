@@ -89,8 +89,8 @@ RhodeLogisticsSteward/
 | `_SYSTEM_CONTRIBUTORS` | 系统贡献者注册表（含锚点/全局/buff生成/设施修改器） | 新增效率为0但有系统贡献的干员 |
 | `_A1_PAIR_TABLE` | 干员配对组合 | 新增配对型联动 buff |
 | `_A3_COUNTER_TABLE` | 技能类型计数锚点 | 新增计数型联动 buff |
-| `_A5_AUTO_NAMES` | 自动化干员名称 | 新增自动化干员 |
-| `_A5_AUTO_FALLBACK` | 自动化回退值 | 自动化干员 buff 变更 |
+| `_A5_AUTO_FALLBACK` | 自动化名称→加成回退值（buff_id 不可用时） | 新增自动化干员或 buff 变更 |
+| `_POWER_BUFF_BONUS` | 自动化 buff_id→加成映射 | 新增 manu_prod_spd&power[*] 类型 buff |
 | `_A6_FACILITY_TABLE` | 设施数量联动表 | 新增设施联动 buff |
 | `_C1_GLOBAL_TABLE` | 中枢全局效率 | 新增中枢全局 buff |
 | `_B_LAYER_CONSUMER_TABLE` | B 层点数消费者 | 新增 buff 池消费者 |

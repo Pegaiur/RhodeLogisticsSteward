@@ -27,8 +27,6 @@ ROOM_TYPE_MAP: dict[str, str] = {
 
 FACILITY_TYPES = {v for v in ROOM_TYPE_MAP.values()}
 
-SENTINEL = -999.0
-
 
 def _load_json(path: Path) -> dict:
     with open(path, "r", encoding="utf-8") as f:
