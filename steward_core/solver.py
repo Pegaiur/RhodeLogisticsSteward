@@ -171,13 +171,39 @@ _LAYOUT_243 = LayoutConfig.layout_243()
 def _greedy_remaining(
     assigned_ids: set[str],
     operators: list[Operator],
+    priority_names: set[str] | None = None,
 ) -> list[RoomAssignment]:
-    """剩余设施（Trade/Power/Reception/Office）支配偏序贪心"""
+    """剩余设施（Trade/Power/Reception/Office）支配偏序贪心
+
+    priority_names: 锁定的支撑干员名集合，即使已在 assigned_ids 中也会被强制分配
+    """
+    if priority_names is None:
+        priority_names = set()
+    priority_ids = {op.char_id for op in operators if op.name in priority_names}
+
     results = []
     for room in _LAYOUT_243.rooms:
         if room.room_type in ("Mfg", "Control", "Dormitory"):
             continue
 
+        taken = []
+
+        # 优先分配 locked 支撑干员（绕过 assigned_ids + 不验证效率）
+        # 注意：支撑干员的价值已在 Phase 1 跨设施联动评估中计入（如 B5 黑键→Trade），
+        # 此处仅执行放置，不重复验证效率值（该值可能为 0，因贡献来自 buff 池消费）
+        for op in operators:
+            if len(taken) >= room.slots:
+                break
+            if op.char_id not in priority_ids:
+                continue
+            if op.char_id in assigned_ids:
+                continue
+            if not op.has_skill_for(room.room_type, room.product):
+                continue
+            taken.append(op.name)
+            assigned_ids.add(op.char_id)
+
+        # 剩余工位走正常支配偏序贪心
         candidates = []
         for op in operators:
             if op.char_id in assigned_ids:
@@ -193,21 +219,21 @@ def _greedy_remaining(
             seg = constant_efficiency(eff, mood_burn=0.0, T=T)
             candidates.append((seg, op))
 
-        if not candidates:
+        if not candidates and not taken:
             results.append(RoomAssignment(
                 room_type=room.room_type, room_index=room.room_index,
                 operators=[], product=room.product, autofill=True,
             ))
             continue
 
-        ranked = rank_by_dominance(candidates, T)
-        taken = []
-        for op in ranked:
-            if len(taken) >= room.slots:
-                break
-            if op.char_id not in assigned_ids:
-                taken.append(op.name)
-                assigned_ids.add(op.char_id)
+        if candidates:
+            ranked = rank_by_dominance(candidates, T)
+            for op in ranked:
+                if len(taken) >= room.slots:
+                    break
+                if op.char_id not in assigned_ids:
+                    taken.append(op.name)
+                    assigned_ids.add(op.char_id)
 
         results.append(RoomAssignment(
             room_type=room.room_type, room_index=room.room_index,
@@ -462,7 +488,11 @@ def solve_mvp(operators: list[Operator]) -> SolveResult:
     ))
 
     # Phase 3: 剩余设施贪心
-    remaining = _greedy_remaining(assigned_ids, operators)
+    # 释放 locked Trade 支撑干员（已在 Phase 1 锁入 assigned_ids 但尚未写入房间）
+    for name in locked_support["Trade"]:
+        if name in op_lookup:
+            assigned_ids.discard(op_lookup[name].char_id)
+    remaining = _greedy_remaining(assigned_ids, operators, locked_support["Trade"])
     assignments.extend(remaining)
     autofill_count += sum(1 for a in remaining if a.autofill)
 
