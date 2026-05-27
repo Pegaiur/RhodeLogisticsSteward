@@ -294,7 +294,6 @@ def _evaluate_with_support(
     product: str,
     all_operators: list[Operator],
     assigned_ids: set[str],
-    dorm_count: int = 20,
 ) -> tuple[float, dict[str, list[str]]]:
     """评估 combo 含最优支撑的完整评分
 
@@ -383,7 +382,7 @@ def solve_mvp(operators: list[Operator]) -> SolveResult:
         "Control": set(), "Trade": set(), "Dormitory": set(),
     }
 
-    # Phase 2: 制造站穷举（CR 2间 + PG 2间）—— 共享 assigned_ids 防跨产物冲突
+    # Phase 1: 制造站穷举（CR 2间 + PG 2间）—— 共享 assigned_ids 防跨产物冲突
     for product, count in [("CombatRecord", 2), ("PureGold", 2)]:
         mfg_ops = [op for op in operators if op.has_skill_for("Mfg", product)]
         if not mfg_ops:
@@ -440,7 +439,7 @@ def solve_mvp(operators: list[Operator]) -> SolveResult:
                 ))
                 autofill_count += 1
 
-    # Phase 3: 填充中枢（来自累计支撑干员）
+    # Phase 2: 填充中枢（来自累计支撑干员）
     ctrl_names = sorted(locked_support["Control"])[:5]
     for n in ctrl_names:
         if n in op_lookup:
@@ -449,7 +448,7 @@ def solve_mvp(operators: list[Operator]) -> SolveResult:
         room_type="Control", room_index=0, operators=ctrl_names,
     ))
 
-    # Phase 4: 剩余设施贪心
+    # Phase 3: 剩余设施贪心
     remaining = _greedy_remaining(assigned_ids, operators)
     assignments.extend(remaining)
     autofill_count += sum(1 for a in remaining if a.autofill)
