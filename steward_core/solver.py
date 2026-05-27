@@ -444,7 +444,7 @@ def solve_mvp(operators: list[Operator]) -> SolveResult:
             continue
 
         classification = classify_mfg_operators(mfg_ops, product, ANCHOR_NAMES)
-        pool = build_candidate_pool(mfg_ops, classification)
+        pool = build_candidate_pool(mfg_ops, classification, room_type="Mfg", product=product)
         pool = [op for op in pool if op.char_id not in assigned_ids]
         combos = _generate_combos(pool, 3)
 
@@ -542,7 +542,7 @@ def solve_mvp(operators: list[Operator]) -> SolveResult:
     if trade_ops:
         TRADE_ANCHOR_NAMES = set(get_system_contributors("Trade", "anchor"))
         classification = classify_trade_operators(trade_ops, TRADE_ANCHOR_NAMES)
-        pool = build_candidate_pool(trade_ops, classification)
+        pool = build_candidate_pool(trade_ops, classification, room_type="Trade", product="Money")
         pool = [op for op in pool if op.char_id not in assigned_ids]
         combos = _generate_combos(pool, min(3, len(pool)))
 

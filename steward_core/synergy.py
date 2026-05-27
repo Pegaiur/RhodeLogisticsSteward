@@ -1102,10 +1102,19 @@ def prune_equivalent(pure_ops: list, top_k: int = 3) -> list:
 
 def build_candidate_pool(
     all_ops: list, classification: "MfgClassification",
+    room_type: str | None = None,
+    product: str | None = None,
 ) -> list:
-    """锚点池筛选 — anchors + providers + top_k 纯效率"""
+    """锚点池筛选 — anchors + providers + top_k 纯效率
+
+    锚点按 best_efficiency 降序排列，确保高产能锚点优先参与组合生成。
+    """
     seen = {op.char_id for op in classification.anchors}
-    pool = list(classification.anchors)
+    if room_type is not None:
+        anchors = sorted(classification.anchors, key=lambda op: -op.best_efficiency(room_type, product))
+    else:
+        anchors = list(classification.anchors)
+    pool = list(anchors)
 
     for op in classification.providers:
         if op.char_id not in seen:

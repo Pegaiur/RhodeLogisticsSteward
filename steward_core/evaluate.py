@@ -51,28 +51,39 @@ def evaluate_room(
     if layout is None:
         layout = _LAYOUT_243
 
-    total = integrate_segments(synergy_pair(operators, room_type, product, T), T)
-    total += integrate_segments(synergy_faction_room(operators, room_type, product, T), T)
-
-    alias = synergy_skill_alias(operators)
-    total += integrate_segments(synergy_skill_count(operators, room_type, alias, T), T)
-    total += integrate_segments(synergy_facility_count(
-        operators, room_type, product, layout, T=T,
-    ), T)
-    total += integrate_segments(synergy_trade_gold_lines(
-        operators, room_type, product, layout, T=T,
-    ), T)
-
+    # 第一步：计算所有归零来源（自动化/低语/归零变体），确定 zero_set
+    # 必须在其他联动函数之前执行，避免被归零干员的效率加成泄漏到 total
     auto_segs, zero_set = synergy_automation(operators, room_type, power_count, T)
-    total += integrate_segments(auto_segs, T)
 
     whisper_segs, whisper_zero = synergy_whisper(operators, room_type, T)
-    total += integrate_segments(whisper_segs, T)
     zero_set |= whisper_zero
 
     zero_segs, zero_set2 = synergy_zeroing_variant(operators, room_type, product, T)
-    total += integrate_segments(zero_segs, T)
     zero_set |= zero_set2
+
+    non_zero_ops = [op for op in operators if op.name not in zero_set]
+
+    # 第二步：房间组成型联动（不受归零影响，仅判定干员是否在场）
+    # synergy_pair 仅 Mfg 生效，check 持有者与目标是否同房
+    total = integrate_segments(synergy_pair(operators, room_type, product, T), T)
+
+    # 技能类型别名（海沫等），基于完整房间组成判定
+    alias = synergy_skill_alias(operators)
+
+    # 第三步：效率加成型联动（仅非归零干员的效率参与计算）
+    total += integrate_segments(synergy_faction_room(non_zero_ops, room_type, product, T), T)
+    total += integrate_segments(synergy_skill_count(non_zero_ops, room_type, alias, T), T)
+    total += integrate_segments(synergy_facility_count(
+        non_zero_ops, room_type, product, layout, T=T,
+    ), T)
+    total += integrate_segments(synergy_trade_gold_lines(
+        non_zero_ops, room_type, product, layout, T=T,
+    ), T)
+
+    # 第四步：归零加成自身的效率段
+    total += integrate_segments(auto_segs, T)
+    total += integrate_segments(whisper_segs, T)
+    total += integrate_segments(zero_segs, T)
 
     total += ctrl_per_op_bonus * T
 
@@ -88,7 +99,6 @@ def evaluate_room(
                 total += integrate_segments(constant_efficiency(eff, mood_burn=0.0, T=T), T)
 
     # 容量→效率（仅未归零干员的容量参与计算）
-    non_zero_ops = [op for op in operators if op.name not in zero_set]
     total += integrate_segments(synergy_capacity_to_eff(non_zero_ops, room_type, product, T), T)
 
     # 效率放大器（仅未归零干员的效率参与计算）
