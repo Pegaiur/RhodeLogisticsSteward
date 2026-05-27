@@ -23,6 +23,7 @@ class SystemContributor:
 _SYSTEM_CONTRIBUTORS: list[SystemContributor] = [
     # 中枢全局加成（C1）
     SystemContributor("凯尔希", ["Control"], "global_bonus"),
+    SystemContributor("灵知", ["Control"], "global_bonus"),
     # 宿舍 B 层生成者（B1 感知/B4 魔物料理/B5 无声共鸣）
     SystemContributor("森西", ["Dormitory"], "b_generator"),
     SystemContributor("爱丽丝", ["Dormitory"], "b_generator"),
@@ -140,9 +141,13 @@ def synergy_jie_order(
         return []
 
     # 其他干员效率总和（用于压缩订单上限）
+    # 排除持有订单机制 buff 的干员（但书/龙舌兰等），其效率为动态计算值
+    _OBSERVE_BLACKLIST = ("trade_ord_law", "trade_ord_long", "trade_ord_closure")
     other_eff = 0.0
     for op in operators:
         if op.name == "孑":
+            continue
+        if any(s.buff_id.startswith(_OBSERVE_BLACKLIST) for s in op.skills if s.room_type == "Trade"):
             continue
         eff = op.best_efficiency(room_type, "Money")
         if eff > 0:
