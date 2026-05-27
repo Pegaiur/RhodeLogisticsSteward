@@ -9,10 +9,9 @@ import itertools
 from dataclasses import dataclass, field
 
 from steward_core.models import LayoutConfig, Operator, RoomAssignment, ShiftPlan, SolveResult
-from steward_core.efficiency_fn import constant_efficiency, integrate_segments, rank_by_dominance
+from steward_core.efficiency_fn import constant_efficiency, rank_by_dominance
 from steward_core.synergy import (
-    synergy_pair, synergy_skill_count, synergy_skill_alias, synergy_automation,
-    synergy_facility_count, synergy_buff_pool_consumer, _skill_class,
+    synergy_facility_count, _skill_class,
     GlobalBonus, compute_control_global_bonus,
     compute_buff_pool, ROSEMARY_SUPPORT,
     _B_LAYER_CONSUMER_TABLE,
@@ -100,7 +99,7 @@ def _upper_bound_ok(total_eff: float, best_known: float, threshold: float = 0.95
 
 # ─── 房间评估 ───────────────────────────────────────────────────
 
-def _control_per_operator_bonus(
+def control_per_operator_bonus(
     control_ops: list[Operator],
     room_ops: list[Operator],
     product: str,
@@ -316,7 +315,7 @@ def _evaluate_with_support(
         ling_mood_below_12=True,
     )
 
-    ctrl_bonus = _control_per_operator_bonus(control_ops, combo_ops, product)
+    ctrl_bonus = control_per_operator_bonus(control_ops, combo_ops, product)
 
     score = evaluate_room(
         combo_ops, room_type, product, POWER_COUNT, T, global_bonus, buff_pool,

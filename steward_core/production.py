@@ -12,15 +12,11 @@ from dataclasses import dataclass, field
 from typing import Optional
 
 from steward_core.models import Operator, ShiftPlan, LayoutConfig
-from steward_core.efficiency_fn import constant_efficiency, integrate_segments
 from steward_core.synergy import (
-    synergy_pair, synergy_skill_count, synergy_skill_alias, synergy_automation,
-    synergy_facility_count, synergy_buff_pool_consumer,
     GlobalBonus, compute_control_global_bonus, compute_buff_pool,
 )
 from steward_core.constants import FIXED_CONTROL
-from steward_core.evaluate import evaluate_room
-from steward_core.solver import _control_per_operator_bonus
+from steward_core.solver import control_per_operator_bonus
 
 # ─── 制造站 Lv3 基础参数 ────────────────────────────────────────
 # 作战记录：基础 1个/3h → 0.333 个/h
@@ -230,7 +226,7 @@ def calculate(plan: ShiftPlan, operators: list[Operator], hours: float = 24.0) -
         n = len(ops)
 
         if assignment.room_type == "Mfg" and assignment.product == "CombatRecord":
-            ctrl_bonus = _control_per_operator_bonus(plan_ctrl_ops, ops, "CombatRecord")
+            ctrl_bonus = control_per_operator_bonus(plan_ctrl_ops, ops, "CombatRecord")
             eff_int = _room_efficiency_integral(ops, "Mfg", "CombatRecord", power_count, hours, global_bonus, buff_pool) + ctrl_bonus * hours
             productivity_int = hours * (1.0 + 0.01 * n) + eff_int / 100.0
             avg_prod = productivity_int / hours
@@ -248,7 +244,7 @@ def calculate(plan: ShiftPlan, operators: list[Operator], hours: float = 24.0) -
             production.total_records_per_day += output_per_day
 
         elif assignment.room_type == "Mfg" and assignment.product == "PureGold":
-            ctrl_bonus = _control_per_operator_bonus(plan_ctrl_ops, ops, "PureGold")
+            ctrl_bonus = control_per_operator_bonus(plan_ctrl_ops, ops, "PureGold")
             eff_int = _room_efficiency_integral(ops, "Mfg", "PureGold", power_count, hours, global_bonus, buff_pool) + ctrl_bonus * hours
             productivity_int = hours * (1.0 + 0.01 * n) + eff_int / 100.0
             avg_prod = productivity_int / hours
