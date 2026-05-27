@@ -163,11 +163,14 @@ def synergy_automation(
     room_type: str,
     power_count: int,
 ) -> tuple[list[LinearSegment], set[str]]:
-    """若房间有自动化干员，返回 (自动化产出段, 需归零的干员名集合)"""
+    """若房间有自动化干员，返回 (自动化产出段, 需归零的干员名集合)
+
+    自动化干员的加成直接叠加（森蚺+温蒂共存时两者均生效）。
+    """
     if room_type != "Mfg":
         return [], set()
 
-    best_bonus = 0.0
+    total_bonus = 0.0
     auto_op_names = set()
     for op in operators:
         if op.name not in _A5_AUTO_NAMES:
@@ -180,13 +183,11 @@ def synergy_automation(
         else:
             bonus = _A5_AUTO_FALLBACK.get(op.name, 0.0)
 
-        if bonus > best_bonus:
-            best_bonus = bonus
+        total_bonus += power_count * bonus
 
     if not auto_op_names:
         return [], set()
 
-    total_bonus = power_count * best_bonus
     segments = [LinearSegment(a=total_bonus, b=0.0, t_start=0.0, dt=T)]
 
     zero_set = {op.name for op in operators if op.name not in auto_op_names}

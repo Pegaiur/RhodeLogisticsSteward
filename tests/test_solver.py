@@ -303,7 +303,7 @@ class TestRoomEvaluation:
         assert score == pytest.approx(540.0, rel=0.01)
 
     def test_自动化房间_自动化干员自身不被归零(self):
-        """森蚺+温蒂共存 → 两者都不在 zero_set 中"""
+        """森蚺+温蒂共存 → 自动化加成叠加，两者都不在 zero_set 中"""
         from steward_core.evaluate import evaluate_room
 
         # Arrange: 森蚺(5%/站) + 温蒂(15%/站) + 填位
@@ -314,9 +314,9 @@ class TestRoomEvaluation:
         # Act
         score = evaluate_room([senia, wenti, filler], "Mfg", "CombatRecord", power_count=3)
 
-        # Assert: filler归零，取最高等级自动化=温蒂15%/站×3=45
-        # 积分 = 45×12 = 540
-        assert score == pytest.approx(540.0, rel=0.01)
+        # Assert: filler归零，自动化叠加=森蚺15(3×5)+温蒂45(3×15)=60
+        # 积分 = 60×12 = 720
+        assert score == pytest.approx(720.0, rel=0.01)
 
 
 # ─── 跨间贪心分配 ──────────────────────────────────────────────
