@@ -10,7 +10,7 @@ class SystemContributor:
     """个人效率为0但对排班系统有非零贡献的干员"""
     name: str
     facility_types: list[str]      # 贡献的目标设施
-    contribution_type: str          # "global_bonus" | "b_generator" | "facility_modifier" | "anchor"
+    contribution_type: str          # "global_bonus" | "b_generator" | "facility_modifier" | "global_faction_holder" | "anchor"
 
 
 _SYSTEM_CONTRIBUTORS: list[SystemContributor] = [
@@ -24,6 +24,8 @@ _SYSTEM_CONTRIBUTORS: list[SystemContributor] = [
     SystemContributor("塑心", ["Dormitory"], "b_generator"),
     # 发电站设施数量修改器
     SystemContributor("承曦格雷伊", ["Power"], "facility_modifier"),
+    # 发电站全局阵营计数持有者
+    SystemContributor("缪尔赛思", ["Power"], "global_faction_holder"),
     # 制造站联动锚点（A1/A3/A5）
     SystemContributor("水月", ["Mfg"], "anchor"),
     SystemContributor("多萝西", ["Mfg"], "anchor"),
