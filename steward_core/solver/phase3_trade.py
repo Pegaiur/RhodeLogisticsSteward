@@ -24,6 +24,7 @@ def _phase3_trade(
     assignments: list,
     op_lookup: dict[str, Operator],
     locked_support: dict[str, set[str]],
+    *,
     config: SolverConfig | None = None,
 ) -> int:
     """Phase 3a: Trade 穷举（使用 locked_support 估计中枢，中枢尚未填充）

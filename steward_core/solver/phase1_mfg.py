@@ -15,6 +15,7 @@ def _phase1_mfg(
     assignments: list,
     op_lookup: dict[str, Operator],
     locked_support: dict[str, set[str]],
+    *,
     anchor_names: set[str],
     config: SolverConfig | None = None,
 ) -> int:
@@ -51,6 +52,7 @@ def _phase1_mfg(
         for combo_ops in combos:
             score, support_map = _evaluate_with_support(
                 combo_ops, "Mfg", product, operators, assigned_names,
+                params=config.params,
             )
             combo_names = [op.name for op in combo_ops]
             all_support_names = [n for names in support_map.values() for n in names]
