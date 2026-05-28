@@ -344,3 +344,43 @@ class TestC2PerOperatorBonus:
             [delphin], [generic], "Money", room_type="Trade",
         )
         assert bonus == 0.0
+
+    def test_银灰异格_Mfg房间_不触发(self):
+        """银灰异格加成仅对 Trade 生效"""
+        from steward_core.synergy import control_per_operator_bonus
+
+        silverash = _mk_op("银灰异格")
+        k1 = _mk_op("崖心", group_id="karlan")
+        k2 = _mk_op("讯使", group_id="karlan")
+        k3 = _mk_op("角峰", group_id="karlan")
+
+        bonus = control_per_operator_bonus(
+            [silverash], [k1, k2, k3], "PureGold", room_type="Mfg",
+        )
+        assert bonus == 0.0
+
+    def test_戴菲恩_Mfg房间_不触发(self):
+        """戴菲恩加成仅对 Trade 生效"""
+        from steward_core.synergy import control_per_operator_bonus
+
+        delphin = _mk_op("戴菲恩")
+        g1 = _mk_op("摩根", group_id="glasgow")
+
+        bonus = control_per_operator_bonus(
+            [delphin], [g1], "PureGold", room_type="Mfg",
+        )
+        assert bonus == 0.0
+
+    def test_银灰异格不在中枢_不加成(self):
+        """中枢无银灰异格 → 加成不触发"""
+        from steward_core.synergy import control_per_operator_bonus
+
+        other = _mk_op("凯尔希")
+        k1 = _mk_op("崖心", group_id="karlan")
+        k2 = _mk_op("讯使", group_id="karlan")
+        k3 = _mk_op("角峰", group_id="karlan")
+
+        bonus = control_per_operator_bonus(
+            [other], [k1, k2, k3], "Money", room_type="Trade",
+        )
+        assert bonus == 0.0

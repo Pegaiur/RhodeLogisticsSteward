@@ -416,7 +416,7 @@ def _calc_trade(
     lmd_output = efficiency_factor × hours/24 × lmd_per_day × (1 + drone)
     """
     n = len(ops)
-    ctrl_bonus = control_per_operator_bonus(ctx.plan_ctrl_ops, ops, "Money")
+    ctrl_bonus = control_per_operator_bonus(ctx.plan_ctrl_ops, ops, "Money", room_type="Trade")
     eff_int = evaluate_room(ops, "Trade", "Money", ctx.power_count, ctx.hours,
                             ctx.global_bonus, ctx.buff_pool, ctrl_per_op_bonus=ctrl_bonus,
                             all_operators=ctx.all_operators,

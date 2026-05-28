@@ -77,6 +77,12 @@ class GlobalContext:
             1 for op in all_operators
             if op.name not in assigned_names and _has_power_count_modifier(op)
         )
+        # 森蚺"我寻思能行"：Lancet-2 可用时若森蚺在中枢则+2
+        if any(op.name == "Lancet-2" for op in all_operators):
+            for op in control_operators:
+                if any(s.buff_id == "control_pow_bot[000]" for s in op.skills):
+                    effective_power += 2
+                    break
 
         return cls(
             global_bonus=global_bonus,
@@ -153,6 +159,16 @@ class GlobalContext:
             1 for op in all_operators
             if _has_power_count_modifier(op)
         )
+        # 森蚺"我寻思能行"：Lancet-2 在发电站时若森蚺在中枢则+2
+        lancet_in_power = any(
+            a.room_type == "Power" and "Lancet-2" in a.operators
+            for a in plan.assignments
+        )
+        if lancet_in_power:
+            for op in control_ops:
+                if any(s.buff_id == "control_pow_bot[000]" for s in op.skills):
+                    effective_power += 2
+                    break
 
         all_assignments: dict[str, list[Operator]] = {}
         for a in plan.assignments:
