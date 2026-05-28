@@ -1,22 +1,31 @@
 """求解器配置开关
 
 功能开关（SolverConfig）与可调参数（SolverParams）分离：
-- SolverConfig: 布尔型功能开关 + 策略选择
+- SolverConfig: 策略选择 + 功能开关
 - SolverParams: 数值型可调参数，支持 JSON 覆盖
 """
 
 from dataclasses import dataclass, field, fields
+from typing import TYPE_CHECKING
 
 from .params import SolverParams
+
+if TYPE_CHECKING:
+    from .strategy import Strategy
 
 
 @dataclass
 class SolverConfig:
-    """求解器配置，功能开关与策略选择
+    """求解器配置——功能开关 + 策略选择 + 可调参数
 
     所有开关默认 False，保证向后兼容。
     数值型调参请使用 SolverParams。
+    策略选择通过 strategy 字段注入自定义 Strategy 实现 A/B 测试。
     """
+
+    # 策略选择
+    strategy: "Strategy | None" = None
+    """求解策略——None 时 solve_mvp() 自动使用 BaselineStrategy"""
 
     # Step 1b: 独占支撑冲突检查 — 仅检查独占支撑（Trade/Office），共享支撑不冲突
     exclusive_support_check: bool = False
