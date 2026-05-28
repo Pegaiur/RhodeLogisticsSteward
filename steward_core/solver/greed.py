@@ -10,7 +10,10 @@ _LAYOUT_243 = LayoutConfig.layout_243()
 
 
 def _upper_bound_ok(total_eff: float, best_known: float, threshold: float = 0.95) -> bool:
-    """规则3: 上界预判 — 总效率不低于 best_known × threshold"""
+    """规则3: 上界预判 — 总效率不低于 best_known × threshold
+
+    threshold 建议从 SolverParams.combo_upper_bound_threshold 读取，默认 0.95。
+    """
     return total_eff >= best_known * threshold
 
 
@@ -244,6 +247,7 @@ def _greedy_allocate_with_support(
     容量不足时跳过当前组合，尝试下一个。
     """
     use_exclusive = config is not None and config.exclusive_support_check
+    max_slots = config.params.control_max_slots if config is not None else max_control_slots
     assigned: set[str] = set()
     exclusive_assigned: set[str] = set()
     control_assigned: set[str] = set(initial_control) if initial_control else set()
@@ -261,7 +265,7 @@ def _greedy_allocate_with_support(
             if any(n in assigned for n in all_support_names):
                 continue
         new_control = set(support_map.get("Control", []))
-        if len(control_assigned | new_control) > max_control_slots:
+        if len(control_assigned | new_control) > max_slots:
             continue
         result.append((combo_names, support_map))
         assigned.update(combo_names)

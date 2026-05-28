@@ -76,15 +76,18 @@ class TestSolverConfigDiff:
         assert len(diffs) == 1
         assert "exclusive_support_check" in diffs[0]
 
-    def test_diff_全部不同_列出所有差异(self):
-        """all_on vs baseline 应列出所有开关差异"""
+    def test_diff_全部不同_列出三个布尔开关差异(self):
+        """all_on vs baseline 应列出 3 个 boolean 开关字段差异"""
         from steward_core.solver.config import SolverConfig
 
         a = SolverConfig.baseline()
         b = SolverConfig.all_on()
 
         diffs = a.diff(b)
-        assert len(diffs) >= 3  # 至少 3 个 boolean 字段不同
+        # 3 个布尔开关字段：exclusive_support_check, local_search_enabled, global_state_scoring
+        bool_diff_fields = {"exclusive_support_check", "local_search_enabled", "global_state_scoring"}
+        actual = {d.split(":")[0] for d in diffs}
+        assert bool_diff_fields.issubset(actual)
 
     def test_diff_对称性(self):
         """a.diff(b) 和 b.diff(a) 内容一致（方向不同但差异对称）"""
@@ -96,6 +99,30 @@ class TestSolverConfigDiff:
         diffs_ab = a.diff(b)
         diffs_ba = b.diff(a)
         assert len(diffs_ab) == len(diffs_ba)
+
+
+class TestSolverConfigWithParams:
+    """with_params 工厂方法"""
+
+    def test_with_params_构造_使用自定义参数(self):
+        """SolverConfig.with_params() 传入自定义 SolverParams"""
+        from steward_core.solver.config import SolverConfig
+        from steward_core.solver.params import SolverParams
+
+        params = SolverParams(shift_hours=24.0)
+        config = SolverConfig.with_params(params)
+        assert config.params.shift_hours == 24.0
+        assert config.exclusive_support_check is False  # 开关仍为默认
+
+    def test_with_params_diff_可见参数差异(self):
+        """两个不同 params 的配置 diff 可见 params.xxx 差异"""
+        from steward_core.solver.config import SolverConfig
+        from steward_core.solver.params import SolverParams
+
+        a = SolverConfig.with_params(SolverParams(shift_hours=12.0))
+        b = SolverConfig.with_params(SolverParams(shift_hours=24.0))
+        diffs = a.diff(b)
+        assert any("params.shift_hours" in d for d in diffs)
 
 
 class TestSolverConfigIntegration:
