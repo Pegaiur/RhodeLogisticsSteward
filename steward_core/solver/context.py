@@ -1,0 +1,174 @@
+"""全局上下文构造器
+
+统一 buff_pool、global_bonus、effective_power 的构建逻辑，
+消除 support.py / phase3_trade.py / refine.py / production.py 中的重复实现。
+"""
+
+from __future__ import annotations
+
+from dataclasses import dataclass, field
+from typing import TYPE_CHECKING
+
+from steward_core.constants import BASE_POWER_COUNT
+from steward_core.synergy import (
+    compute_control_global_bonus,
+    compute_buff_pool,
+    _has_power_count_modifier,
+    GlobalBonus,
+    BuffPool,
+)
+
+if TYPE_CHECKING:
+    from steward_core.models import Operator, RoomAssignment, ShiftPlan
+    from .params import SolverParams
+
+
+@dataclass
+class GlobalContext:
+    """求解过程中的全局状态快照
+
+    所有评估函数共享同一个构造路径，确保 buff_pool、有效发电站数
+    等全局状态的计算口径完全一致。
+    """
+
+    global_bonus: GlobalBonus = field(default_factory=GlobalBonus)
+    buff_pool: BuffPool | None = None
+    effective_power: int = BASE_POWER_COUNT
+    control_operators: list = field(default_factory=list)
+    dorm_operators: list = field(default_factory=list)
+    all_assignments: dict[str, list] = field(default_factory=dict)
+
+    @classmethod
+    def from_estimated(
+        cls,
+        control_operators: list[Operator],
+        dorm_operators: list[Operator],
+        all_operators: list[Operator],
+        assigned_names: set[str],
+        params: "SolverParams",
+        *,
+        has_rosmontis_in_mfg: bool = False,
+        has_ebnhlz_in_trade: bool = False,
+        has_wuyou_in_trade: bool = False,
+        ling_mood_below_12: bool = False,
+        perception_from_office: int = 0,
+    ) -> "GlobalContext":
+        """从估计数据构建上下文（Phase 1/3a 预评估用）
+
+        用于尚未完成完整排班的阶段：
+        - Phase 1 Mfg 评估：control/dorm 来自 available_support
+        - Phase 3a Trade 评估：dorm 为估计占位干员
+        """
+        global_bonus = compute_control_global_bonus(control_operators)
+
+        buff_pool = compute_buff_pool(
+            control_operators,
+            suich_count=params.suich_count,
+            dorm_operators=dorm_operators,
+            dorm_level=params.dorm_level,
+            has_rosmontis_in_mfg=has_rosmontis_in_mfg,
+            has_ebnhlz_in_trade=has_ebnhlz_in_trade,
+            has_wuyou_in_trade=has_wuyou_in_trade,
+            ling_mood_below_12=ling_mood_below_12,
+            perception_from_office=perception_from_office,
+        )
+
+        effective_power = BASE_POWER_COUNT + sum(
+            1 for op in all_operators
+            if op.name not in assigned_names and _has_power_count_modifier(op)
+        )
+
+        return cls(
+            global_bonus=global_bonus,
+            buff_pool=buff_pool,
+            effective_power=effective_power,
+            control_operators=control_operators,
+            dorm_operators=dorm_operators,
+        )
+
+    @classmethod
+    def from_plan(
+        cls,
+        plan: "ShiftPlan",
+        all_operators: list[Operator],
+        params: "SolverParams",
+    ) -> "GlobalContext":
+        """从已完成的排班方案构建上下文（refine/production 评估用）
+
+        从实际 assignment 中提取控制中枢、宿舍、以及 buff 生成者是否在
+        工作设施中的布尔状态。
+        """
+        from steward_core.models import Operator
+        from steward_core.synergy import _B_ROSEMARY, _B_EBENHOLZ
+
+        op_lookup = {op.name: op for op in all_operators}
+
+        def _room_ops(room_type: str) -> list[Operator]:
+            names: list[str] = []
+            for a in plan.assignments:
+                if a.room_type == room_type:
+                    names.extend(a.operators)
+            return [op_lookup[n] for n in names if n in op_lookup]
+
+        control_ops = _room_ops("Control")
+        dorm_ops = _room_ops("Dormitory")
+
+        global_bonus = compute_control_global_bonus(control_ops)
+
+        has_rosmontis = any(
+            a.room_type == "Mfg" and _B_ROSEMARY in a.operators
+            for a in plan.assignments
+        )
+        has_ebnhlz = any(
+            a.room_type == "Trade" and _B_EBENHOLZ in a.operators
+            for a in plan.assignments
+        )
+        has_wuyou = any(
+            a.room_type == "Trade" and "乌有" in a.operators
+            for a in plan.assignments
+        )
+
+        office_perception = 0
+        if any(
+            a.room_type == "Office" and "絮雨" in a.operators
+            for a in plan.assignments
+        ):
+            office_perception = params.office_perception_base
+
+        ling_mood_below_12 = has_rosmontis
+
+        buff_pool = compute_buff_pool(
+            control_ops,
+            suich_count=params.suich_count,
+            dorm_operators=dorm_ops,
+            dorm_level=params.dorm_level,
+            has_rosmontis_in_mfg=has_rosmontis,
+            has_ebnhlz_in_trade=has_ebnhlz,
+            has_wuyou_in_trade=has_wuyou,
+            ling_mood_below_12=ling_mood_below_12,
+            perception_from_office=office_perception,
+        )
+
+        effective_power = BASE_POWER_COUNT + sum(
+            1 for op in all_operators
+            if _has_power_count_modifier(op)
+        )
+
+        all_assignments: dict[str, list[Operator]] = {}
+        for a in plan.assignments:
+            if a.room_type not in all_assignments:
+                all_assignments[a.room_type] = []
+            for name in a.operators:
+                if name in op_lookup:
+                    op = op_lookup[name]
+                    if op not in all_assignments[a.room_type]:
+                        all_assignments[a.room_type].append(op)
+
+        return cls(
+            global_bonus=global_bonus,
+            buff_pool=buff_pool,
+            effective_power=effective_power,
+            control_operators=control_ops,
+            dorm_operators=dorm_ops,
+            all_assignments=all_assignments,
+        )
