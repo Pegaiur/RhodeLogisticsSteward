@@ -1,7 +1,7 @@
 """Phase 3a: 贸易站穷举"""
 
 from steward_core.constants import BASE_POWER_COUNT
-from steward_core.models import Operator, RoomAssignment
+from steward_core.models import Operator, RoomAssignment, LayoutConfig
 from steward_core.synergy import (
     compute_control_global_bonus,
     compute_buff_pool,
@@ -82,13 +82,11 @@ def _phase3_trade(
         # 评估所有组合（含宿舍估计用于乌有烟火/黑键感知等B1生成）
         dorm_est = [Operator(char_id=f"_dorm_{i}", name=f"填位宿舍{i}", skills=[])
                     for i in range(params.dorm_estimated_count)]
-        has_ebnhlz_any = "黑键" in locked_support["Trade"]
-
         evaluated = []
         for combo_ops in combos:
             combo_names = [op.name for op in combo_ops]
             has_wuyou = "乌有" in combo_names
-            has_ebnhlz = has_ebnhlz_any or "黑键" in combo_names
+            has_ebnhlz = "黑键" in combo_names
             ctrl_bonus = control_per_operator_bonus(
                 ctrl_ops, combo_ops, "Money", room_type="Trade",
             )
@@ -99,12 +97,24 @@ def _phase3_trade(
                     dorm_operators=dorm_est, dorm_level=params.dorm_level,
                     has_ebnhlz_in_trade=has_ebnhlz,
                     has_wuyou_in_trade=has_wuyou,
+                    layout=LayoutConfig.layout_243(),
                 ), ctrl_bonus,
                 all_operators=operators,
                 control_operators=ctrl_ops,
             )
             evaluated.append((lmd, combo_names))
         evaluated.sort(key=lambda x: -x[0])
+
+        # 强制放置 locked Trade 支撑干员：将含支撑干员的组合排到前面
+        # Phase 1 已基于"该干员在 Trade 中"的假设评估制造站得分，此处强制执行
+        if locked_support["Trade"]:
+            locked_combos = [(s, n) for s, n in evaluated
+                             if any(name in locked_support["Trade"] for name in n)]
+            normal_combos = [(s, n) for s, n in evaluated
+                             if not any(name in locked_support["Trade"] for name in n)]
+            locked_combos.sort(key=lambda x: -x[0])
+            normal_combos.sort(key=lambda x: -x[0])
+            evaluated = locked_combos + normal_combos
 
         # 贪心分配（2 间 Trade）
         allocated = _greedy_allocate(evaluated, room_count=2)

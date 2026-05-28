@@ -132,6 +132,7 @@ class RoomConfig:
     room_index: int
     slots: int
     product: Optional[str] = None
+    level: int = 3
 
 
 @dataclass
@@ -161,17 +162,18 @@ class LayoutConfig:
             RoomConfig("Mfg", 3, 3, "PureGold"),
             RoomConfig("Trade", 0, 3, "Money"),
             RoomConfig("Trade", 1, 3, "Money"),
-            RoomConfig("Control", 0, 5),
+            RoomConfig("Control", 0, 5, level=5),
             RoomConfig("Power", 0, 1),
             RoomConfig("Power", 1, 1),
             RoomConfig("Power", 2, 1),
             RoomConfig("Reception", 0, 2, "General"),
             RoomConfig("Office", 0, 1, "HR"),
             RoomConfig("Training", 0, 1),
-            RoomConfig("Dormitory", 0, 5, "Rest"),
-            RoomConfig("Dormitory", 1, 5, "Rest"),
-            RoomConfig("Dormitory", 2, 5, "Rest"),
-            RoomConfig("Dormitory", 3, 5, "Rest"),
+            RoomConfig("Workshop", 0, 1),
+            RoomConfig("Dormitory", 0, 5, "Rest", level=5),
+            RoomConfig("Dormitory", 1, 5, "Rest", level=5),
+            RoomConfig("Dormitory", 2, 5, "Rest", level=5),
+            RoomConfig("Dormitory", 3, 5, "Rest", level=5),
         ]
         return LayoutConfig(rooms=rooms)
 

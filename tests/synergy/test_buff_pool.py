@@ -390,15 +390,15 @@ class TestFullBuffPool:
 class TestEngineeringRobots:
     """B2: compute_engineering_robots — 绘图设计生成工程机器人"""
 
-    def test_243布局_14设施Lv3_生成42机器人(self):
-        """14 间设施 × Lv3 = 42 机器人"""
+    def test_243布局_18间设施含中枢与宿舍Lv5_触发上限64机器人(self):
+        """13 工作 Lv3 + 中枢 Lv5 + 4 宿舍 Lv5 = 64 → 触及上限"""
         from steward_core.synergy import compute_engineering_robots
         from steward_core.models import LayoutConfig
 
         layout = LayoutConfig.layout_243()
 
         robots = compute_engineering_robots(layout)
-        assert robots == 51  # 17 间设施(含Training+4Dorm) × Lv3
+        assert robots == 64  # 13工作Lv3(=39) + 中枢Lv5(=5) + 4宿舍Lv5(=20) = 64 = cap
 
     def test_空布局_返回0(self):
         """空布局 → 0 机器人"""
@@ -418,7 +418,7 @@ class TestEngineeringRobots:
         layout = LayoutConfig.layout_243()
         pool = compute_buff_pool([], layout=layout)
 
-        assert pool.engineering_robots == 51
+        assert pool.engineering_robots == 64
 
     def test_机械辅助α_42机器人_加10percent(self):
         """至简 α: 每16机器人→+5%，42机器人 → 42//16×5 = 10%"""

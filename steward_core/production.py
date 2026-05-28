@@ -508,6 +508,7 @@ def calculate(
         has_ebnhlz_in_trade=has_ebnhlz_in_trade,
         has_wuyou_in_trade=has_wuyou_in_trade,
         ling_mood_below_12=ling_mood_below_12,
+        layout=LayoutConfig.layout_243(),
     )
 
     # 1. 收集发电站干员，计算无人机产量（按工期比例缩放）
@@ -555,8 +556,9 @@ def calculate(
         elif assignment.room_type == "Trade":
             _calc_trade(ctx, assignment, ops, production)
 
-    # 4. 赤金供需平衡（含外部来源赤金）
-    total_available_gold = production.total_gold_produced_per_day + production.external_gold_per_day
+    # 4. 赤金供需平衡（含外部来源赤金，外部赤金按班次时长折算）
+    shift_external = production.external_gold_per_day * (ctx.hours / 24.0)
+    total_available_gold = production.total_gold_produced_per_day + shift_external
     production.gold_surplus = total_available_gold - production.total_gold_consumed_per_day
     if production.gold_surplus < 0:
         ratio = total_available_gold / max(production.total_gold_consumed_per_day, 0.001)

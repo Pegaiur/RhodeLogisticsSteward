@@ -10,6 +10,7 @@ from dataclasses import dataclass, field
 from typing import TYPE_CHECKING
 
 from steward_core.constants import BASE_POWER_COUNT
+from steward_core.models import LayoutConfig
 from steward_core.synergy import (
     compute_control_global_bonus,
     compute_buff_pool,
@@ -71,6 +72,7 @@ class GlobalContext:
             has_wuyou_in_trade=has_wuyou_in_trade,
             ling_mood_below_12=ling_mood_below_12,
             perception_from_office=perception_from_office,
+            layout=LayoutConfig.layout_243(),
         )
 
         effective_power = BASE_POWER_COUNT + sum(
@@ -153,6 +155,7 @@ class GlobalContext:
             has_wuyou_in_trade=has_wuyou,
             ling_mood_below_12=ling_mood_below_12,
             perception_from_office=office_perception,
+            layout=LayoutConfig.layout_243(),
         )
 
         effective_power = BASE_POWER_COUNT + sum(

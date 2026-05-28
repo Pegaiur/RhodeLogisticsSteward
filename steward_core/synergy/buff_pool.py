@@ -4,7 +4,7 @@ from dataclasses import dataclass, field
 
 from steward_core.models import LinearSegment, Operator, LayoutConfig
 from .types import BuffConsumerEntry
-from .helpers import ROSEMARY_SUPPORT, _B_ROSEMARY, _B_EBENHOLZ, _FACILITY_LEVEL
+from .helpers import ROSEMARY_SUPPORT, _B_ROSEMARY, _B_EBENHOLZ
 
 
 @dataclass
@@ -136,9 +136,9 @@ def _dorm_has_buff(dorm_operators: list[Operator], buff_id: str) -> bool:
 def compute_engineering_robots(layout: LayoutConfig) -> int:
     """计算工程机器人总数 = Σ(每间设施 × 等级)，上限 64
 
-    243 布局 14 间设施 Lv3 → 42 机器人
+    243 布局 13 间工作设施 Lv3(39) + 中枢 Lv5(5) + 4 间宿舍 Lv5(20) = 64 → 触及上限。
     """
-    return sum(_FACILITY_LEVEL for _ in layout.rooms)
+    return min(sum(r.level for r in layout.rooms), 64)
 
 
 _B_BUFF_CONSUMER_TABLE: dict[str, BuffConsumerEntry] = {

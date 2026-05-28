@@ -2,7 +2,7 @@
 
 from steward_core.models import LinearSegment, Operator, LayoutConfig
 from .types import FacilityLinkEntry
-from .helpers import _FACILITY_LEVEL, _DEFAULT_DORM_LEVELS
+from .helpers import _DEFAULT_DORM_LEVELS
 
 
 _A_FACILITY_LINK_TABLE: dict[str, FacilityLinkEntry] = {
@@ -35,7 +35,7 @@ def synergy_facility_count(
 
     trade_count = sum(1 for r in layout.rooms if r.room_type == "Trade")
     meeting_level = sum(
-        _FACILITY_LEVEL for r in layout.rooms if r.room_type == "Reception"
+        r.level for r in layout.rooms if r.room_type == "Reception"
     )
     mfg_products = {
         r.product for r in layout.rooms
@@ -43,7 +43,7 @@ def synergy_facility_count(
     }
     mfg_recipe_types = len(mfg_products)
     train_level = sum(
-        _FACILITY_LEVEL for r in layout.rooms if r.room_type == "Training"
+        r.level for r in layout.rooms if r.room_type == "Training"
     )
 
     for name in names:
