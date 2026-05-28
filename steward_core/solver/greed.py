@@ -71,6 +71,40 @@ def _greedy_allocate(
     return result
 
 
+def _greedy_allocate_with_support_excluding(
+    evaluated: list,
+    room_count: int,
+    exclude_sets: list[frozenset] | None = None,
+    **kwargs,
+) -> list[tuple[list[str], dict[str, list[str]]]] | None:
+    """贪心分配，排除与 exclude_sets 完全相同的分配结果
+
+    用于 K-Beam 迭代排斥——每次排斥上一次完整分配的 combo 集合，
+    迫使算法找到不同的房间组合。
+    """
+    if not exclude_sets:
+        return _greedy_allocate_with_support(evaluated, room_count, **kwargs)
+
+    result = _greedy_allocate_with_support(evaluated, room_count, **kwargs)
+    if result is None:
+        return None
+    result_set = frozenset(tuple(names) for names, _ in result)
+    if result_set not in exclude_sets:
+        return result
+
+    for skip_idx, (_, skip_names, _, _) in enumerate(evaluated):
+        if skip_names not in [names for names, _ in result]:
+            continue
+        trimmed = [e for i, e in enumerate(evaluated) if i != skip_idx]
+        alt = _greedy_allocate_with_support(trimmed, room_count, **kwargs)
+        if alt is None or len(alt) < room_count:
+            continue
+        alt_set = frozenset(tuple(names) for names, _ in alt)
+        if alt_set not in exclude_sets:
+            return alt
+    return None
+
+
 def _room_conditions_satisfiable(
     op: Operator,
     taken_names: list[str],
