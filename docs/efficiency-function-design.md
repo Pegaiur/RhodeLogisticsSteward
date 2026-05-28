@@ -1,8 +1,8 @@
-# 效率函数统一建模（草案）
+# 效率函数统一建模
 
-> **状态**：草案 (Draft) — 全部设计问题已决议，待进入实现
+> **状态**：已实现 — MVP v0.2.0 中完整实现 `efficiency_fn.py`，含 `constant_efficiency`/`ramping_efficiency` 构造器与支配偏序排序
 >
-> **依赖决策**：分组模型 ([上轮讨论](#6-与分组模型的关系))、跨设施组表达方式、`buffs_infrastructure.json` 数据层选型
+> **依赖决策**：分组模型 ([§6](#6-与分组模型的关系))、跨设施组表达方式、`buffs_infrastructure.json` 数据层选型
 
 ## 1. 动机
 

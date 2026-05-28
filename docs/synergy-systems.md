@@ -1,6 +1,6 @@
 # 基建联动体系建模
 
-> **版本**: 2026-05-26 · 基于 `buffs_infrastructure.json` (520 buff) + `character_identity.json` (415 干员) 交叉核验
+> **版本**: 2026-05-28 · 基于 `buffs_infrastructure.json` (520 buff) + `character_identity.json` (415 干员) 交叉核验，已删除 Trade 贪心迭代相关过时章节
 >
 > 每个体系一个独立函数。同层体系之间并行计算后线性叠加（游戏内效果本即加法，利用 `∫ Σ = Σ ∫` 分别积分后求和）。
 
@@ -769,54 +769,7 @@ def synergy_order_mechanics(
     return OrderMechanicsResult(...)
 ```
 
-### 贪心偏置系数 1.63 推导
-
-`solver.py` 中 `get_trade_order_equivalent_efficiency()` 使用系数 `1.63` 将订单倍数 `m` 映射为等效个人效率：
-
-```
-equiv_eff = (m - 1.0) × 1.63 × 100
-```
-
-推导过程（以但书为例，`m = 15929 / 10265 ≈ 1.552`）：
-
-```
-基础房间效率因子（3 人、各 30%）:
-  eff_normal = 1.0 + 0.01×3 + 0.30×3 = 1.03 + 0.90 = 1.93
-
-但书房间效率因子（但书 0%，2 室友各 30%）:
-  eff_butler = 1.0 + 0.01×3 + 0.30×2 = 1.03 + 0.60 = 1.63
-
-等效效率 = (m - 1.0) × eff_butler × 100
-         = (m - 1.0) × 1.63 × 100
-
-但书:  (1.552 - 1.0) × 1.63 × 100 = 0.552 × 163 = 89.9 ≈ 90
-龙舌兰: (1.069 - 1.0) × 1.63 × 100 = 0.069 × 163 = 11.2
-可露希尔: (1.169 - 1.0) × 1.63 × 100 = 0.169 × 163 = 27.6
-裁缝α:  (1.024 - 1.0) × 1.63 × 100 = 0.024 × 163 = 3.9
-```
-
-系数 `1.63` = 基础 1.0 + 人头加成 0.03 + 2 名室友假设各 30%（共 0.60）。
-验证：自动量化结果与手算偏置一致（但书 90 vs 85，龙舌兰 11 vs 15 更准）。
-
-### 迭代槽位填充与后验验证
-
-Trade 房间采用贪心迭代填充：
-
-```
-while len(taken) < room.slots and remaining:
-    op = remaining.pop(0)
-    if not _room_conditions_satisfiable(op, taken, remaining, slots, ops):
-        continue       # 条件不满足 → 跳过
-    taken.append(op)   # 条件满足 → 提交
-
-# 填充完毕后验：已入槽干员的机制条件是否实际兑现？
-if not _post_fill_verify(taken, ops):
-    _backtrack_and_refill(taken, remaining, ...)
-```
-
-后验作用：摩根需要格帮室友同房，前验只检查"剩余池中有格帮"，
-不保证格帮一定会被选入同一房间。后验在填充完成后确认同房
-条件是否实际兑现。
+> **注**：Trade 已改为 C(n,3) 全量穷举（与 Mfg 同架构），不再需要贪心迭代填充与等效效率近似。以下 A7 实现策略仍为文档参考。
 
 ---
 

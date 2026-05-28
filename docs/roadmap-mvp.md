@@ -54,7 +54,7 @@ Office candidate: 31
 
 ## MV2：联动函数（A 层核心，B/C 占位）
 
-**目标**：A1/A3/A4/A5 联动正确计算，A2/A6/A7 留占位，B/C 层用常数。
+**目标**（初始：A1/A3/A4/A5 正确，A2/A6/A7 留占位）→ **实际**：A1-A7 同房间联动全覆盖。
 
 **依赖**：MV0（需要 Operator 的身份字段和技能标签）
 
@@ -162,12 +162,116 @@ MV0 → MV1 串行。MV2 可与 MV1 并行开发（联动函数不需要效率�
 
 ## 里程碑与版本
 
-| 里程碑 | 版本 | 标准 |
-|--------|------|------|
-| MV0 + MV1 完成 | v0.1.0 | 数据加载正确 + 效率函数可排序 |
-| MV2 + MV3 完成 | v0.2.0 | 制造站穷举可输出完整排班 |
-| MV4 完成 | v0.3.0 | 端到端可运行，产出 MAA JSON |
-| MV5 完成 | v1.0.0 | 全体系联动建模完成 |
+| 里程碑 | 状态 | 说明 |
+|--------|:---:|------|
+| MV0 数据模型 | ✅ | `character_identity.json` + `buffs_infrastructure.json` 加载，415干员/520buff |
+| MV1 效率函数 | ✅ | `LinearSegment` + 支配偏序排序 + `constant_efficiency`/`ramping_efficiency` 构造器 |
+| MV2 联动函数 | ✅ | A1-A7 同房间联动全覆盖，16 个独立体系函数 |
+| MV3 制造站穷举 | ✅ | C(n,3) 穷举 + 三层剪枝 + 跨间贪心分配 |
+| MV4 入口整合 | ✅ | `run_solver.py` 端到端，命令行输出 MAA `custom_infrast` JSON |
+| MV5 跨设施+B层 | ✅ | B1-B7 + C1-C2 + D 层全体系联动建模完成 |
+
+**MVP 完成版本**: `v0.2.0` — 全box满练 243 布局单班次(12h)排班
+
+---
+
+## 实施记录
+
+> 以下内容来自 `docs/notes.md`（已合并归档），记录了 MVP 开发过程中的关键决策、偏差与发现。
+
+### MV0 (数据模型) — 2026-05-26
+
+**决策 1: 保留旧版 `load_operators`**
+- 审查发现删除旧函数会破坏 `run_solver.py`
+- 保留为兼容层，标注 MV4 后移除
+- data_loader.py 从 ~140 行膨胀到 ~230 行（+90 行旧代码）
+
+**决策 2: `integrate_segments` T 参数**
+- MV0 占位实现中 T 未被使用
+- 增加 T 裁剪逻辑（段尾超出 T 时截断），与 efficiency-function-design 对齐
+
+**发现: `skill_icon` 字段改用 `buff_id`**
+- 旧版从 `building_data.json` 的 `skillIcon` 获取，新版 `character_identity.json` 不包含
+- 改用 `buff_id` 填入；旧版兼容层不受影响
+
+### MV1 (效率函数) — 2026-05-26
+
+**决策 3: MVP 不实现 mood_gate**
+- 12h 班次下 mood 从 24 降到最低 ~16（三人房 0.65/h），心情门控不切换
+- 仅实现 `constant_efficiency` 和 `ramping_efficiency`，mood_gate 归入联动函数 B1 层
+
+**决策 4: 支配偏序在 12h 场景下退化**
+- 12h 内所有 e(t) 为常数段（无 mood 截断）→ 支配退化为纯效率值比较
+- 先实现通版 `_dominates()` 和 O(1) 简化版 `_dominates_simple()`，MVP 默认走简化版
+
+### MV2 (联动函数) — 2026-05-26
+
+**决策 5: 联动用干员名匹配而非 buff_id**
+- 测试中构造的 Operator 无 skills 列表，无法从 buff_id 判定联动角色
+- A1(配对)、A4(别名)、A5(自动化) 使用硬编码干员名查找表；A3(技能计数) 使用 `buff_name` 关键词匹配
+- ~30 行硬编码表，后续可改为从 buff 元数据自动生成
+
+### MV3 (求解器) — 2026-05-26
+
+**偏差: 真数据下制造站候选人数超出文档预期**
+- 预期 CR≈60, PG≈56；实际 CR=82, PG=83
+- 原因：`EfficiencyMap` 中 `all` 键让所有通用技能对双产物均可用
+- 82 人 × C(82,3) ≈ 88k 组合，剪枝后 ~4-5k，仍在 MV3 计算预算内
+
+**发现: Control 固定方案的干员可能不全匹配**
+- `FIXED_CONTROL = ["令", "重岳", "夕", "凯尔希", "焰尾"]` 从 `character_identity.json` 加载时可能不全匹配
+- MV4 入口整合时已调整并提取到 `steward_core/constants.py`
+
+### MV5 各阶段 — 2026-05-26
+
+**Phase 5a (A6 设施数量联动)**
+- `synergy_facility_count()`: 7 名干员，基于 LayoutConfig 统计设施数量
+- 宿舍等级硬编码为默认参数 12（4×Lv3），切换布局时需同步调整
+
+**Phase 5b (C1 中枢全局效率)**
+- `GlobalBonus` dataclass + `compute_control_global_bonus()`
+- 全局加成直接加到房间总积分：`total += global_bonus.mfg_bonus * T`
+
+**Phase 5d (B1 人间烟火)**
+- `BuffPool` dataclass + `compute_buff_pool()` 生产者 + `synergy_buff_pool_consumer()` 消费者
+- Phase 1 用固定中枢方案预计算保守值，Phase 5 验证时修正
+
+**Phase 5c/5e (B2/B3/B4/B5 + C2)**
+- BuffPool 扩展：thought_chains(B3)、silent_resonance(B5)、engineering_robots(B2)、monster_cuisine(B4)
+- C2: `compute_global_burn()` — 固定中枢下 burn=0.35，12h 不触发截断
+
+### 偏差修复 — 2026-05-27
+
+**修复 1: 森蚺 A5 版本检测**
+- 从 `op.skills` 的 `buff_id` 检测实际持有的 automation buff 版本
+- `_A5_AUTO_TABLE` 拆分为 `_A5_AUTO_NAMES` + `_POWER_BUFF_BONUS` + `_A5_AUTO_FALLBACK`
+
+**修复 2: FIXED_CONTROL 去重**
+- 提取到 `steward_core/constants.py`，solver.py 和 production.py 统一引用
+
+**修复 3: _greedy_remaining Trade A6 联动**
+- `eff <= 0` 时回退检测 `synergy_facility_count`，空弦/伺夜/渡桥/石英 可参与 Trade 排班
+
+**修复 4: B1 烟火消费者纳入候选池**
+- `_classify_mfg_operators` 新增 B 层消费者检测，黍/桑葚/截云/至简/迷迭香/玛露西尔 不再被等效剪枝过滤
+
+**文档同步: efficiency-function-design.md**
+- `_key_values` 改为取最后一个非零段终点，`rank_by_dominance` DAG 改为严格支配
+
+### Trade C(n,3) 穷举重构 — 2026-05-27
+
+**决策 12: Trade 从单干员贪心改为 C(n,3) 穷举**
+- 删除 `get_trade_order_equivalent_efficiency`（~100行），新增 `classify_trade_operators` + `_evaluate_trade_combo`
+- 净代码 -25 行，硬编码值 16→0
+
+**决策 13: _greedy_remaining 设施过滤改为正向匹配**
+- Trade 从 `_greedy_remaining` 移出，仅剩 Power/Reception/Office 三种设施
+
+**决策 14: _SYSTEM_CONTRIBUTORS 新增 Trade 锚点**
+- 新增 7 名 Trade anchor: 巫恋/火哨/吉星/雪雉/德克萨斯/摩根/新约能天使
+
+**决策 15: 裁缝不视为 Trade 锚点**
+- 裁缝自身效率极低，效果已在 `_get_trade_order_multiplier` 中自然计入
 
 ---
 
