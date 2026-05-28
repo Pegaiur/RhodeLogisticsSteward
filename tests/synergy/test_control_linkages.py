@@ -292,3 +292,55 @@ class TestC2PerOperatorBonus:
             [yahata], [bellone, siye, generic], "Money", room_type="Trade",
         )
         assert bonus == 10.0
+
+    def test_银灰异格_Trade满3谢拉格_加10(self):
+        """银灰异格在中枢，Trade 房 ≥3 谢拉格干员 → +10%"""
+        from steward_core.synergy import control_per_operator_bonus
+
+        silverash = _mk_op("银灰异格")
+        k1 = _mk_op("崖心", group_id="karlan")
+        k2 = _mk_op("讯使", group_id="karlan")
+        k3 = _mk_op("角峰", group_id="karlan")
+
+        bonus = control_per_operator_bonus(
+            [silverash], [k1, k2, k3], "Money", room_type="Trade",
+        )
+        assert bonus == 10.0
+
+    def test_银灰异格_Trade不足3谢拉格_不加成(self):
+        """银灰异格在中枢，Trade 房仅 2 谢拉格 → 0"""
+        from steward_core.synergy import control_per_operator_bonus
+
+        silverash = _mk_op("银灰异格")
+        k1 = _mk_op("崖心", group_id="karlan")
+        k2 = _mk_op("讯使", group_id="karlan")
+
+        bonus = control_per_operator_bonus(
+            [silverash], [k1, k2], "Money", room_type="Trade",
+        )
+        assert bonus == 0.0
+
+    def test_戴菲恩_Trade每格拉斯哥帮加10(self):
+        """戴菲恩在中枢，Trade 房 2 格拉斯哥帮 → +20%"""
+        from steward_core.synergy import control_per_operator_bonus
+
+        delphin = _mk_op("戴菲恩")
+        g1 = _mk_op("推进之王", group_id="glasgow")
+        g2 = _mk_op("摩根", group_id="glasgow")
+
+        bonus = control_per_operator_bonus(
+            [delphin], [g1, g2], "Money", room_type="Trade",
+        )
+        assert bonus == 20.0
+
+    def test_戴菲恩_无格拉斯哥帮_不加成(self):
+        """戴菲恩在中枢，Trade 房无格拉斯哥帮 → 0"""
+        from steward_core.synergy import control_per_operator_bonus
+
+        delphin = _mk_op("戴菲恩")
+        generic = _mk_op("普通干员")
+
+        bonus = control_per_operator_bonus(
+            [delphin], [generic], "Money", room_type="Trade",
+        )
+        assert bonus == 0.0

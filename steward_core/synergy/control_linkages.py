@@ -83,6 +83,8 @@ def control_per_operator_bonus(
     薇薇安娜: 每个骑士 Mfg 干员 → +7%
     老友相聚: 每黑钢国际 Mfg 干员 → +5%
     八幡海铃: 每个叙拉古 Trade 干员 → +5%
+    银灰异格: Trade 房间含 ≥3 谢拉格干员 → +10%
+    戴菲恩: Trade 房间每名格拉斯哥帮干员 → +10%
     """
     bonus = 0.0
     control_names = {op.name for op in control_ops}
@@ -112,5 +114,15 @@ def control_per_operator_bonus(
         for op in room_ops:
             if op.nation_id == "siracusa":
                 bonus += 5.0
+
+    if "银灰异格" in control_names and room_type == "Trade":
+        karlan_count = sum(1 for op in room_ops if op.group_id == "karlan")
+        if karlan_count >= 3:
+            bonus += 10.0
+
+    if "戴菲恩" in control_names and room_type == "Trade":
+        for op in room_ops:
+            if op.group_id == "glasgow":
+                bonus += 10.0
 
     return bonus
