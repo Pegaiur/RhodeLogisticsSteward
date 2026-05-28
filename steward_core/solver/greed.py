@@ -240,11 +240,13 @@ def _greedy_allocate_with_support(
     room_count: int,
     max_control_slots: int = 5,
     initial_control: set[str] | None = None,
+    config=None,
 ) -> list[tuple[list[str], dict[str, list[str]]]]:
     """从排序组合中贪心取无冲突的 N 间（含支撑干员冲突检查 + 中枢容量限制）
 
     evaluated: [(score, combo_names, all_support_names, support_map), ...]
     initial_control: 已占用的中枢支撑干员集合（跨产物轮次传递容量状态）
+    config: SolverConfig（预留，Step 1b 启用独占检查）
     容量不足时跳过当前组合，尝试下一个。
     """
     assigned: set[str] = set()

@@ -3,6 +3,7 @@
 from steward_core.models import Operator, RoomAssignment
 from steward_core.synergy import classify_mfg_operators, build_candidate_pool, get_synergy_enablers
 
+from .config import SolverConfig
 from .greed import _generate_combos, _greedy_allocate_with_support
 from .support import _evaluate_with_support
 
@@ -15,6 +16,7 @@ def _phase1_mfg(
     op_lookup: dict[str, Operator],
     locked_support: dict[str, set[str]],
     anchor_names: set[str],
+    config: SolverConfig | None = None,
 ) -> int:
     """Phase 1: 制造站穷举（CR 2间 + PG 2间）
 

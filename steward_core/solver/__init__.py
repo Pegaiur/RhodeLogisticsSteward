@@ -2,7 +2,7 @@
 
 Mfg 和 Trade 均使用 C(n,3) 穷举（含联动）+ 贪心分配。
 剩余设施（Power/Reception/Office）用支配偏序贪心。
-中枢后置于 Mfg + Trade，由两者累计的支撑需求动态决定。
+Control 由制造站 combo 的支撑需求动态决定。
 """
 
 from steward_core.models import Operator, ShiftPlan, SolveResult
@@ -19,7 +19,8 @@ from steward_core.synergy import (
 from steward_core.evaluate import evaluate_room
 from steward_core.constants import BASE_POWER_COUNT
 
-from .support import compute_optimal_support, _evaluate_with_support, compute_trade_support
+from .config import SolverConfig
+from .support import compute_optimal_support, _evaluate_with_support
 from .greed import (
     _greedy_allocate, _greedy_allocate_with_support, _greedy_remaining,
     _generate_combos, _upper_bound_ok, _evaluate_trade_combo,
@@ -44,12 +45,15 @@ _POWER_NAMES = set(get_system_contributors("Power", "facility_modifier"))
 _CTRL_GLOBAL_SORT_BIAS = 1000.0
 
 
-def solve_mvp(operators: list[Operator]) -> SolveResult:
-    """MVP 完整求解：制造站穷举 + 贸易站穷举 + 中枢后置填充 + 剩余设施贪心
+def solve_mvp(operators: list[Operator], config: SolverConfig | None = None) -> SolveResult:
+    """MVP 完整求解：制造站穷举 + 支撑干员锁 + 剩余设施贪心
 
-    中枢后置于 Mfg + Trade：由两者的支撑需求累计决定组成。
-    返回 SolveResult，含一个 12h ShiftPlan。
+    中枢不再固定——由制造站 combo 的支撑需求动态决定。
+    返回 SolveResult，含一个 12h ShiftPlan 和使用的配置。
     """
+    if config is None:
+        config = SolverConfig()
+
     assigned_ids: set[str] = set()
     assigned_names: set[str] = set()
     assignments: list = []
@@ -62,7 +66,7 @@ def solve_mvp(operators: list[Operator]) -> SolveResult:
     # Phase 1: 制造站穷举（CR 2间 + PG 2间）
     autofill_count += _phase1_mfg(
         operators, assigned_ids, assigned_names, assignments,
-        op_lookup, locked_support, ANCHOR_NAMES,
+        op_lookup, locked_support, ANCHOR_NAMES, config,
     )
 
     # Phase 3a: 贸易站穷举（使用 locked_support 估计中枢，中枢尚未填充）
@@ -94,4 +98,4 @@ def solve_mvp(operators: list[Operator]) -> SolveResult:
         period_from="00:00",
         period_to="11:59",
     )
-    return SolveResult(plans=[plan], autofill_count=autofill_count)
+    return SolveResult(plans=[plan], autofill_count=autofill_count, config_used=config)

@@ -1,7 +1,12 @@
 """排班求解器数据模型"""
 
+from __future__ import annotations
+
 from dataclasses import dataclass, field
-from typing import Optional
+from typing import TYPE_CHECKING, Optional
+
+if TYPE_CHECKING:
+    from steward_core.solver.config import SolverConfig
 
 
 @dataclass
@@ -200,3 +205,4 @@ class SolveResult:
     """求解结果"""
     plans: list[ShiftPlan] = field(default_factory=list)
     autofill_count: int = 0
+    config_used: Optional["SolverConfig"] = None
