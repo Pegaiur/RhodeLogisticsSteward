@@ -55,3 +55,19 @@
 ### 偏离 plan 的情况
 
 Step 2（GlobalContext 去重，plan 预计约 30 行）被跳过。plan 文档 §"可顺带优化的架构脆弱点" 第 2 项标记为完成但不改动。
+
+---
+
+## Step 4: K-Beam Strategy 实现
+
+### 实施时间
+
+2026-05-28
+
+### 决策记录
+
+- **迭代排斥法选择**：采用"排斥完整 combo 集合 + 逐项跳过"而非 DFS 回溯。原因——排斥集合方式简单、可预测、每轮只需一次贪心扫描。K=5 时 5 次扫描仍可接受。
+- **CR 做 K 条、PG 做 1 条**：`_phase1_kbeam` 中 CR 的 top-K 分配是分叉点，PG 在每条 CR 路径上只取 1 条——防止 K² 爆炸（K 条 CR × K 条 PG = 25 条路径）。
+- **测试池 prune_equivalent 冲突**：`classify_mfg_operators` → `prune_equivalent(top_k=3)` 将测试干员全标记为纯效率 → 仅保留 3 人 → C(3,3)=1 个组合。集成测试调整为验证"至少 1 间 Mfg"而非"4 间满员"。全量数据下锚点充足，不受影响。
+- **择优选 `_production_score` 而非 `evaluate_room`**：因为 Trade 订单机制（孑/但书/可露希尔）将效率积分非线性转换为 LMD 产出，`production.calculate()` 才能准确比较不同路径的真实产出。
+- **Phase 函数直接调用**：KBeamStrategy 不通过 Pipeline，直接调用 `_phase2_control`、`_phase3_trade` 等——树状数据流无法用线性 Pipeline 表达。
