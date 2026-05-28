@@ -112,47 +112,19 @@ RhodeLogisticsSteward/
 
 ### 硬编码数据清单
 
-以下硬编码数据不受 ArknightsGameData 驱动，每次游戏版本更新需人工审查：
+以下硬编码数据不受 ArknightsGameData 驱动，每次游戏版本更新需人工审查。**详情以源码为准，本文档不重复列出：**
 
-**`steward_core/synergy/`** — 联动体系
-
-| 名称 | 类型 | 维护内容 | 触发条件 |
-|------|------|----------|----------|
-| `_SYSTEM_CONTRIBUTORS` | list | 系统贡献者注册表（含锚点/全局/buff生成/设施修改器） | 新增效率为0但有系统贡献的干员 |
-| `_A_PAIR_TABLE` | dict | 干员配对组合 | 新增配对型联动 buff |
-| `_A_ROOM_FACTION_TABLE` | dict | 同房阵营计数联动 | 新增同房阵营计数型联动 buff |
-| `_A_ROOM_FACTION_EXTRA` | dict | 同房阵营额外加成（如摩根+推王→额外+35%） | 新增同房阵营额外加成 |
-| `_A_SKILL_COUNT_TABLE` | dict | 技能类型计数锚点 | 新增计数型联动 buff |
-| `_A_SKILL_COUNT_BONUS` | float | 技能计数每人加成（5%） | buff 数值变更 |
-| `_A_AUTOMATION_FALLBACK` | dict | 自动化名称→加成回退值（buff_id 不可用时） | 新增自动化干员或 buff 变更 |
-| `_POWER_BUFF_BONUS` | dict | 自动化 buff_id→加成映射 | 新增 manu_prod_spd&power[*] 类型 buff |
-| `_ZEROING_VARIANT_TABLE` | dict | 归零变体（科学改造/流程优化） | 新增归零型变体 buff |
-| `_TOKEN_PROD_TABLE` | dict | 机械精通加成映射 | 新增作业平台联动 buff |
-| `_RAMPING_SKILL_TABLE` | dict | 爬升型效率技能参数 | 新增 manu_prod_spd_addition[*] 爬升型技能 |
-| `_A_FACILITY_LINK_TABLE` | dict | 设施数量联动表 | 新增设施联动 buff |
-| `_C_CONTROL_GLOBAL_TABLE` | dict | 中枢全局效率 | 新增中枢全局 buff |
-| `_B_BUFF_CONSUMER_TABLE` | dict | buff 池消费者 | 新增 buff 池消费者 |
-| `_B_GLOBAL_FACTION_TABLE` | dict | 全局阵营计数 | 新增全局阵营计数型 buff |
-| `_B_CROSS_ROOM_PAIR_TABLE` | dict | 跨房间配对表 | 新增跨设施干员条件配对 buff |
-| `_KNIGHT_NAMES` | set | 骑士干员名称（安全网补全） | 新增卡西米尔但不属于 kazimierz 势力/pinus 组织的骑士 |
-| `_OP_PLATFORM_NAMES` | set | 作业平台干员名称 | 新增机器人/作业平台干员 |
-| `_MH_NAMES` | set | 怪物猎人小队干员名 | 新增怪物猎人联动干员 |
-| `_LUNG_MEN_GUARD_NAMES` | set | 龙门近卫局干员名 | 新增龙门近卫局干员 |
-| `_DURIN_NAMES` | set | 杜林族干员名（自动推导安全网） | 新增杜林族干员 |
-| `_BLACKSTEEL_HOLDERS` | set | 老友相聚中枢持有者 | 新增黑钢国际相关中枢干员 |
-| `_PINUS_GROUP` | str | 红松骑士团 group_id | ArknightsGameData 更新 |
-| `_BLACKSTEEL_GROUP` | str | 黑钢国际 group_id | ArknightsGameData 更新 |
-| `_GLASGOW_GROUP` | str | 格拉斯哥帮 group_id | ArknightsGameData 更新 |
-| `_ORDER_ANCHOR_PREFIXES` | tuple | 贸易站订单机制 buff_id 前缀 | 新增订单机制 buff |
-| `_B_ROSEMARY` | str | 迷迭香名称常量 | — |
-| `_B_EBENHOLZ` | str | 黑键名称常量 | — |
-| `ROSEMARY_SUPPORT` | dict | 迷迭香支撑干员 | 新增迷迭香联动链参与者 |
-| `TABLES` | dict | 硬编码表集中索引（`TableMeta` 注册器） | 任意硬编码表新增/改名时同步更新 |
+| 数据类别 | 权威来源 | 说明 |
+|----------|----------|------|
+| 系统贡献者 | [`registry.py`](file:///d:/Dev/RhodeLogisticsSteward/steward_core/synergy/registry.py) `_SYSTEM_CONTRIBUTORS` | 效率为0但有系统贡献的干员，按 `contribution_type` 分类标注 |
+| 联动映射表 | [`types.py`](file:///d:/Dev/RhodeLogisticsSteward/steward_core/synergy/types.py) `TABLES` 注册器 | 13 张 dict 表，含消费者函数和更新触发条件 |
+| 名称集合 | [`helpers.py`](file:///d:/Dev/RhodeLogisticsSteward/steward_core/synergy/helpers.py) | `_KNIGHT_NAMES`、`_OP_PLATFORM_NAMES`、`_MH_NAMES` 等 10 个集合/常量 |
+| 辅助常量 | [`helpers.py`](#) | `_PINUS_GROUP`、`_ORDER_ANCHOR_PREFIXES`、`_B_ROSEMARY` 等 |
 
 ### 维护流程
 
 1. 游戏版本更新后，查阅 [PRTS Wiki 基建页面](https://prts.wiki/w/基建) 确认新增干员/技能
-2. 对照上表逐项检查是否需要更新硬编码数据
+2. 对照上述权威来源逐项检查是否需要更新
 3. 更新代码后运行 `python -m pytest tests/ -v` 确保现有测试通过
 4. 提交时在 commit message 中注明更新了哪些表
 
