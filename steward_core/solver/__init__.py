@@ -30,6 +30,7 @@ from .phase2_control import _phase2_control
 from .phase3_trade import _phase3_trade
 from .phase3_remaining import _phase3_remaining
 from .phase4_dorm import _phase4_dorm
+from .refine import local_search_refine
 
 T = 12.0
 
@@ -98,4 +99,6 @@ def solve_mvp(operators: list[Operator], config: SolverConfig | None = None) -> 
         period_from="00:00",
         period_to="11:59",
     )
-    return SolveResult(plans=[plan], autofill_count=autofill_count, config_used=config)
+    result = SolveResult(plans=[plan], autofill_count=autofill_count, config_used=config)
+    result = local_search_refine(result, operators, config)
+    return result
