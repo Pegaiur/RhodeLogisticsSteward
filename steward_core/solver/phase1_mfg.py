@@ -27,6 +27,10 @@ def _phase1_mfg(
     """
     autofill_count = 0
 
+    # 全局状态跨产物共享——CR 消耗的包余量在 PG 评分中体现为惩罚
+    use_global = config.global_state_scoring if config else False
+    gs = GlobalState.for_layout_243() if use_global else None
+
     for product, count in [("CombatRecord", 2), ("PureGold", 2)]:
         mfg_ops = [op for op in operators if op.has_skill_for("Mfg", product)]
         if not mfg_ops:
@@ -49,8 +53,6 @@ def _phase1_mfg(
         combos = _generate_combos(pool, 3)
 
         # 评估所有组合（含最优支撑）
-        use_global = config.global_state_scoring if config else False
-        gs = GlobalState.for_layout_243() if use_global else None
         evaluated = []
         for combo_ops in combos:
             score, support_map = _evaluate_with_support(
