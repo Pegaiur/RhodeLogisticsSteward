@@ -110,39 +110,44 @@ RhodeLogisticsSteward/
 | 怪物猎人小队 | `tag.mh` | 联动限定干员 | 尚未建模 | — |
 | 莱欧斯小队 | `tag.dungeon` | 联动限定干员 | 尚未建模 | — |
 
-### 硬编码表清单
+### 硬编码数据清单
 
-以下模块包含不受 ArknightsGameData 驱动的硬编码映射表，每次游戏版本更新需人工审查：
+以下硬编码数据不受 ArknightsGameData 驱动，每次游戏版本更新需人工审查：
 
-**`steward_core/synergy/`** — 联动体系表
+**`steward_core/synergy/`** — 联动体系
 
-| 表名 | 维护内容 | 触发条件 |
-|------|----------|----------|
-| `_SYSTEM_CONTRIBUTORS` | 系统贡献者注册表（含锚点/全局/buff生成/设施修改器） | 新增效率为0但有系统贡献的干员 |
-| `_A_PAIR_TABLE` | 干员配对组合 | 新增配对型联动 buff |
-| `_A_ROOM_FACTION_TABLE` | 同房阵营计数联动 | 新增同房阵营计数型联动 buff |
-| `_A_ROOM_FACTION_EXTRA` | 同房阵营额外加成（如摩根+推王→额外+35%） | 新增同房阵营额外加成 |
-| `_A_SKILL_COUNT_TABLE` | 技能类型计数锚点 | 新增计数型联动 buff |
-| `_A_AUTOMATION_FALLBACK` | 自动化名称→加成回退值（buff_id 不可用时） | 新增自动化干员或 buff 变更 |
-| `_ZEROING_VARIANT_TABLE` | 归零变体（科学改造/流程优化） | 新增归零型变体 buff |
-| `_TOKEN_PROD_TABLE` | 机械精通加成映射 | 新增作业平台联动 buff |
-| `_RAMPING_SKILL_TABLE` | 爬升型效率技能参数 | 新增 manu_prod_spd_addition[*] 爬升型技能 |
-| `_POWER_BUFF_BONUS` | 自动化 buff_id→加成映射 | 新增 manu_prod_spd&power[*] 类型 buff |
-| `_A_FACILITY_LINK_TABLE` | 设施数量联动表 | 新增设施联动 buff |
-| `_C_CONTROL_GLOBAL_TABLE` | 中枢全局效率 | 新增中枢全局 buff |
-| `_KNIGHT_NAMES` | 骑士干员名称（安全网补全） | 新增卡西米尔但不属于 kazimierz 势力/pinus 组织的骑士 |
-| `_B_BUFF_CONSUMER_TABLE` | buff 池消费者 | 新增 buff 池消费者 |
-| `_B_GLOBAL_FACTION_TABLE` | 全局阵营计数 | 新增全局阵营计数型 buff |
-| `_B_CROSS_ROOM_PAIR_TABLE` | 跨房间配对表 | 新增跨设施干员条件配对 buff |
-| `ROSEMARY_SUPPORT` | 迷迭香支撑干员 | 新增迷迭香联动链参与者 |
-| `_RAMPING_SKILL_TABLE` | 爬升型效率技能参数 | 新增 manu_prod_spd_addition[*] 爬升型技能 |
-| `_ZEROING_VARIANT_TABLE` | 归零变体（科学改造/流程优化） | 新增归零型变体 buff |
-| `_TOKEN_PROD_TABLE` | 机械精通加成映射 | 新增作业平台联动 buff |
-| `_OP_PLATFORM_NAMES` | 作业平台干员名称 | 新增机器人/作业平台干员 |
-| `_MH_NAMES` | 怪物猎人小队干员名 | 新增怪物猎人联动干员 |
-| `_LUNG_MEN_GUARD_NAMES` | 龙门近卫局干员名 | 新增龙门近卫局干员 |
-| `_BLACKSTEEL_HOLDERS` | 老友相聚中枢持有者 | 新增黑钢国际相关中枢干员 |
-| `TABLES` | 硬编码表集中索引（`TableMeta` 注册器） | 任意硬编码表新增/改名时同步更新 |
+| 名称 | 类型 | 维护内容 | 触发条件 |
+|------|------|----------|----------|
+| `_SYSTEM_CONTRIBUTORS` | list | 系统贡献者注册表（含锚点/全局/buff生成/设施修改器） | 新增效率为0但有系统贡献的干员 |
+| `_A_PAIR_TABLE` | dict | 干员配对组合 | 新增配对型联动 buff |
+| `_A_ROOM_FACTION_TABLE` | dict | 同房阵营计数联动 | 新增同房阵营计数型联动 buff |
+| `_A_ROOM_FACTION_EXTRA` | dict | 同房阵营额外加成（如摩根+推王→额外+35%） | 新增同房阵营额外加成 |
+| `_A_SKILL_COUNT_TABLE` | dict | 技能类型计数锚点 | 新增计数型联动 buff |
+| `_A_SKILL_COUNT_BONUS` | float | 技能计数每人加成（5%） | buff 数值变更 |
+| `_A_AUTOMATION_FALLBACK` | dict | 自动化名称→加成回退值（buff_id 不可用时） | 新增自动化干员或 buff 变更 |
+| `_POWER_BUFF_BONUS` | dict | 自动化 buff_id→加成映射 | 新增 manu_prod_spd&power[*] 类型 buff |
+| `_ZEROING_VARIANT_TABLE` | dict | 归零变体（科学改造/流程优化） | 新增归零型变体 buff |
+| `_TOKEN_PROD_TABLE` | dict | 机械精通加成映射 | 新增作业平台联动 buff |
+| `_RAMPING_SKILL_TABLE` | dict | 爬升型效率技能参数 | 新增 manu_prod_spd_addition[*] 爬升型技能 |
+| `_A_FACILITY_LINK_TABLE` | dict | 设施数量联动表 | 新增设施联动 buff |
+| `_C_CONTROL_GLOBAL_TABLE` | dict | 中枢全局效率 | 新增中枢全局 buff |
+| `_B_BUFF_CONSUMER_TABLE` | dict | buff 池消费者 | 新增 buff 池消费者 |
+| `_B_GLOBAL_FACTION_TABLE` | dict | 全局阵营计数 | 新增全局阵营计数型 buff |
+| `_B_CROSS_ROOM_PAIR_TABLE` | dict | 跨房间配对表 | 新增跨设施干员条件配对 buff |
+| `_KNIGHT_NAMES` | set | 骑士干员名称（安全网补全） | 新增卡西米尔但不属于 kazimierz 势力/pinus 组织的骑士 |
+| `_OP_PLATFORM_NAMES` | set | 作业平台干员名称 | 新增机器人/作业平台干员 |
+| `_MH_NAMES` | set | 怪物猎人小队干员名 | 新增怪物猎人联动干员 |
+| `_LUNG_MEN_GUARD_NAMES` | set | 龙门近卫局干员名 | 新增龙门近卫局干员 |
+| `_DURIN_NAMES` | set | 杜林族干员名（自动推导安全网） | 新增杜林族干员 |
+| `_BLACKSTEEL_HOLDERS` | set | 老友相聚中枢持有者 | 新增黑钢国际相关中枢干员 |
+| `_PINUS_GROUP` | str | 红松骑士团 group_id | ArknightsGameData 更新 |
+| `_BLACKSTEEL_GROUP` | str | 黑钢国际 group_id | ArknightsGameData 更新 |
+| `_GLASGOW_GROUP` | str | 格拉斯哥帮 group_id | ArknightsGameData 更新 |
+| `_ORDER_ANCHOR_PREFIXES` | tuple | 贸易站订单机制 buff_id 前缀 | 新增订单机制 buff |
+| `_B_ROSEMARY` | str | 迷迭香名称常量 | — |
+| `_B_EBENHOLZ` | str | 黑键名称常量 | — |
+| `ROSEMARY_SUPPORT` | dict | 迷迭香支撑干员 | 新增迷迭香联动链参与者 |
+| `TABLES` | dict | 硬编码表集中索引（`TableMeta` 注册器） | 任意硬编码表新增/改名时同步更新 |
 
 ### 维护流程
 
@@ -179,26 +184,6 @@ RhodeLogisticsSteward/
 | 重构/模块拆分/架构 | `docs/refactor-plan.md` |
 | 联动体系代码 | `steward_core/synergy/` → `__init__.py` 重导出一览，`types.py` TABLES 注册器索引全部表 |
 | 求解/排班代码 | `steward_core/solver/` → `__init__.py` solve_mvp() 入口，各 `phase*.py` 按阶段独立 |
-
-## 技能 (Skills)
-
-本项目使用 Trae IDE 的 Skill 机制辅助开发和文档编写。
-
-### 已注册技能
-
-| 技能 | 用途 | 触发条件 |
-|------|------|----------|
-| **commit-convention** | 生成中文约定式提交信息 + 版本号推算 + tag 管理 | 提交代码时自动拉起 |
-| **mermaid-charting** | Mermaid 图表渲染（flowchart/sequence/er/pie/mindmap 等 13 种） | 需要可视化流程、架构、数据关系时 |
-| **tdd-workflow** | TDD 红-绿-重构循环，3A 测试模板 | 编写求解器单元测试时 |
-| **TRAE-debugger** | HTTP 日志收集 + 假设→插桩→复现→分析 科学调试 | 排班结果异常需运行时诊断时 |
-| **data-query** | 对数据源执行常见查询，替代每次写临时脚本 | 需要查询干员数据、分析 buff 或统计信息时 |
-
-### 技能约定
-
-- `commit-convention` 产出中文 commit message，格式 `type(scope): 描述`
-- `mermaid-charting` 图表使用 ` ```mermaid ` 代码块，优先 flowchart/mindmap
-- 需要用户级技能时以用户侧注册为准，本文件仅声明项目级约定
 
 ## 版本管理
 
