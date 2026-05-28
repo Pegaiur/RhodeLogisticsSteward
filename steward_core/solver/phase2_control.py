@@ -17,6 +17,7 @@ def _phase2_control(
     返回 ctrl_names 供 Phase 3a 使用。
     """
     ctrl_names = sorted(locked_support["Control"])
+    ctrl_names = ctrl_names[:5]
     for n in ctrl_names:
         if n in op_lookup:
             assigned_ids.add(op_lookup[n].char_id)
