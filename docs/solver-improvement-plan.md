@@ -143,31 +143,4 @@ class SolverConfig:
 | Step 2: 局部搜索 | ✅ 完成 | `feat(refine): 局部搜索后处理 (可开关)` |
 | Step 3: 全局状态 | ✅ 完成 | `feat(global_state): 包级稀缺度评分注入 (可开关)` |
 
-## 远期待办（Inbox）
-
-以下是不阻塞当前功能的长期方向，触发条件满足时启动：
-
-### Strategy 策略组合器
-
-**触发条件**：SolverConfig 中 bool 开关 ≥ 4 个时
-
-**问题**：当前 `SolverConfig` 用独立 bool 开关 + `SolverParams` 数值参数控制行为，无法表达策略间互锁（如"全局状态评分仅在独占检查开启时生效"）或元策略（如"同时跑两种算法取最高分"）。
-
-**方向**：引入 `Strategy` 抽象层——每个 Strategy 封装一个完整的求解流水线（预处理 + 主求解 + 后处理 + 目标函数），`SolverConfig` 引用 Strategy 而非直接含开关。详见 [2026-05-28 讨论](#)。
-
-### 瓶颈枚举（互补件一）
-
-**触发条件**：跨 Phase 资源分配（如"黑键该去 Mfg 支撑还是 Trade 主力"）成为显著瓶颈时
-
-**方向**：识别 8-12 个关键瓶颈干员，枚举所有可行分配方案，对每种方案跑完整求解取最优。与全局状态评分互补——前者处理少量关键决策的精确分配，后者处理大规模资源竞争的启发式引导。
-
-### 局部搜索策略化
-
-**触发条件**：当前 first-improvement 策略无法满足需求时
-
-**方向**：支持 best-improvement、simulated annealing、或基于房间类型的加权搜索。策略选择通过 `Strategy.scoring` 配置。
-
-### 实验工具
-
-`scripts/experiments/compare_solver.py` — A/B 对比 6 种配置组合
-`scripts/experiments/compare_detail.py` — 单次对比逐房间产出差异
+远期待办见 [inbox.md](inbox.md)。
