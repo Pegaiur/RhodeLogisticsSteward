@@ -15,6 +15,10 @@ _C_CONTROL_GLOBAL_TABLE: dict[str, GlobalBonusEntry] = {
     "凯尔希": GlobalBonusEntry(2.0, 0.0),
     "Mon3tr": GlobalBonusEntry(2.0, 0.0),
     "望": GlobalBonusEntry(2.0, 7.0),
+    "阿米娅": GlobalBonusEntry(0.0, 7.0),
+    "诗怀雅": GlobalBonusEntry(0.0, 7.0),
+    "佩佩": GlobalBonusEntry(0.0, 7.0),
+    "阿斯卡纶": GlobalBonusEntry(0.0, 7.0),
 }
 
 

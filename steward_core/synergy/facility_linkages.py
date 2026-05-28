@@ -95,14 +95,22 @@ def _has_power_count_modifier(op: Operator) -> bool:
 def compute_effective_power_count(
     power_operators: list[Operator],
     physical_count: int,
+    control_operators: list[Operator] | None = None,
 ) -> int:
     """计算有效发电站数量（含设施数量修改器）
 
-    承曦格雷伊"晨曦"（power_count[000]）：发电站额外+1（仅影响设施数量）。
-    已知限制: Lancet-2 + 森蚺中枢"我寻思能行"（control_pow_bot[000]）发电站额外+2 暂未实现。
+    承曦格雷伊"晨曦"（power_count[000]）：发电站额外+1。
+    森蚺"我寻思能行"（control_pow_bot[000]）：Lancet-2在发电站时额外+2。
     """
     count = physical_count
     for op in power_operators:
         if _has_power_count_modifier(op):
             count += 1
+    if control_operators:
+        power_names = {op.name for op in power_operators}
+        if "Lancet-2" in power_names:
+            for op in control_operators:
+                if any(s.buff_id == "control_pow_bot[000]" for s in op.skills):
+                    count += 2
+                    break
     return count

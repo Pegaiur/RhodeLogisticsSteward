@@ -176,6 +176,55 @@ class TestC1Wang:
         assert bonus.trade_bonus == 7.0  # 望7
 
 
+# ─── C1 全局贸易加成 fallback（阿米娅/诗怀雅/佩佩/阿斯卡纶） ────
+
+class TestC1Trade7Fallback:
+    """C1: compute_control_global_bonus — 全局贸易+7% fallback"""
+
+    def test_阿米娅_贸易加7(self):
+        from steward_core.synergy import compute_control_global_bonus
+
+        amiya = _mk_op("阿米娅")
+        bonus = compute_control_global_bonus([amiya])
+
+        assert bonus.trade_bonus == 7.0
+        assert bonus.mfg_bonus == 0.0
+
+    def test_诗怀雅_贸易加7(self):
+        from steward_core.synergy import compute_control_global_bonus
+
+        swire = _mk_op("诗怀雅")
+        bonus = compute_control_global_bonus([swire])
+
+        assert bonus.trade_bonus == 7.0
+
+    def test_佩佩_贸易加7(self):
+        from steward_core.synergy import compute_control_global_bonus
+
+        peper = _mk_op("佩佩")
+        bonus = compute_control_global_bonus([peper])
+
+        assert bonus.trade_bonus == 7.0
+
+    def test_阿斯卡纶_贸易加7(self):
+        from steward_core.synergy import compute_control_global_bonus
+
+        ascln = _mk_op("阿斯卡纶")
+        bonus = compute_control_global_bonus([ascln])
+
+        assert bonus.trade_bonus == 7.0
+
+    def test_阿米娅加望_同种取最高仍为7(self):
+        """同种取最高：望7 与 阿米娅7 → 取 max=7"""
+        from steward_core.synergy import compute_control_global_bonus
+
+        amiya = _mk_op("阿米娅")
+        wang = _mk_op("望")
+        bonus = compute_control_global_bonus([amiya, wang])
+
+        assert bonus.trade_bonus == 7.0
+
+
 # ─── C2 中枢 per-operator 加成 ──────────────────────────────────────
 
 class TestC2PerOperatorBonus:
