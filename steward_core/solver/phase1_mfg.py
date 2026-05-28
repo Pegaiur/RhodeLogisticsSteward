@@ -4,8 +4,9 @@ from steward_core.models import Operator, RoomAssignment
 from steward_core.synergy import classify_mfg_operators, build_candidate_pool, get_synergy_enablers
 
 from .config import SolverConfig
+from .global_state import GlobalState
 from .greed import _generate_combos, _greedy_allocate_with_support
-from .support import _evaluate_with_support
+from .support import _evaluate_with_support, compute_optimal_support
 
 
 def _phase1_mfg(
@@ -48,6 +49,8 @@ def _phase1_mfg(
         combos = _generate_combos(pool, 3)
 
         # 评估所有组合（含最优支撑）
+        use_global = config.global_state_scoring if config else False
+        gs = GlobalState.for_layout_243() if use_global else None
         evaluated = []
         for combo_ops in combos:
             score, support_map = _evaluate_with_support(
@@ -56,6 +59,14 @@ def _phase1_mfg(
             )
             combo_names = [op.name for op in combo_ops]
             all_support_names = [n for names in support_map.values() for n in names]
+
+            # 全局状态评分修正：稀缺包消耗越多惩罚越重
+            if use_global:
+                bundles = compute_optimal_support(combo_ops).bundles
+                alpha = config.params.global_state_alpha if config else 0.3
+                penalty = gs.scarcity_penalty(bundles, alpha=alpha)
+                score -= penalty
+
             evaluated.append((score, combo_names, all_support_names, support_map))
         evaluated.sort(key=lambda x: -x[0])
 
@@ -77,6 +88,12 @@ def _phase1_mfg(
                     if n in op_lookup:
                         assigned_ids.add(op_lookup[n].char_id)
                         assigned_names.add(n)
+            # 全局状态：消耗已分配 combo 的包余量
+            if use_global:
+                allocated_bundles = compute_optimal_support(
+                    [op_lookup[n] for n in names if n in op_lookup]
+                ).bundles
+                gs.allocate(allocated_bundles)
             assignments.append(RoomAssignment(
                 room_type="Mfg",
                 room_index=len([a for a in assignments if a.room_type == "Mfg"]),

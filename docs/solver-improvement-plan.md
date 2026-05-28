@@ -141,4 +141,4 @@ class SolverConfig:
 | Step 1a: 支撑包 | ✅ 完成 | `feat(bundle): 支撑包数据结构 (SupportBundle + SupportResult)` |
 | Step 1b: 独占冲突检查 | ✅ 完成 | `feat(greed): 独占支撑冲突检查 (可开关)` |
 | Step 2: 局部搜索 | ✅ 完成 | `feat(refine): 局部搜索后处理 (可开关)` |
-| Step 3: 全局状态 | 待开始 | — |
+| Step 3: 全局状态 | ✅ 完成 | `feat(global_state): 包级稀缺度评分注入 (可开关)` |
