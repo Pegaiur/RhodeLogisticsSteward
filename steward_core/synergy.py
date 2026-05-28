@@ -89,11 +89,11 @@ def _is_glasgow(op: "Operator") -> bool:
     return getattr(op, "group_id", None) == "glasgow"
 
 
-# ─── A1 干员配对 ─────────────────────────────────────────────────
+# ─── A·干员配对 ─────────────────────────────────────────────────
 
 # 配对表: (持有者名, 目标名, 产物, 加成%)
 # 来自 buffs_infrastructure.json 中 efficiency=0 的条件型 buff
-_A1_PAIR_TABLE: dict[tuple[str, str, str], float] = {
+_A_PAIR_TABLE: dict[tuple[str, str, str], float] = {
     ("阿兰娜", "温米", "PureGold"): 15.0,
     ("Miss.Christine", "酒神", "CombatRecord"): 30.0,
     ("怒潮凛冬", "乌萨斯学生自治团", "CombatRecord"): 10.0,
@@ -113,7 +113,7 @@ def synergy_pair(
     names = {op.name for op in operators}
     segments = []
 
-    for (holder_name, target_name, p_type), bonus in _A1_PAIR_TABLE.items():
+    for (holder_name, target_name, p_type), bonus in _A_PAIR_TABLE.items():
         if product != p_type:
             continue
         if holder_name in names and target_name in names:
@@ -122,7 +122,7 @@ def synergy_pair(
     return segments
 
 
-# ─── A7 孑订单压缩机制 ───────────────────────────────────────────
+# ─── A·订单压缩 ───────────────────────────────────────────
 
 def synergy_jie_order(
     operators: list[Operator],
@@ -386,15 +386,15 @@ def operator_ramp_segments(
     return None
 
 
-# ─── A3 技能类型计数 ─────────────────────────────────────────────
+# ─── A·技能计数 ─────────────────────────────────────────────
 
 # 计数锚点: {干员名: 计数的技能类型}
-_A3_COUNTER_TABLE: dict[str, str] = {
+_A_SKILL_COUNT_TABLE: dict[str, str] = {
     "水月": "标准化",
     "多萝西": "莱茵科技",
     "苍苔": "金属工艺",
 }
-_A3_BONUS_PER = 5.0  # 每个该类技能 +5%
+_A_SKILL_COUNT_BONUS = 5.0  # 每个该类技能 +5%
 
 
 def skill_class(buff_name: str) -> str | None:
@@ -435,9 +435,9 @@ def synergy_skill_count(
     segments = []
 
     for op in operators:
-        if op.name not in _A3_COUNTER_TABLE:
+        if op.name not in _A_SKILL_COUNT_TABLE:
             continue
-        target_cls = _A3_COUNTER_TABLE[op.name]
+        target_cls = _A_SKILL_COUNT_TABLE[op.name]
 
         # 统计同房所有干员（含自身）中持有 target_cls 类型的数量
         count = 0
@@ -446,13 +446,13 @@ def synergy_skill_count(
                 count += 1
 
         if count > 0:
-            bonus = count * _A3_BONUS_PER
+            bonus = count * _A_SKILL_COUNT_BONUS
             segments.append(LinearSegment(a=bonus, b=0.0, t_start=0.0, dt=T))
 
     return segments
 
 
-# ─── A4 技能类型别名 ─────────────────────────────────────────────
+# ─── A·技能别名 ─────────────────────────────────────────────
 
 def synergy_skill_alias(
     operators: list[Operator],
@@ -470,7 +470,7 @@ def synergy_skill_alias(
     }
 
 
-# ─── A5 自动化 ───────────────────────────────────────────────────
+# ─── A·自动化 ───────────────────────────────────────────────────
 
 # 自动化 buff 版本 → 每发电站加成%: manu_prod_spd&power[000/010/020]
 _POWER_BUFF_BONUS: dict[str, float] = {
@@ -480,7 +480,7 @@ _POWER_BUFF_BONUS: dict[str, float] = {
 }
 
 # 名称→加成回退值（技能数据不可用时，如 building_data.json 缺失 buff_id 映射）
-_A5_AUTO_FALLBACK: dict[str, float] = {
+_A_AUTOMATION_FALLBACK: dict[str, float] = {
     "森蚺": 5.0,
     "掠风": 5.0,
     "异客": 5.0,
@@ -497,7 +497,7 @@ def _automation_bonus(op: Operator) -> float:
             if b > best:
                 best = b
     if best <= 0:
-        best = _A5_AUTO_FALLBACK.get(op.name, 0.0)
+        best = _A_AUTOMATION_FALLBACK.get(op.name, 0.0)
     return best
 
 
@@ -533,7 +533,7 @@ def synergy_automation(
     return segments, zero_set
 
 
-# ─── A5b 低语（秩序低语/归零反馈型）───────────────────────────────
+# ─── A·低语（巫恋·归零反馈）───────────────────────────────
 
 def synergy_whisper(
     operators: list[Operator],
@@ -590,12 +590,12 @@ def _has_power_count_modifier(op: Operator) -> bool:
     return False
 
 
-# ─── A6 设施数量联动 ─────────────────────────────────────────────
+# ─── A·设施数量联动 ─────────────────────────────────────────────
 
 # 设施数量联动表: {干员名: (计数对象, 每单位加成%, 设施类型, 产物, 上限或无)}
 # buffs_infrastructure.json 中 efficiency=0 的条件型 buff，
 # 按全基建设施数量统计后输出加成
-_A6_FACILITY_TABLE: dict[str, tuple[str, float, str, str | None, float | None]] = {
+_A_FACILITY_LINK_TABLE: dict[str, tuple[str, float, str, str | None, float | None]] = {
     "清流": ("trade_count", 20.0, "Mfg", "PureGold", None),
     "引星棘刺": ("trade_count", 3.0, "Mfg", "PureGold", None),
     "娜仁图亚": ("dorm_levels", 1.0, "Mfg", "PureGold", None),
@@ -643,9 +643,9 @@ def synergy_facility_count(
     )
 
     for name in names:
-        if name not in _A6_FACILITY_TABLE:
+        if name not in _A_FACILITY_LINK_TABLE:
             continue
-        count_key, bonus_per, target_room, target_product, cap = _A6_FACILITY_TABLE[name]
+        count_key, bonus_per, target_room, target_product, cap = _A_FACILITY_LINK_TABLE[name]
 
         if room_type != target_room:
             continue
@@ -675,12 +675,12 @@ def synergy_facility_count(
     return segments
 
 
-# ─── C1 中枢全局效率 ─────────────────────────────────────────────
+# ─── C·中枢全局效率 ─────────────────────────────────────────────
 
 # 中枢全局效率表: {干员名: (制造加成%, 贸易加成%)}
 # buffs_infrastructure.json 中 efficiency=0 的条件型 CONTROL buff
 # 同种效果取最高（不叠加）
-_C1_GLOBAL_TABLE: dict[str, tuple[float, float]] = {
+_C_CONTROL_GLOBAL_TABLE: dict[str, tuple[float, float]] = {
     "凯尔希": (2.0, 0.0),
     "Mon3tr": (2.0, 0.0),
     "望": (2.0, 7.0),
@@ -725,8 +725,8 @@ def compute_control_global_bonus(
     best_trade = 0.0
 
     for name in names:
-        if name in _C1_GLOBAL_TABLE:
-            m, t = _C1_GLOBAL_TABLE[name]
+        if name in _C_CONTROL_GLOBAL_TABLE:
+            m, t = _C_CONTROL_GLOBAL_TABLE[name]
             best_mfg = max(best_mfg, m)
             best_trade = max(best_trade, t)
 
@@ -754,7 +754,7 @@ def compute_control_global_bonus(
     return GlobalBonus(mfg_bonus=best_mfg, trade_bonus=best_trade)
 
 
-# ─── C1 扩展：中枢 per-operator 条件型加成 ───────────────────────
+# ─── C·中枢 per-operator 条件型加成 ───────────────────────
 
 # 红松骑士团 group_id
 _PINUS_GROUP = "pinus"
@@ -811,7 +811,7 @@ def control_per_operator_bonus(
     return bonus
 
 
-# ─── B1 人间烟火 / 感知信息 / 巫术结晶 ──────────────────────────
+# ─── B·人间烟火 / 感知信息 / 巫术结晶 ──────────────────────────
 
 @dataclass
 class BuffPool:
@@ -932,7 +932,7 @@ def compute_buff_pool(
     thought_chains = perception  # B3: 感知信息→思维链环（1:1，迷迭香消费）
     eng_robots = compute_engineering_robots(layout) if layout is not None else 0
 
-    # ─── B5 无声共鸣 ───
+    # ─── B·无声共鸣 ───
 
     silent_resonance = 0
     # 黑键在贸易站: 感知信息→无声共鸣 1:1
@@ -971,7 +971,7 @@ def compute_engineering_robots(layout: LayoutConfig) -> int:
 
 
 # B 层 buff 池消费者表: {干员名: (设施类型, pool_key, 每单位, 每单位加成%)}
-_B_LAYER_CONSUMER_TABLE: dict[str, tuple[str, str, int, float]] = {
+_B_BUFF_CONSUMER_TABLE: dict[str, tuple[str, str, int, float]] = {
     # B1 烟火消费者
     "黍": ("Mfg", "yanhuo", 3, 1.0),
     "桑葚": ("Mfg", "yanhuo", 3, 1.0),
@@ -1001,8 +1001,8 @@ ROSEMARY_SUPPORT: dict[str, list[str]] = {
 }
 
 # B 层关键干员名称（避免多处字符串硬编码）
-_B3_ROSEMARY = "迷迭香"
-_B5_EBNHLZ = "黑键"
+_B_ROSEMARY = "迷迭香"
+_B_EBENHOLZ = "黑键"
 
 
 def synergy_buff_pool_consumer(
@@ -1020,9 +1020,9 @@ def synergy_buff_pool_consumer(
     segments = []
 
     for name in names:
-        if name not in _B_LAYER_CONSUMER_TABLE:
+        if name not in _B_BUFF_CONSUMER_TABLE:
             continue
-        target_room, pool_key, per_unit, bonus_per = _B_LAYER_CONSUMER_TABLE[name]
+        target_room, pool_key, per_unit, bonus_per = _B_BUFF_CONSUMER_TABLE[name]
         if room_type != target_room:
             continue
         if bonus_per <= 0:  # 铎铃影响心情而非效率
@@ -1040,7 +1040,7 @@ def synergy_buff_pool_consumer(
     return segments
 
 
-# ─── C2 中枢全局恢复 ─────────────────────────────────────────────
+# ─── C·中枢心情恢复 ─────────────────────────────────────────────
 
 _BASE_BURN_3 = 0.75
 
@@ -1101,9 +1101,9 @@ def classify_mfg_operators(
             result.anchors.append(op)
         elif has_skill_label:
             result.providers.append(op)
-        elif op.name in _B_LAYER_CONSUMER_TABLE and _B_LAYER_CONSUMER_TABLE[op.name][0] == "Mfg":
+        elif op.name in _B_BUFF_CONSUMER_TABLE and _B_BUFF_CONSUMER_TABLE[op.name][0] == "Mfg":
             result.providers.append(op)
-        elif op.name in _A6_FACILITY_TABLE and _A6_FACILITY_TABLE[op.name][2] == "Mfg":
+        elif op.name in _A_FACILITY_LINK_TABLE and _A_FACILITY_LINK_TABLE[op.name][2] == "Mfg":
             result.providers.append(op)
         else:
             result.pure_efficiency.append(op)
@@ -1167,9 +1167,9 @@ def classify_trade_operators(
 
         if is_registered or is_order_anchor:
             result.anchors.append(op)
-        elif op.name in _B_LAYER_CONSUMER_TABLE and _B_LAYER_CONSUMER_TABLE[op.name][0] == "Trade":
+        elif op.name in _B_BUFF_CONSUMER_TABLE and _B_BUFF_CONSUMER_TABLE[op.name][0] == "Trade":
             result.providers.append(op)
-        elif op.name in _A6_FACILITY_TABLE and _A6_FACILITY_TABLE[op.name][2] == "Trade":
+        elif op.name in _A_FACILITY_LINK_TABLE and _A_FACILITY_LINK_TABLE[op.name][2] == "Trade":
             result.providers.append(op)
         else:
             result.pure_efficiency.append(op)
@@ -1212,10 +1212,10 @@ def synergy_trade_gold_lines(
     return [LinearSegment(a=bonus, b=0.0, t_start=0.0, dt=T)] if bonus > 0 else []
 
 
-# ─── A2 阵营计数（同房） ─────────────────────────────────────────
+# ─── A·阵营计数（同房） ─────────────────────────────────────────
 
 # 阵营计数表: {持有者名: (字段名, 匹配值, 每人加成%, 产物或None, 设施类型)}
-_A2_FACTION_TABLE: dict[str, tuple[str, str, float, str | None, str | None]] = {
+_A_ROOM_FACTION_TABLE: dict[str, tuple[str, str, float, str | None, str | None]] = {
     "历阵锐枪芬": ("team_id", "reserve1", 10.0, None, "Mfg"),
     "摩根": ("group_id", "glasgow", 20.0, "Money", "Trade"),
     "新约能天使": ("nation_id", "laterano", 15.0, "Money", "Trade"),
@@ -1223,7 +1223,7 @@ _A2_FACTION_TABLE: dict[str, tuple[str, str, float, str | None, str | None]] = {
 
 # A2 专属额外加成: {持有者名: (目标名, 额外加成%, 产物或None, 设施类型)}
 # 特例：摩根帮派指南针——当推进之王同在贸易站时，除每人+20%外额外+35%
-_A2_EXTRA_TABLE: dict[str, tuple[str, float, str | None, str | None]] = {
+_A_ROOM_FACTION_EXTRA: dict[str, tuple[str, float, str | None, str | None]] = {
     "摩根": ("推进之王", 35.0, "Money", "Trade"),
 }
 
@@ -1241,7 +1241,7 @@ def synergy_faction_room(
     names = {op.name for op in operators}
     segments = []
 
-    for holder_name, (field, value, bonus_per, target_product, target_room) in _A2_FACTION_TABLE.items():
+    for holder_name, (field, value, bonus_per, target_product, target_room) in _A_ROOM_FACTION_TABLE.items():
         if holder_name not in names:
             continue
         if target_room is not None and room_type != target_room:
@@ -1255,7 +1255,7 @@ def synergy_faction_room(
             segments.append(LinearSegment(a=bonus, b=0.0, t_start=0.0, dt=T))
 
     # A2 专属额外加成（如摩根+推王同在贸易站→额外+35%）
-    for holder_name, (extra_name, extra_bonus, target_product, target_room) in _A2_EXTRA_TABLE.items():
+    for holder_name, (extra_name, extra_bonus, target_product, target_room) in _A_ROOM_FACTION_EXTRA.items():
         if holder_name not in names:
             continue
         if target_room is not None and room_type != target_room:
@@ -1273,7 +1273,7 @@ def get_synergy_enablers(
     room_type: str,
     product: str | None = None,
 ) -> list[Operator]:
-    """从 _A2_FACTION_TABLE 反查联动使能者
+    """从 _A_ROOM_FACTION_TABLE 反查联动使能者
 
     返回无目标设施技能、但属于 A2 阵营计数范围、能提升同房持有者效率的干员。
     特例：推进之王（无 Trade 技能，但能触发摩根帮派指南针额外+35%+A2计数）。
@@ -1283,7 +1283,7 @@ def get_synergy_enablers(
     enablers: list[Operator] = []
     seen: set[str] = set()
 
-    for holder_name, (field, value, bonus_per, target_product, target_room) in _A2_FACTION_TABLE.items():
+    for holder_name, (field, value, bonus_per, target_product, target_room) in _A_ROOM_FACTION_TABLE.items():
         if target_room is not None and room_type != target_room:
             continue
         if target_product is not None and product is not None and product != target_product:
@@ -1312,10 +1312,10 @@ def get_synergy_enablers(
     return enablers
 
 
-# ─── B7 跨房间配对 ───────────────────────────────────────────────
+# ─── B·跨房间配对 ───────────────────────────────────────────────
 
 # 跨房间配对表: {持有者名: (目标名, 目标设施, 加成%, 产物或None, 当前设施)}
-_B7_CROSS_PAIR_TABLE: dict[str, tuple[str, str | None, float, str | None, str | None]] = {
+_B_CROSS_ROOM_PAIR_TABLE: dict[str, tuple[str, str | None, float, str | None, str | None]] = {
     "烈夏": ("古米", "Trade", 35.0, "CombatRecord", "Mfg"),
     "深巡": ("乌尔比安", None, 10.0, "Money", "Trade"),
     "贝洛内": ("伺夜", None, 10.0, "Money", "Trade"),
@@ -1336,7 +1336,7 @@ def synergy_cross_room_pair(
     names = {op.name for op in operators}
     segments = []
 
-    for holder_name, (target_name, target_facility, bonus_per, target_product, target_room) in _B7_CROSS_PAIR_TABLE.items():
+    for holder_name, (target_name, target_facility, bonus_per, target_product, target_room) in _B_CROSS_ROOM_PAIR_TABLE.items():
         if holder_name not in names:
             continue
         if target_room is not None and room_type != target_room:
@@ -1359,10 +1359,10 @@ def synergy_cross_room_pair(
     return segments
 
 
-# ─── B6 全局阵营计数 ─────────────────────────────────────────────
+# ─── B·全局阵营计数 ─────────────────────────────────────────────
 
 # 全局阵营计数表: {持有者名: (字段名, 匹配值, 每人加成%, 产物, 设施, 上限, 是否除自身)}
-_B6_GLOBAL_TABLE: dict[str, tuple[str, str, float, str | None, str, int, bool]] = {
+_B_GLOBAL_FACTION_TABLE: dict[str, tuple[str, str, float, str | None, str, int, bool]] = {
     "缪尔赛思": ("group_id", "rhine", 3.0, None, "Power", 5, True),
     "杏仁": ("group_id", "blacksteel", 2.0, "PureGold", "Mfg", 3, False),
     "娜斯提": ("group_id", "rhine", 3.0, "PureGold", "Mfg", 5, False),
@@ -1380,7 +1380,7 @@ def synergy_global_faction(
     names = {op.name for op in operators}
     segments = []
 
-    for holder_name, (field, value, bonus_per, target_product, target_room, cap, exclude_self) in _B6_GLOBAL_TABLE.items():
+    for holder_name, (field, value, bonus_per, target_product, target_room, cap, exclude_self) in _B_GLOBAL_FACTION_TABLE.items():
         if holder_name not in names:
             continue
         if room_type != target_room:

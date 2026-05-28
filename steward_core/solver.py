@@ -18,7 +18,7 @@ from steward_core.synergy import (
     classify_mfg_operators, prune_equivalent, build_candidate_pool,
     classify_trade_operators,
     control_per_operator_bonus, _is_knight, _PINUS_GROUP,
-    _B3_ROSEMARY, _B5_EBNHLZ, _is_glasgow,
+    _B_ROSEMARY, _B_EBENHOLZ, _is_glasgow,
     get_synergy_enablers,
 )
 from steward_core.evaluate import evaluate_room
@@ -303,7 +303,7 @@ def compute_optimal_support(
     names = {op.name for op in combo_ops}
 
     # 迷迭香包
-    if _B3_ROSEMARY in names:
+    if _B_ROSEMARY in names:
         for facility, ops in ROSEMARY_SUPPORT.items():
             support[facility].update(ops)
 
@@ -356,8 +356,8 @@ def _evaluate_with_support(
     dorm_names = available_support.get("Dormitory", [])
     dorm_ops = [op_lookup[n] for n in dorm_names if n in op_lookup]
 
-    has_rosmontis = any(op.name == _B3_ROSEMARY for op in combo_ops)
-    has_ebnhlz = _B5_EBNHLZ in available_support.get("Trade", [])
+    has_rosmontis = any(op.name == _B_ROSEMARY for op in combo_ops)
+    has_ebnhlz = _B_EBENHOLZ in available_support.get("Trade", [])
 
     # 絮雨在办公室时提供 +20 感知信息（243 Lv3 Office: 2额外招募位×10=20）
     office_perception = 0

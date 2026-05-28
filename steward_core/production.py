@@ -16,7 +16,7 @@ from steward_core.synergy import (
     GlobalBonus, compute_control_global_bonus, compute_buff_pool,
     compute_effective_power_count,
     control_per_operator_bonus,
-    _B3_ROSEMARY, _B5_EBNHLZ,
+    _B_ROSEMARY, _B_EBENHOLZ,
 )
 from steward_core.constants import FIXED_CONTROL, BASE_POWER_COUNT
 from steward_core.evaluate import evaluate_room
@@ -473,11 +473,11 @@ def calculate(plan: ShiftPlan, operators: list[Operator], hours: float = 24.0) -
 
     # 检测 B1 感知信息生成者是否在工作设施中
     has_rosmontis_in_mfg = any(
-        _B3_ROSEMARY in a.operators and a.room_type == "Mfg"
+        _B_ROSEMARY in a.operators and a.room_type == "Mfg"
         for a in plan.assignments
     )
     has_ebnhlz_in_trade = any(
-        _B5_EBNHLZ in a.operators and a.room_type == "Trade"
+        _B_EBENHOLZ in a.operators and a.room_type == "Trade"
         for a in plan.assignments
     )
     has_wuyou_in_trade = any(
