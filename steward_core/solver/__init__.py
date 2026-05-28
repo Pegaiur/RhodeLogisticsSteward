@@ -2,7 +2,7 @@
 
 Mfg 和 Trade 均使用 C(n,3) 穷举（含联动）+ 贪心分配。
 剩余设施（Power/Reception/Office）用支配偏序贪心。
-Control 由制造站 combo 的支撑需求动态决定。
+中枢后置于 Mfg + Trade，由两者累计的支撑需求动态决定。
 """
 
 from steward_core.models import Operator, ShiftPlan, SolveResult
@@ -19,7 +19,7 @@ from steward_core.synergy import (
 from steward_core.evaluate import evaluate_room
 from steward_core.constants import BASE_POWER_COUNT
 
-from .support import compute_optimal_support, _evaluate_with_support
+from .support import compute_optimal_support, _evaluate_with_support, compute_trade_support
 from .greed import (
     _greedy_allocate, _greedy_allocate_with_support, _greedy_remaining,
     _generate_combos, _upper_bound_ok, _evaluate_trade_combo,
@@ -45,9 +45,9 @@ _CTRL_GLOBAL_SORT_BIAS = 1000.0
 
 
 def solve_mvp(operators: list[Operator]) -> SolveResult:
-    """MVP 完整求解：制造站穷举 + 支撑干员锁 + 剩余设施贪心
+    """MVP 完整求解：制造站穷举 + 贸易站穷举 + 中枢后置填充 + 剩余设施贪心
 
-    中枢不再固定——由制造站 combo 的支撑需求动态决定。
+    中枢后置于 Mfg + Trade：由两者的支撑需求累计决定组成。
     返回 SolveResult，含一个 12h ShiftPlan。
     """
     assigned_ids: set[str] = set()
@@ -65,16 +65,16 @@ def solve_mvp(operators: list[Operator]) -> SolveResult:
         op_lookup, locked_support, ANCHOR_NAMES,
     )
 
-    # Phase 2: 填充中枢（来自累计支撑干员）
+    # Phase 3a: 贸易站穷举（使用 locked_support 估计中枢，中枢尚未填充）
+    autofill_count += _phase3_trade(
+        operators, assigned_ids, assigned_names, assignments,
+        op_lookup, locked_support,
+    )
+
+    # Phase 2: 填充中枢（来自 Phase 1 Mfg 锁 + Phase 3a Trade 锁）
     ctrl_names = _phase2_control(
         operators, assigned_ids, assignments, locked_support, op_lookup,
         _CTRL_GLOBAL_NAMES, _CTRL_GLOBAL_SORT_BIAS,
-    )
-
-    # Phase 3a: Trade 穷举（与 Mfg 同架构）
-    autofill_count += _phase3_trade(
-        operators, assigned_ids, assigned_names, assignments,
-        op_lookup, locked_support, ctrl_names,
     )
 
     # Phase 3b: 剩余设施（Power/Reception/Office）贪心

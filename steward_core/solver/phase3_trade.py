@@ -13,6 +13,7 @@ from steward_core.synergy import (
 )
 
 from .greed import _generate_combos, _greedy_allocate, _evaluate_trade_combo, T
+from .support import compute_trade_support
 
 
 def _phase3_trade(
@@ -22,9 +23,11 @@ def _phase3_trade(
     assignments: list,
     op_lookup: dict[str, Operator],
     locked_support: dict[str, set[str]],
-    ctrl_names: list[str],
 ) -> int:
-    """Phase 3a: Trade 穷举（与 Mfg 同架构）
+    """Phase 3a: Trade 穷举（使用 locked_support 估计中枢，中枢尚未填充）
+
+    中枢后置于 Trade 之后——此处用 Mfg 锁定的中枢支撑干员做评估估计。
+    分配完毕后，将 Trade combo 自身的中枢支撑需求合并到 locked_support。
 
     返回本阶段新增的 autofill_count。
     """
@@ -61,7 +64,8 @@ def _phase3_trade(
                 pool.append(enabler)
         combos = _generate_combos(pool, min(3, len(pool)))
 
-        # 构建全局上下文（Phase 2 中枢已确定）
+        # 用 locked_support 中的 Control 名称估计中枢（中枢尚未实际填充）
+        ctrl_names = list(locked_support["Control"])
         ctrl_ops = [op_lookup[n] for n in ctrl_names if n in op_lookup]
         global_bonus = compute_control_global_bonus(ctrl_ops)
         effective_power = BASE_POWER_COUNT + sum(
@@ -104,6 +108,11 @@ def _phase3_trade(
                 if op.name in names:
                     assigned_ids.add(op.char_id)
                     assigned_names.add(op.name)
+            # 计算该 combo 的 trade support 并合并到 locked_support
+            combo_ops = [op_lookup[n] for n in names if n in op_lookup]
+            ts = compute_trade_support(combo_ops)
+            for facility, support_names in ts.items():
+                locked_support[facility].update(support_names)
             room_idx = len([a for a in assignments if a.room_type == "Trade"])
             assignments.append(RoomAssignment(
                 room_type="Trade", room_index=room_idx,
