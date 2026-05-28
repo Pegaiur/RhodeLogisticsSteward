@@ -7,7 +7,6 @@ from .types import CrossRoomPairEntry, GlobalFactionEntry
 _B_CROSS_ROOM_PAIR_TABLE: dict[str, CrossRoomPairEntry] = {
     "烈夏": CrossRoomPairEntry("古米", "Trade", 35.0, "CombatRecord", "Mfg"),
     "深巡": CrossRoomPairEntry("乌尔比安", None, 10.0, "Money", "Trade"),
-    "贝洛内": CrossRoomPairEntry("伺夜", None, 10.0, "Money", "Trade"),
 }
 
 

@@ -204,3 +204,64 @@ class TestTrainingRoomA6:
         segs = synergy_facility_count([weiyi], "Mfg", "PureGold", layout, T=12.0)
         assert len(segs) == 1
         assert segs[0].a == 30.0  # 6级 × 10% = 60% → clamp 30%
+
+
+# ─── 有效发电站计算 ──────────────────────────────────────────────
+
+class TestEffectivePowerCount:
+    """compute_effective_power_count — 承曦格雷伊 + 森蚺发电站加成"""
+
+    def test_无修改器_返回物理数量(self):
+        from steward_core.synergy import compute_effective_power_count
+
+        count = compute_effective_power_count([], 3)
+        assert count == 3
+
+    def test_承曦格雷伊_额外加1(self):
+        from steward_core.synergy import compute_effective_power_count
+
+        chengxi = _mk_op("承曦格雷伊", [
+            _mk_skill("power_count[000]", "Power", "晨曦"),
+        ])
+        count = compute_effective_power_count([chengxi], 3)
+        assert count == 4
+
+    def test_森蚺在中枢_Lancet2在发电_额外加2(self):
+        from steward_core.synergy import compute_effective_power_count
+
+        senran = _mk_op("森蚺", [
+            _mk_skill("control_pow_bot[000]", "Control", "我寻思能行"),
+        ])
+        lancet = _mk_op("Lancet-2")
+        count = compute_effective_power_count([lancet], 3, [senran])
+        assert count == 5
+
+    def test_森蚺在中枢_无Lancet2_不加成(self):
+        from steward_core.synergy import compute_effective_power_count
+
+        senran = _mk_op("森蚺", [
+            _mk_skill("control_pow_bot[000]", "Control", "我寻思能行"),
+        ])
+        generic = _mk_op("普通发电干员")
+        count = compute_effective_power_count([generic], 3, [senran])
+        assert count == 3
+
+    def test_Lancet2在发电_无森蚺_不加成(self):
+        from steward_core.synergy import compute_effective_power_count
+
+        lancet = _mk_op("Lancet-2")
+        count = compute_effective_power_count([lancet], 3, [])
+        assert count == 3
+
+    def test_森蚺加承曦格雷伊_叠加为加3(self):
+        from steward_core.synergy import compute_effective_power_count
+
+        senran = _mk_op("森蚺", [
+            _mk_skill("control_pow_bot[000]", "Control", "我寻思能行"),
+        ])
+        chengxi = _mk_op("承曦格雷伊", [
+            _mk_skill("power_count[000]", "Power", "晨曦"),
+        ])
+        lancet = _mk_op("Lancet-2")
+        count = compute_effective_power_count([lancet, chengxi], 3, [senran])
+        assert count == 6  # 3 + 1(格雷伊) + 2(森蚺)

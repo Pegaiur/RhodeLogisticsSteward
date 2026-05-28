@@ -132,3 +132,8 @@ from steward_core.synergy.classification import (
     build_candidate_pool,
     classify_trade_operators,
 )
+
+from steward_core.synergy._derived import (
+    MFG_ANCHORS,
+    TRADE_ANCHORS,
+)

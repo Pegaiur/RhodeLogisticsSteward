@@ -18,6 +18,7 @@ def synergy_jie_order(
     精2（市井之道+摊贩经济）: 效率恒定 = 压缩后上限 × 4%
     精1（仅市井之道）: ramp近似，订单随时间爬升
     灵知在中枢时：每名谢拉格贸易站干员 → 订单上限+6
+    贝洛内+伺夜同房时：订单上限+2
     """
     if room_type != "Trade":
         return []
@@ -52,6 +53,9 @@ def synergy_jie_order(
             other_eff += eff
 
     order_limit = max(1, 10 - int(other_eff) // 10)
+
+    if "贝洛内" in names and "伺夜" in names:
+        order_limit += 2
 
     if control_operators:
         ctrl_names = {op.name for op in control_operators}

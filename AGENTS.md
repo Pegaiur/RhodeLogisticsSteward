@@ -126,7 +126,8 @@ RhodeLogisticsSteward/
 1. 游戏版本更新后，查阅 [PRTS Wiki 基建页面](https://prts.wiki/w/基建) 确认新增干员/技能
 2. 对照上述权威来源逐项检查是否需要更新
 3. 更新代码后运行 `python -m pytest tests/ -v` 确保现有测试通过
-4. 提交时在 commit message 中注明更新了哪些表
+4. 修改了协同表或名称集合后，按 `.trae/rules/hardcoded-data.md` 中的规则运行对应生成脚本
+5. 提交时在 commit message 中注明更新了哪些表
 
 
 ## AI Agent 发现流程
@@ -140,6 +141,7 @@ RhodeLogisticsSteward/
    - 求解/排班逻辑 → `steward_core/solver/`：先读 `__init__.py` 的 `solve_mvp()` 四阶段编排，再按需进入各 `phase*.py`
    - 数据模型/常量 → `steward_core/models.py` / `constants.py`
    - 表维护/新增 → `synergy/types.py` TABLES 注册器 + `synergy/registry.py` 系统贡献者 + AGENTS.md §人工维护数据
+   - 硬编码数据维护规则 → `.trae/rules/hardcoded-data.md`（锚点生成、名称集合同步、分类覆盖率）
 
 **关键文件名索引**：
 
@@ -153,6 +155,7 @@ RhodeLogisticsSteward/
 | 设施容量/约束/多班次 | `docs/strategy-brief.md` §设施容量/§约束/§策略 |
 | 干员/buff 数据查询 | `.trae/skills/data-query/query_data.py` (通过 `data-query` skill) |
 | 人工维护/硬编码数据/更新 | AGENTS.md §人工维护数据 |
+| 硬编码数据生成规则 | `.trae/rules/hardcoded-data.md` |
 | 重构/模块拆分/架构 | `docs/archive/refactor-plan.md`（已归档） |
 | 联动体系代码 | `steward_core/synergy/` → `__init__.py` 重导出一览，`types.py` TABLES 注册器索引全部表 |
 | 求解/排班代码 | `steward_core/solver/` → `__init__.py` solve_mvp() 入口，各 `phase*.py` 按阶段独立 |

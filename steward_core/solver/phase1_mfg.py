@@ -3,8 +3,10 @@
 from steward_core.models import Operator, RoomAssignment
 from steward_core.synergy import classify_mfg_operators, build_candidate_pool, get_synergy_enablers
 
+from .config import SolverConfig
+from .global_state import GlobalState
 from .greed import _generate_combos, _greedy_allocate_with_support
-from .support import _evaluate_with_support
+from .support import _evaluate_with_support, compute_optimal_support
 
 
 def _phase1_mfg(
@@ -14,7 +16,9 @@ def _phase1_mfg(
     assignments: list,
     op_lookup: dict[str, Operator],
     locked_support: dict[str, set[str]],
+    *,
     anchor_names: set[str],
+    config: SolverConfig | None = None,
 ) -> int:
     """Phase 1: 制造站穷举（CR 2间 + PG 2间）
 
@@ -22,6 +26,10 @@ def _phase1_mfg(
     返回本阶段新增的 autofill_count。
     """
     autofill_count = 0
+
+    # 全局状态跨产物共享——CR 消耗的包余量在 PG 评分中体现为惩罚
+    use_global = config.global_state_scoring if config else False
+    gs = GlobalState.for_layout_243() if use_global else None
 
     for product, count in [("CombatRecord", 2), ("PureGold", 2)]:
         mfg_ops = [op for op in operators if op.has_skill_for("Mfg", product)]
@@ -49,14 +57,27 @@ def _phase1_mfg(
         for combo_ops in combos:
             score, support_map = _evaluate_with_support(
                 combo_ops, "Mfg", product, operators, assigned_names,
+                params=config.params,
             )
             combo_names = [op.name for op in combo_ops]
             all_support_names = [n for names in support_map.values() for n in names]
+
+            # 全局状态评分修正：稀缺包消耗越多惩罚越重
+            if use_global:
+                bundles = compute_optimal_support(combo_ops).bundles
+                alpha = config.params.global_state_alpha if config else 0.3
+                penalty = gs.scarcity_penalty(bundles, alpha=alpha)
+                score -= penalty
+
             evaluated.append((score, combo_names, all_support_names, support_map))
         evaluated.sort(key=lambda x: -x[0])
 
-        # 贪心分配（含支撑干员锁）
-        allocated = _greedy_allocate_with_support(evaluated, room_count=count)
+        # 贪心分配（含支撑干员锁，中枢容量跨产物轮次共享）
+        allocated = _greedy_allocate_with_support(
+            evaluated, room_count=count,
+            initial_control=locked_support["Control"].copy(),
+            config=config,
+        )
         for names, support_map in allocated:
             for op in pool:
                 if op.name in names:
@@ -69,6 +90,12 @@ def _phase1_mfg(
                     if n in op_lookup:
                         assigned_ids.add(op_lookup[n].char_id)
                         assigned_names.add(n)
+            # 全局状态：消耗已分配 combo 的包余量
+            if use_global:
+                allocated_bundles = compute_optimal_support(
+                    [op_lookup[n] for n in names if n in op_lookup]
+                ).bundles
+                gs.allocate(allocated_bundles)
             assignments.append(RoomAssignment(
                 room_type="Mfg",
                 room_index=len([a for a in assignments if a.room_type == "Mfg"]),

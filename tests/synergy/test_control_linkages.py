@@ -174,3 +174,213 @@ class TestC1Wang:
         bonus = compute_control_global_bonus([wang, kalts])
         assert bonus.mfg_bonus == 2.0   # 凯尔希2
         assert bonus.trade_bonus == 7.0  # 望7
+
+
+# ─── C1 全局贸易加成 fallback（阿米娅/诗怀雅/佩佩/阿斯卡纶） ────
+
+class TestC1Trade7Fallback:
+    """C1: compute_control_global_bonus — 全局贸易+7% fallback"""
+
+    def test_阿米娅_贸易加7(self):
+        from steward_core.synergy import compute_control_global_bonus
+
+        amiya = _mk_op("阿米娅")
+        bonus = compute_control_global_bonus([amiya])
+
+        assert bonus.trade_bonus == 7.0
+        assert bonus.mfg_bonus == 0.0
+
+    def test_诗怀雅_贸易加7(self):
+        from steward_core.synergy import compute_control_global_bonus
+
+        swire = _mk_op("诗怀雅")
+        bonus = compute_control_global_bonus([swire])
+
+        assert bonus.trade_bonus == 7.0
+
+    def test_佩佩_贸易加7(self):
+        from steward_core.synergy import compute_control_global_bonus
+
+        peper = _mk_op("佩佩")
+        bonus = compute_control_global_bonus([peper])
+
+        assert bonus.trade_bonus == 7.0
+
+    def test_阿斯卡纶_贸易加7(self):
+        from steward_core.synergy import compute_control_global_bonus
+
+        ascln = _mk_op("阿斯卡纶")
+        bonus = compute_control_global_bonus([ascln])
+
+        assert bonus.trade_bonus == 7.0
+
+    def test_阿米娅加望_同种取最高仍为7(self):
+        """同种取最高：望7 与 阿米娅7 → 取 max=7"""
+        from steward_core.synergy import compute_control_global_bonus
+
+        amiya = _mk_op("阿米娅")
+        wang = _mk_op("望")
+        bonus = compute_control_global_bonus([amiya, wang])
+
+        assert bonus.trade_bonus == 7.0
+
+
+# ─── C2 中枢 per-operator 加成 ──────────────────────────────────────
+
+class TestC2PerOperatorBonus:
+    """C2: control_per_operator_bonus — 中枢干员对房间干员的条件加成"""
+
+    def test_八幡海铃_叙拉古Trade干员每人加5(self):
+        """八幡海铃(家族认可)在中枢 → 每个叙拉古 Trade 干员 +5%"""
+        from steward_core.synergy import control_per_operator_bonus
+
+        yahata = _mk_op("八幡海铃")
+        bellone = _mk_op("贝洛内", nation_id="siracusa")
+        siye = _mk_op("伺夜", nation_id="siracusa")
+
+        bonus = control_per_operator_bonus(
+            [yahata], [bellone, siye], "Money", room_type="Trade",
+        )
+        assert bonus == 10.0  # 2 人 × 5%
+
+    def test_八幡海铃_无叙拉古干员_不加成(self):
+        """八幡海铃在 but Trade 无叙拉古干员 → 0"""
+        from steward_core.synergy import control_per_operator_bonus
+
+        yahata = _mk_op("八幡海铃")
+        generic = _mk_op("普通干员", nation_id="lungmen")
+
+        bonus = control_per_operator_bonus(
+            [yahata], [generic], "Money", room_type="Trade",
+        )
+        assert bonus == 0.0
+
+    def test_八幡海铃不在中枢_不加成(self):
+        """中枢无八幡海铃 → 叙拉古加成不触发"""
+        from steward_core.synergy import control_per_operator_bonus
+
+        other = _mk_op("凯尔希")
+        bellone = _mk_op("贝洛内", nation_id="siracusa")
+
+        bonus = control_per_operator_bonus(
+            [other], [bellone], "Money", room_type="Trade",
+        )
+        assert bonus == 0.0
+
+    def test_八幡海铃_Mfg房间_不触发(self):
+        """八幡海铃的加成仅对 Trade/Money 生效，Mfg 不触发"""
+        from steward_core.synergy import control_per_operator_bonus
+
+        yahata = _mk_op("八幡海铃")
+        bellone = _mk_op("贝洛内", nation_id="siracusa")
+
+        bonus = control_per_operator_bonus(
+            [yahata], [bellone], "CombatRecord", room_type="Mfg",
+        )
+        assert bonus == 0.0
+
+    def test_八幡海铃_叙拉古干员混编_仅计数叙拉古(self):
+        """Trade 房 3 人（2 叙拉古 + 1 非叙拉古）→ +10%"""
+        from steward_core.synergy import control_per_operator_bonus
+
+        yahata = _mk_op("八幡海铃")
+        bellone = _mk_op("贝洛内", nation_id="siracusa")
+        siye = _mk_op("伺夜", nation_id="siracusa")
+        generic = _mk_op("普通干员", nation_id="lungmen")
+
+        bonus = control_per_operator_bonus(
+            [yahata], [bellone, siye, generic], "Money", room_type="Trade",
+        )
+        assert bonus == 10.0
+
+    def test_银灰异格_Trade满3谢拉格_加10(self):
+        """银灰异格在中枢，Trade 房 ≥3 谢拉格干员 → +10%"""
+        from steward_core.synergy import control_per_operator_bonus
+
+        silverash = _mk_op("银灰异格")
+        k1 = _mk_op("崖心", group_id="karlan")
+        k2 = _mk_op("讯使", group_id="karlan")
+        k3 = _mk_op("角峰", group_id="karlan")
+
+        bonus = control_per_operator_bonus(
+            [silverash], [k1, k2, k3], "Money", room_type="Trade",
+        )
+        assert bonus == 10.0
+
+    def test_银灰异格_Trade不足3谢拉格_不加成(self):
+        """银灰异格在中枢，Trade 房仅 2 谢拉格 → 0"""
+        from steward_core.synergy import control_per_operator_bonus
+
+        silverash = _mk_op("银灰异格")
+        k1 = _mk_op("崖心", group_id="karlan")
+        k2 = _mk_op("讯使", group_id="karlan")
+
+        bonus = control_per_operator_bonus(
+            [silverash], [k1, k2], "Money", room_type="Trade",
+        )
+        assert bonus == 0.0
+
+    def test_戴菲恩_Trade每格拉斯哥帮加10(self):
+        """戴菲恩在中枢，Trade 房 2 格拉斯哥帮 → +20%"""
+        from steward_core.synergy import control_per_operator_bonus
+
+        delphin = _mk_op("戴菲恩")
+        g1 = _mk_op("推进之王", group_id="glasgow")
+        g2 = _mk_op("摩根", group_id="glasgow")
+
+        bonus = control_per_operator_bonus(
+            [delphin], [g1, g2], "Money", room_type="Trade",
+        )
+        assert bonus == 20.0
+
+    def test_戴菲恩_无格拉斯哥帮_不加成(self):
+        """戴菲恩在中枢，Trade 房无格拉斯哥帮 → 0"""
+        from steward_core.synergy import control_per_operator_bonus
+
+        delphin = _mk_op("戴菲恩")
+        generic = _mk_op("普通干员")
+
+        bonus = control_per_operator_bonus(
+            [delphin], [generic], "Money", room_type="Trade",
+        )
+        assert bonus == 0.0
+
+    def test_银灰异格_Mfg房间_不触发(self):
+        """银灰异格加成仅对 Trade 生效"""
+        from steward_core.synergy import control_per_operator_bonus
+
+        silverash = _mk_op("银灰异格")
+        k1 = _mk_op("崖心", group_id="karlan")
+        k2 = _mk_op("讯使", group_id="karlan")
+        k3 = _mk_op("角峰", group_id="karlan")
+
+        bonus = control_per_operator_bonus(
+            [silverash], [k1, k2, k3], "PureGold", room_type="Mfg",
+        )
+        assert bonus == 0.0
+
+    def test_戴菲恩_Mfg房间_不触发(self):
+        """戴菲恩加成仅对 Trade 生效"""
+        from steward_core.synergy import control_per_operator_bonus
+
+        delphin = _mk_op("戴菲恩")
+        g1 = _mk_op("摩根", group_id="glasgow")
+
+        bonus = control_per_operator_bonus(
+            [delphin], [g1], "PureGold", room_type="Mfg",
+        )
+        assert bonus == 0.0
+
+    def test_银灰异格不在中枢_不加成(self):
+        """中枢无银灰异格 → 加成不触发"""
+        from steward_core.synergy import control_per_operator_bonus
+
+        other = _mk_op("凯尔希")
+        k1 = _mk_op("崖心", group_id="karlan")
+        k2 = _mk_op("讯使", group_id="karlan")
+        k3 = _mk_op("角峰", group_id="karlan")
+
+        bonus = control_per_operator_bonus(
+            [other], [k1, k2, k3], "Money", room_type="Trade",
+        )
+        assert bonus == 0.0

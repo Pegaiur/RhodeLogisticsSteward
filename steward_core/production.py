@@ -150,8 +150,10 @@ def _weighted_avg_order_time(p2: float, p3: float, p4: float) -> float:
 def _get_trade_order_multiplier(ops: list[Operator], hours: float = 24.0) -> tuple[float, float, float]:
     """贸易站订单机制倍数查询
 
-    检测干员组合中的特殊订单机制（但书违约、龙舌兰投资、
-    裁缝品质、可露希尔独占），返回加强后的每日产出。
+    检测干员组合中的特殊订单机制，返回加强后的每日产出。
+
+    优先级: 可露希尔特别订单 > 但书违约 > 龙舌兰投资 > 裁缝品质
+    可露希尔在场时，但书/龙舌兰/裁缝机制均不生效。
 
     Args:
         ops: 贸易站干员列表
@@ -161,20 +163,20 @@ def _get_trade_order_multiplier(ops: list[Operator], hours: float = 24.0) -> tup
         (lmd_per_day, gold_per_day, equiv_gold_per_day):
         100%效率 24h 的 LMD 日产、赤金消耗、等效赤金产出（赤金/天）
     """
+    # P0: 可露希尔特别订单 — 最高优先级，独占全部订单
+    # 固定 2赤金/1200LMD, 2.4h/单, 10单/天, 等效产金=4赤金/天
+    if any(s.buff_id.startswith("trade_ord_closure") for op in ops for s in op.skills):
+        orders = 24.0 / 2.4
+        equiv_gold = orders * (1200.0 - 1000.0) / 500.0
+        return (12000.0, orders * 2.0, equiv_gold)
+
+    # P1: 但书/龙舌兰/裁缝 — 可露希尔不在场时检测
     has_law = any(s.buff_id.startswith("trade_ord_law") for op in ops for s in op.skills)
-    has_closure = any(s.buff_id.startswith("trade_ord_closure") for op in ops for s in op.skills)
     has_tequila_beta = any(s.buff_id == "trade_ord_long[010]" for op in ops for s in op.skills)
     has_tequila_alpha = any(s.buff_id == "trade_ord_long[000]" for op in ops for s in op.skills)
     has_tequila = has_tequila_beta or has_tequila_alpha
     tailor_level = _extract_tailor_level(ops)
     tequila_bonus = 500 if has_tequila_beta else 250 if has_tequila_alpha else 0
-
-    if has_closure:
-        # 可露希尔特别订单：固定 2赤金/1200LMD, 2.4h/单
-        # 每单等效产金: (1200 - 2×500)/500 = 0.4赤金, 10单/天 = 4赤金/天
-        orders = 24.0 / 2.4
-        equiv_gold = orders * (1200.0 - 1000.0) / 500.0
-        return (12000.0, orders * 2.0, equiv_gold)
 
     # 裁缝时变等效P4（仅在有效时计算）
     p4 = _effective_tailor_p4(hours, tailor_level) if has_tequila or tailor_level > 0 else 0.20
@@ -277,6 +279,7 @@ class DailyProduction:
     effective_lmd_per_day: float = 0.0
     gold_surplus: float = 0.0
     equivalent_gold_from_mechanism: float = 0.0  # 订单机制等效赤金产出（赤金/天）
+    external_gold_per_day: float = 0.0  # 外部来源赤金（赤金/天）
 
     def summary(self) -> str:
         lines = [
@@ -287,15 +290,18 @@ class DailyProduction:
         lines.extend([
             f"作战记录产出: {self.total_records_per_day * _RECORD_EXP_PER_UNIT:,.0f} 经验/天 ({self.total_records_per_day:.1f} 个)",
             f"赤金制造: {self.total_gold_produced_per_day * _GOLD_LMD_PER_UNIT:,.0f} LMD等值/天 ({self.total_gold_produced_per_day:.1f} 个)",
-            f"赤金消耗: {self.total_gold_consumed_per_day * _GOLD_LMD_PER_UNIT:,.0f} LMD等值/天 ({self.total_gold_consumed_per_day:.1f} 个)",
         ])
+        if self.external_gold_per_day > 0:
+            lines.append(f"外部赤金: +{self.external_gold_per_day:.1f} 个/天 ({self.external_gold_per_day * _GOLD_LMD_PER_UNIT:,.0f} LMD等值)")
+        lines.append(f"赤金消耗: {self.total_gold_consumed_per_day * _GOLD_LMD_PER_UNIT:,.0f} LMD等值/天 ({self.total_gold_consumed_per_day:.1f} 个)")
         if self.equivalent_gold_from_mechanism > 0:
             lines.append(f"订单等效赤金: +{self.equivalent_gold_from_mechanism:.1f} 个/天 ({self.equivalent_gold_from_mechanism * _GOLD_LMD_PER_UNIT:,.0f} LMD等值)")
         lines.append(f"龙门币产出: {self.effective_lmd_per_day:,.0f} /天")
         if self.gold_surplus > 0:
             lines.append(f"赤金盈余: +{self.gold_surplus:.1f} 个 ({self.gold_surplus * _GOLD_LMD_PER_UNIT:,.0f} LMD等值)")
         elif self.gold_surplus < 0:
-            lines.append(f"赤金缺口: {abs(self.gold_surplus):.1f} 个 ({abs(self.gold_surplus) * _GOLD_LMD_PER_UNIT:,.0f} LMD等值)（贸易站开工率 {self.effective_lmd_per_day/self.total_lmd_per_day:.0%}）")
+            total_available = self.total_gold_produced_per_day + self.external_gold_per_day
+            lines.append(f"赤金缺口: {abs(self.gold_surplus):.1f} 个 ({abs(self.gold_surplus) * _GOLD_LMD_PER_UNIT:,.0f} LMD等值)（贸易站开工率 {total_available/self.total_gold_consumed_per_day:.0%}）")
         return "\n".join(lines)
 
 
@@ -414,7 +420,7 @@ def _calc_trade(
     lmd_output = efficiency_factor × hours/24 × lmd_per_day × (1 + drone)
     """
     n = len(ops)
-    ctrl_bonus = control_per_operator_bonus(ctx.plan_ctrl_ops, ops, "Money")
+    ctrl_bonus = control_per_operator_bonus(ctx.plan_ctrl_ops, ops, "Money", room_type="Trade")
     eff_int = evaluate_room(ops, "Trade", "Money", ctx.power_count, ctx.hours,
                             ctx.global_bonus, ctx.buff_pool, ctrl_per_op_bonus=ctrl_bonus,
                             all_operators=ctx.all_operators,
@@ -440,16 +446,23 @@ def _calc_trade(
     production.equivalent_gold_from_mechanism += base_factor * equiv_gold_per_day * (1.0 + drone_boost)
 
 
-def calculate(plan: ShiftPlan, operators: list[Operator], hours: float = 24.0) -> DailyProduction:
+def calculate(
+    plan: ShiftPlan,
+    operators: list[Operator],
+    hours: float = 24.0,
+    external_gold_per_day: float = 0.0,
+) -> DailyProduction:
     """计算排班方案的精确产出（含无人机加速）
 
     Args:
         plan: 排班计划
         operators: 全量干员池
         hours: 该班次覆盖的小时数（默认 24h 即全天）
+        external_gold_per_day: 外部来源赤金（赤金/天），如日常任务等效赤金收入
     """
     op_lookup = _operator_lookup(operators)
     production = DailyProduction()
+    production.external_gold_per_day = external_gold_per_day
 
     # 从 plan 获取中枢干员（若未指定则回退 FIXED_CONTROL）
     plan_ctrl_ops: list[Operator] = []
@@ -495,6 +508,7 @@ def calculate(plan: ShiftPlan, operators: list[Operator], hours: float = 24.0) -
         has_ebnhlz_in_trade=has_ebnhlz_in_trade,
         has_wuyou_in_trade=has_wuyou_in_trade,
         ling_mood_below_12=ling_mood_below_12,
+        layout=LayoutConfig.layout_243(),
     )
 
     # 1. 收集发电站干员，计算无人机产量（按工期比例缩放）
@@ -542,12 +556,12 @@ def calculate(plan: ShiftPlan, operators: list[Operator], hours: float = 24.0) -
         elif assignment.room_type == "Trade":
             _calc_trade(ctx, assignment, ops, production)
 
-    # 4. 赤金供需平衡
-    production.gold_surplus = (
-        production.total_gold_produced_per_day - production.total_gold_consumed_per_day
-    )
+    # 4. 赤金供需平衡（含外部来源赤金，外部赤金按班次时长折算）
+    shift_external = production.external_gold_per_day * (ctx.hours / 24.0)
+    total_available_gold = production.total_gold_produced_per_day + shift_external
+    production.gold_surplus = total_available_gold - production.total_gold_consumed_per_day
     if production.gold_surplus < 0:
-        ratio = production.total_gold_produced_per_day / max(production.total_gold_consumed_per_day, 0.001)
+        ratio = total_available_gold / max(production.total_gold_consumed_per_day, 0.001)
         production.effective_lmd_per_day = production.total_lmd_per_day * ratio
     else:
         production.effective_lmd_per_day = production.total_lmd_per_day

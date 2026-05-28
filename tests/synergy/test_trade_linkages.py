@@ -206,3 +206,29 @@ class TestJieOrderMechanics:
 
         segs = synergy_jie_order(ops, "Trade", [], 12.0)
         assert segs[0].a == 4.0  # 1×4%
+
+    def test_贝洛内加伺夜同房_订单上限加2(self):
+        """贝洛内+伺夜同房（未偿还的债务）→ 订单上限+2"""
+        from steward_core.synergy import synergy_jie_order
+
+        jie = self._mk_jie_e2()
+        bellone = _mk_op("贝洛内")
+        bellone.skills.append(_mk_skill("trade_ord_limit&cost_P[020]", "Trade", "未偿还的债务"))
+        siye = _mk_op("伺夜")
+
+        # 无其他队友 → 上限=10+2(贝洛内)→ ceiling=12×4%=48%
+        segs = synergy_jie_order([jie, bellone, siye], "Trade", [], 12.0)
+        assert segs[0].a == 48.0
+
+    def test_贝洛内无伺夜_不加成(self):
+        """贝洛内独自 + 孑 → 无伺夜，订单上限不加"""
+        from steward_core.synergy import synergy_jie_order
+
+        jie = self._mk_jie_e2()
+        bellone = _mk_op("贝洛内")
+        bellone.skills.append(_mk_skill("trade_ord_limit&cost_P[020]", "Trade", "未偿还的债务"))
+        generic = _mk_op("其他干员")
+
+        # 无伺夜 → 上限=10 → 40%
+        segs = synergy_jie_order([jie, bellone, generic], "Trade", [], 12.0)
+        assert segs[0].a == 40.0

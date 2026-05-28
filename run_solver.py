@@ -50,7 +50,10 @@ def main():
 
     # ── 12h 产出计算 ──
     print("\n[产出] 计算 12h 生产结果...\n")
-    dp = production.calculate(result.plans[0], all_operators, hours=12.0)
+    dp = production.calculate(
+        result.plans[0], all_operators, hours=12.0,
+        external_gold_per_day=result.config_used.params.daily_task_lmd / _GOLD_LMD_PER_UNIT,
+    )
 
     print("── 作战记录（经验）──")
     for room in dp.record_rooms:
@@ -70,7 +73,14 @@ def main():
         lmd_value = room.output_per_day * _GOLD_LMD_PER_UNIT
         print(f"  Mfg[{room.room_index}]: {room.operators} → {lmd_value:,.0f} LMD等值/12h (基础{head_base}%+{skill_pct:.0f}%){drone}")
     total_gold_lmd = dp.total_gold_produced_per_day * _GOLD_LMD_PER_UNIT
-    print(f"  合计: {total_gold_lmd:,.0f} LMD等值/12h\n")
+    print(f"  合计: {total_gold_lmd:,.0f} LMD等值/12h")
+    if dp.external_gold_per_day > 0:
+        shift_hours = result.config_used.params.shift_hours
+        external_gold_shift = dp.external_gold_per_day * (shift_hours / 24.0)
+        external_lmd_shift = external_gold_shift * _GOLD_LMD_PER_UNIT
+        print(f"  外部收入: +{external_lmd_shift:,.0f} LMD等值/{shift_hours:.0f}h ({external_gold_shift:.1f} 赤金)\n")
+    else:
+        print()
 
     print("── 贸易站（龙门币）──")
     for room in dp.trade_rooms:
@@ -81,8 +91,10 @@ def main():
         print(f"  Trade[{room.room_index}]: {room.operators} → {room.output_per_day:,.0f} LMD/12h (基础{head_base}%+{skill_pct:.0f}%){drone}  |  消耗赤金 {gold_use:.1f}/12h")
     print(f"  合计: {dp.total_lmd_per_day:,.0f} LMD/12h")
     print(f"  赤金消耗: {dp.total_gold_consumed_per_day:.1f} 个/12h (等值 {dp.total_gold_consumed_per_day * _GOLD_LMD_PER_UNIT:,.0f} LMD)")
-    if dp.gold_surplus < 0:
-        print(f"  赤金缺口 {abs(dp.gold_surplus):.1f} 个 → 有效收入 {dp.effective_lmd_per_day:,.0f} LMD/12h")
+    if dp.gold_surplus >= 0:
+        print(f"  赤金盈余: +{dp.gold_surplus:.1f} 个/12h")
+    else:
+        print(f"  赤金缺口: {abs(dp.gold_surplus):.1f} 个 → 有效收入 {dp.effective_lmd_per_day:,.0f} LMD/12h")
 
     output_path = project_root / "output" / "custom_infrast" / "mvp_12h.json"
     save_json(result, output_path, title="MVP 全box满练度 12h排班")

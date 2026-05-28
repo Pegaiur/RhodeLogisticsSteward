@@ -38,7 +38,7 @@ _GLASGOW_GROUP = "glasgow"
 
 # ─── 设施常量 ─────────────────────────────────────────────────────────
 
-_FACILITY_LEVEL = 3
+_FACILITY_LEVEL = 3  # 已弃用：请使用 RoomConfig.level 代替，由 LayoutConfig 驱动
 _DEFAULT_DORM_LEVELS = 20  # 4 间 Lv5 宿舍
 _BASE_BURN_3 = 0.75
 

@@ -6,13 +6,14 @@ from steward_core.efficiency_fn import constant_efficiency, rank_by_dominance
 from steward_core.models import LayoutConfig, Operator, RoomAssignment
 from steward_core.synergy import synergy_facility_count
 
-T = 12.0
-
 _LAYOUT_243 = LayoutConfig.layout_243()
 
 
 def _upper_bound_ok(total_eff: float, best_known: float, threshold: float = 0.95) -> bool:
-    """规则3: 上界预判 — 总效率不低于 best_known × threshold"""
+    """规则3: 上界预判 — 总效率不低于 best_known × threshold
+
+    threshold 建议从 SolverParams.combo_upper_bound_threshold 读取，默认 0.95。
+    """
     return total_eff >= best_known * threshold
 
 
@@ -154,6 +155,7 @@ def _greedy_remaining(
     assigned_ids: set[str],
     operators: list[Operator],
     priority_names: set[str] | None = None,
+    params=None,
 ) -> list[RoomAssignment]:
     """剩余设施（Trade/Power/Reception/Office）支配偏序贪心
 
@@ -162,6 +164,7 @@ def _greedy_remaining(
     if priority_names is None:
         priority_names = set()
     priority_ids = {op.char_id for op in operators if op.name in priority_names}
+    T = params.shift_hours if params is not None else 12.0
 
     results = []
     for room in _LAYOUT_243.rooms:
@@ -170,9 +173,6 @@ def _greedy_remaining(
 
         taken = []
 
-        # 优先分配 locked 支撑干员（绕过 assigned_ids + 不验证效率）
-        # 注意：支撑干员的价值已在 Phase 1 跨设施联动评估中计入（如 B5 黑键→Trade），
-        # 此处仅执行放置，不重复验证效率值（该值可能为 0，因贡献来自 buff 池消费）
         for op in operators:
             if len(taken) >= room.slots:
                 break
@@ -185,7 +185,6 @@ def _greedy_remaining(
             taken.append(op.name)
             assigned_ids.add(op.char_id)
 
-        # 剩余工位走正常支配偏序贪心
         op_lookup = {op.char_id: op for op in operators}
         candidates = []
         for op in operators:
@@ -213,17 +212,15 @@ def _greedy_remaining(
             ranked = rank_by_dominance(candidates, T)
             remaining = [op for op in ranked if op.char_id not in assigned_ids]
 
-            # 迭代填充：每个槽位"尝试→验证条件→接受或跳过"
             while len(taken) < room.slots and remaining:
                 op = remaining.pop(0)
                 if op.char_id in assigned_ids:
                     continue
                 if not _room_conditions_satisfiable(op, taken, remaining, room.slots, operators):
-                    continue  # 条件不可满足 → 跳过此候选人，试下一个
+                    continue
                 taken.append(op.name)
                 assigned_ids.add(op.char_id)
 
-            # 后验验证：确认条件型干员的机制实际兑现
             _post_fill_verify(taken, operators, assigned_ids)
 
         results.append(RoomAssignment(
@@ -238,21 +235,46 @@ def _greedy_remaining(
 def _greedy_allocate_with_support(
     evaluated: list,
     room_count: int,
+    max_control_slots: int = 5,
+    initial_control: set[str] | None = None,
+    config=None,
 ) -> list[tuple[list[str], dict[str, list[str]]]]:
-    """从排序组合中贪心取无冲突的 N 间（含支撑干员冲突检查）
+    """从排序组合中贪心取无冲突的 N 间（含支撑干员冲突检查 + 中枢容量限制）
 
     evaluated: [(score, combo_names, all_support_names, support_map), ...]
+    initial_control: 已占用的中枢支撑干员集合（跨产物轮次传递容量状态）
+    config: SolverConfig，exclusive_support_check=True 时仅检查独占支撑冲突
+    容量不足时跳过当前组合，尝试下一个。
     """
-    assigned = set()
+    use_exclusive = config is not None and config.exclusive_support_check
+    max_slots = config.params.control_max_slots if config is not None else max_control_slots
+    assigned: set[str] = set()
+    exclusive_assigned: set[str] = set()
+    control_assigned: set[str] = set(initial_control) if initial_control else set()
     result = []
     for _score, combo_names, all_support_names, support_map in evaluated:
         if any(n in assigned for n in combo_names):
             continue
-        if any(n in assigned for n in all_support_names):
+        if use_exclusive:
+            # 独占检查：仅 Trade + Office 支撑产生跨房间冲突
+            exclusive_names = set(support_map.get("Trade", [])) | set(support_map.get("Office", []))
+            if any(n in exclusive_assigned for n in exclusive_names):
+                continue
+        else:
+            # 旧逻辑：全部支撑扁平冲突检查
+            if any(n in assigned for n in all_support_names):
+                continue
+        new_control = set(support_map.get("Control", []))
+        if len(control_assigned | new_control) > max_slots:
             continue
         result.append((combo_names, support_map))
         assigned.update(combo_names)
-        assigned.update(all_support_names)
+        if use_exclusive:
+            exclusive_assigned.update(exclusive_names)
+            control_assigned.update(new_control)
+        else:
+            assigned.update(all_support_names)
+            control_assigned.update(new_control)
         if len(result) >= room_count:
             break
     return result

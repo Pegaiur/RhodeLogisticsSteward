@@ -4,7 +4,7 @@ from dataclasses import dataclass, field
 
 from steward_core.models import Operator
 from .helpers import _DURIN_NAMES, _ORDER_ANCHOR_PREFIXES
-from .mfg_linkages import skill_class
+from .mfg_linkages import skill_class, _ZEROING_VARIANT_TABLE
 from .buff_pool import _B_BUFF_CONSUMER_TABLE
 from .facility_linkages import _A_FACILITY_LINK_TABLE
 
@@ -26,17 +26,21 @@ def classify_mfg_operators(
         is_anchor = op.name in anchor_names
 
         has_skill_label = False
+        has_zeroing = False
         for sk in op.skills:
             if sk.room_type != "Mfg":
                 continue
             if skill_class(sk.buff_name):
                 has_skill_label = True
-                break
+            if sk.buff_id in _ZEROING_VARIANT_TABLE:
+                has_zeroing = True
 
         if is_anchor:
             result.anchors.append(op)
-        elif has_skill_label:
+        elif has_skill_label or has_zeroing:
             result.providers.append(op)
+        # 以下两步已被 MFG_ANCHORS 覆盖（derive.py 扫描同名表自动注册），
+        # 保留作为防御性兜底：如果 _derived.py 过期未更新，此检查仍能防剪枝。
         elif op.name in _B_BUFF_CONSUMER_TABLE and _B_BUFF_CONSUMER_TABLE[op.name].target_room == "Mfg":
             result.providers.append(op)
         elif op.name in _A_FACILITY_LINK_TABLE and _A_FACILITY_LINK_TABLE[op.name].target_room == "Mfg":
@@ -103,6 +107,7 @@ def classify_trade_operators(
 
         if is_registered or is_order_anchor:
             result.anchors.append(op)
+        # 以下两步已被 TRADE_ANCHORS 覆盖，保留作为防御性兜底。
         elif op.name in _B_BUFF_CONSUMER_TABLE and _B_BUFF_CONSUMER_TABLE[op.name].target_room == "Trade":
             result.providers.append(op)
         elif op.name in _A_FACILITY_LINK_TABLE and _A_FACILITY_LINK_TABLE[op.name].target_room == "Trade":
