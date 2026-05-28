@@ -22,7 +22,7 @@ C层（中枢全局）:
 每个体系一个独立函数，同层并行计算后线性叠加。
 """
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import NamedTuple
 
 from steward_core.models import LinearSegment, Operator, LayoutConfig
