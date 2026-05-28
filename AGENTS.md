@@ -139,7 +139,7 @@ RhodeLogisticsSteward/
    - 联动体系逻辑 → `steward_core/synergy/`：先读 `__init__.py` 了解公开 API，再按需进入对应模块（A层→`mfg_linkages`/`trade_linkages`/`facility_linkages`，B层→`buff_pool`/`global_linkages`，C层→`control_linkages`/`mood`）
    - 求解/排班逻辑 → `steward_core/solver/`：先读 `__init__.py` 的 `solve_mvp()` 五阶段编排，再按需进入各 `phase*.py`
    - 数据模型/常量 → `steward_core/models.py` / `constants.py`
-   - 表维护/新增 → `synergy/types.py` TABLES 注册器 + AGENTS.md §硬编码表清单
+   - 表维护/新增 → `synergy/types.py` TABLES 注册器 + `synergy/registry.py` 系统贡献者 + AGENTS.md §人工维护数据
 
 **关键文件名索引**：
 
