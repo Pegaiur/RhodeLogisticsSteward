@@ -66,7 +66,10 @@ def _production_score(plan: ShiftPlan, operators: list[Operator], params) -> flo
     from steward_core import production
     from steward_core.production import _RECORD_EXP_PER_UNIT
 
-    dp = production.calculate(plan, operators, hours=params.shift_hours)
+    dp = production.calculate(
+        plan, operators, hours=params.shift_hours,
+        external_gold_per_day=params.daily_task_lmd / production._GOLD_LMD_PER_UNIT,
+    )
     exp_value = dp.total_records_per_day * _RECORD_EXP_PER_UNIT
     lmd_value = dp.effective_lmd_per_day
     return exp_value + lmd_value

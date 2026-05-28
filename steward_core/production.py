@@ -279,6 +279,7 @@ class DailyProduction:
     effective_lmd_per_day: float = 0.0
     gold_surplus: float = 0.0
     equivalent_gold_from_mechanism: float = 0.0  # 订单机制等效赤金产出（赤金/天）
+    external_gold_per_day: float = 0.0  # 外部来源赤金（赤金/天）
 
     def summary(self) -> str:
         lines = [
@@ -289,15 +290,18 @@ class DailyProduction:
         lines.extend([
             f"作战记录产出: {self.total_records_per_day * _RECORD_EXP_PER_UNIT:,.0f} 经验/天 ({self.total_records_per_day:.1f} 个)",
             f"赤金制造: {self.total_gold_produced_per_day * _GOLD_LMD_PER_UNIT:,.0f} LMD等值/天 ({self.total_gold_produced_per_day:.1f} 个)",
-            f"赤金消耗: {self.total_gold_consumed_per_day * _GOLD_LMD_PER_UNIT:,.0f} LMD等值/天 ({self.total_gold_consumed_per_day:.1f} 个)",
         ])
+        if self.external_gold_per_day > 0:
+            lines.append(f"外部赤金: +{self.external_gold_per_day:.1f} 个/天 ({self.external_gold_per_day * _GOLD_LMD_PER_UNIT:,.0f} LMD等值)")
+        lines.append(f"赤金消耗: {self.total_gold_consumed_per_day * _GOLD_LMD_PER_UNIT:,.0f} LMD等值/天 ({self.total_gold_consumed_per_day:.1f} 个)")
         if self.equivalent_gold_from_mechanism > 0:
             lines.append(f"订单等效赤金: +{self.equivalent_gold_from_mechanism:.1f} 个/天 ({self.equivalent_gold_from_mechanism * _GOLD_LMD_PER_UNIT:,.0f} LMD等值)")
         lines.append(f"龙门币产出: {self.effective_lmd_per_day:,.0f} /天")
         if self.gold_surplus > 0:
             lines.append(f"赤金盈余: +{self.gold_surplus:.1f} 个 ({self.gold_surplus * _GOLD_LMD_PER_UNIT:,.0f} LMD等值)")
         elif self.gold_surplus < 0:
-            lines.append(f"赤金缺口: {abs(self.gold_surplus):.1f} 个 ({abs(self.gold_surplus) * _GOLD_LMD_PER_UNIT:,.0f} LMD等值)（贸易站开工率 {self.effective_lmd_per_day/self.total_lmd_per_day:.0%}）")
+            total_available = self.total_gold_produced_per_day + self.external_gold_per_day
+            lines.append(f"赤金缺口: {abs(self.gold_surplus):.1f} 个 ({abs(self.gold_surplus) * _GOLD_LMD_PER_UNIT:,.0f} LMD等值)（贸易站开工率 {total_available/self.total_gold_consumed_per_day:.0%}）")
         return "\n".join(lines)
 
 
@@ -442,16 +446,23 @@ def _calc_trade(
     production.equivalent_gold_from_mechanism += base_factor * equiv_gold_per_day * (1.0 + drone_boost)
 
 
-def calculate(plan: ShiftPlan, operators: list[Operator], hours: float = 24.0) -> DailyProduction:
+def calculate(
+    plan: ShiftPlan,
+    operators: list[Operator],
+    hours: float = 24.0,
+    external_gold_per_day: float = 0.0,
+) -> DailyProduction:
     """计算排班方案的精确产出（含无人机加速）
 
     Args:
         plan: 排班计划
         operators: 全量干员池
         hours: 该班次覆盖的小时数（默认 24h 即全天）
+        external_gold_per_day: 外部来源赤金（赤金/天），如日常任务等效赤金收入
     """
     op_lookup = _operator_lookup(operators)
     production = DailyProduction()
+    production.external_gold_per_day = external_gold_per_day
 
     # 从 plan 获取中枢干员（若未指定则回退 FIXED_CONTROL）
     plan_ctrl_ops: list[Operator] = []
@@ -544,12 +555,11 @@ def calculate(plan: ShiftPlan, operators: list[Operator], hours: float = 24.0) -
         elif assignment.room_type == "Trade":
             _calc_trade(ctx, assignment, ops, production)
 
-    # 4. 赤金供需平衡
-    production.gold_surplus = (
-        production.total_gold_produced_per_day - production.total_gold_consumed_per_day
-    )
+    # 4. 赤金供需平衡（含外部来源赤金）
+    total_available_gold = production.total_gold_produced_per_day + production.external_gold_per_day
+    production.gold_surplus = total_available_gold - production.total_gold_consumed_per_day
     if production.gold_surplus < 0:
-        ratio = production.total_gold_produced_per_day / max(production.total_gold_consumed_per_day, 0.001)
+        ratio = total_available_gold / max(production.total_gold_consumed_per_day, 0.001)
         production.effective_lmd_per_day = production.total_lmd_per_day * ratio
     else:
         production.effective_lmd_per_day = production.total_lmd_per_day

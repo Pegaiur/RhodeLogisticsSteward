@@ -59,6 +59,10 @@ class SolverParams:
     office_perception_base: int = 20
     """絮雨办公室感知信息基础值（243 Lv3: 2额外招募位 × 10）"""
 
+    # === 外部收入 ===
+    daily_task_lmd: float = 5000.0
+    """日常任务等外部来源等效赤金收入（LMD/天，按每赤金=500LMD折算）"""
+
     # === 算法调优 ===
     combo_upper_bound_threshold: float = 0.95
     """穷举上界预判阈值（规则 3：总效率 ≥ best_known × threshold）"""
@@ -128,5 +132,7 @@ class SolverParams:
         if self.local_search_max_rounds < 1:
             errors.append("local_search_max_rounds 必须 ≥ 1")
         if self.dorm_max_operators < self.dorm_room_size:
-            errors.append("dorm_max_operators 应 ≥ dorm_room_size")
+            errors.append("dorm_max_operators 应 >= dorm_room_size")
+        if self.daily_task_lmd < 0:
+            errors.append("daily_task_lmd 必须 >= 0")
         return errors
