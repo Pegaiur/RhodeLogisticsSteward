@@ -41,14 +41,44 @@ RhodeLogisticsSteward/
 ├── AGENTS.md                     # 本文件
 ├── .gitignore
 ├── scan_operators.py             # 干员扫描工具
-├── steward_core/                 # 排班核心库（待开发）
+├── steward_core/                 # 排班核心库
+│   ├── synergy/                  # 联动体系子包（12模块）
+│   │   ├── __init__.py           #   ─ 全部公开符号重导出
+│   │   ├── types.py              #   ─ NamedTuple类型 + TABLES注册器
+│   │   ├── helpers.py            #   ─ 名称集合/常量/辅助函数
+│   │   ├── mfg_linkages.py       #   ─ A层·制造站联动（配对/阵营/技能/自动化/低语/爬升/归零）
+│   │   ├── trade_linkages.py     #   ─ A层·贸易站联动（订单压缩/销路宣发）
+│   │   ├── facility_linkages.py  #   ─ A层·设施数量联动 + 发电站计数
+│   │   ├── control_linkages.py   #   ─ C层·中枢全局效率 + per-operator条件加成
+│   │   ├── global_linkages.py    #   ─ B层·跨房间配对 + 全局阵营计数
+│   │   ├── buff_pool.py          #   ─ B层·BuffPool生成/消费 + 工程机器人
+│   │   ├── classification.py     #   ─ 制造站/贸易站干员分类与候选池
+│   │   ├── registry.py           #   ─ SystemContributor注册表
+│   │   └── mood.py               #   ─ 中枢心情恢复
+│   ├── solver/                   # 排班求解器子包（8模块）
+│   │   ├── __init__.py           #   ─ solve_mvp() 五阶段编排
+│   │   ├── phase1_mfg.py         #   ─ Phase 1: 制造站穷举
+│   │   ├── phase2_control.py     #   ─ Phase 2: 中枢填充
+│   │   ├── phase3_trade.py       #   ─ Phase 3a: 贸易站穷举
+│   │   ├── phase3_remaining.py   #   ─ Phase 3b: 剩余设施贪心
+│   │   ├── phase4_dorm.py        #   ─ Phase 4: 宿舍填充
+│   │   ├── support.py            #   ─ 支撑干员计算
+│   │   └── greed.py              #   ─ 贪心分配/组合评估/条件验证
+│   ├── models.py                 # 核心数据模型
+│   ├── evaluate.py               # 房间效率评估
+│   ├── production.py             # 产出/日产计算
+│   ├── output.py                 # MAA 基建排班协议输出
+│   ├── efficiency_fn.py          # 效率函数（常数/爬升）
+│   ├── data_loader.py            # 数据加载器（v2）
+│   ├── mood.py                   # 心情/消耗模型
+│   └── constants.py              # 布局/设施常量
 ├── docs/
-│   ├── constraints-and-data-baseline.md  # 约束体系与数据基线（含溯源核验）
-│   ├── strategy-brief.md         # 精简策略概要（编码上下文用）
-│   ├── efficiency-function-design.md  # 效率函数统一建模（草案）
-│   ├── synergy-systems.md        # 联动体系建模（16个独立函数清单）
+│   ├── constraints-and-data-baseline.md  # 约束体系与数据基线
+│   ├── strategy-brief.md         # 精简策略概要
+│   ├── efficiency-function-design.md  # 效率函数建模
+│   ├── synergy-systems.md        # 联动体系建模
 │   ├── archive/
-│   │   └── roadmap-mvp.md         # 开发路线图（MV0-MV5，已归档）
+│   │   └── roadmap-mvp.md         # 开发路线图（已归档）
 │   └── refactor-plan.md           # 重构计划
 └── output/                       # 生成的排班文件（不入库）
     └── custom_infrast/
@@ -126,17 +156,18 @@ RhodeLogisticsSteward/
 
 当 AI Agent 进入本项目工作区时，按以下顺序发现上下文：
 
-1. **读取 AGENTS.md**（本文件）→ 理解项目定位、技术栈、规则
+1. **读取 AGENTS.md**（本文件）→ 理解项目定位、技术栈、规则、包结构
 2. **读取 `docs/strategy-brief.md`** → 理解当前策略与算法骨架
-3. **按需读取**：
-   - 需要约束体系与数据基线 → `docs/constraints-and-data-baseline.md`
-   - 需要效率函数建模方案 → `docs/efficiency-function-design.md`
-   - 实现排班求解器 → 关注 `steward_core/` 目录
+3. **按需深入到子包**：
+   - 联动体系逻辑 → `steward_core/synergy/`：先读 `__init__.py` 了解公开 API，再按需进入对应模块（A层→`mfg_linkages`/`trade_linkages`/`facility_linkages`，B层→`buff_pool`/`global_linkages`，C层→`control_linkages`/`mood`）
+   - 求解/排班逻辑 → `steward_core/solver/`：先读 `__init__.py` 的 `solve_mvp()` 五阶段编排，再按需进入各 `phase*.py`
+   - 数据模型/常量 → `steward_core/models.py` / `constants.py`
+   - 表维护/新增 → `synergy/types.py` TABLES 注册器 + AGENTS.md §硬编码表清单
 
 **关键文件名索引**：
 
-| 关键词 | 目标文件 |
-|--------|----------|
+| 关键词 | 目标文件 / 位置 |
+|--------|----------------|
 | 排班策略/算法 | `docs/strategy-brief.md` |
 | 约束/设施/联动 | `docs/constraints-and-data-baseline.md` |
 | 数据源/覆盖度/效率值 | `docs/constraints-and-data-baseline.md` 附录 A |
@@ -146,6 +177,8 @@ RhodeLogisticsSteward/
 | 干员/buff 数据查询 | `.trae/skills/data-query/query_data.py` (通过 `data-query` skill) |
 | 人工维护/硬编码数据/更新 | AGENTS.md §人工维护数据 |
 | 重构/模块拆分/架构 | `docs/refactor-plan.md` |
+| 联动体系代码 | `steward_core/synergy/` → `__init__.py` 重导出一览，`types.py` TABLES 注册器索引全部表 |
+| 求解/排班代码 | `steward_core/solver/` → `__init__.py` solve_mvp() 入口，各 `phase*.py` 按阶段独立 |
 
 ## 技能 (Skills)
 
