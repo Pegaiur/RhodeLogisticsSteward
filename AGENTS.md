@@ -56,7 +56,7 @@ RhodeLogisticsSteward/
 │   │   ├── registry.py           #   ─ SystemContributor注册表
 │   │   └── mood.py               #   ─ 中枢心情恢复
 │   ├── solver/                   # 排班求解器子包（8模块）
-│   │   ├── __init__.py           #   ─ solve_mvp() 五阶段编排
+│   │   ├── __init__.py           #   ─ solve_mvp() 四阶段编排
 │   │   ├── phase1_mfg.py         #   ─ Phase 1: 制造站穷举
 │   │   ├── phase2_control.py     #   ─ Phase 2: 中枢填充
 │   │   ├── phase3_trade.py       #   ─ Phase 3a: 贸易站穷举
@@ -78,8 +78,8 @@ RhodeLogisticsSteward/
 │   ├── efficiency-function-design.md  # 效率函数建模
 │   ├── synergy-systems.md        # 联动体系建模
 │   ├── archive/
-│   │   └── roadmap-mvp.md         # 开发路线图（已归档）
-│   └── refactor-plan.md           # 重构计划
+│   │   ├── roadmap-mvp.md         # 开发路线图（已归档）
+│   │   └── refactor-plan.md       # 重构计划（已归档）
 └── output/                       # 生成的排班文件（不入库）
     └── custom_infrast/
 ```
@@ -137,7 +137,7 @@ RhodeLogisticsSteward/
 2. **读取 `docs/strategy-brief.md`** → 理解当前策略与算法骨架
 3. **按需深入到子包**：
    - 联动体系逻辑 → `steward_core/synergy/`：先读 `__init__.py` 了解公开 API，再按需进入对应模块（A层→`mfg_linkages`/`trade_linkages`/`facility_linkages`，B层→`buff_pool`/`global_linkages`，C层→`control_linkages`/`mood`）
-   - 求解/排班逻辑 → `steward_core/solver/`：先读 `__init__.py` 的 `solve_mvp()` 五阶段编排，再按需进入各 `phase*.py`
+   - 求解/排班逻辑 → `steward_core/solver/`：先读 `__init__.py` 的 `solve_mvp()` 四阶段编排，再按需进入各 `phase*.py`
    - 数据模型/常量 → `steward_core/models.py` / `constants.py`
    - 表维护/新增 → `synergy/types.py` TABLES 注册器 + `synergy/registry.py` 系统贡献者 + AGENTS.md §人工维护数据
 
@@ -153,7 +153,7 @@ RhodeLogisticsSteward/
 | 设施容量/约束/多班次 | `docs/strategy-brief.md` §设施容量/§约束/§策略 |
 | 干员/buff 数据查询 | `.trae/skills/data-query/query_data.py` (通过 `data-query` skill) |
 | 人工维护/硬编码数据/更新 | AGENTS.md §人工维护数据 |
-| 重构/模块拆分/架构 | `docs/refactor-plan.md` |
+| 重构/模块拆分/架构 | `docs/archive/refactor-plan.md`（已归档） |
 | 联动体系代码 | `steward_core/synergy/` → `__init__.py` 重导出一览，`types.py` TABLES 注册器索引全部表 |
 | 求解/排班代码 | `steward_core/solver/` → `__init__.py` solve_mvp() 入口，各 `phase*.py` 按阶段独立 |
 

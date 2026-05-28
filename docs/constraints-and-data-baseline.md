@@ -14,7 +14,7 @@ flowchart LR
     end
     subgraph 本项目["RhodeLogisticsSteward"]
         C["steward_core/data_loader.py<br/>解析数据 → Operator / Skill 模型"]
-        D["steward_core/solver.py<br/>单班次贪心求解"]
+        D["steward_core/solver/<br/>四阶段穷举+支撑+贪心求解"]
         E["output/custom_infrast/*.json<br/>供 MAA 执行排班"]
     end
     A -->|"charId → buffId → phase"| C
