@@ -1,6 +1,6 @@
 # 效率函数统一建模
 
-> **状态**：已实现 — 通过 `efficiency_fn.py` 的 `LinearSegment` + `constant_efficiency`/`ramping_efficiency` 构造器 + `evaluate.py` 的 `evaluate_room()` 统一积分
+> **版本**: 2026-05-28 · 已实现 — 通过 `efficiency_fn.py` 的 `LinearSegment` + `constant_efficiency`/`ramping_efficiency` 构造器 + `evaluate.py` 的 `evaluate_room()` 统一积分
 >
 > **MVP 简化**：12h 单班次下心情截断不触发（`t_red ≥ 16h`），实际 `mood_burn=0.0`，e(t) 退化为全常数段。
 

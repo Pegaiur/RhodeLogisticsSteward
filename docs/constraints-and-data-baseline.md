@@ -346,10 +346,9 @@ flowchart TD
 
 | # | 断言 | 位置 | 风险 |
 |---|------|------|------|
-| TODO-1 | 心情消耗 ~0.75/时（3人工位） | §A.6 | PRTS Wiki 值，中枢干员消耗随技能变化 |
-| TODO-2 | 宿舍恢复 1.5~3.0/时 | §A.6 | 取决于中枢体系和宿舍配置 |
+| ✅ | 心情消耗 ~0.75/时（3人工位） | §A.6 | 已实现于 `steward_core/mood.py` |
+| ✅ | 宿舍恢复 1.5~3.0/时 | §A.6 | 已实现于 `steward_core/mood.py` |
 | TODO-3 | 联动约束 ~300 个（具体数量待精确统计） | §2.3 | 需对 buff description 做结构化解析 |
-| TODO-4 | `buffs_non_production.json` 已生成 | §1.1 | TRAINING 103 + WORKSHOP 104 = 207 条 buff，全部完成 ✅ |
 
 ---
 

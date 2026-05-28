@@ -316,7 +316,7 @@ def synergy_facility_count(
 **函数签名**:
 
 ```python
-def synergy_order_mechanics(
+def synergy_jie_order(
     operators: list[Operator],
     room_type: str,
     global_context: GlobalContext,  # 提供赤金生产线总数、全局干员计数等
@@ -662,7 +662,7 @@ def compute_global_burn(
 | A4 | 技能类型别名 | `synergy_skill_alias()` | A | 房间干员列表 |
 | A5 | 自动化 | `synergy_automation()` | A | 房间干员 + layout |
 | A6 | 设施数量联动 | `synergy_facility_count()` | A | 房间干员 + layout |
-| A7 | 订单机制 | `synergy_order_mechanics()` | A | 房间干员 + GlobalContext |
+| A7 | 订单机制 | `synergy_jie_order()` | A | 房间干员 + GlobalContext |
 | B1 | 人间烟火/感知信息 | `compute_buff_pool()` | B | 中枢+宿舍+全基建 |
 | B2 | 工程机器人 | `compute_engineering_robots()` | B | layout |
 | B3 | 思维链环 | `compute_thought_chains()` | B | B1(感知信息) |
@@ -729,7 +729,7 @@ A7（订单机制）是 MVP 中唯一需要概率近似的体系。以下是期�
 **函数实现策略**:
 
 ```python
-def synergy_order_mechanics(
+def synergy_jie_order(
     operators: list[Operator],
     room_type: str,
     global_context: GlobalContext,

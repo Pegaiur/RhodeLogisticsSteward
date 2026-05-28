@@ -42,7 +42,7 @@ RhodeLogisticsSteward/
 ├── .gitignore
 ├── scan_operators.py             # 干员扫描工具
 ├── steward_core/                 # 排班核心库
-│   ├── synergy/                  # 联动体系子包（12模块）
+│   ├── synergy/                  # 联动体系子包（14模块）
 │   │   ├── __init__.py           #   ─ 全部公开符号重导出
 │   │   ├── types.py              #   ─ NamedTuple类型 + TABLES注册器
 │   │   ├── helpers.py            #   ─ 名称集合/常量/辅助函数
@@ -54,14 +54,22 @@ RhodeLogisticsSteward/
 │   │   ├── buff_pool.py          #   ─ B层·BuffPool生成/消费 + 工程机器人
 │   │   ├── classification.py     #   ─ 制造站/贸易站干员分类与候选池
 │   │   ├── registry.py           #   ─ SystemContributor注册表
+│   │   ├── _derived.py            #   ─ 脚本推导的锚点表+名称集合
 │   │   └── mood.py               #   ─ 中枢心情恢复
-│   ├── solver/                   # 排班求解器子包（8模块）
-│   │   ├── __init__.py           #   ─ solve_mvp() 四阶段编排
+│   ├── solver/                   # 排班求解器子包（15模块）
+│   │   ├── __init__.py           #   ─ solve_mvp() 入口 + config/bundle/refine/LocalSearch 重导出
+│   │   ├── config.py             #   ─ SolverConfig 开关机制（三件套总开关）
+│   │   ├── params.py             #   ─ SolverParams 参数注册表（数值参数集中管理）
+│   │   ├── pipeline.py           #   ─ Pipeline 可组合流水线（Phase 顺序可配置）
+│   │   ├── context.py            #   ─ GlobalContext 统一上下文构造
+│   │   ├── bundle.py             #   ─ 支撑包数据结构（SupportBundle + SupportResult）
 │   │   ├── phase1_mfg.py         #   ─ Phase 1: 制造站穷举
-│   │   ├── phase2_control.py     #   ─ Phase 2: 中枢填充
-│   │   ├── phase3_trade.py       #   ─ Phase 3a: 贸易站穷举
-│   │   ├── phase3_remaining.py   #   ─ Phase 3b: 剩余设施贪心
-│   │   ├── phase4_dorm.py        #   ─ Phase 4: 宿舍填充
+│   │   ├── phase3_trade.py       #   ─ Phase 2: 贸易站穷举（中枢后置）
+│   │   ├── phase2_control.py     #   ─ Phase 3: 中枢填充
+│   │   ├── phase3_remaining.py   #   ─ Phase 4: 剩余设施贪心
+│   │   ├── phase4_dorm.py        #   ─ Phase 5: 宿舍填充
+│   │   ├── global_state.py       #   ─ 包级稀缺度评分注入（Step 3 全局状态注入）
+│   │   ├── refine.py             #   ─ 局部搜索后处理（单房间替换 + 干员交换）
 │   │   ├── support.py            #   ─ 支撑干员计算
 │   │   └── greed.py              #   ─ 贪心分配/组合评估/条件验证
 │   ├── models.py                 # 核心数据模型
@@ -77,9 +85,13 @@ RhodeLogisticsSteward/
 │   ├── strategy-brief.md         # 精简策略概要
 │   ├── efficiency-function-design.md  # 效率函数建模
 │   ├── synergy-systems.md        # 联动体系建模
+│   ├── inbox.md                  # 需求收件箱（远期待办登记）
+│   ├── solver-improvement-plan.md # 求解器优化计划（v0.4.0 已实施）
 │   ├── archive/
+│   │   ├── index.md               # 里程碑索引
 │   │   ├── roadmap-mvp.md         # 开发路线图（已归档）
-│   │   └── refactor-plan.md       # 重构计划（已归档）
+│   │   ├── refactor-plan.md       # 重构计划（已归档）
+│   │   └── solver-improvement-plan.md  # 求解器优化计划（已实施，已归档）
 └── output/                       # 生成的排班文件（不入库）
     └── custom_infrast/
 ```
@@ -138,7 +150,7 @@ RhodeLogisticsSteward/
 2. **读取 `docs/strategy-brief.md`** → 理解当前策略与算法骨架
 3. **按需深入到子包**：
    - 联动体系逻辑 → `steward_core/synergy/`：先读 `__init__.py` 了解公开 API，再按需进入对应模块（A层→`mfg_linkages`/`trade_linkages`/`facility_linkages`，B层→`buff_pool`/`global_linkages`，C层→`control_linkages`/`mood`）
-   - 求解/排班逻辑 → `steward_core/solver/`：先读 `__init__.py` 的 `solve_mvp()` 四阶段编排，再按需进入各 `phase*.py`
+   - 求解/排班逻辑 → `steward_core/solver/`：先读 `__init__.py` 的 `solve_mvp()` Pipeline 编排，再按需进入 `pipeline.py`（Phase 顺序）、各 `phase*.py`（具体阶段）、`refine.py`（局部搜索）、`global_state.py`（全局状态评分）
    - 数据模型/常量 → `steward_core/models.py` / `constants.py`
    - 表维护/新增 → `synergy/types.py` TABLES 注册器 + `synergy/registry.py` 系统贡献者 + AGENTS.md §人工维护数据
    - 硬编码数据维护规则 → `.trae/rules/hardcoded-data.md`（锚点生成、名称集合同步、分类覆盖率）
@@ -157,8 +169,10 @@ RhodeLogisticsSteward/
 | 人工维护/硬编码数据/更新 | AGENTS.md §人工维护数据 |
 | 硬编码数据生成规则 | `.trae/rules/hardcoded-data.md` |
 | 重构/模块拆分/架构 | `docs/archive/refactor-plan.md`（已归档） |
+| 求解器优化/三件套 | `docs/archive/solver-improvement-plan.md`（v0.4.0 已实施） |
+| 远期待办/需求登记 | `docs/inbox.md` |
 | 联动体系代码 | `steward_core/synergy/` → `__init__.py` 重导出一览，`types.py` TABLES 注册器索引全部表 |
-| 求解/排班代码 | `steward_core/solver/` → `__init__.py` solve_mvp() 入口，各 `phase*.py` 按阶段独立 |
+| 求解/排班代码 | `steward_core/solver/` → `__init__.py` solve_mvp() 入口，各 `phase*.py` 按阶段独立，`pipeline.py` 配置 Phase 顺序 |
 
 ## 版本管理
 
@@ -185,8 +199,10 @@ master ────────────────────────�
 |----------|--------|------|
 | 首次可用的排班求解器 | 0.1.0 | 起步 |
 | 通过 Step 1 验证 | 0.2.0 | 核心算法验证 |
-| 通过 Step 4 全验证 | 1.0.0 | 首个正式版 |
-| MAA 发版需适配 | PATCH +1 | 0.2.1 |
+| 通过 Step 2 验证 | 0.3.0 | 横向重构完成 |
+| 求解器三件套优化 | 0.4.0 | 支撑包+局部搜索+全局状态 |
+| 首个正式版 | 1.0.0 | 全验证通过 |
+| MAA 发版需适配 | PATCH +1 | 0.4.1 |
 
 ### 提交约定
 
@@ -206,7 +222,8 @@ docs(roadmap): 添加 Step 2 验证结果
 v0.1.0  → M1: Step 1 验证通过
 v0.2.0  → M2: Step 2 验证通过
 v0.3.0  → M3: Step 3 验证通过
-v1.0.0  → M4: 全验证通过
+v0.4.0  → M4: 求解器三件套优化（支撑包+局部搜索+全局状态）
+v1.0.0  → 首个正式版
 ```
 
 ## 文档规范
