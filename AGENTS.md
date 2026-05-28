@@ -89,14 +89,18 @@ RhodeLogisticsSteward/
 | 表名 | 维护内容 | 触发条件 |
 |------|----------|----------|
 | `_SYSTEM_CONTRIBUTORS` | 系统贡献者注册表（含锚点/全局/buff生成/设施修改器） | 新增效率为0但有系统贡献的干员 |
-| `_A1_PAIR_TABLE` | 干员配对组合 | 新增配对型联动 buff |
-| `_A3_COUNTER_TABLE` | 技能类型计数锚点 | 新增计数型联动 buff |
-| `_A5_AUTO_FALLBACK` | 自动化名称→加成回退值（buff_id 不可用时） | 新增自动化干员或 buff 变更 |
+| `_A_PAIR_TABLE` | 干员配对组合 | 新增配对型联动 buff |
+| `_A_ROOM_FACTION_TABLE` | 同房阵营计数联动 | 新增同房阵营计数型联动 buff |
+| `_A_ROOM_FACTION_EXTRA` | 同房阵营额外加成（如摩根+推王→额外+35%） | 新增同房阵营额外加成 |
+| `_A_SKILL_COUNT_TABLE` | 技能类型计数锚点 | 新增计数型联动 buff |
+| `_A_AUTOMATION_FALLBACK` | 自动化名称→加成回退值（buff_id 不可用时） | 新增自动化干员或 buff 变更 |
 | `_POWER_BUFF_BONUS` | 自动化 buff_id→加成映射 | 新增 manu_prod_spd&power[*] 类型 buff |
-| `_A6_FACILITY_TABLE` | 设施数量联动表 | 新增设施联动 buff |
-| `_C1_GLOBAL_TABLE` | 中枢全局效率 | 新增中枢全局 buff |
+| `_A_FACILITY_LINK_TABLE` | 设施数量联动表 | 新增设施联动 buff |
+| `_C_CONTROL_GLOBAL_TABLE` | 中枢全局效率 | 新增中枢全局 buff |
 | `_KNIGHT_NAMES` | 骑士干员名称（安全网补全） | 新增卡西米尔但不属于 kazimierz 势力/pinus 组织的骑士 |
-| `_B_LAYER_CONSUMER_TABLE` | B 层点数消费者 | 新增 buff 池消费者 |
+| `_B_BUFF_CONSUMER_TABLE` | buff 池消费者 | 新增 buff 池消费者 |
+| `_B_GLOBAL_FACTION_TABLE` | 全局阵营计数 | 新增全局阵营计数型 buff |
+| `_B_CROSS_ROOM_PAIR_TABLE` | 跨房间配对表 | 新增跨设施干员条件配对 buff |
 | `ROSEMARY_SUPPORT` | 迷迭香支撑干员 | 新增迷迭香联动链参与者 |
 | `_RAMPING_SKILL_TABLE` | 爬升型效率技能参数 | 新增 manu_prod_spd_addition[*] 爬升型技能 |
 | `_ZEROING_VARIANT_TABLE` | 归零变体（科学改造/流程优化） | 新增归零型变体 buff |
@@ -105,9 +109,7 @@ RhodeLogisticsSteward/
 | `_MH_NAMES` | 怪物猎人小队干员名 | 新增怪物猎人联动干员 |
 | `_LUNG_MEN_GUARD_NAMES` | 龙门近卫局干员名 | 新增龙门近卫局干员 |
 | `_BLACKSTEEL_HOLDERS` | 老友相聚中枢持有者 | 新增黑钢国际相关中枢干员 |
-| `_A2_FACTION_TABLE` | 阵营计数联动表 | 新增同房阵营计数型联动 buff |
-| `_A2_EXTRA_TABLE` | A2 专属额外加成（如摩根+推王→额外+35%） | 新增 A2 持有者与特定成员共存时的额外加成 |
-| `_B7_CROSS_PAIR_TABLE` | 跨房间配对表 | 新增跨设施干员条件配对 buff |
+| `TABLES` | 硬编码表集中索引（`TableMeta` 注册器） | 任意硬编码表新增/改名时同步更新 |
 
 ### 维护流程
 
