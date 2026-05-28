@@ -47,7 +47,9 @@ RhodeLogisticsSteward/
 │   ├── strategy-brief.md         # 精简策略概要（编码上下文用）
 │   ├── efficiency-function-design.md  # 效率函数统一建模（草案）
 │   ├── synergy-systems.md        # 联动体系建模（16个独立函数清单）
-│   └── roadmap-mvp.md             # 开发路线图（MV0-MV5）
+│   ├── archive/
+│   │   └── roadmap-mvp.md         # 开发路线图（MV0-MV5，已归档）
+│   └── refactor-plan.md           # 重构计划
 └── output/                       # 生成的排班文件（不入库）
     └── custom_infrast/
 ```
@@ -136,8 +138,9 @@ RhodeLogisticsSteward/
 | 效率函数/e(t) | `docs/efficiency-function-design.md` |
 | 联动/体系建模 | `docs/synergy-systems.md` |
 | 设施容量/约束/多班次 | `docs/strategy-brief.md` §设施容量/§约束/§策略 |
-| 干员/buff 数据查询 | `scripts/query_data.py` (通过 `data-query` skill) |
+| 干员/buff 数据查询 | `.trae/skills/data-query/query_data.py` (通过 `data-query` skill) |
 | 人工维护/硬编码数据/更新 | AGENTS.md §人工维护数据 |
+| 重构/模块拆分/架构 | `docs/refactor-plan.md` |
 
 ## 技能 (Skills)
 

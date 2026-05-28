@@ -7,7 +7,7 @@ description: "对 character_identity/buffs_infrastructure 等数据源执行常�
 
 ## 触发条件
 
-当 agent 需要执行以下操作时，应使用 `scripts/query_data.py` 而非临时写 Python 脚本：
+当 agent 需要执行以下操作时，应使用 `.trae/skills/data-query/query_data.py` 而非临时写 Python 脚本：
 
 - 查询某个干员的基建技能和身份信息
 - 列出某设施类型的所有干员
@@ -34,8 +34,8 @@ description: "对 character_identity/buffs_infrastructure 等数据源执行常�
 ### `operator <干员名或ID>` — 查干员身份与技能
 
 ```bash
-python scripts/query_data.py operator 阿米娅
-python scripts/query_data.py operator char_003_kalts
+python .trae/skills/data-query/query_data.py operator 阿米娅
+python .trae/skills/data-query/query_data.py operator char_003_kalts
 ```
 
 输出：星级、职业、势力/组织/队伍、附属势力、全部基建技能（含 buff 名称、设施、需求精英阶段、效率值、描述）。
@@ -43,9 +43,9 @@ python scripts/query_data.py operator char_003_kalts
 ### `facility <设施类型>` — 列出某设施类型的所有干员
 
 ```bash
-python scripts/query_data.py facility MANUFACTURE
-python scripts/query_data.py facility TRADING
-python scripts/query_data.py facility CONTROL
+python .trae/skills/data-query/query_data.py facility MANUFACTURE
+python .trae/skills/data-query/query_data.py facility TRADING
+python .trae/skills/data-query/query_data.py facility CONTROL
 ```
 
 设施类型：`CONTROL` / `MANUFACTURE` / `TRADING` / `POWER` / `MEETING` / `HIRE` / `DORMITORY`
@@ -55,8 +55,8 @@ python scripts/query_data.py facility CONTROL
 ### `buff <buffId或名称>` — 查 buff 详情与拥有者
 
 ```bash
-python scripts/query_data.py buff 最高权限
-python scripts/query_data.py buff manu_prod_spd[000]
+python .trae/skills/data-query/query_data.py buff 最高权限
+python .trae/skills/data-query/query_data.py buff manu_prod_spd[000]
 ```
 
 输出：buff 名称、设施类型、效率值、描述、目标、拥有干员列表（含星级）。
@@ -64,28 +64,28 @@ python scripts/query_data.py buff manu_prod_spd[000]
 ### `group <组织ID>` — 按组织筛选干员
 
 ```bash
-python scripts/query_data.py group karlan
-python scripts/query_data.py group abyssal
+python .trae/skills/data-query/query_data.py group karlan
+python .trae/skills/data-query/query_data.py group abyssal
 ```
 
 ### `team <队伍ID>` — 按队伍筛选干员
 
 ```bash
-python scripts/query_data.py team action4
+python .trae/skills/data-query/query_data.py team action4
 ```
 
 ### `nation <势力ID>` — 按势力筛选干员（含附属势力）
 
 ```bash
-python scripts/query_data.py nation victoria
-python scripts/query_data.py nation egir
+python .trae/skills/data-query/query_data.py nation victoria
+python .trae/skills/data-query/query_data.py nation egir
 ```
 
 ### `search <关键词>` — 搜索 buff 名称/描述
 
 ```bash
-python scripts/query_data.py search 标准化
-python scripts/query_data.py search 骑士
+python .trae/skills/data-query/query_data.py search 标准化
+python .trae/skills/data-query/query_data.py search 骑士
 ```
 
 输出：匹配的 buff 列表，含设施类型、拥有人数，名称匹配优先。
@@ -93,8 +93,8 @@ python scripts/query_data.py search 骑士
 ### `rarity <星级>` — 按星级筛选干员
 
 ```bash
-python scripts/query_data.py rarity 6    # 6★
-python scripts/query_data.py rarity 4    # 5★
+python .trae/skills/data-query/query_data.py rarity 6    # 6★
+python .trae/skills/data-query/query_data.py rarity 4    # 5★
 ```
 
 星级映射：0=1★, 1=2★, 2=3★, 3=4★, 4=5★, 5=6★
@@ -102,8 +102,8 @@ python scripts/query_data.py rarity 4    # 5★
 ### `compare <干员1> <干员2>` — 对比基建技能
 
 ```bash
-python scripts/query_data.py compare 阿米娅 凯尔希
-python scripts/query_data.py compare char_131_flame char_134_ifrit
+python .trae/skills/data-query/query_data.py compare 阿米娅 凯尔希
+python .trae/skills/data-query/query_data.py compare char_131_flame char_134_ifrit
 ```
 
 输出：独有技能和共同技能对比。
@@ -111,7 +111,7 @@ python scripts/query_data.py compare char_131_flame char_134_ifrit
 ### `stats` — 数据统计概览
 
 ```bash
-python scripts/query_data.py stats
+python .trae/skills/data-query/query_data.py stats
 ```
 
 输出：星级/职业/势力/组织/队伍分布、技能数分布、设施分布、阶段分布。
@@ -119,10 +119,10 @@ python scripts/query_data.py stats
 ### 列举类命令
 
 ```bash
-python scripts/query_data.py list-groups      # 所有组织及人数
-python scripts/query_data.py list-teams       # 所有队伍及人数
-python scripts/query_data.py list-nations     # 所有势力及人数
-python scripts/query_data.py list-facilities  # 所有设施类型及技能/干员数
+python .trae/skills/data-query/query_data.py list-groups      # 所有组织及人数
+python .trae/skills/data-query/query_data.py list-teams       # 所有队伍及人数
+python .trae/skills/data-query/query_data.py list-nations     # 所有势力及人数
+python .trae/skills/data-query/query_data.py list-facilities  # 所有设施类型及技能/干员数
 ```
 
 ## 注意事项

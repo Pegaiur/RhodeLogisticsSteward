@@ -277,7 +277,7 @@ MV0 → MV1 串行。MV2 可与 MV1 并行开发（联动函数不需要效率�
 
 ## 参考
 
-- 策略概要: [`strategy-brief.md`](./strategy-brief.md)
-- 联动体系建模: [`synergy-systems.md`](./synergy-systems.md)
-- 效率函数建模: [`efficiency-function-design.md`](./efficiency-function-design.md)
-- 约束体系与数据基线: [`constraints-and-data-baseline.md`](./constraints-and-data-baseline.md)
+- 策略概要: [`strategy-brief.md`](../strategy-brief.md)
+- 联动体系建模: [`synergy-systems.md`](../synergy-systems.md)
+- 效率函数建模: [`efficiency-function-design.md`](../efficiency-function-design.md)
+- 约束体系与数据基线: [`constraints-and-data-baseline.md`](../constraints-and-data-baseline.md)

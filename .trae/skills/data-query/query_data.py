@@ -4,20 +4,20 @@
 支持按干员、设施、buff、组织、星级等多维度查询，避免每次分析数据时重复写临时脚本。
 
 用法:
-  python scripts/query_data.py operator <干员名或ID>    # 查干员身份与技能
-  python scripts/query_data.py facility <设施类型>       # 列出某设施的所有干员
-  python scripts/query_data.py buff <buffId或名称>      # 查 buff 详情与拥有者
-  python scripts/query_data.py group <组织ID>           # 按 groupId 筛选干员
-  python scripts/query_data.py team <队伍ID>            # 按 teamId 筛选干员
-  python scripts/query_data.py nation <势力ID>          # 按 nationId 筛选干员
-  python scripts/query_data.py search <关键词>           # 在 buff 名称/描述中搜索
-  python scripts/query_data.py rarity <星级>             # 按星级筛选干员
-  python scripts/query_data.py compare <干员1> <干员2>   # 对比两个干员的基建技能
-  python scripts/query_data.py stats                    # 数据统计概览
-  python scripts/query_data.py list-groups              # 列出所有组织及人数
-  python scripts/query_data.py list-teams               # 列出所有队伍及人数
-  python scripts/query_data.py list-nations             # 列出所有势力及人数
-  python scripts/query_data.py list-facilities          # 列出所有设施类型及技能数
+  python .trae/skills/data-query/query_data.py operator <干员名或ID>    # 查干员身份与技能
+  python .trae/skills/data-query/query_data.py facility <设施类型>       # 列出某设施的所有干员
+  python .trae/skills/data-query/query_data.py buff <buffId或名称>      # 查 buff 详情与拥有者
+  python .trae/skills/data-query/query_data.py group <组织ID>           # 按 groupId 筛选干员
+  python .trae/skills/data-query/query_data.py team <队伍ID>            # 按 teamId 筛选干员
+  python .trae/skills/data-query/query_data.py nation <势力ID>          # 按 nationId 筛选干员
+  python .trae/skills/data-query/query_data.py search <关键词>           # 在 buff 名称/描述中搜索
+  python .trae/skills/data-query/query_data.py rarity <星级>             # 按星级筛选干员
+  python .trae/skills/data-query/query_data.py compare <干员1> <干员2>   # 对比两个干员的基建技能
+  python .trae/skills/data-query/query_data.py stats                    # 数据统计概览
+  python .trae/skills/data-query/query_data.py list-groups              # 列出所有组织及人数
+  python .trae/skills/data-query/query_data.py list-teams               # 列出所有队伍及人数
+  python .trae/skills/data-query/query_data.py list-nations             # 列出所有势力及人数
+  python .trae/skills/data-query/query_data.py list-facilities          # 列出所有设施类型及技能数
 
 设施类型:
   CONTROL / MANUFACTURE / TRADING / POWER / MEETING / HIRE / DORMITORY
@@ -30,7 +30,7 @@ import sys
 from collections import Counter
 from pathlib import Path
 
-PROJECT_ROOT = Path(__file__).resolve().parent.parent
+PROJECT_ROOT = Path(__file__).resolve().parents[3]
 
 IDENTITY_PATH = PROJECT_ROOT / "character_identity.json"
 BUFFS_INFRA_PATH = PROJECT_ROOT / "buffs_infrastructure.json"
@@ -316,7 +316,6 @@ def _filter_by_field(store: DataStore, field: str, value: str, label: str, fuzzy
             if val != value:
                 continue
             if field == "subPower":
-                # 精确匹配 subPower 时只匹配 nationId
                 for sp in data.get("subPower", []):
                     if sp.get("nationId") == value:
                         matched_group = sp.get("groupId")
@@ -599,13 +598,13 @@ def main():
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 示例:
-  python scripts/query_data.py operator 阿米娅
-  python scripts/query_data.py facility MANUFACTURE
-  python scripts/query_data.py buff 最高权限
-  python scripts/query_data.py search 标准化
-  python scripts/query_data.py group karlan
-  python scripts/query_data.py rarity 6
-  python scripts/query_data.py stats
+  python .trae/skills/data-query/query_data.py operator 阿米娅
+  python .trae/skills/data-query/query_data.py facility MANUFACTURE
+  python .trae/skills/data-query/query_data.py buff 最高权限
+  python .trae/skills/data-query/query_data.py search 标准化
+  python .trae/skills/data-query/query_data.py group karlan
+  python .trae/skills/data-query/query_data.py rarity 6
+  python .trae/skills/data-query/query_data.py stats
         """,
     )
     subparsers = parser.add_subparsers(dest="command", help="子命令")
