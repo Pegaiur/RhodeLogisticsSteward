@@ -41,15 +41,45 @@ RhodeLogisticsSteward/
 ├── AGENTS.md                     # 本文件
 ├── .gitignore
 ├── scan_operators.py             # 干员扫描工具
-├── steward_core/                 # 排班核心库（待开发）
+├── steward_core/                 # 排班核心库
+│   ├── synergy/                  # 联动体系子包（12模块）
+│   │   ├── __init__.py           #   ─ 全部公开符号重导出
+│   │   ├── types.py              #   ─ NamedTuple类型 + TABLES注册器
+│   │   ├── helpers.py            #   ─ 名称集合/常量/辅助函数
+│   │   ├── mfg_linkages.py       #   ─ A层·制造站联动（配对/阵营/技能/自动化/低语/爬升/归零）
+│   │   ├── trade_linkages.py     #   ─ A层·贸易站联动（订单压缩/销路宣发）
+│   │   ├── facility_linkages.py  #   ─ A层·设施数量联动 + 发电站计数
+│   │   ├── control_linkages.py   #   ─ C层·中枢全局效率 + per-operator条件加成
+│   │   ├── global_linkages.py    #   ─ B层·跨房间配对 + 全局阵营计数
+│   │   ├── buff_pool.py          #   ─ B层·BuffPool生成/消费 + 工程机器人
+│   │   ├── classification.py     #   ─ 制造站/贸易站干员分类与候选池
+│   │   ├── registry.py           #   ─ SystemContributor注册表
+│   │   └── mood.py               #   ─ 中枢心情恢复
+│   ├── solver/                   # 排班求解器子包（8模块）
+│   │   ├── __init__.py           #   ─ solve_mvp() 四阶段编排
+│   │   ├── phase1_mfg.py         #   ─ Phase 1: 制造站穷举
+│   │   ├── phase2_control.py     #   ─ Phase 2: 中枢填充
+│   │   ├── phase3_trade.py       #   ─ Phase 3a: 贸易站穷举
+│   │   ├── phase3_remaining.py   #   ─ Phase 3b: 剩余设施贪心
+│   │   ├── phase4_dorm.py        #   ─ Phase 4: 宿舍填充
+│   │   ├── support.py            #   ─ 支撑干员计算
+│   │   └── greed.py              #   ─ 贪心分配/组合评估/条件验证
+│   ├── models.py                 # 核心数据模型
+│   ├── evaluate.py               # 房间效率评估
+│   ├── production.py             # 产出/日产计算
+│   ├── output.py                 # MAA 基建排班协议输出
+│   ├── efficiency_fn.py          # 效率函数（常数/爬升）
+│   ├── data_loader.py            # 数据加载器（v2）
+│   ├── mood.py                   # 心情/消耗模型
+│   └── constants.py              # 布局/设施常量
 ├── docs/
-│   ├── constraints-and-data-baseline.md  # 约束体系与数据基线（含溯源核验）
-│   ├── strategy-brief.md         # 精简策略概要（编码上下文用）
-│   ├── efficiency-function-design.md  # 效率函数统一建模（草案）
-│   ├── synergy-systems.md        # 联动体系建模（16个独立函数清单）
+│   ├── constraints-and-data-baseline.md  # 约束体系与数据基线
+│   ├── strategy-brief.md         # 精简策略概要
+│   ├── efficiency-function-design.md  # 效率函数建模
+│   ├── synergy-systems.md        # 联动体系建模
 │   ├── archive/
-│   │   └── roadmap-mvp.md         # 开发路线图（MV0-MV5，已归档）
-│   └── refactor-plan.md           # 重构计划
+│   │   ├── roadmap-mvp.md         # 开发路线图（已归档）
+│   │   └── refactor-plan.md       # 重构计划（已归档）
 └── output/                       # 生成的排班文件（不入库）
     └── custom_infrast/
 ```
@@ -74,45 +104,27 @@ RhodeLogisticsSteward/
 
 | 标签 | 游戏 ref | 判定逻辑 | 维护位置 | 更新触发条件 |
 |------|---------|----------|----------|-------------|
-| 骑士 | `tag.knight` | name 集合 + `nationId=="kazimierz"` + `groupId=="pinus"` | [solver.py](file:///d:/Dev/RhodeLogisticsSteward/steward_core/solver.py#L219-L232) `_KNIGHT_NAMES` | 新增卡西米尔骑士干员 |
+| 骑士 | `tag.knight` | name 集合 + `nationId=="kazimierz"` + `groupId=="pinus"` | `synergy/helpers.py` `_KNIGHT_NAMES` | 新增卡西米尔骑士干员 |
 | 杜林族 | `tag.durin` | `raceId == "DURIN"` | 由 `character_table.json` 自动推导 | — |
-| 作业平台 | `tag.op` | 特定 profession | `synergy.py` `_OP_PLATFORM_NAMES` 硬编码 4 台 | 新增机器人/作业平台干员 |
+| 作业平台 | `tag.op` | 特定 profession | `synergy/helpers.py` `_OP_PLATFORM_NAMES` 硬编码 4 台 | 新增机器人/作业平台干员 |
 | 怪物猎人小队 | `tag.mh` | 联动限定干员 | 尚未建模 | — |
 | 莱欧斯小队 | `tag.dungeon` | 联动限定干员 | 尚未建模 | — |
 
-### 硬编码表清单
+### 硬编码数据清单
 
-以下模块包含不受 ArknightsGameData 驱动的硬编码映射表，每次游戏版本更新需人工审查：
+以下硬编码数据不受 ArknightsGameData 驱动，每次游戏版本更新需人工审查。**详情以源码为准，本文档不重复列出：**
 
-**`steward_core/synergy.py`** — 联动体系表
-
-| 表名 | 维护内容 | 触发条件 |
-|------|----------|----------|
-| `_SYSTEM_CONTRIBUTORS` | 系统贡献者注册表（含锚点/全局/buff生成/设施修改器） | 新增效率为0但有系统贡献的干员 |
-| `_A1_PAIR_TABLE` | 干员配对组合 | 新增配对型联动 buff |
-| `_A3_COUNTER_TABLE` | 技能类型计数锚点 | 新增计数型联动 buff |
-| `_A5_AUTO_FALLBACK` | 自动化名称→加成回退值（buff_id 不可用时） | 新增自动化干员或 buff 变更 |
-| `_POWER_BUFF_BONUS` | 自动化 buff_id→加成映射 | 新增 manu_prod_spd&power[*] 类型 buff |
-| `_A6_FACILITY_TABLE` | 设施数量联动表 | 新增设施联动 buff |
-| `_C1_GLOBAL_TABLE` | 中枢全局效率 | 新增中枢全局 buff |
-| `_KNIGHT_NAMES` | 骑士干员名称（安全网补全） | 新增卡西米尔但不属于 kazimierz 势力/pinus 组织的骑士 |
-| `_B_LAYER_CONSUMER_TABLE` | B 层点数消费者 | 新增 buff 池消费者 |
-| `ROSEMARY_SUPPORT` | 迷迭香支撑干员 | 新增迷迭香联动链参与者 |
-| `_RAMPING_SKILL_TABLE` | 爬升型效率技能参数 | 新增 manu_prod_spd_addition[*] 爬升型技能 |
-| `_ZEROING_VARIANT_TABLE` | 归零变体（科学改造/流程优化） | 新增归零型变体 buff |
-| `_TOKEN_PROD_TABLE` | 机械精通加成映射 | 新增作业平台联动 buff |
-| `_OP_PLATFORM_NAMES` | 作业平台干员名称 | 新增机器人/作业平台干员 |
-| `_MH_NAMES` | 怪物猎人小队干员名 | 新增怪物猎人联动干员 |
-| `_LUNG_MEN_GUARD_NAMES` | 龙门近卫局干员名 | 新增龙门近卫局干员 |
-| `_BLACKSTEEL_HOLDERS` | 老友相聚中枢持有者 | 新增黑钢国际相关中枢干员 |
-| `_A2_FACTION_TABLE` | 阵营计数联动表 | 新增同房阵营计数型联动 buff |
-| `_A2_EXTRA_TABLE` | A2 专属额外加成（如摩根+推王→额外+35%） | 新增 A2 持有者与特定成员共存时的额外加成 |
-| `_B7_CROSS_PAIR_TABLE` | 跨房间配对表 | 新增跨设施干员条件配对 buff |
+| 数据类别 | 权威来源 | 说明 |
+|----------|----------|------|
+| 系统贡献者 | [`registry.py`](file:///d:/Dev/RhodeLogisticsSteward/steward_core/synergy/registry.py) `_SYSTEM_CONTRIBUTORS` | 效率为0但有系统贡献的干员，按 `contribution_type` 分类标注 |
+| 联动映射表 | [`types.py`](file:///d:/Dev/RhodeLogisticsSteward/steward_core/synergy/types.py) `TABLES` 注册器 | 13 张 dict 表，含消费者函数和更新触发条件 |
+| 名称集合 | [`helpers.py`](file:///d:/Dev/RhodeLogisticsSteward/steward_core/synergy/helpers.py) | `_KNIGHT_NAMES`、`_OP_PLATFORM_NAMES`、`_MH_NAMES` 等 10 个集合/常量 |
+| 辅助常量 | [`helpers.py`](#) | `_PINUS_GROUP`、`_ORDER_ANCHOR_PREFIXES`、`_B_ROSEMARY` 等 |
 
 ### 维护流程
 
 1. 游戏版本更新后，查阅 [PRTS Wiki 基建页面](https://prts.wiki/w/基建) 确认新增干员/技能
-2. 对照上表逐项检查是否需要更新硬编码数据
+2. 对照上述权威来源逐项检查是否需要更新
 3. 更新代码后运行 `python -m pytest tests/ -v` 确保现有测试通过
 4. 提交时在 commit message 中注明更新了哪些表
 
@@ -121,17 +133,18 @@ RhodeLogisticsSteward/
 
 当 AI Agent 进入本项目工作区时，按以下顺序发现上下文：
 
-1. **读取 AGENTS.md**（本文件）→ 理解项目定位、技术栈、规则
+1. **读取 AGENTS.md**（本文件）→ 理解项目定位、技术栈、规则、包结构
 2. **读取 `docs/strategy-brief.md`** → 理解当前策略与算法骨架
-3. **按需读取**：
-   - 需要约束体系与数据基线 → `docs/constraints-and-data-baseline.md`
-   - 需要效率函数建模方案 → `docs/efficiency-function-design.md`
-   - 实现排班求解器 → 关注 `steward_core/` 目录
+3. **按需深入到子包**：
+   - 联动体系逻辑 → `steward_core/synergy/`：先读 `__init__.py` 了解公开 API，再按需进入对应模块（A层→`mfg_linkages`/`trade_linkages`/`facility_linkages`，B层→`buff_pool`/`global_linkages`，C层→`control_linkages`/`mood`）
+   - 求解/排班逻辑 → `steward_core/solver/`：先读 `__init__.py` 的 `solve_mvp()` 四阶段编排，再按需进入各 `phase*.py`
+   - 数据模型/常量 → `steward_core/models.py` / `constants.py`
+   - 表维护/新增 → `synergy/types.py` TABLES 注册器 + `synergy/registry.py` 系统贡献者 + AGENTS.md §人工维护数据
 
 **关键文件名索引**：
 
-| 关键词 | 目标文件 |
-|--------|----------|
+| 关键词 | 目标文件 / 位置 |
+|--------|----------------|
 | 排班策略/算法 | `docs/strategy-brief.md` |
 | 约束/设施/联动 | `docs/constraints-and-data-baseline.md` |
 | 数据源/覆盖度/效率值 | `docs/constraints-and-data-baseline.md` 附录 A |
@@ -140,27 +153,9 @@ RhodeLogisticsSteward/
 | 设施容量/约束/多班次 | `docs/strategy-brief.md` §设施容量/§约束/§策略 |
 | 干员/buff 数据查询 | `.trae/skills/data-query/query_data.py` (通过 `data-query` skill) |
 | 人工维护/硬编码数据/更新 | AGENTS.md §人工维护数据 |
-| 重构/模块拆分/架构 | `docs/refactor-plan.md` |
-
-## 技能 (Skills)
-
-本项目使用 Trae IDE 的 Skill 机制辅助开发和文档编写。
-
-### 已注册技能
-
-| 技能 | 用途 | 触发条件 |
-|------|------|----------|
-| **commit-convention** | 生成中文约定式提交信息 + 版本号推算 + tag 管理 | 提交代码时自动拉起 |
-| **mermaid-charting** | Mermaid 图表渲染（flowchart/sequence/er/pie/mindmap 等 13 种） | 需要可视化流程、架构、数据关系时 |
-| **tdd-workflow** | TDD 红-绿-重构循环，3A 测试模板 | 编写求解器单元测试时 |
-| **TRAE-debugger** | HTTP 日志收集 + 假设→插桩→复现→分析 科学调试 | 排班结果异常需运行时诊断时 |
-| **data-query** | 对数据源执行常见查询，替代每次写临时脚本 | 需要查询干员数据、分析 buff 或统计信息时 |
-
-### 技能约定
-
-- `commit-convention` 产出中文 commit message，格式 `type(scope): 描述`
-- `mermaid-charting` 图表使用 ` ```mermaid ` 代码块，优先 flowchart/mindmap
-- 需要用户级技能时以用户侧注册为准，本文件仅声明项目级约定
+| 重构/模块拆分/架构 | `docs/archive/refactor-plan.md`（已归档） |
+| 联动体系代码 | `steward_core/synergy/` → `__init__.py` 重导出一览，`types.py` TABLES 注册器索引全部表 |
+| 求解/排班代码 | `steward_core/solver/` → `__init__.py` solve_mvp() 入口，各 `phase*.py` 按阶段独立 |
 
 ## 版本管理
 

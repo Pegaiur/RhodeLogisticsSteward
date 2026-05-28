@@ -8,50 +8,43 @@
 
 ## 总体架构
 
-求解器分五阶段执行。体系函数分布在 Phase 1（预计算常数层）、Phase 2（制造站穷举中评估 A1-A6）、Phase 5（精确验证时注入 B 层）。
+体系函数通过 `evaluate_room()` 统一集成到求解器的各 Phase 中。求解器分四阶段执行（见 [`strategy-brief.md`](./strategy-brief.md)），体系函数在每阶段直接参与评估，而非预计算+后验证的两步模式。
+
+**集成方式**：
 
 ```
-solve(全box干员池, layout)
+evaluate_room(operators, room_type, product, ...)
   │
-  ├─ Phase 1: 预计算（常数层，无需知道入选者）
-  │     C1: compute_control_global_bonus(固定中枢方案) → GlobalBonus
-  │     C2: global_burn = 常数（12h 不触发截断）
-  │     B1: compute_buff_pool(固定中枢, 满宿舍估计) → BuffPool (保守值)
-  │     B2: compute_engineering_robots(layout) → int
-  │     B4: compute_monster_cuisine(宿舍配置) → int
-  │     中枢方案固定为社区最优: 令+重岳+夕+凯尔希+焰尾
-  │
-  ├─ Phase 2: 制造站穷举（精确评估 A 层联动）
-  │     按产物分离: CR 60人 / PG 56人
-  │     剪枝规则 1-3 过滤 → ~1,500 种组合 per product
-  │     每种组合:
-  │         per_op = Σ op.to_segments(room_type, product)
-  │         synergy = A1(synergy_pair) + A2(synergy_faction_room)
-  │                 + A3(synergy_skill_count) + A4(synergy_skill_alias)
-  │                 + A5(synergy_automation) + A6(synergy_facility_count)
-  │         P(t) = 1 + 0.01*3 + (per_op + synergy) / 100
-  │         output = base_rate × ∫₀¹² P(t) dt
-  │     按产出降序排列
-  │
-  ├─ Phase 3: 制造站跨间贪心（无回溯）
-  │     for each product_type:
-  │         for combo in sorted_list:
-  │             if 组合中干员均未被前序房间占用: 选中, 标记已用
-  │             凑满 2 间后跳出
-  │
-  ├─ Phase 4: 剩余设施贪心
-  │     Trade(6人) → Power(3人) → Reception(2人) → Office(1人)
-  │     所有设施共享剩余池，支配偏序排序后贪心取值
-  │     Control 复用 Phase 1 固定方案
-  │
-  └─ Phase 5: 精确验证（注入 B 层 + C 层精确值）
-        B5-B7 用实际干员分配重新计算
-        for each room:
-            final_synergy = Phase2_synergy + B层注入(B3,B5,B6,B7) + C1_global_bonus
-            P(t) = 1 + 0.01*n + (Σ per_op + final_synergy) / 100
-            output = base_rate × ∫₀¹² P(t) dt + A7订单机制(贸易站)
-        如有显著偏差 → 局部调整
+  ├─ 第一步: 归零来源（自动化/低语/归零变体）→ zero_set
+  ├─ 第二步: 房间组成型联动（不受归零影响）
+  │     synergy_pair()           — A1 干员配对
+  │     synergy_skill_alias()    — A4 技能别名
+  ├─ 第三步: 效率加成型联动（仅非归零干员）
+  │     synergy_faction_room()   — A2 同房阵营计数
+  │     synergy_skill_count()    — A3 技能类型计数
+  │     synergy_facility_count() — A6 设施数量联动
+  │     synergy_trade_gold_lines() — A7 赤金线→效率
+  ├─ 第四步: 归零加成自身效率段
+  │     synergy_automation()     — A5 自动化产出
+  │     synergy_whisper()        — 低语产出
+  │     synergy_zeroing_variant() — 归零变体产出
+  ├─ 第五步: 个体效率 + 容量→效率 + 效率放大器 + 机械精通
+  ├─ A7 孑订单机制: synergy_jie_order()
+  ├─ B7 跨房间配对: synergy_cross_room_pair()
+  ├─ B6 全局阵营计数: synergy_global_faction()
+  ├─ B1-B5 buff 池消费: synergy_buff_pool_consumer()
+  └─ C1 中枢全局加成: global_bonus.mfg_bonus / trade_bonus
 ```
+
+**求解器各阶段如何使用体系函数**：
+
+| Phase | 设施 | 如何调用 |
+|-------|------|----------|
+| Phase 1 | Mfg | `_evaluate_with_support()` → `evaluate_room()`（含完整 A+B+C 层） |
+| Phase 3a | Trade | `_evaluate_trade_combo()` → `evaluate_room()`（含 A7 订单机制） |
+| Phase 3b | Power/Reception/Office | `_greedy_remaining()` → 支配偏序排序（个体效率，不含联动） |
+
+中枢不再固定预设——Phase 1 通过 `compute_optimal_support()` 动态决定支撑干员，Phase 2 填充中枢后，Phase 3a 直接使用实际中枢计算 global_bonus 和 buff_pool。
 
 ---
 
@@ -417,9 +410,7 @@ def compute_buff_pool(
     """
 ```
 
-**对 A 层注入**: BuffPool 在 Phase 1 用固定中枢方案 + 满宿舍估计计算为保守常数。Phase 5 精确验证时用实际干员分配重新计算。
-
-**MVP 处理策略**: 中枢方案固定为社区最优（令+重岳+夕+凯尔希+焰尾）。Phase 1 用此固定方案 + 满 20 人宿舍估计预计算 BuffPool，Phase 5 验证时再修正。此策略避免了循环依赖——制造站穷举和剩余设施贪心阶段 BuffPool 不变。
+**对 A 层注入**: BuffPool 在 Phase 1 通过 `_evaluate_with_support()` 按 combo 动态计算——每个制造站组合评估时，用其支撑干员（中枢+宿舍+办公室）实时计算 buff_pool。Phase 3a 贸易站穷举中，中枢已确定，直接用实际中枢 + 满宿舍估计计算 buff_pool。
 
 ---
 
@@ -637,7 +628,7 @@ def compute_global_burn(
     孤光共照/巴别塔之帜 = 工作干员直接心情恢复
     burn = max(0, 基础 - 减免)
 
-    MVP 单班次 12h: burn 为常数，固定中枢方案下预计算一次即可。
+    MVP 单班次 12h: burn 为常数，由中枢配置动态决定。
     """
 ```
 

@@ -1,8 +1,6 @@
-"""排班求解器单元测试 (solver.py MV3 重写)
+"""制造站穷举相关测试 (Phase 1 Mfg)
 
-测试制造站穷举+剪枝+贪心分配的核心逻辑。
-纯内存构造优先，关键路径辅以真数据验证。
-遵循 TDD 3A 模式。
+测试制造站干员分类、剪枝规则、房间穷举评估。
 """
 
 from pathlib import Path
@@ -26,9 +24,8 @@ def _mk_mfg_skill(buff_name: str, efficiency: float, buff_id: str = "test",
     )
 
 
-# ─── 干员角色分类 ───────────────────────────────────────────────
-
 _TEST_ANCHORS = {"水月", "海沫", "森蚺", "温蒂", "多萝西", "苍苔", "掠风", "异客"}
+
 
 class TestClassifyOperators:
     """分类制造站干员: 纯效率 / 联动锚点 / 技能提供者"""
@@ -92,7 +89,7 @@ class TestClassifyOperators:
         # Arrange: 加载真数据
         from steward_core.data_loader import load_operators_v2
 
-        project_root = Path(__file__).resolve().parent.parent
+        project_root = Path(__file__).resolve().parent.parent.parent
         ci_path = project_root / "character_identity.json"
         bi_path = project_root / "buffs_infrastructure.json"
 
@@ -163,77 +160,8 @@ class TestClassifyOperators:
         assert "乌有" not in provider_names
 
 
-# ─── Trade 干员分类 ──────────────────────────────────────────────
-
-_TRADE_TEST_ANCHORS = {"巫恋", "火哨", "吉星", "雪雉"}
-
-
-class TestClassifyTradeOperators:
-    """分类 Trade 干员: 订单机制锚点 / 反馈型锚点 / 提供者 / 纯效率"""
-
-    def test_订单机制型_但书归为锚点(self):
-        from steward_core.synergy import classify_trade_operators
-        but = _mk_op("但书", [_mk_mfg_skill("合同法", 0.0, "trade_ord_law[000]", "Trade")])
-        filler = _mk_op("白雪", [_mk_mfg_skill("高效生产", 30.0, "generic", "Trade")])
-        result = classify_trade_operators([but, filler], _TRADE_TEST_ANCHORS)
-        assert "但书" in {op.name for op in result.anchors}
-
-    def test_订单机制型_龙舌兰归为锚点(self):
-        from steward_core.synergy import classify_trade_operators
-        tequila = _mk_op("龙舌兰", [_mk_mfg_skill("投资·β", 0.0, "trade_ord_long[010]", "Trade")])
-        result = classify_trade_operators([tequila], _TRADE_TEST_ANCHORS)
-        assert "龙舌兰" in {op.name for op in result.anchors}
-
-    def test_反馈型锚点_巫恋归为锚点(self):
-        from steward_core.synergy import classify_trade_operators
-        shamare = _mk_op("巫恋", [_mk_mfg_skill("低语", 0.0, "trade_ord_vodfox[000]", "Trade")])
-        result = classify_trade_operators([shamare], _TRADE_TEST_ANCHORS)
-        assert "巫恋" in {op.name for op in result.anchors}
-
-    def test_B层消费者_乌有归为提供者(self):
-        from steward_core.synergy import classify_trade_operators
-        wuyou = _mk_op("乌有", [_mk_mfg_skill("人间烟火", 0.0, "b1", "Trade")])
-        result = classify_trade_operators([wuyou], _TRADE_TEST_ANCHORS)
-        assert "乌有" in {op.name for op in result.providers}
-
-    def test_纯效率_归为纯效率(self):
-        from steward_core.synergy import classify_trade_operators
-        normal = _mk_op("白雪", [_mk_mfg_skill("高效生产", 30.0, "generic", "Trade")])
-        result = classify_trade_operators([normal], _TRADE_TEST_ANCHORS)
-        assert "白雪" in {op.name for op in result.pure_efficiency}
-        assert len(result.anchors) == 0
-
-
-# ─── Trade 组合评估 ──────────────────────────────────────────────
-
-class TestEvaluateTradeCombo:
-    """_evaluate_trade_combo: Trade 3人组合的 LMD 日产评估"""
-
-    def test_纯效率三人组_产出为正(self):
-        from steward_core.synergy import GlobalBonus, compute_buff_pool
-        ops = [
-            _mk_op("A", [_mk_mfg_skill("高效生产", 30.0, "generic", "Trade")]),
-            _mk_op("B", [_mk_mfg_skill("高效生产", 30.0, "generic", "Trade")]),
-            _mk_op("C", [_mk_mfg_skill("高效生产", 30.0, "generic", "Trade")]),
-        ]
-        from steward_core.solver import _evaluate_trade_combo
-        lmd = _evaluate_trade_combo(ops, 3, 12.0, GlobalBonus(), compute_buff_pool([], suich_count=0), 0.0)
-        assert lmd > 5000, f"预期 >5000, 实际 {lmd:.0f}"
-
-    def test_但书_产出高于基准(self):
-        from steward_core.synergy import GlobalBonus, compute_buff_pool
-        but = _mk_op("但书", [_mk_mfg_skill("合同法", 0.0, "trade_ord_law[000]", "Trade")])
-        fa = _mk_op("A", [_mk_mfg_skill("高效生产", 30.0, "generic", "Trade")])
-        fb = _mk_op("B", [_mk_mfg_skill("高效生产", 30.0, "generic", "Trade")])
-        from steward_core.solver import _evaluate_trade_combo
-        lmd = _evaluate_trade_combo([but, fa, fb], 3, 12.0, GlobalBonus(), compute_buff_pool([], suich_count=0), 0.0)
-        assert lmd > 7000, f"但书应大幅高于基准, 实际 {lmd:.0f}"
-
-
-# ─── 剪枝规则 ───────────────────────────────────────────────────
-
 class TestPruning:
-    """三条剪枝规则的正确性验证"""
+    """剪枝规则的正确性验证 — Mfg 侧"""
 
     def test_等价类合并_纯效率只保留代表(self):
         """三个无联动干员 → 组合数从 C(3,3)=1 缩到 1（已经是1）"""
@@ -285,36 +213,6 @@ class TestPruning:
         # 白雪作为高纯效率，也应保留
         assert "白雪" in pool_names
 
-    def test_上界预判_不可能翻盘的组合被过滤(self):
-        """低效干员组合 → 上界 < best_known×0.95 → 被剪掉"""
-        from steward_core.solver import _upper_bound_ok
-
-        # Arrange: best是3个35干员(积分=35×3×12=1260)，当前是3个20(积分=20×3×12=720)
-        best_known = 1260.0  # 3×35×12
-        total = 720.0        # 3×20×12
-
-        # Act
-        ok = _upper_bound_ok(total, best_known)
-
-        # Assert: 720 < 1260×0.95=1197 → 不合格
-        assert ok is False
-
-    def test_上界预判_高效组合不被过滤(self):
-        """三35 → 上界=1260 → 通过"""
-        from steward_core.solver import _upper_bound_ok
-
-        # Arrange
-        best_known = 1260.0
-        total = 1260.0
-
-        # Act
-        ok = _upper_bound_ok(total, best_known)
-
-        # Assert
-        assert ok is True
-
-
-# ─── 房间评估 ───────────────────────────────────────────────────
 
 class TestRoomEvaluation:
     """单房间穷举评估（含联动）"""
@@ -386,129 +284,3 @@ class TestRoomEvaluation:
         # Assert: filler归零，自动化叠加=森蚺15(3×5)+温蒂45(3×15)=60
         # 积分 = 60×12 = 720
         assert score == pytest.approx(720.0, rel=0.01)
-
-
-# ─── 跨间贪心分配 ──────────────────────────────────────────────
-
-class TestGreedyAllocation:
-    """制造站跨间贪心分配"""
-
-    def test_无冲突_直接取前N(self):
-        """两间房无冲突 → 直接取前2组合"""
-        from steward_core.solver import _greedy_allocate
-
-        # Arrange: 三个独立组合，互不冲突
-        combos = [
-            (100.0, ["A", "B", "C"]),
-            (90.0, ["D", "E", "F"]),
-            (80.0, ["G", "H", "I"]),
-        ]
-
-        # Act
-        result = _greedy_allocate(combos, room_count=2)
-
-        # Assert
-        assert len(result) == 2
-        assert result[0] == ["A", "B", "C"]
-        assert result[1] == ["D", "E", "F"]
-
-    def test_有冲突_跳过选下一个(self):
-        """组合1和2共享D → 跳过组合2选组合3"""
-        from steward_core.solver import _greedy_allocate
-
-        # Arrange
-        combos = [
-            (100.0, ["A", "B", "C"]),
-            (90.0, ["C", "D", "E"]),   # 冲突: C 已被占
-            (85.0, ["F", "G", "H"]),   # 无冲突
-        ]
-
-        # Act
-        result = _greedy_allocate(combos, room_count=2)
-
-        # Assert: 第二间跳到组合3
-        assert len(result) == 2
-        assert result[0] == ["A", "B", "C"]
-        assert result[1] == ["F", "G", "H"]
-
-    def test_候选不足_提前终止(self):
-        """仅1个组合可用 → 只分配1间"""
-        from steward_core.solver import _greedy_allocate
-
-        # Arrange
-        combos = [(100.0, ["A", "B", "C"])]
-
-        # Act
-        result = _greedy_allocate(combos, room_count=2)
-
-        # Assert
-        assert len(result) == 1
-
-
-# ─── 真数据端到端 ──────────────────────────────────────────────
-
-class TestRealDataEndToEnd:
-    """真数据验证：核心人数约束"""
-
-    def test_制造站候选人数_匹配文档预期(self):
-        """从真数据加载后，CR=60, PG=56 与文档一致"""
-        from steward_core.data_loader import load_operators_v2, ROOM_TYPE_MAP
-        from steward_core.synergy import classify_mfg_operators
-
-        project_root = Path(__file__).resolve().parent.parent
-        ci_path = project_root / "character_identity.json"
-        bi_path = project_root / "buffs_infrastructure.json"
-
-        if not ci_path.exists() or not bi_path.exists():
-            pytest.skip("真数据文件不存在")
-
-        all_ops = load_operators_v2(ci_path, bi_path)
-        mfg_ops = [op for op in all_ops if op.has_skill_for("Mfg")]
-
-        cr = [op for op in mfg_ops if op.has_skill_for("Mfg", "CombatRecord")]
-        pg = [op for op in mfg_ops if op.has_skill_for("Mfg", "PureGold")]
-
-        # CR 候选人数在合理范围
-        assert 70 <= len(cr) <= 90
-        assert 70 <= len(pg) <= 90
-
-        # 分类验证
-        classification = classify_mfg_operators(cr, "CombatRecord", _TEST_ANCHORS)
-        assert len(classification.anchors) >= 3  # 至少水月/多萝西/海沫
-
-    def test_end_to_end_纯内存_无崩溃(self):
-        """端到端求解不崩溃"""
-        # 此测试用纯内存数据跑通路径，不验证结果正确性
-        from steward_core.synergy import classify_mfg_operators, build_candidate_pool
-        from steward_core.solver import _generate_combos, _greedy_allocate
-        from steward_core.evaluate import evaluate_room
-
-        # Arrange: 构造 6 个制造站干员（模拟真实分布）
-        ops = [
-            _mk_op("地灵", [_mk_mfg_skill("s", 35.0, "a")]),
-            _mk_op("裂响", [_mk_mfg_skill("s", 35.0, "b")]),
-            _mk_op("水月", [_mk_mfg_skill("标准化·α", 25.0, "s1")]),
-            _mk_op("海沫", [_mk_mfg_skill("标准化·β", 25.0, "s2")]),
-            _mk_op("杰西卡", [_mk_mfg_skill("标准化·α", 25.0, "s3")]),
-            _mk_op("白雪", [_mk_mfg_skill("标准化·α", 30.0, "s4")]),
-        ]
-
-        classification = classify_mfg_operators(ops, "CombatRecord", _TEST_ANCHORS)
-        pool = build_candidate_pool(ops, classification)
-        combos = _generate_combos(pool, 3)
-
-        evaluated = []
-        for combo_ops in combos:
-            score = evaluate_room(combo_ops, "Mfg", "CombatRecord", power_count=3)
-            evaluated.append((score, [op.name for op in combo_ops]))
-
-        evaluated.sort(key=lambda x: -x[0])
-        allocated = _greedy_allocate(evaluated, room_count=2)
-
-        # Assert: 成功分配至少1间
-        assert len(allocated) >= 1
-        assert len(allocated[0]) == 3
-
-
-# ─── _greedy_remaining 正确性 ────────────────────────────────────
-
