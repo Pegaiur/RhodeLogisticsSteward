@@ -1,5 +1,8 @@
 """registry 模块单元测试 — SystemContributor / ROSEMARY_SUPPORT 注册表"""
 
+import importlib
+import pkgutil
+
 import pytest
 
 from steward_core.models import EfficiencyMap, LinearSegment, Operator, Skill
@@ -42,3 +45,40 @@ class TestRosemarySupportExtension:
         from steward_core.synergy import ROSEMARY_SUPPORT
 
         assert "塑心" in ROSEMARY_SUPPORT["Dormitory"]
+
+
+# ─── TABLES 注册器一致性检查 ──────────────────────────────────────
+
+
+class TestTablesRegistryConsistency:
+    """确保所有硬编码 dict 表都在 TABLES 注册器中登记"""
+
+    def test_全部_TABLE_字典已在TABLES注册(self):
+        """扫描 synergy 包中所有 _TABLE 结尾的 dict 变量，确认全部在 TABLES 中注册"""
+        import steward_core.synergy as synergy_pkg
+
+        from steward_core.synergy import TABLES
+
+        registered_ids = {id(m.table) for m in TABLES.values()}
+        unregistered = {}
+
+        for _, mod_name, _ in pkgutil.walk_packages(
+            synergy_pkg.__path__, prefix="steward_core.synergy."
+        ):
+            if mod_name == "steward_core.synergy.types":
+                continue
+            mod = importlib.import_module(mod_name)
+            for attr_name in dir(mod):
+                if not attr_name.endswith("_TABLE"):
+                    continue
+                obj = getattr(mod, attr_name)
+                if not isinstance(obj, dict):
+                    continue
+                if id(obj) not in registered_ids:
+                    unregistered[f"{mod_name}.{attr_name}"] = type(obj).__name__
+
+        assert not unregistered, (
+            f"以下 _TABLE 字典未在 TABLES 注册器中登记:\n"
+            + "\n".join(f"  {k}" for k in unregistered)
+            + "\n请同步更新 synergy/types.py 中的 TABLES 字典。"
+        )

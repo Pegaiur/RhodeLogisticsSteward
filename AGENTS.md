@@ -74,9 +74,9 @@ RhodeLogisticsSteward/
 
 | 标签 | 游戏 ref | 判定逻辑 | 维护位置 | 更新触发条件 |
 |------|---------|----------|----------|-------------|
-| 骑士 | `tag.knight` | name 集合 + `nationId=="kazimierz"` + `groupId=="pinus"` | [solver.py](file:///d:/Dev/RhodeLogisticsSteward/steward_core/solver.py#L219-L232) `_KNIGHT_NAMES` | 新增卡西米尔骑士干员 |
+| 骑士 | `tag.knight` | name 集合 + `nationId=="kazimierz"` + `groupId=="pinus"` | `synergy/helpers.py` `_KNIGHT_NAMES` | 新增卡西米尔骑士干员 |
 | 杜林族 | `tag.durin` | `raceId == "DURIN"` | 由 `character_table.json` 自动推导 | — |
-| 作业平台 | `tag.op` | 特定 profession | `synergy.py` `_OP_PLATFORM_NAMES` 硬编码 4 台 | 新增机器人/作业平台干员 |
+| 作业平台 | `tag.op` | 特定 profession | `synergy/helpers.py` `_OP_PLATFORM_NAMES` 硬编码 4 台 | 新增机器人/作业平台干员 |
 | 怪物猎人小队 | `tag.mh` | 联动限定干员 | 尚未建模 | — |
 | 莱欧斯小队 | `tag.dungeon` | 联动限定干员 | 尚未建模 | — |
 
@@ -84,7 +84,7 @@ RhodeLogisticsSteward/
 
 以下模块包含不受 ArknightsGameData 驱动的硬编码映射表，每次游戏版本更新需人工审查：
 
-**`steward_core/synergy.py`** — 联动体系表
+**`steward_core/synergy/`** — 联动体系表
 
 | 表名 | 维护内容 | 触发条件 |
 |------|----------|----------|
@@ -94,6 +94,9 @@ RhodeLogisticsSteward/
 | `_A_ROOM_FACTION_EXTRA` | 同房阵营额外加成（如摩根+推王→额外+35%） | 新增同房阵营额外加成 |
 | `_A_SKILL_COUNT_TABLE` | 技能类型计数锚点 | 新增计数型联动 buff |
 | `_A_AUTOMATION_FALLBACK` | 自动化名称→加成回退值（buff_id 不可用时） | 新增自动化干员或 buff 变更 |
+| `_ZEROING_VARIANT_TABLE` | 归零变体（科学改造/流程优化） | 新增归零型变体 buff |
+| `_TOKEN_PROD_TABLE` | 机械精通加成映射 | 新增作业平台联动 buff |
+| `_RAMPING_SKILL_TABLE` | 爬升型效率技能参数 | 新增 manu_prod_spd_addition[*] 爬升型技能 |
 | `_POWER_BUFF_BONUS` | 自动化 buff_id→加成映射 | 新增 manu_prod_spd&power[*] 类型 buff |
 | `_A_FACILITY_LINK_TABLE` | 设施数量联动表 | 新增设施联动 buff |
 | `_C_CONTROL_GLOBAL_TABLE` | 中枢全局效率 | 新增中枢全局 buff |
