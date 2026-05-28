@@ -687,16 +687,352 @@ K=5 下约 5 秒——完全可接受。
 
 | Step | 状态 | 说明 |
 |------|:---:|------|
-| Step 0: Strategy ABC + PartialSolution | ⬜ 待实施 | 5 文件，~170 行 |
-| Step 1: Pipeline 状态适配层 | ⬜ 待实施 | 1 文件，~10 行 |
-| Step 2: GlobalContext 去重 | ⬜ 待实施 | 1 文件，~30 行 |
-| Step 2.5: 开关迁移方案（设计） | ⬜ 待实施 | 本文档 §Step 2.5 |
-| Step 3: 测试助手（设计） | ⬜ 待实施 | 1 文件，~40 行 |
-| Step 4: K-Beam Strategy | ⬜ 后续 | 独立实施 |
+| Step 0: Strategy ABC + PartialSolution | ✅ 完成 | 5 文件，~170 行 |
+| Step 1: Pipeline 状态适配层 | ✅ 完成 | 1 文件，~18 行 |
+| Step 2: GlobalContext 去重 | ✅ 有意跳过 | 见 notes.md §Step 2 |
+| Step 2.5: 开关迁移方案（设计） | ✅ 完成 | 本文档 §Step 2.5 |
+| Step 3: 测试助手（设计） | ✅ 完成 | 本文档 §Step 3 |
+| Step 4: K-Beam Strategy（设计） | ✅ 完成 | 本文档 §Step 4 |
+| Step 4a: K-Beam 实现 | ⬜ 待实施 | 见 §Step 4a |
+| Step 4b: K-Beam 测试 | ⬜ 待实施 | 见 §Step 4b |
+| Step 4c: K-Beam 验收 | ⬜ 待实施 | 见 §Step 4c |
 
 ---
 
-## inbox 条目路由
+### Step 4a: K-Beam 实现计划
+
+#### 子任务拆分
+
+| # | 文件 | 操作 | 内容 | 行数 |
+|:---:|------|:---:|------|:---:|
+| 4a.1 | `tests/strategy_helpers.py` | **新建** | 测试辅助工具（Step 3 落地） | ~50 |
+| 4a.2 | `solver/greed.py` | **修改** | 新增 `_greedy_allocate_with_support_excluding()` | ~20 |
+| 4a.3 | `solver/strategies/kbeam.py` | **新建** | `KBeamStrategy` 主类 + 私有编排方法 | ~150 |
+| 4a.4 | `solver/strategies/__init__.py` | **修改** | 重导出 `KBeamStrategy` | +2 |
+
+#### 4a.1 `tests/strategy_helpers.py`（先落地，K-Beam 测试依赖）
+
+```python
+from steward_core.models import Operator, Skill, SolveResult, SolverConfig
+from steward_core.solver import solve_mvp
+
+
+def make_op(name, char_id, room_type, *, efficiency=0.0, product=None,
+            buff_id="", rarity=5, phase="PHASE_2",
+            nation_id="test", group_id="test") -> Operator:
+    """构造测试 Operator。buff_id 非空时从 buff 表查询效率，否则用 efficiency 参数。"""
+    ...
+
+
+def make_ops(*specs) -> list[Operator]:
+    """批量构造：make_ops(("温蒂","wendy","Mfg",{"buff_id":"manu_prod_spd&power[020]"}), ...)"""
+    ...
+
+
+def assert_plan_structure(result: SolveResult, expected: dict[str, int]):
+    """验证 room_type → 房间数"""
+    ...
+
+
+def assert_operator_in_room(result: SolveResult, room_type: str, name: str):
+    """验证干员被分配到了指定设施类型"""
+    ...
+
+
+def assert_no_duplicate_operators(result: SolveResult):
+    """扫描全方案，确保无干员重复出现"""
+    ...
+
+
+def strategy_runner(strategy_class, operators, **strategy_kwargs):
+    """一键构造 SolverConfig → 注入 Strategy → 执行 solve_mvp → 返回 SolveResult"""
+    ...
+```
+
+#### 4a.2 `_greedy_allocate_with_support_excluding()`
+
+在现有 `_greedy_allocate_with_support` 基础上新增 `exclude_sets` 参数：
+
+```python
+def _greedy_allocate_with_support_excluding(
+    evaluated: list,
+    room_count: int,
+    exclude_sets: list[frozenset[tuple[str, ...]]] | None = None,
+    **kwargs,
+) -> list[tuple[list[str], dict[str, list[str]]]] | None:
+    """贪心分配，但排除与 exclude_sets 中任意集合完全相同的分配结果
+
+    用于 K-Beam 迭代排斥——每次排斥上一次完整分配的 combo 集合，
+    迫使算法找到不同的房间组合。
+    """
+    if not exclude_sets:
+        return _greedy_allocate_with_support(evaluated, room_count, **kwargs)
+
+    # 运行贪心，检查结果是否与任何 excluded set 相同
+    result = _greedy_allocate_with_support(evaluated, room_count, **kwargs)
+    if result is None:
+        return None
+    result_set = frozenset(tuple(names) for names, _ in result)
+    if result_set in exclude_sets:
+        # 被排斥 → 跳过第一个可用组合，重新贪心
+        ...
+    return result
+```
+
+#### 4a.3 `KBeamStrategy` 主类
+
+```python
+class KBeamStrategy(Strategy):
+    name = "kbeam"
+
+    def __init__(self, beam_width: int = 5):
+        self.beam_width = beam_width
+
+    def execute(self, operators, config, op_lookup):
+        params = config.params
+        anchor_names = self._get_anchor_names()
+
+        # Phase 1: Mfg K-Beam
+        mfg_paths = self._phase1_kbeam(operators, config, op_lookup, anchor_names)
+
+        # Phase 2-3a: 每条路径 Control + Trade
+        for path in mfg_paths:
+            self._fill_control(operators, config, op_lookup, path)
+            self._fill_trade(operators, config, op_lookup, path)
+
+        # 择优
+        best = self._select_best(mfg_paths, operators, params)
+
+        # Phase 3b-4: 优胜路径
+        self._fill_remaining(operators, config, op_lookup, best)
+        self._fill_dorm(operators, config, op_lookup, best)
+
+        return self._build_result(best, operators, config)
+
+    # ── 私有方法 ──
+
+    def _phase1_kbeam(self, operators, config, op_lookup, anchor_names):
+        """CR K 条路径 × PG 1 条 → K 条 Mfg 路径"""
+        ...
+
+    def _fill_control(self, operators, config, op_lookup, state):
+        """在 state 上运行中枢填充（复用 _phase2_control 逻辑）"""
+        ...
+
+    def _fill_trade(self, operators, config, op_lookup, state):
+        """在 state 上运行贸易站穷举（复用 _phase3_trade 逻辑，含 B7 接线修复）"""
+        ...
+
+    def _fill_remaining(self, operators, config, op_lookup, state):
+        """剩余设施贪心"""
+        ...
+
+    def _fill_dorm(self, operators, config, op_lookup, state):
+        """宿舍填充"""
+        ...
+
+    def _select_best(self, paths, operators, params):
+        """用 production.calculate() 选真实经济产出最高的路径"""
+        ...
+```
+
+**B7 接线修复**：`_fill_trade` 内部调用 `_evaluate_trade_combo` 时，从 `state.assignments` 提取 Mfg 分配构造 `all_assignments` 传入，使深巡↔乌尔比安等 Trade↔任意 配对在 Trade 评分时被正确计入。
+
+#### 4a.4 `strategies/__init__.py` 更新
+
+```python
+from .baseline import BaselineStrategy
+from .kbeam import KBeamStrategy
+
+__all__ = ["BaselineStrategy", "KBeamStrategy"]
+```
+
+---
+
+### Step 4b: K-Beam 测试计划
+
+Strategy 架构使 K-Beam 可以在三层粒度上独立测试。
+
+#### 测试矩阵
+
+| 层 | 测试对象 | 测试文件 | 依赖 Strategy 架构的能力 |
+|:---:|------|------|------|
+| **单元** | `_greedy_allocate_with_support_excluding` | `tests/test_kbeam.py` | 独立函数，注入构造的 evaluated 列表 |
+| **集成** | `KBeamStrategy` 全流程 | `tests/test_kbeam.py` | `strategy_runner(KBeamStrategy, ops)` 一行跑策略 |
+| **对比** | K-Beam vs Baseline | `tests/test_kbeam.py` | 同一组 operators 分别跑两个策略，比较产出 |
+
+#### 4b.1 单元测试：排斥分配器
+
+```python
+class TestGreedyAllocateExcluding:
+    """_greedy_allocate_with_support_excluding 单元测试"""
+
+    def test_无排斥_等价于原贪心(self):
+        """exclude_sets=None → 与原函数输出一致"""
+
+    def test_排斥唯一解_返回不同解(self):
+        """只有一个可用分配 → 排斥后返回 None"""
+
+    def test_排斥首选_返回次优(self):
+        """排斥最高分分配 → 返回第二高分分配"""
+
+    def test_多轮排斥_每条路径不同(self):
+        """迭代 K=3 次，3 条路径的 combo 集合互不相同"""
+
+    def test_排斥耗尽_提前终止(self):
+        """只有 2 种可能分配，K=5 → 返回 2 条"""
+```
+
+#### 4b.2 集成测试：KBeamStrategy 正确性
+
+```python
+class TestKBeamCorrectness:
+    """KBeamStrategy 基本正确性——用最小干员集验证核心约束"""
+
+    def test_产出有效排班方案(self):
+        """K=3，产出 SolveResult 含完整房间结构"""
+        ops = _minimal_mfg_trade_pool()
+        result = strategy_runner(KBeamStrategy, ops, beam_width=3)
+        assert_plan_structure(result, {
+            "Mfg": 4, "Trade": 2, "Control": 1,
+            "Power": 3, "Reception": 1, "Office": 1, "Dormitory": 4,
+        })
+
+    def test_无重复干员(self):
+        """H2 约束——任何干员只出现一次"""
+
+    def test_制造站全部三人满员(self):
+        """4 间 Mfg 每间 3 人"""
+
+    def test_贸易站全部三人满员(self):
+        """2 间 Trade 每间 3 人"""
+
+    def test_beam_width_1_等价基线(self):
+        """K=1 时 K-Beam 必须与 Baseline 产出完全一致"""
+        ops = _minimal_mfg_trade_pool()
+        baseline = strategy_runner(BaselineStrategy, ops)
+        kbeam_k1 = strategy_runner(KBeamStrategy, ops, beam_width=1)
+        # 逐房间验证干员分配一致
+        ...
+
+    def test_产物类型正确(self):
+        """CR 房间 product=CombatRecord，PG 房间 product=PureGold"""
+
+    def test_中枢五人上限(self):
+        """Control 不超过 5 人"""
+```
+
+#### 4b.3 对比测试：K-Beam 不低于 Baseline
+
+```python
+class TestKBeamVsBaseline:
+    """K-Beam 产出不应低于 Baseline（同输入下）"""
+
+    def test_kbeam_不低于_baseline(self):
+        """用中等规模干员池（~30 人），K-Beam LMD 日产 ≥ Baseline"""
+        ops = _medium_pool_with_synergy()  # 含联动干员的真实场景
+        baseline = strategy_runner(BaselineStrategy, ops)
+        kbeam = strategy_runner(KBeamStrategy, ops, beam_width=5)
+        assert _production_score(kbeam.plans[0], ops, params) >= \
+               _production_score(baseline.plans[0], ops, params)
+
+    def test_路径多样性(self):
+        """K=5 时至少产生 2 条不同的 Mfg 分配"""
+        ...
+```
+
+#### 4b.4 专项测试：B7 深巡修复
+
+```python
+class TestB7DeepcruiseFix:
+    """深巡↔乌尔比安 B7 跨房间配对在 K-Beam Trade 评分中被计入"""
+
+    def test_深巡_乌尔比安在基建_Trade评分含B7加成(self):
+        """构造场景：乌尔比安在 Mfg，深巡在 Trade → Trade 评估时 B7 触发"""
+        ops = [
+            make_op("深巡", "deepcruise", "Trade",
+                    buff_id="trade_ord_spd_ext[001]"),  # β: 乌尔比安在基建内→+10%
+            make_op("乌尔比安", "ulpanis", "Mfg",
+                    buff_id="manu_formula_spd&bd[001]"),
+            # ... 其他干员
+        ]
+        result = strategy_runner(KBeamStrategy, ops, beam_width=3)
+        # 验证深巡被分配到 Trade 且乌尔比安被分配到 Mfg
+        assert_operator_in_room(result, "Trade", "深巡")
+        # 如果 K-Beam 正确评估了 B7 加成，深巡房间的总效率应含额外 10%
+        ...
+```
+
+#### 4b.5 回归测试：不影响现有功能
+
+```python
+class TestKBeamRegression:
+    """K-Beam 不破坏现有测试"""
+
+    def test_existing_tests_still_pass(self):
+        """现有 369 测试全部通过（已在 CI 中保证）"""
+
+    def test_baseline_strategy_unchanged(self):
+        """BaselineStrategy 行为不受 K-Beam 新增代码影响"""
+```
+
+---
+
+### Step 4c: K-Beam 验收计划
+
+#### 4c.1 功能验收
+
+| # | 验收项 | 判定标准 | 验证方式 |
+|:---:|------|------|------|
+| F1 | 产出合法排班 | 29 工位全满，无重复干员 | `assert_plan_structure` + `assert_no_duplicate_operators` |
+| F2 | K=1 等价基线 | KBeamStrategy(beam_width=1) 与 BaselineStrategy 逐房间一致 | 集成测试 `test_beam_width_1_等价基线` |
+| F3 | K≥2 产出 ≥ 基线 | 真实经济产出不低于 BaselineStrategy | 对比测试 `test_kbeam_不低于_baseline` |
+| F4 | 路径多样 | K=5 时 K 条 Mfg 路径不完全相同 | 路径差异诊断日志 |
+| F5 | B7 深巡修复 | 深巡+乌尔比安场景产出含 B7 加成 | 专项测试 `test_深巡_乌尔比安在基建_Trade评分含B7加成` |
+
+#### 4c.2 性能验收
+
+| # | 验收项 | 判定标准 | 验证方式 |
+|:---:|------|------|------|
+| P1 | K=5 求解时间 | < 30 秒（全量 415 干员） | 计时 `solve_mvp(config=config_kbeam)` |
+| P2 | 内存 | 不因 K=5 导致 OOM | 监控峰值内存 |
+| P3 | 穷举量 | 不重复计算 Mfg combo（复用 Baseline 的 ~1500 评估结果） | 日志计数 |
+
+#### 4c.3 质量验收
+
+| # | 验收项 | 判定标准 | 验证方式 |
+|:---:|------|------|------|
+| Q1 | B7 覆盖度 | 深巡↔乌尔比安 + 贝洛内↔伺夜 等 Trade↔任意 配对在 Trade 评分中正确计入 | 逐个配对手工验证 |
+| Q2 | 烈夏↔古米 间接改善 | K-Beam 最终方案中，若烈夏组合真实最优，不会因 Phase 1 评分遗漏而被排除 | A/B 对比：含烈夏+古米的干员池中，K-Beam 是否选了该组合 |
+| Q3 | 无回归 | 现有 369 测试全部通过 | `python -m pytest tests/ -v` |
+
+#### 4c.4 验收脚本
+
+```powershell
+# 1. 单元测试
+python -m pytest tests/test_kbeam.py -v -k "TestGreedyAllocateExcluding"
+
+# 2. 集成 + 对比测试
+python -m pytest tests/test_kbeam.py -v -k "TestKBeamCorrectness or TestKBeamVsBaseline"
+
+# 3. B7 专项
+python -m pytest tests/test_kbeam.py -v -k "TestB7"
+
+# 4. 全量回归
+python -m pytest tests/ -v
+
+# 5. 性能基准
+python -c "
+import time
+from steward_core.solver import solve_mvp
+from steward_core.solver.config import SolverConfig
+from steward_core.solver.strategies.kbeam import KBeamStrategy
+# ... 加载全量干员 ...
+t0 = time.time()
+result = solve_mvp(operators, SolverConfig(strategy=KBeamStrategy(beam_width=5)))
+print(f'K=5 求解耗时: {time.time()-t0:.1f}s')
+"
+```
 
 执行本文档后，以下 inbox 条目更新状态：
 
