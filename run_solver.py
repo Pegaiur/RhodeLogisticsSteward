@@ -75,8 +75,10 @@ def main():
     total_gold_lmd = dp.total_gold_produced_per_day * _GOLD_LMD_PER_UNIT
     print(f"  合计: {total_gold_lmd:,.0f} LMD等值/12h")
     if dp.external_gold_per_day > 0:
-        external_lmd = dp.external_gold_per_day * _GOLD_LMD_PER_UNIT
-        print(f"  外部收入: +{external_lmd:,.0f} LMD等值/12h ({dp.external_gold_per_day:.1f} 赤金)\n")
+        shift_hours = result.config_used.params.shift_hours
+        external_gold_shift = dp.external_gold_per_day * (shift_hours / 24.0)
+        external_lmd_shift = external_gold_shift * _GOLD_LMD_PER_UNIT
+        print(f"  外部收入: +{external_lmd_shift:,.0f} LMD等值/{shift_hours:.0f}h ({external_gold_shift:.1f} 赤金)\n")
     else:
         print()
 
