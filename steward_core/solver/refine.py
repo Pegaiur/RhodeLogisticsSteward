@@ -2,6 +2,9 @@
 
 在 solve_mvp() 完成后对排班方案做轻量级局部优化。
 包含全量排班评估与房间级替换搜索。
+
+目标函数使用 production.calculate() 的真实经济产出（经验+LMD），
+而非 evaluate_room() 的效率积分——后者不经过订单机制和赤金供需。
 """
 
 from steward_core.evaluate import evaluate_room
@@ -12,10 +15,7 @@ from .context import GlobalContext
 
 
 def evaluate_full_plan(plan: ShiftPlan, operators: list[Operator], params=None) -> float:
-    """评估完整排班方案的总效率积分
-
-    通过 GlobalContext.from_plan() 统一构建全局上下文后逐间调用 evaluate_room。
-    """
+    """评估完整排班方案的总效率积分（用于 A/B 对比）"""
     if params is None:
         from .params import SolverParams
         params = SolverParams()
@@ -57,6 +57,21 @@ def evaluate_full_plan(plan: ShiftPlan, operators: list[Operator], params=None) 
     return total
 
 
+def _production_score(plan: ShiftPlan, operators: list[Operator], params) -> float:
+    """用真实经济产出作为局部搜索的目标函数
+
+    综合经验产出与有效 LMD（已处理赤金供需平衡），
+    避免 evaluate_room 效率积分与实际产出脱节的问题。
+    """
+    from steward_core import production
+    from steward_core.production import _RECORD_EXP_PER_UNIT
+
+    dp = production.calculate(plan, operators, hours=params.shift_hours)
+    exp_value = dp.total_records_per_day * _RECORD_EXP_PER_UNIT
+    lmd_value = dp.effective_lmd_per_day
+    return exp_value + lmd_value
+
+
 def local_search_refine(
     result: SolveResult,
     operators: list[Operator],
@@ -73,7 +88,7 @@ def local_search_refine(
     params = config.params
     plan = result.plans[0]
     best_plan = plan
-    best_score = evaluate_full_plan(best_plan, operators, params)
+    best_score = _production_score(best_plan, operators, params)
     op_lookup = {op.name: op for op in operators}
 
     for _round in range(params.local_search_max_rounds):
@@ -126,7 +141,7 @@ def local_search_refine(
                 period_from=best_plan.period_from,
                 period_to=best_plan.period_to,
             )
-            new_score = evaluate_full_plan(new_plan, operators, params)
+            new_score = _production_score(new_plan, operators, params)
 
             if new_score > best_score:
                 best_plan = new_plan
