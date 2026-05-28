@@ -680,15 +680,15 @@ def _has_power_count_modifier(op: Operator) -> bool:
 # 设施数量联动表: {干员名: (计数对象, 每单位加成%, 设施类型, 产物, 上限或无)}
 # buffs_infrastructure.json 中 efficiency=0 的条件型 buff，
 # 按全基建设施数量统计后输出加成
-_A_FACILITY_LINK_TABLE: dict[str, tuple[str, float, str, str | None, float | None]] = {
-    "清流": ("trade_count", 20.0, "Mfg", "PureGold", None),
-    "引星棘刺": ("trade_count", 3.0, "Mfg", "PureGold", None),
-    "娜仁图亚": ("dorm_levels", 1.0, "Mfg", "PureGold", None),
-    "空弦": ("dorm_levels", 2.0, "Trade", "Money", None),
-    "伺夜": ("meeting_level", 5.0, "Trade", "Money", 40.0),
-    "渡桥": ("meeting_level", 5.0, "Trade", "Money", 30.0),
-    "石英": ("mfg_recipe_types", 2.0, "Trade", "Money", None),
-    "维伊": ("train_level", 10.0, "Mfg", None, 30.0),
+_A_FACILITY_LINK_TABLE: dict[str, FacilityLinkEntry] = {
+    "清流": FacilityLinkEntry("trade_count", 20.0, "Mfg", "PureGold", None),
+    "引星棘刺": FacilityLinkEntry("trade_count", 3.0, "Mfg", "PureGold", None),
+    "娜仁图亚": FacilityLinkEntry("dorm_levels", 1.0, "Mfg", "PureGold", None),
+    "空弦": FacilityLinkEntry("dorm_levels", 2.0, "Trade", "Money", None),
+    "伺夜": FacilityLinkEntry("meeting_level", 5.0, "Trade", "Money", 40.0),
+    "渡桥": FacilityLinkEntry("meeting_level", 5.0, "Trade", "Money", 30.0),
+    "石英": FacilityLinkEntry("mfg_recipe_types", 2.0, "Trade", "Money", None),
+    "维伊": FacilityLinkEntry("train_level", 10.0, "Mfg", None, 30.0),
 }
 
 # 设施等级 （Mfg/Trade/Meeting 默认 Lv3，宿舍 Lv5 见 _DEFAULT_DORM_LEVELS）
@@ -765,10 +765,10 @@ def synergy_facility_count(
 # 中枢全局效率表: {干员名: (制造加成%, 贸易加成%)}
 # buffs_infrastructure.json 中 efficiency=0 的条件型 CONTROL buff
 # 同种效果取最高（不叠加）
-_C_CONTROL_GLOBAL_TABLE: dict[str, tuple[float, float]] = {
-    "凯尔希": (2.0, 0.0),
-    "Mon3tr": (2.0, 0.0),
-    "望": (2.0, 7.0),
+_C_CONTROL_GLOBAL_TABLE: dict[str, GlobalBonusEntry] = {
+    "凯尔希": GlobalBonusEntry(2.0, 0.0),
+    "Mon3tr": GlobalBonusEntry(2.0, 0.0),
+    "望": GlobalBonusEntry(2.0, 7.0),
 }
 
 # 怪物猎人小队干员名（中枢条件型加成判定用）
@@ -1056,21 +1056,21 @@ def compute_engineering_robots(layout: LayoutConfig) -> int:
 
 
 # B 层 buff 池消费者表: {干员名: (设施类型, pool_key, 每单位, 每单位加成%)}
-_B_BUFF_CONSUMER_TABLE: dict[str, tuple[str, str, int, float]] = {
+_B_BUFF_CONSUMER_TABLE: dict[str, BuffConsumerEntry] = {
     # B1 烟火消费者
-    "黍": ("Mfg", "yanhuo", 3, 1.0),
-    "桑葚": ("Mfg", "yanhuo", 3, 1.0),
-    "乌有": ("Trade", "yanhuo", 1, 1.0),
-    "截云": ("Mfg", "wushu_crystal", 1, 2.0),
-    "铎铃": ("Trade", "yanhuo", 10, 0.0),
+    "黍": BuffConsumerEntry("Mfg", "yanhuo", 3, 1.0),
+    "桑葚": BuffConsumerEntry("Mfg", "yanhuo", 3, 1.0),
+    "乌有": BuffConsumerEntry("Trade", "yanhuo", 1, 1.0),
+    "截云": BuffConsumerEntry("Mfg", "wushu_crystal", 1, 2.0),
+    "铎铃": BuffConsumerEntry("Trade", "yanhuo", 10, 0.0),
     # B2 工程机器人消费者
-    "至简": ("Mfg", "engineering_robots", 8, 5.0),  # β: 每8机器人+5%
+    "至简": BuffConsumerEntry("Mfg", "engineering_robots", 8, 5.0),
     # B3 思维链环消费者
-    "迷迭香": ("Mfg", "thought_chains", 1, 1.0),      # β: 每1链环+1%
+    "迷迭香": BuffConsumerEntry("Mfg", "thought_chains", 1, 1.0),
     # B4 魔物料理消费者
-    "玛露西尔": ("Mfg", "monster_cuisine", 1, 1.0),
-    # B5 无声共鸣消费者 TODO: B5 生成待实现（塑心宿舍 → 无声共鸣 → 黑键贸易消费）
-    "黑键": ("Trade", "silent_resonance", 2, 1.0),    # β: 每2共鸣+1%
+    "玛露西尔": BuffConsumerEntry("Mfg", "monster_cuisine", 1, 1.0),
+    # B5 无声共鸣消费者
+    "黑键": BuffConsumerEntry("Trade", "silent_resonance", 2, 1.0),
 }
 
 
@@ -1300,16 +1300,16 @@ def synergy_trade_gold_lines(
 # ─── A·阵营计数（同房） ─────────────────────────────────────────
 
 # 阵营计数表: {持有者名: (字段名, 匹配值, 每人加成%, 产物或None, 设施类型)}
-_A_ROOM_FACTION_TABLE: dict[str, tuple[str, str, float, str | None, str | None]] = {
-    "历阵锐枪芬": ("team_id", "reserve1", 10.0, None, "Mfg"),
-    "摩根": ("group_id", "glasgow", 20.0, "Money", "Trade"),
-    "新约能天使": ("nation_id", "laterano", 15.0, "Money", "Trade"),
+_A_ROOM_FACTION_TABLE: dict[str, FactionEntry] = {
+    "历阵锐枪芬": FactionEntry("team_id", "reserve1", 10.0, None, "Mfg"),
+    "摩根": FactionEntry("group_id", "glasgow", 20.0, "Money", "Trade"),
+    "新约能天使": FactionEntry("nation_id", "laterano", 15.0, "Money", "Trade"),
 }
 
-# A2 专属额外加成: {持有者名: (目标名, 额外加成%, 产物或None, 设施类型)}
+# A·同房阵营额外加成: {持有者名: (目标名, 额外加成%, 产物或None, 设施类型)}
 # 特例：摩根帮派指南针——当推进之王同在贸易站时，除每人+20%外额外+35%
-_A_ROOM_FACTION_EXTRA: dict[str, tuple[str, float, str | None, str | None]] = {
-    "摩根": ("推进之王", 35.0, "Money", "Trade"),
+_A_ROOM_FACTION_EXTRA: dict[str, ExtraFactionEntry] = {
+    "摩根": ExtraFactionEntry("推进之王", 35.0, "Money", "Trade"),
 }
 
 
@@ -1400,10 +1400,10 @@ def get_synergy_enablers(
 # ─── B·跨房间配对 ───────────────────────────────────────────────
 
 # 跨房间配对表: {持有者名: (目标名, 目标设施, 加成%, 产物或None, 当前设施)}
-_B_CROSS_ROOM_PAIR_TABLE: dict[str, tuple[str, str | None, float, str | None, str | None]] = {
-    "烈夏": ("古米", "Trade", 35.0, "CombatRecord", "Mfg"),
-    "深巡": ("乌尔比安", None, 10.0, "Money", "Trade"),
-    "贝洛内": ("伺夜", None, 10.0, "Money", "Trade"),
+_B_CROSS_ROOM_PAIR_TABLE: dict[str, CrossRoomPairEntry] = {
+    "烈夏": CrossRoomPairEntry("古米", "Trade", 35.0, "CombatRecord", "Mfg"),
+    "深巡": CrossRoomPairEntry("乌尔比安", None, 10.0, "Money", "Trade"),
+    "贝洛内": CrossRoomPairEntry("伺夜", None, 10.0, "Money", "Trade"),
 }
 
 
@@ -1447,10 +1447,10 @@ def synergy_cross_room_pair(
 # ─── B·全局阵营计数 ─────────────────────────────────────────────
 
 # 全局阵营计数表: {持有者名: (字段名, 匹配值, 每人加成%, 产物, 设施, 上限, 是否除自身)}
-_B_GLOBAL_FACTION_TABLE: dict[str, tuple[str, str, float, str | None, str, int, bool]] = {
-    "缪尔赛思": ("group_id", "rhine", 3.0, None, "Power", 5, True),
-    "杏仁": ("group_id", "blacksteel", 2.0, "PureGold", "Mfg", 3, False),
-    "娜斯提": ("group_id", "rhine", 3.0, "PureGold", "Mfg", 5, False),
+_B_GLOBAL_FACTION_TABLE: dict[str, GlobalFactionEntry] = {
+    "缪尔赛思": GlobalFactionEntry("group_id", "rhine", 3.0, None, "Power", 5, True),
+    "杏仁": GlobalFactionEntry("group_id", "blacksteel", 2.0, "PureGold", "Mfg", 3, False),
+    "娜斯提": GlobalFactionEntry("group_id", "rhine", 3.0, "PureGold", "Mfg", 5, False),
 }
 
 
