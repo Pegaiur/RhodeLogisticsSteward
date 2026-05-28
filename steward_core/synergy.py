@@ -730,7 +730,12 @@ def synergy_facility_count(
     for name in names:
         if name not in _A_FACILITY_LINK_TABLE:
             continue
-        count_key, bonus_per, target_room, target_product, cap = _A_FACILITY_LINK_TABLE[name]
+        entry = _A_FACILITY_LINK_TABLE[name]
+        count_key = entry.count_source
+        bonus_per = entry.bonus_per_unit
+        target_room = entry.target_room
+        target_product = entry.target_product
+        cap = entry.cap
 
         if room_type != target_room:
             continue
@@ -811,7 +816,8 @@ def compute_control_global_bonus(
 
     for name in names:
         if name in _C_CONTROL_GLOBAL_TABLE:
-            m, t = _C_CONTROL_GLOBAL_TABLE[name]
+            entry = _C_CONTROL_GLOBAL_TABLE[name]
+            m, t = entry.mfg_bonus, entry.trade_bonus
             best_mfg = max(best_mfg, m)
             best_trade = max(best_trade, t)
 
@@ -1107,7 +1113,11 @@ def synergy_buff_pool_consumer(
     for name in names:
         if name not in _B_BUFF_CONSUMER_TABLE:
             continue
-        target_room, pool_key, per_unit, bonus_per = _B_BUFF_CONSUMER_TABLE[name]
+        entry = _B_BUFF_CONSUMER_TABLE[name]
+        target_room = entry.target_room
+        pool_key = entry.pool_key
+        per_unit = entry.per_unit
+        bonus_per = entry.bonus_per
         if room_type != target_room:
             continue
         if bonus_per <= 0:  # 铎铃影响心情而非效率
@@ -1186,9 +1196,9 @@ def classify_mfg_operators(
             result.anchors.append(op)
         elif has_skill_label:
             result.providers.append(op)
-        elif op.name in _B_BUFF_CONSUMER_TABLE and _B_BUFF_CONSUMER_TABLE[op.name][0] == "Mfg":
+        elif op.name in _B_BUFF_CONSUMER_TABLE and _B_BUFF_CONSUMER_TABLE[op.name].target_room == "Mfg":
             result.providers.append(op)
-        elif op.name in _A_FACILITY_LINK_TABLE and _A_FACILITY_LINK_TABLE[op.name][2] == "Mfg":
+        elif op.name in _A_FACILITY_LINK_TABLE and _A_FACILITY_LINK_TABLE[op.name].target_room == "Mfg":
             result.providers.append(op)
         else:
             result.pure_efficiency.append(op)
@@ -1252,9 +1262,9 @@ def classify_trade_operators(
 
         if is_registered or is_order_anchor:
             result.anchors.append(op)
-        elif op.name in _B_BUFF_CONSUMER_TABLE and _B_BUFF_CONSUMER_TABLE[op.name][0] == "Trade":
+        elif op.name in _B_BUFF_CONSUMER_TABLE and _B_BUFF_CONSUMER_TABLE[op.name].target_room == "Trade":
             result.providers.append(op)
-        elif op.name in _A_FACILITY_LINK_TABLE and _A_FACILITY_LINK_TABLE[op.name][2] == "Trade":
+        elif op.name in _A_FACILITY_LINK_TABLE and _A_FACILITY_LINK_TABLE[op.name].target_room == "Trade":
             result.providers.append(op)
         else:
             result.pure_efficiency.append(op)
