@@ -1,8 +1,25 @@
 """联动体系函数
 
-每个体系一个独立函数。同层体系之间并行计算后线性叠加。
-MVP 范围: A1/A3/A4/A5/A6/C1（A/C 层已完成）。
-A2/A7/B 层在后续迭代补充。
+A层（同设施内联动）:
+  PAIR          — 干员配对（阿兰娜↔温米 等）
+  ROOM_FACTION  — 同房阵营计数（摩根/新约能天使 等）
+  SKILL_COUNT   — 技能类型计数（水月/多萝西/苍苔）
+  SKILL_ALIAS   — 技能别名（海沫·意识兼容）
+  AUTOMATION    — 自动化（森蚺/温蒂/异客 等）
+  WHISPER       — 巫恋·低语（归零反馈型）
+  FACILITY_LINK — 设施数量联动（清流/空弦/伺夜 等）
+  ORDER         — 订单压缩（孑）
+
+B层（跨设施 buff 消费链）:
+  BUFF_POOL     — 感知信息/烟火/巫术结晶/机器人/思维链环/魔物料理/无声共鸣
+  GLOBAL_FACTION — 全局阵营计数（缪尔赛思/杏仁/娜斯提）
+  CROSS_ROOM    — 跨房间配对（烈夏↔古米 等）
+
+C层（中枢全局）:
+  CONTROL_GLOBAL — 中枢全局效率（凯尔希/望/布丁 等）
+  MOOD_BURN      — 中枢心情恢复（重岳·孤光共照）
+
+每个体系一个独立函数，同层并行计算后线性叠加。
 """
 
 from dataclasses import dataclass
