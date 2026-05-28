@@ -78,6 +78,7 @@ def control_per_operator_bonus(
     焰尾: 每个红松骑士团 Mfg 干员 → CR+10%, PG-10%
     薇薇安娜: 每个骑士 Mfg 干员 → +7%
     老友相聚: 每黑钢国际 Mfg 干员 → +5%
+    八幡海铃: 每个叙拉古 Trade 干员 → +5%
     """
     bonus = 0.0
     control_names = {op.name for op in control_ops}
@@ -102,5 +103,10 @@ def control_per_operator_bonus(
                     if op.group_id == _BLACKSTEEL_GROUP:
                         bonus += 5.0
                 break
+
+    if "八幡海铃" in control_names and room_type == "Trade":
+        for op in room_ops:
+            if op.nation_id == "siracusa":
+                bonus += 5.0
 
     return bonus

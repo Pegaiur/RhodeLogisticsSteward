@@ -174,3 +174,72 @@ class TestC1Wang:
         bonus = compute_control_global_bonus([wang, kalts])
         assert bonus.mfg_bonus == 2.0   # 凯尔希2
         assert bonus.trade_bonus == 7.0  # 望7
+
+
+# ─── C2 中枢 per-operator 加成 ──────────────────────────────────────
+
+class TestC2PerOperatorBonus:
+    """C2: control_per_operator_bonus — 中枢干员对房间干员的条件加成"""
+
+    def test_八幡海铃_叙拉古Trade干员每人加5(self):
+        """八幡海铃(家族认可)在中枢 → 每个叙拉古 Trade 干员 +5%"""
+        from steward_core.synergy import control_per_operator_bonus
+
+        yahata = _mk_op("八幡海铃")
+        bellone = _mk_op("贝洛内", nation_id="siracusa")
+        siye = _mk_op("伺夜", nation_id="siracusa")
+
+        bonus = control_per_operator_bonus(
+            [yahata], [bellone, siye], "Money", room_type="Trade",
+        )
+        assert bonus == 10.0  # 2 人 × 5%
+
+    def test_八幡海铃_无叙拉古干员_不加成(self):
+        """八幡海铃在 but Trade 无叙拉古干员 → 0"""
+        from steward_core.synergy import control_per_operator_bonus
+
+        yahata = _mk_op("八幡海铃")
+        generic = _mk_op("普通干员", nation_id="lungmen")
+
+        bonus = control_per_operator_bonus(
+            [yahata], [generic], "Money", room_type="Trade",
+        )
+        assert bonus == 0.0
+
+    def test_八幡海铃不在中枢_不加成(self):
+        """中枢无八幡海铃 → 叙拉古加成不触发"""
+        from steward_core.synergy import control_per_operator_bonus
+
+        other = _mk_op("凯尔希")
+        bellone = _mk_op("贝洛内", nation_id="siracusa")
+
+        bonus = control_per_operator_bonus(
+            [other], [bellone], "Money", room_type="Trade",
+        )
+        assert bonus == 0.0
+
+    def test_八幡海铃_Mfg房间_不触发(self):
+        """八幡海铃的加成仅对 Trade/Money 生效，Mfg 不触发"""
+        from steward_core.synergy import control_per_operator_bonus
+
+        yahata = _mk_op("八幡海铃")
+        bellone = _mk_op("贝洛内", nation_id="siracusa")
+
+        bonus = control_per_operator_bonus(
+            [yahata], [bellone], "CombatRecord", room_type="Mfg",
+        )
+        assert bonus == 0.0
+
+    def test_八幡海铃_叙拉古干员混编_仅计数叙拉古(self):
+        """Trade 房 3 人（2 叙拉古 + 1 非叙拉古）→ +10%"""
+        from steward_core.synergy import control_per_operator_bonus
+
+        yahata = _mk_op("八幡海铃")
+        bellone = _mk_op("贝洛内", nation_id="siracusa")
+        siye = _mk_op("伺夜", nation_id="siracusa")
+        generic = _mk_op("普通干员", nation_id="lungmen")
+
+        bonus = control_per_operator_bonus(
+            [yahata], [bellone, siye, generic], "Money", room_type="Trade",
+        )
+        assert bonus == 10.0
