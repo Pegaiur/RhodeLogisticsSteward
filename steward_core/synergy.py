@@ -23,9 +23,94 @@ C层（中枢全局）:
 """
 
 from dataclasses import dataclass
+from typing import NamedTuple
 
 from steward_core.models import LinearSegment, Operator, LayoutConfig
 from steward_core.efficiency_fn import ramping_efficiency
+
+# ─── 硬编码表类型定义 ──────────────────────────────────────────────
+
+
+class FacilityLinkEntry(NamedTuple):
+    """A·设施数量联动条目"""
+    count_source: str
+    bonus_per_unit: float
+    target_room: str
+    target_product: str | None
+    cap: float | None
+
+
+class BuffConsumerEntry(NamedTuple):
+    """B·buff池消费者条目"""
+    target_room: str
+    pool_key: str
+    per_unit: int
+    bonus_per: float
+
+
+class FactionEntry(NamedTuple):
+    """A·同房阵营计数条目"""
+    field: str
+    value: str
+    bonus_per: float
+    target_product: str | None
+    target_room: str | None
+
+
+class ExtraFactionEntry(NamedTuple):
+    """A·同房阵营额外加成条目"""
+    extra_name: str
+    extra_bonus: float
+    target_product: str | None
+    target_room: str | None
+
+
+class GlobalFactionEntry(NamedTuple):
+    """B·全局阵营计数条目"""
+    field: str
+    value: str
+    bonus_per: float
+    target_product: str | None
+    target_room: str
+    cap: int
+    exclude_self: bool
+
+
+class CrossRoomPairEntry(NamedTuple):
+    """B·跨房间配对条目"""
+    target_name: str
+    target_facility: str | None
+    bonus_per: float
+    target_product: str | None
+    target_room: str | None
+
+
+class ZeroingVariantEntry(NamedTuple):
+    """A·归零变体条目"""
+    buff_id: str
+    room_type: str
+    bonus_per: float
+
+
+class RampingSkillEntry(NamedTuple):
+    """A·爬升型技能条目"""
+    buff_id: str
+    room_type: str
+    base_rate: float
+
+
+class GlobalBonusEntry(NamedTuple):
+    """C·中枢全局效率条目"""
+    mfg_bonus: float
+    trade_bonus: float
+
+
+class TableMeta(NamedTuple):
+    """硬编码表元信息"""
+    table: object
+    consumers: list[str]
+    trigger: str
+
 
 # ─── 系统贡献者注册表 ────────────────────────────────────────────
 
