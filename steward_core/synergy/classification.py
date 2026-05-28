@@ -39,6 +39,8 @@ def classify_mfg_operators(
             result.anchors.append(op)
         elif has_skill_label or has_zeroing:
             result.providers.append(op)
+        # 以下两步已被 MFG_ANCHORS 覆盖（derive.py 扫描同名表自动注册），
+        # 保留作为防御性兜底：如果 _derived.py 过期未更新，此检查仍能防剪枝。
         elif op.name in _B_BUFF_CONSUMER_TABLE and _B_BUFF_CONSUMER_TABLE[op.name].target_room == "Mfg":
             result.providers.append(op)
         elif op.name in _A_FACILITY_LINK_TABLE and _A_FACILITY_LINK_TABLE[op.name].target_room == "Mfg":
@@ -105,6 +107,7 @@ def classify_trade_operators(
 
         if is_registered or is_order_anchor:
             result.anchors.append(op)
+        # 以下两步已被 TRADE_ANCHORS 覆盖，保留作为防御性兜底。
         elif op.name in _B_BUFF_CONSUMER_TABLE and _B_BUFF_CONSUMER_TABLE[op.name].target_room == "Trade":
             result.providers.append(op)
         elif op.name in _A_FACILITY_LINK_TABLE and _A_FACILITY_LINK_TABLE[op.name].target_room == "Trade":

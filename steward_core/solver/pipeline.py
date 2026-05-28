@@ -94,11 +94,12 @@ class Pipeline:
         from .phase4_dorm import _phase4_dorm
 
         from steward_core.synergy import get_system_contributors
+        from steward_core.synergy._derived import MFG_ANCHORS
 
-        ANCHOR_NAMES = set(get_system_contributors("Mfg", "anchor"))
+        ANCHOR_NAMES = MFG_ANCHORS
         CTRL_GLOBAL_NAMES = set(get_system_contributors("Control", "global_bonus"))
         DORM_NAMES = get_system_contributors("Dormitory")
-        POWER_NAMES = set(get_system_contributors("Power", "facility_modifier"))
+        POWER_NAMES = set(get_system_contributors("Power"))
 
         return cls(phases=[
             ("mfg", partial(_phase1_mfg, anchor_names=ANCHOR_NAMES)),

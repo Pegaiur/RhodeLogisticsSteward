@@ -6,11 +6,11 @@ from steward_core.synergy import (
     compute_control_global_bonus,
     compute_buff_pool,
     _has_power_count_modifier,
-    get_system_contributors,
     classify_trade_operators, build_candidate_pool,
     control_per_operator_bonus,
     get_synergy_enablers,
 )
+from steward_core.synergy._derived import TRADE_ANCHORS
 
 from .config import SolverConfig
 from .greed import _generate_combos, _greedy_allocate, _evaluate_trade_combo
@@ -59,8 +59,7 @@ def _phase3_trade(
             trade_ops.append(op)
 
     if trade_ops:
-        TRADE_ANCHOR_NAMES = set(get_system_contributors("Trade", "anchor"))
-        classification = classify_trade_operators(trade_ops, TRADE_ANCHOR_NAMES)
+        classification = classify_trade_operators(trade_ops, TRADE_ANCHORS)
         pool = build_candidate_pool(trade_ops, classification, room_type="Trade", product="Money")
         pool = [op for op in pool if op.char_id not in assigned_ids]
         # 补充 Trade 联动使能者（无 Trade 技能但能提升 A2 阵营计数的干员，如推王→摩根）
