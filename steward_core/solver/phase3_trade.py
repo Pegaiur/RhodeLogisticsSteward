@@ -12,7 +12,8 @@ from steward_core.synergy import (
     get_synergy_enablers,
 )
 
-from .greed import _generate_combos, _greedy_allocate, _evaluate_trade_combo, T
+from .config import SolverConfig
+from .greed import _generate_combos, _greedy_allocate, _evaluate_trade_combo
 from .support import compute_trade_support
 
 
@@ -23,6 +24,7 @@ def _phase3_trade(
     assignments: list,
     op_lookup: dict[str, Operator],
     locked_support: dict[str, set[str]],
+    config: SolverConfig | None = None,
 ) -> int:
     """Phase 3a: Trade 穷举（使用 locked_support 估计中枢，中枢尚未填充）
 
@@ -31,6 +33,9 @@ def _phase3_trade(
 
     返回本阶段新增的 autofill_count。
     """
+    if config is None:
+        config = SolverConfig()
+    params = config.params
     autofill_count = 0
 
     # 释放 locked Trade 支撑干员（已在 Phase 1 锁入 assigned_ids 但尚未写入房间）
@@ -74,9 +79,8 @@ def _phase3_trade(
         )
 
         # 评估所有组合（含宿舍估计用于乌有烟火/黑键感知等B1生成）
-        estimated_dorm_count = 20
         dorm_est = [Operator(char_id=f"_dorm_{i}", name=f"填位宿舍{i}", skills=[])
-                    for i in range(estimated_dorm_count)]
+                    for i in range(params.dorm_estimated_count)]
         has_ebnhlz_any = "黑键" in locked_support["Trade"]
 
         evaluated = []
@@ -88,10 +92,10 @@ def _phase3_trade(
                 ctrl_ops, combo_ops, "Money", room_type="Trade",
             )
             lmd = _evaluate_trade_combo(
-                combo_ops, effective_power, T, global_bonus,
+                combo_ops, effective_power, params.shift_hours, global_bonus,
                 compute_buff_pool(
-                    ctrl_ops, suich_count=5,
-                    dorm_operators=dorm_est, dorm_level=5,
+                    ctrl_ops, suich_count=params.suich_count,
+                    dorm_operators=dorm_est, dorm_level=params.dorm_level,
                     has_ebnhlz_in_trade=has_ebnhlz,
                     has_wuyou_in_trade=has_wuyou,
                 ), ctrl_bonus,
@@ -113,7 +117,7 @@ def _phase3_trade(
             ts = compute_trade_support(combo_ops)
             for facility, support_names in ts.items():
                 if facility == "Control":
-                    remaining = 5 - len(locked_support["Control"])
+                    remaining = params.control_max_slots - len(locked_support["Control"])
                     if remaining > 0:
                         locked_support["Control"].update(list(support_names)[:remaining])
                 else:

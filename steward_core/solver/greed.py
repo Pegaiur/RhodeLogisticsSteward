@@ -6,8 +6,6 @@ from steward_core.efficiency_fn import constant_efficiency, rank_by_dominance
 from steward_core.models import LayoutConfig, Operator, RoomAssignment
 from steward_core.synergy import synergy_facility_count
 
-T = 12.0
-
 _LAYOUT_243 = LayoutConfig.layout_243()
 
 
@@ -154,6 +152,7 @@ def _greedy_remaining(
     assigned_ids: set[str],
     operators: list[Operator],
     priority_names: set[str] | None = None,
+    params=None,
 ) -> list[RoomAssignment]:
     """剩余设施（Trade/Power/Reception/Office）支配偏序贪心
 
@@ -162,6 +161,7 @@ def _greedy_remaining(
     if priority_names is None:
         priority_names = set()
     priority_ids = {op.char_id for op in operators if op.name in priority_names}
+    T = params.shift_hours if params is not None else 12.0
 
     results = []
     for room in _LAYOUT_243.rooms:
@@ -170,9 +170,6 @@ def _greedy_remaining(
 
         taken = []
 
-        # 优先分配 locked 支撑干员（绕过 assigned_ids + 不验证效率）
-        # 注意：支撑干员的价值已在 Phase 1 跨设施联动评估中计入（如 B5 黑键→Trade），
-        # 此处仅执行放置，不重复验证效率值（该值可能为 0，因贡献来自 buff 池消费）
         for op in operators:
             if len(taken) >= room.slots:
                 break
@@ -185,7 +182,6 @@ def _greedy_remaining(
             taken.append(op.name)
             assigned_ids.add(op.char_id)
 
-        # 剩余工位走正常支配偏序贪心
         op_lookup = {op.char_id: op for op in operators}
         candidates = []
         for op in operators:
@@ -213,17 +209,15 @@ def _greedy_remaining(
             ranked = rank_by_dominance(candidates, T)
             remaining = [op for op in ranked if op.char_id not in assigned_ids]
 
-            # 迭代填充：每个槽位"尝试→验证条件→接受或跳过"
             while len(taken) < room.slots and remaining:
                 op = remaining.pop(0)
                 if op.char_id in assigned_ids:
                     continue
                 if not _room_conditions_satisfiable(op, taken, remaining, room.slots, operators):
-                    continue  # 条件不可满足 → 跳过此候选人，试下一个
+                    continue
                 taken.append(op.name)
                 assigned_ids.add(op.char_id)
 
-            # 后验验证：确认条件型干员的机制实际兑现
             _post_fill_verify(taken, operators, assigned_ids)
 
         results.append(RoomAssignment(
