@@ -55,8 +55,11 @@ def _phase1_mfg(
             evaluated.append((score, combo_names, all_support_names, support_map))
         evaluated.sort(key=lambda x: -x[0])
 
-        # 贪心分配（含支撑干员锁）
-        allocated = _greedy_allocate_with_support(evaluated, room_count=count)
+        # 贪心分配（含支撑干员锁，中枢容量跨产物轮次共享）
+        allocated = _greedy_allocate_with_support(
+            evaluated, room_count=count,
+            initial_control=locked_support["Control"].copy(),
+        )
         for names, support_map in allocated:
             for op in pool:
                 if op.name in names:

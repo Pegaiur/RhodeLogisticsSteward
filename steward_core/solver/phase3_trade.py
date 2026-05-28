@@ -108,11 +108,16 @@ def _phase3_trade(
                 if op.name in names:
                     assigned_ids.add(op.char_id)
                     assigned_names.add(op.name)
-            # 计算该 combo 的 trade support 并合并到 locked_support
+            # 计算该 combo 的 trade support 并合并到 locked_support（中枢容量受限）
             combo_ops = [op_lookup[n] for n in names if n in op_lookup]
             ts = compute_trade_support(combo_ops)
             for facility, support_names in ts.items():
-                locked_support[facility].update(support_names)
+                if facility == "Control":
+                    remaining = 5 - len(locked_support["Control"])
+                    if remaining > 0:
+                        locked_support["Control"].update(list(support_names)[:remaining])
+                else:
+                    locked_support[facility].update(support_names)
             room_idx = len([a for a in assignments if a.room_type == "Trade"])
             assignments.append(RoomAssignment(
                 room_type="Trade", room_index=room_idx,
