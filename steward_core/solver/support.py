@@ -53,6 +53,34 @@ def compute_optimal_support(
     return {k: sorted(v) for k, v in support.items()}
 
 
+def compute_trade_support(
+    combo_ops: list[Operator],
+) -> dict[str, list[str]]:
+    """计算贸易站组合所需的最优支撑干员集
+
+    与 compute_optimal_support 对称：Trade combo → 锁定的支撑干员。
+    孑 → 灵知(中枢)，叙拉古干员 → 八幡海铃(中枢)。
+
+    Returns:
+        {"Control": [names], "Trade": [names], "Dormitory": [names]}
+    """
+    support: dict[str, set[str]] = {
+        "Control": set(),
+        "Trade": set(),
+        "Dormitory": set(),
+    }
+
+    names = {op.name for op in combo_ops}
+
+    if "孑" in names:
+        support["Control"].add("灵知")
+
+    if any(op.nation_id == "siracusa" for op in combo_ops):
+        support["Control"].add("八幡海铃")
+
+    return {k: sorted(v) for k, v in support.items()}
+
+
 def _evaluate_with_support(
     combo_ops: list[Operator],
     room_type: str,
