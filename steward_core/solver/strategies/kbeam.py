@@ -51,17 +51,17 @@ class KBeamStrategy(Strategy):
             return self._empty_result(config)
 
         for path in mfg_paths:
-            _phase2_control(
-                operators=operators, assigned_ids=path.assigned_ids,
-                assigned_names=path.assigned_names, assignments=path.assignments,
-                op_lookup=op_lookup, locked_support=path.locked_support,
-                ctrl_global_names=ctrl_global_names, config=config,
-            )
             _phase3_trade(
                 operators=operators, assigned_ids=path.assigned_ids,
                 assigned_names=path.assigned_names, assignments=path.assignments,
                 op_lookup=op_lookup, locked_support=path.locked_support,
                 config=config,
+            )
+            _phase2_control(
+                operators=operators, assigned_ids=path.assigned_ids,
+                assigned_names=path.assigned_names, assignments=path.assignments,
+                op_lookup=op_lookup, locked_support=path.locked_support,
+                ctrl_global_names=ctrl_global_names, config=config,
             )
 
         best = self._select_best(mfg_paths, operators, params)
