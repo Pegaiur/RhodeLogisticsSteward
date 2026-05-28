@@ -364,81 +364,292 @@ class SolverConfig:
 
 ---
 
-### Step 3: Strategy 测试助手（设计先行）
+### Step 3: Strategy 测试助手
 
-**新建文件**: `tests/strategy_helpers.py`（~40 行）
+**新建文件**: `tests/strategy_helpers.py`（~50 行）
 
-为策略测试提供轻量级工具：
+#### 设计目标
+
+降低新 Strategy 的测试编写成本。当前测试文件各自独立构造 `Operator` 对象，存在大量重复的样板代码。
+
+#### API 设计
 
 ```python
 """策略测试辅助工具
 
-降低新 Strategy 的测试编写成本。
+降低新 Strategy 的测试编写成本，避免每个测试文件重复构造 Operator 和验证排班结构。
 """
 
-from steward_core.models import Operator, Skill
+from steward_core.models import Operator, Skill, SolveResult
 
 
-def make_op(name: str, char_id: str, room_type: str,
-            efficiency: float = 0.0, product: str | None = None,
-            buff_id: str = "") -> Operator:
-    """快速构造测试用 Operator"""
-    skills = []
-    if efficiency > 0 or buff_id:
-        skills = [Skill(
-            buff_id=buff_id or f"test_{char_id}",
-            room_type=room_type,
-            efficiency=efficiency,
-            phase="PHASE_2",
-            product=product,
-        )]
-    return Operator(
-        char_id=char_id, name=name,
-        rarity=5, nation_id="test", group_id="test",
-        race_id="test", skills=skills,
-    )
+def make_op(
+    name: str,
+    char_id: str,
+    room_type: str,
+    efficiency: float = 0.0,
+    product: str | None = None,
+    buff_id: str = "",
+    rarity: int = 5,
+    phase: str = "PHASE_2",
+    nation_id: str = "test",
+    group_id: str = "test",
+) -> Operator:
+    """快速构造测试用 Operator
+
+    常用场景：
+      make_op("温蒂", "wendy", "Mfg", buff_id="manu_prod_spd&power[020]")
+        → 自动化干员，效率来自 buff 表查询
+
+      make_op("普通制造", "mfg_001", "Mfg", efficiency=25.0, product="PureGold")
+        → 纯效率干员，25% 贵金属加成
+
+      make_op("无技能", "empty_001", "Mfg")
+        → 无技能干员，仅用于填位
+    """
+    ...
 
 
-def assert_plan_structure(result, expected_rooms: dict[str, int]):
+def assert_plan_structure(result: SolveResult, expected: dict[str, int]):
     """验证 SolveResult 的房间结构
 
-    expected_rooms: {"Mfg": 4, "Trade": 2, "Control": 1, ...}
+    expected: {"Mfg": 4, "Trade": 2, "Control": 1, "Power": 3, ...}
     """
-    plan = result.plans[0]
-    actual = {}
-    for a in plan.assignments:
-        actual[a.room_type] = actual.get(a.room_type, 0) + 1
-    assert actual == expected_rooms, f"房间结构不匹配: {actual} != {expected_rooms}"
+    ...
+
+
+def assert_operator_in_room(result: SolveResult, room_type: str, name: str):
+    """验证某干员被分配到指定房间类型"""
+    ...
+
+
+def assert_no_duplicate_operators(result: SolveResult):
+    """验证全方案无重复干员（H2 约束）"""
+    ...
+
+
+def strategy_runner(strategy_class, operators, **strategy_kwargs):
+    """一键跑策略：构造 SolverConfig → 执行 → 返回 SolveResult
+
+    消除每个测试中重复的 solve_mvp 样板代码。
+    """
+    ...
 ```
 
-**设计原则**：仅提供辅助函数，不引入测试框架耦合。测试文件自主决定是否使用。
+#### 使用示例（K-Beam 测试）
 
-**实施时机**: Step 0 完成后、K-Beam 开发前。
+```python
+from tests.strategy_helpers import make_op, assert_plan_structure, strategy_runner
+from steward_core.solver.strategies.kbeam import KBeamStrategy
+
+
+def test_kbeam_produces_valid_plan():
+    ops = [
+        make_op("温蒂", "wendy", "Mfg", buff_id="manu_prod_spd&power[020]"),
+        make_op("清流", "qingliu", "Mfg", buff_id="manu_prod_spd&trade[000]"),
+        make_op("德克萨斯", "texas", "Trade", buff_id="trade_ord_spd&limit[022]"),
+        # ... 更多测试干员
+    ]
+    result = strategy_runner(KBeamStrategy, ops, beam_width=3)
+    assert_plan_structure(result, {"Mfg": 4, "Trade": 2, "Control": 1, "Power": 3,
+                                    "Reception": 1, "Office": 1, "Dormitory": 4})
+    assert_no_duplicate_operators(result)
+```
+
+#### 实施时机
+
+Step 0 完成后、K-Beam 开发前。K-Beam 的测试直接依赖此模块。
 
 ---
 
-### Step 4: K-Beam Strategy（后续独立实施）
+### Step 4: K-Beam Strategy（详细设计）
 
-**新建文件**: `solver/strategies/kbeam.py`
+#### 4.1 算法定位
+
+K-Beam 是 Phase 1（Mfg 穷举）的**分配层升级**——将唯一的贪心分配替换为 top-K 保留，其余 Phase（2-5）逻辑完全不变。
+
+```
+BaselineStrategy:
+  Phase 1: 穷举 → 贪心取 1-best → Phase 2-5
+
+KBeamStrategy:
+  Phase 1: 穷举 → 贪心取 K-best → K 条路径
+  For each path:
+    Phase 2-3a: 中枢填充 + 贸易站穷举 → 完整排班
+  择优（production.calculate）
+  优胜路径: Phase 3b-4 → 最终方案
+```
+
+**不改动任何 Phase 模块**。K-Beam 是纯编排层逻辑。
+
+#### 4.2 路径定义
+
+```
+一条 "Mfg 路径" = (CR 2间 + PG 2间) 的分配方案 + 对应支撑干员
+
+路径快照 = PartialSolution 包含:
+  assigned_ids    = CR 6人 + PG 6人 + 支撑干员
+  assignments     = [RoomAssignment×4] (Mfg)
+  locked_support  = 所有 4 间 Mfg 需要的支撑（Control/Trade/Dormitory/Office）
+```
+
+K=5 时，Phase 1 产出 5 个 `PartialSolution`，每个有不同的 Mfg 分配。
+
+#### 4.3 核心算法：top-K 贪心分配
+
+当前 `_greedy_allocate_with_support` 扫描排序后的 evaluated 列表，贪心取第一个完整分配。K-Beam 扩展为 **迭代排斥法**：
+
+```python
+def _greedy_allocate_top_k(
+    evaluated: list[tuple[float, list[str], list[str], dict]],
+    room_count: int,
+    k: int,
+    **kwargs,
+) -> list[list[tuple[list[str], dict]]]:
+    """迭代排斥：每次运行贪心，排除上一次的首选组合，生成 K 条不同路径"""
+    results = []
+    used_combo_sets: list[frozenset[tuple]] = []
+
+    for _ in range(k):
+        result = _greedy_allocate_with_support_excluding(
+            evaluated, room_count,
+            exclude_sets=used_combo_sets,
+            **kwargs,
+        )
+        if not result:
+            break
+        results.append(result)
+        used_combo_sets.append(
+            frozenset(tuple(names) for names, _ in result)
+        )
+
+    return results
+```
+
+**关键设计决策**：排斥完整的 combo 集合而非单个 combo——确保 K 条路径在至少一间 Mfg 房间上不同。
+
+#### 4.4 路径多样性保证
+
+迭代排斥法的问题：如果前 K 条路径都选了高分 combo A（因为 A 确实是最优的），排斥整个集合会导致路径 2 完全放弃 A，可能大幅劣于路径 1。这在实际场景中是可接受的——我们需要的正是"如果不选 A，什么样的替代方案最好？"。
+
+K=5 时可能的路径形态：
+```
+路径 1: CR{迷迭香+t0+t1} + CR{水月+t2+t3} + PG{森蚺+温蒂+t4} + PG{...
+路径 2: CR{迷迭香+t0+t1} + CR{杏仁+t2+t3} + PG{森蚺+温蒂+t4} + PG{...  ← 第二间CR不同
+路径 3: CR{水月+t0+t1} + CR{杏仁+t2+t3} + PG{清流+t4+t5} + PG{...      ← 全部不同
+...
+```
+
+#### 4.5 跨产物分配（CR 2间 → PG 2间）
+
+当前 `_phase1_mfg` 先跑 CR 再跑 PG，PG 看到 CR 已占用的干员。K-Beam 需要：
+
+```
+Phase 1 K-Beam 编排:
+  1. CR: 评估全部 CR combo → 贪心取 K 条 CR 路径
+     → K 个 PartialSolution (仅含 CR 2间 + 支撑)
+  
+  2. For each CR 路径:
+     PG: 评估 PG combo（排除 CR 路径已占用的干员）
+       → 贪心取 1 条 PG 分配（此时 PG 不需要 K 条——CR 才是分叉点）
+     → 合并为完整 Mfg 路径（CR + PG + 支撑）
+  
+  3. 得到 K 条 Mfg 路径，每条含 4 间 Mfg
+```
+
+**为什么 PG 不也做 K 条？** 因为 CR 的分叉已经覆盖了主要的跨产品冲突（如黑键同时被 CR 迷迭香体系和 PG 某体系需要）。PG 再分叉会导致 K² 爆炸且增量收益有限。
+
+#### 4.6 路径评估与择优
+
+每条 Mfg 路径在 Phase 2-3a 后得到完整方案（Mfg + Control + Trade）。择优使用 `_production_score()`——与 `local_search_refine` 相同的真实经济产出目标函数：
+
+```python
+def _select_best_path(paths, operators, params):
+    """从 K 条路径中选真实经济产出最高的"""
+    best_path = None
+    best_score = -float("inf")
+    for path in paths:
+        plan = ShiftPlan(assignments=path.assignments, ...)
+        score = _production_score(plan, operators, params)
+        if score > best_score:
+            best_score = score
+            best_path = path
+    return best_path
+```
+
+**为什么不用 evaluate_room 积分排序？** 因为 Trade 的订单机制（孑/但书/可露希尔）将效率积分非线性转换为 LMD 产出，`production.calculate()` 是唯一能准确比较两条路径产出的函数。
+
+#### 4.7 KBeamStrategy 完整流程
 
 ```python
 class KBeamStrategy(Strategy):
-    """K-Beam 搜索策略
-
-    在 Phase 1（制造站穷举）后保留 K 条最佳分配路径，
-    Phase 2（中枢填充）和 Phase 3a（贸易站穷举）在每条路径上并行执行，
-    择优后继续 Phase 3b-4。
-    """
-
     name = "kbeam"
     beam_width: int = 5
 
     def execute(self, operators, config, op_lookup):
-        # 详见独立 plan: docs/kbeam-implementation.md
-        ...
+        params = config.params
+        anchor_names = ...  # from synergy (same as Pipeline.default)
+
+        # ── Phase 1: 制造站 K-Beam 展开 ──
+        mfg_paths = self._phase1_kbeam(
+            operators, config, op_lookup, anchor_names, K=self.beam_width
+        )
+        # mfg_paths: list[PartialSolution], 每个含 4 间 Mfg + 支撑
+
+        # ── Phase 2-3a: 每条路径上填充中枢 + 贸易站 ──
+        for path in mfg_paths:
+            self._phase2_control_on_path(operators, config, op_lookup, path)
+            self._phase3_trade_on_path(operators, config, op_lookup, path)
+
+        # ── 择优 ──
+        best = _select_best_path(mfg_paths, operators, params)
+
+        # ── Phase 3b-4: 在优胜路径上继续 ──
+        self._phase3_remaining_on_path(operators, config, op_lookup, best)
+        self._phase4_dorm_on_path(operators, config, op_lookup, best)
+
+        # ── 产出 ──
+        plan = ShiftPlan(assignments=best.assignments, ...)
+        result = SolveResult(plans=[plan], ...)
+        result = local_search_refine(result, operators, config)
+        return result
 ```
 
-K-Beam 的完整实现计划不在本文档范围，将在 Step 0-3 完成后单独制定。
+其中 `_phase1_kbeam` 会调用现有的 `_phase1_mfg` 的核心逻辑，但将 `_greedy_allocate_with_support` 替换为 `_greedy_allocate_top_k`。
+
+#### 4.8 需要修改的文件
+
+| 文件 | 操作 | 说明 |
+|------|:---:|------|
+| `solver/strategies/kbeam.py` | **新建** | KBeamStrategy，~150 行 |
+| `solver/greed.py` | **修改** | 新增 `_greedy_allocate_with_support_excluding()`，~20 行 |
+| `solver/strategies/__init__.py` | **修改** | 重导出 KBeamStrategy，+1 行 |
+| `tests/strategy_helpers.py` | **新建** | 测试辅助工具，~50 行（Step 3） |
+| `tests/test_kbeam.py` | **新建** | K-Beam 单元测试，~60 行 |
+
+**不改动的文件**: 所有 Phase 模块、pipeline.py、support.py、refine.py
+
+#### 4.9 计算复杂度
+
+| 阶段 | Baseline | K-Beam (K=5) | 增幅 |
+|------|:---:|:---:|:---:|
+| Phase 1: Mfg 穷举 | ~1500 combos × 2 products | 同 Baseline（穷举不变） | ×1 |
+| Phase 1: 分配 | 贪心 1 次 | 贪心 K 次（排斥迭代） | ×K |
+| Phase 2: Control | 1 次 | K 次 | ×K |
+| Phase 3a: Trade 穷举 | ~19600 combos | K × ~19600 ≈ 98000 | ×K |
+| Phase 3b-4 | 1 次 | 1 次（仅优胜路径） | ×1 |
+| **总计** | ~1s | ~5s | ×5 |
+
+K=5 下约 5 秒——完全可接受。
+
+#### 4.10 风险与缓解
+
+| 风险 | 缓解 |
+|------|------|
+| K 条路径产出完全相同（排斥迭代收敛太慢） | 打印路径差异诊断日志；必要时换 DFS 回溯 |
+| Trade C(n,3) × K 太慢 | 剪枝阈值从 0.95 收紧到 0.90（仅 K-Beam 模式） |
+| K 条路径的 Control 都相同（支撑需求一致） | 这是合理的——中枢选人是确定性的；差异在 Mfg 和 Trade |
+| 无 K 条不同路径（干员池太小） | 返回实际路径数（可能 < K），日志记录 |
 
 ---
 
