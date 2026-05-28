@@ -1333,29 +1333,29 @@ def synergy_faction_room(
     names = {op.name for op in operators}
     segments = []
 
-    for holder_name, (field, value, bonus_per, target_product, target_room) in _A_ROOM_FACTION_TABLE.items():
+    for holder_name, e in _A_ROOM_FACTION_TABLE.items():
         if holder_name not in names:
             continue
-        if target_room is not None and room_type != target_room:
+        if e.target_room is not None and room_type != e.target_room:
             continue
-        if target_product is not None and product != target_product:
+        if e.target_product is not None and product != e.target_product:
             continue
 
-        count = sum(1 for op in operators if getattr(op, field, None) == value)
-        bonus = count * bonus_per
+        count = sum(1 for op in operators if getattr(op, e.field, None) == e.value)
+        bonus = count * e.bonus_per
         if bonus > 0:
             segments.append(LinearSegment(a=bonus, b=0.0, t_start=0.0, dt=T))
 
-    # A2 专属额外加成（如摩根+推王同在贸易站→额外+35%）
-    for holder_name, (extra_name, extra_bonus, target_product, target_room) in _A_ROOM_FACTION_EXTRA.items():
+    # A·同房阵营额外加成（如摩根+推王同在贸易站→额外+35%）
+    for holder_name, e in _A_ROOM_FACTION_EXTRA.items():
         if holder_name not in names:
             continue
-        if target_room is not None and room_type != target_room:
+        if e.target_room is not None and room_type != e.target_room:
             continue
-        if target_product is not None and product != target_product:
+        if e.target_product is not None and product != e.target_product:
             continue
-        if extra_name in names:
-            segments.append(LinearSegment(a=extra_bonus, b=0.0, t_start=0.0, dt=T))
+        if e.extra_name in names:
+            segments.append(LinearSegment(a=e.extra_bonus, b=0.0, t_start=0.0, dt=T))
 
     return segments
 
@@ -1375,16 +1375,16 @@ def get_synergy_enablers(
     enablers: list[Operator] = []
     seen: set[str] = set()
 
-    for holder_name, (field, value, bonus_per, target_product, target_room) in _A_ROOM_FACTION_TABLE.items():
-        if target_room is not None and room_type != target_room:
+    for holder_name, e in _A_ROOM_FACTION_TABLE.items():
+        if e.target_room is not None and room_type != e.target_room:
             continue
-        if target_product is not None and product is not None and product != target_product:
+        if e.target_product is not None and product is not None and product != e.target_product:
             continue
 
         for op in all_operators:
             if op.name in seen:
                 continue
-            if getattr(op, field, None) != value:
+            if getattr(op, e.field, None) != e.value:
                 continue
             # 已在普通池中的不重复
             if room_type == "Trade":
@@ -1428,25 +1428,25 @@ def synergy_cross_room_pair(
     names = {op.name for op in operators}
     segments = []
 
-    for holder_name, (target_name, target_facility, bonus_per, target_product, target_room) in _B_CROSS_ROOM_PAIR_TABLE.items():
+    for holder_name, e in _B_CROSS_ROOM_PAIR_TABLE.items():
         if holder_name not in names:
             continue
-        if target_room is not None and room_type != target_room:
+        if e.target_room is not None and room_type != e.target_room:
             continue
-        if target_product is not None and product != target_product:
+        if e.target_product is not None and product != e.target_product:
             continue
 
-        if target_facility is None:
+        if e.target_facility is None:
             # 任意设施：扫描所有设施
             target_names: set[str] = set()
             for ops in all_assignments.values():
                 target_names.update(op.name for op in ops)
         else:
-            target_ops = all_assignments.get(target_facility, [])
+            target_ops = all_assignments.get(e.target_facility, [])
             target_names = {op.name for op in target_ops}
 
-        if target_name in target_names:
-            segments.append(LinearSegment(a=bonus_per, b=0.0, t_start=0.0, dt=T))
+        if e.target_name in target_names:
+            segments.append(LinearSegment(a=e.bonus_per, b=0.0, t_start=0.0, dt=T))
 
     return segments
 
@@ -1472,19 +1472,19 @@ def synergy_global_faction(
     names = {op.name for op in operators}
     segments = []
 
-    for holder_name, (field, value, bonus_per, target_product, target_room, cap, exclude_self) in _B_GLOBAL_FACTION_TABLE.items():
+    for holder_name, e in _B_GLOBAL_FACTION_TABLE.items():
         if holder_name not in names:
             continue
-        if room_type != target_room:
+        if room_type != e.target_room:
             continue
-        if target_product is not None and product != target_product:
+        if e.target_product is not None and product != e.target_product:
             continue
 
-        count = sum(1 for op in all_operators if getattr(op, field, None) == value)
-        if exclude_self:
+        count = sum(1 for op in all_operators if getattr(op, e.field, None) == e.value)
+        if e.exclude_self:
             count = max(0, count - 1)
-        count = min(count, cap)
-        bonus = count * bonus_per
+        count = min(count, e.cap)
+        bonus = count * e.bonus_per
         if bonus > 0:
             segments.append(LinearSegment(a=bonus, b=0.0, t_start=0.0, dt=T))
 
