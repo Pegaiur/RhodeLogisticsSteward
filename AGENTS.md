@@ -86,7 +86,8 @@ RhodeLogisticsSteward/
 │   ├── efficiency-function-design.md  # 效率函数建模
 │   ├── synergy-systems.md        # 联动体系建模
 │   ├── inbox.md                  # 需求收件箱（远期待办登记）
-│   ├── solver-improvement-plan.md # 求解器优化计划（v0.4.0 已实施）
+│   ├── strategy-refactor-plan.md  # Strategy 策略层重构计划（v0.5.0）
+│   ├── strategy-refactor-notes.md # 重构实施笔记
 │   ├── archive/
 │   │   ├── index.md               # 里程碑索引
 │   │   ├── roadmap-mvp.md         # 开发路线图（已归档）
