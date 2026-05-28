@@ -61,6 +61,7 @@ def _phase1_mfg(
         allocated = _greedy_allocate_with_support(
             evaluated, room_count=count,
             initial_control=locked_support["Control"].copy(),
+            config=config,
         )
         for names, support_map in allocated:
             for op in pool:
