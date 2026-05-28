@@ -138,7 +138,7 @@ class SolverConfig:
 | Step | 状态 | 提交 |
 |------|------|------|
 | Step 0: SolverConfig | ✅ 完成 | `infra: 引入 SolverConfig 开关机制 (Step 0)` |
-| Step 1a: 支撑包 | 待开始 | — |
+| Step 1a: 支撑包 | ✅ 完成 | `feat(bundle): 支撑包数据结构 (SupportBundle + SupportResult)` |
 | Step 1b: 独占冲突检查 | 待开始 | — |
 | Step 2: 局部搜索 | 待开始 | — |
 | Step 3: 全局状态 | 待开始 | — |

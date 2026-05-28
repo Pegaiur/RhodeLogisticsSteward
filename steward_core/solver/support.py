@@ -11,19 +11,21 @@ from steward_core.synergy import (
     _B_ROSEMARY, _B_EBENHOLZ,
 )
 
+from .bundle import BUNDLES, SupportResult
+
 T = 12.0
 
 
 def compute_optimal_support(
     combo_ops: list[Operator],
-) -> dict[str, list[str]]:
+) -> SupportResult:
     """计算制造站组合所需的最优支撑干员集
 
     按"加成包"概念：每种制造站 combo 类型决定性地对应一组支撑干员。
     如果 combo 含多种类型（如迷迭香+骑士），支撑集取并集。
 
     Returns:
-        {"Control": [names], "Trade": [names], "Dormitory": [names]}
+        SupportResult(support_map, bundles)
     """
     support: dict[str, set[str]] = {
         "Control": set(),
@@ -31,6 +33,7 @@ def compute_optimal_support(
         "Dormitory": set(),
         "Office": set(),
     }
+    activated_bundles: list[str] = []
 
     names = {op.name for op in combo_ops}
 
@@ -38,19 +41,24 @@ def compute_optimal_support(
     if _B_ROSEMARY in names:
         for facility, ops in ROSEMARY_SUPPORT.items():
             support[facility].update(ops)
+        activated_bundles.append("迷迭香包")
 
     # 骑士包（含红松骑士团，游戏内骑士标签覆盖全体）
     has_knight = any(_is_knight(op) for op in combo_ops)
     if has_knight:
         support["Control"].add("薇薇安娜")
         support["Control"].add("焰尾")  # 骑士中枢天然伴随焰尾
+        activated_bundles.append("骑士包")
 
     # 红松骑士团包（已包含在骑士包中，此处显式标注确保焰尾）
     has_pinus = any(op.group_id == _PINUS_GROUP for op in combo_ops)
     if has_pinus:
         support["Control"].add("焰尾")
 
-    return {k: sorted(v) for k, v in support.items()}
+    return SupportResult(
+        support_map={k: sorted(v) for k, v in support.items()},
+        bundles=activated_bundles,
+    )
 
 
 def compute_trade_support(
@@ -98,7 +106,7 @@ def _evaluate_with_support(
     Returns:
         (score, support_map) — support_map 仅含可用的支撑干员
     """
-    support_map = compute_optimal_support(combo_ops)
+    support_map = compute_optimal_support(combo_ops).support_map
     op_lookup = {op.name: op for op in all_operators}
 
     # 过滤已分配的支撑干员
