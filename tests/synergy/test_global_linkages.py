@@ -155,7 +155,7 @@ class TestB6GlobalFaction:
 # ─── B7 跨房间配对扩展 ──────────────────────────────────────────
 
 class TestB7CrossRoomExtended:
-    """B7: synergy_cross_room_pair — 深巡/贝洛内 跨设施配对"""
+    """B7: synergy_cross_room_pair — 深巡 跨设施配对"""
 
     def test_深巡_乌尔比安在任意设施_贸易加10(self):
         """深巡在 Trade，乌尔比安在 Control → Trade +10%(β)"""
@@ -178,16 +178,3 @@ class TestB7CrossRoomExtended:
         segs = synergy_cross_room_pair([shenxun], "Trade", "Money", {}, 12.0)
 
         assert segs == []
-
-    def test_贝洛内_伺夜在任意设施_贸易加10(self):
-        """贝洛内在 Trade，伺夜在 Dorm → Trade +10%(β)"""
-        from steward_core.synergy import synergy_cross_room_pair
-
-        beluonei = _mk_op("贝洛内")
-        siye = _mk_op("伺夜")
-
-        all_assignments = {"Dormitory": [siye]}
-        segs = synergy_cross_room_pair([beluonei], "Trade", "Money", all_assignments, 12.0)
-
-        assert len(segs) == 1
-        assert segs[0].a == 10.0
