@@ -1618,7 +1618,7 @@ class TestA2TradeFaction:
     """A2: synergy_faction_room — Trade 设施阵营计数"""
 
     def test_摩根_格拉斯哥帮_含自身_加40(self):
-        """摩根 + 推王(格帮) → 2名格帮 × 20% = 40%"""
+        """摩根 + 推王(格帮) → 2名格帮 × 20% = 40% A2计数 + 推王专属额外35% = 75%"""
         from steward_core.synergy import synergy_faction_room
 
         morgan = _mk_op("摩根", group_id="glasgow")
@@ -1626,8 +1626,9 @@ class TestA2TradeFaction:
 
         segs = synergy_faction_room([morgan, sieger], "Trade", "Money", 12.0)
 
-        assert len(segs) == 1
+        assert len(segs) == 2
         assert segs[0].a == 40.0  # 2人 × 20%
+        assert segs[1].a == 35.0  # 推王专属额外+35%
 
     def test_摩根_仅自身_格拉斯哥帮_加20(self):
         """摩根独自在场 → 1名格帮(自身) × 20% = 20%"""

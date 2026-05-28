@@ -1204,6 +1204,12 @@ _A2_FACTION_TABLE: dict[str, tuple[str, str, float, str | None, str | None]] = {
     "新约能天使": ("nation_id", "laterano", 15.0, "Money", "Trade"),
 }
 
+# A2 专属额外加成: {持有者名: (目标名, 额外加成%, 产物或None, 设施类型)}
+# 特例：摩根帮派指南针——当推进之王同在贸易站时，除每人+20%外额外+35%
+_A2_EXTRA_TABLE: dict[str, tuple[str, float, str | None, str | None]] = {
+    "摩根": ("推进之王", 35.0, "Money", "Trade"),
+}
+
 
 def synergy_faction_room(
     operators: list[Operator],
@@ -1231,7 +1237,62 @@ def synergy_faction_room(
         if bonus > 0:
             segments.append(LinearSegment(a=bonus, b=0.0, t_start=0.0, dt=T))
 
+    # A2 专属额外加成（如摩根+推王同在贸易站→额外+35%）
+    for holder_name, (extra_name, extra_bonus, target_product, target_room) in _A2_EXTRA_TABLE.items():
+        if holder_name not in names:
+            continue
+        if target_room is not None and room_type != target_room:
+            continue
+        if target_product is not None and product != target_product:
+            continue
+        if extra_name in names:
+            segments.append(LinearSegment(a=extra_bonus, b=0.0, t_start=0.0, dt=T))
+
     return segments
+
+
+def get_synergy_enablers(
+    all_operators: list[Operator],
+    room_type: str,
+    product: str | None = None,
+) -> list[Operator]:
+    """从 _A2_FACTION_TABLE 反查联动使能者
+
+    返回无目标设施技能、但属于 A2 阵营计数范围、能提升同房持有者效率的干员。
+    特例：推进之王（无 Trade 技能，但能触发摩根帮派指南针额外+35%+A2计数）。
+
+    这些干员被 Phase 1/Phase 3a 的 has_skill_for 门禁阻挡，需单独补充入池。
+    """
+    enablers: list[Operator] = []
+    seen: set[str] = set()
+
+    for holder_name, (field, value, bonus_per, target_product, target_room) in _A2_FACTION_TABLE.items():
+        if target_room is not None and room_type != target_room:
+            continue
+        if target_product is not None and product is not None and product != target_product:
+            continue
+
+        for op in all_operators:
+            if op.name in seen:
+                continue
+            if getattr(op, field, None) != value:
+                continue
+            # 已在普通池中的不重复
+            if room_type == "Trade":
+                if op.has_skill_for("Trade", "Money"):
+                    continue
+                if any(s.buff_id.startswith(("trade_ord_law", "trade_ord_long",
+                                              "trade_ord_closure", "trade_ord_vodfox",
+                                              "trade_ord_limit_count"))
+                       for s in op.skills):
+                    continue
+            elif room_type == "Mfg":
+                if op.has_skill_for("Mfg", product):
+                    continue
+            seen.add(op.name)
+            enablers.append(op)
+
+    return enablers
 
 
 # ─── B7 跨房间配对 ───────────────────────────────────────────────

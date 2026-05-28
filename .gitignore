@@ -23,6 +23,7 @@ env/
 building_data.json
 character_table.json
 operators_data.json
+reference_docs/
 
 # ===== 输出产物 =====
 output/

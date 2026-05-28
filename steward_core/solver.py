@@ -19,6 +19,7 @@ from steward_core.synergy import (
     classify_trade_operators,
     control_per_operator_bonus, _is_knight, _PINUS_GROUP,
     _B3_ROSEMARY, _B5_EBNHLZ, _is_glasgow,
+    get_synergy_enablers,
 )
 from steward_core.evaluate import evaluate_room
 from steward_core.constants import BASE_POWER_COUNT
@@ -446,6 +447,11 @@ def solve_mvp(operators: list[Operator]) -> SolveResult:
         classification = classify_mfg_operators(mfg_ops, product, ANCHOR_NAMES)
         pool = build_candidate_pool(mfg_ops, classification, room_type="Mfg", product=product)
         pool = [op for op in pool if op.char_id not in assigned_ids]
+        # 补充 Mfg 联动使能者（无 Mfg 技能但能提升 A2 阵营计数的干员，如芙蓉→历阵锐枪芬）
+        existing = {op.char_id for op in pool}
+        for enabler in get_synergy_enablers(operators, "Mfg", product):
+            if enabler.char_id not in existing and enabler.char_id not in assigned_ids:
+                pool.append(enabler)
         combos = _generate_combos(pool, 3)
 
         # 评估所有组合（含最优支撑）
@@ -544,6 +550,11 @@ def solve_mvp(operators: list[Operator]) -> SolveResult:
         classification = classify_trade_operators(trade_ops, TRADE_ANCHOR_NAMES)
         pool = build_candidate_pool(trade_ops, classification, room_type="Trade", product="Money")
         pool = [op for op in pool if op.char_id not in assigned_ids]
+        # 补充 Trade 联动使能者（无 Trade 技能但能提升 A2 阵营计数的干员，如推王→摩根）
+        existing = {op.char_id for op in pool}
+        for enabler in get_synergy_enablers(operators, "Trade", "Money"):
+            if enabler.char_id not in existing and enabler.char_id not in assigned_ids:
+                pool.append(enabler)
         combos = _generate_combos(pool, min(3, len(pool)))
 
         # 构建全局上下文（Phase 2 中枢已确定）
