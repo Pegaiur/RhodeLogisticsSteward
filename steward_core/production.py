@@ -150,8 +150,10 @@ def _weighted_avg_order_time(p2: float, p3: float, p4: float) -> float:
 def _get_trade_order_multiplier(ops: list[Operator], hours: float = 24.0) -> tuple[float, float, float]:
     """贸易站订单机制倍数查询
 
-    检测干员组合中的特殊订单机制（但书违约、龙舌兰投资、
-    裁缝品质、可露希尔独占），返回加强后的每日产出。
+    检测干员组合中的特殊订单机制，返回加强后的每日产出。
+
+    优先级: 可露希尔特别订单 > 但书违约 > 龙舌兰投资 > 裁缝品质
+    可露希尔在场时，但书/龙舌兰/裁缝机制均不生效。
 
     Args:
         ops: 贸易站干员列表
@@ -161,20 +163,20 @@ def _get_trade_order_multiplier(ops: list[Operator], hours: float = 24.0) -> tup
         (lmd_per_day, gold_per_day, equiv_gold_per_day):
         100%效率 24h 的 LMD 日产、赤金消耗、等效赤金产出（赤金/天）
     """
+    # P0: 可露希尔特别订单 — 最高优先级，独占全部订单
+    # 固定 2赤金/1200LMD, 2.4h/单, 10单/天, 等效产金=4赤金/天
+    if any(s.buff_id.startswith("trade_ord_closure") for op in ops for s in op.skills):
+        orders = 24.0 / 2.4
+        equiv_gold = orders * (1200.0 - 1000.0) / 500.0
+        return (12000.0, orders * 2.0, equiv_gold)
+
+    # P1: 但书/龙舌兰/裁缝 — 可露希尔不在场时检测
     has_law = any(s.buff_id.startswith("trade_ord_law") for op in ops for s in op.skills)
-    has_closure = any(s.buff_id.startswith("trade_ord_closure") for op in ops for s in op.skills)
     has_tequila_beta = any(s.buff_id == "trade_ord_long[010]" for op in ops for s in op.skills)
     has_tequila_alpha = any(s.buff_id == "trade_ord_long[000]" for op in ops for s in op.skills)
     has_tequila = has_tequila_beta or has_tequila_alpha
     tailor_level = _extract_tailor_level(ops)
     tequila_bonus = 500 if has_tequila_beta else 250 if has_tequila_alpha else 0
-
-    if has_closure:
-        # 可露希尔特别订单：固定 2赤金/1200LMD, 2.4h/单
-        # 每单等效产金: (1200 - 2×500)/500 = 0.4赤金, 10单/天 = 4赤金/天
-        orders = 24.0 / 2.4
-        equiv_gold = orders * (1200.0 - 1000.0) / 500.0
-        return (12000.0, orders * 2.0, equiv_gold)
 
     # 裁缝时变等效P4（仅在有效时计算）
     p4 = _effective_tailor_p4(hours, tailor_level) if has_tequila or tailor_level > 0 else 0.20

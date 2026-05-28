@@ -147,6 +147,79 @@ class TestTradeOrderMultiplier:
         assert lmd_per_day == pytest.approx(10343.5, rel=0.002)
         assert gold_per_day == pytest.approx(20.69, rel=0.002)
 
+    # ─── 可露希尔优先级与互斥 ──────────────────────────────
+
+    def test_可露希尔加但书_但书机制失效(self):
+        """可露希尔特别订单最高优先级，但书违约机制不生效"""
+        closure = _mk_op("可露希尔", [
+            Skill(buff_id="trade_ord_closure[000]", buff_name="特别订单", skill_icon="test",
+                  room_type="Trade", efficient=EfficiencyMap(raw={"Money": 10})),
+        ])
+        butler = _mk_op("但书", [
+            Skill(buff_id="trade_ord_law[000]", buff_name="合同法", skill_icon="test",
+                  room_type="Trade", efficient=EfficiencyMap(raw={"Money": 0})),
+            Skill(buff_id="trade_ord_against[010]", buff_name="违约索赔·β", skill_icon="test",
+                  room_type="Trade", efficient=EfficiencyMap(raw={"Money": 0})),
+        ])
+
+        lmd_per_day, gold_per_day, _ = _get_trade_order_multiplier([closure, butler])
+
+        # 应与纯 可露希尔 相同（但书机制被覆盖）
+        assert lmd_per_day == pytest.approx(12000.0, rel=0.01)
+        assert gold_per_day == pytest.approx(20.0, rel=0.01)
+
+    def test_可露希尔加龙舌兰_投资机制失效(self):
+        """可露希尔特别订单下，龙舌兰投资不触发"""
+        closure = _mk_op("可露希尔", [
+            Skill(buff_id="trade_ord_closure[000]", buff_name="特别订单", skill_icon="test",
+                  room_type="Trade", efficient=EfficiencyMap(raw={"Money": 10})),
+        ])
+        tequila = _mk_op("龙舌兰", [
+            Skill(buff_id="trade_ord_long[010]", buff_name="投资·β", skill_icon="test",
+                  room_type="Trade", efficient=EfficiencyMap(raw={"Money": 0})),
+        ])
+
+        lmd_per_day, gold_per_day, _ = _get_trade_order_multiplier([closure, tequila])
+
+        assert lmd_per_day == pytest.approx(12000.0, rel=0.01)
+        assert gold_per_day == pytest.approx(20.0, rel=0.01)
+
+    def test_可露希尔加裁缝_裁缝机制失效(self):
+        """可露希尔特别订单下，裁缝P4品质不触发"""
+        closure = _mk_op("可露希尔", [
+            Skill(buff_id="trade_ord_closure[000]", buff_name="特别订单", skill_icon="test",
+                  room_type="Trade", efficient=EfficiencyMap(raw={"Money": 10})),
+        ])
+        tailor = _mk_op("柏喙", [
+            Skill(buff_id="trade_ord_wt&cost[010]", buff_name="裁缝·β", skill_icon="test",
+                  room_type="Trade", efficient=EfficiencyMap(raw={"Money": 0})),
+        ])
+
+        lmd_per_day, gold_per_day, _ = _get_trade_order_multiplier([closure, tailor])
+
+        assert lmd_per_day == pytest.approx(12000.0, rel=0.01)
+        assert gold_per_day == pytest.approx(20.0, rel=0.01)
+
+    def test_可露希尔加但书加龙舌兰_全部被覆盖(self):
+        """可露希尔+但书+龙舌兰 → 仅可露希尔机制生效"""
+        closure = _mk_op("可露希尔", [
+            Skill(buff_id="trade_ord_closure[000]", buff_name="特别订单", skill_icon="test",
+                  room_type="Trade", efficient=EfficiencyMap(raw={"Money": 10})),
+        ])
+        butler = _mk_op("但书", [
+            Skill(buff_id="trade_ord_law[000]", buff_name="合同法", skill_icon="test",
+                  room_type="Trade", efficient=EfficiencyMap(raw={"Money": 0})),
+        ])
+        tequila = _mk_op("龙舌兰", [
+            Skill(buff_id="trade_ord_long[010]", buff_name="投资·β", skill_icon="test",
+                  room_type="Trade", efficient=EfficiencyMap(raw={"Money": 0})),
+        ])
+
+        lmd_per_day, gold_per_day, _ = _get_trade_order_multiplier([closure, butler, tequila])
+
+        assert lmd_per_day == pytest.approx(12000.0, rel=0.01)
+        assert gold_per_day == pytest.approx(20.0, rel=0.01)
+
 
 # ─── 订单机制等效产金 ────────────────────────────────────────
 
