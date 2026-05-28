@@ -13,6 +13,7 @@ from typing import TYPE_CHECKING, Protocol
 if TYPE_CHECKING:
     from steward_core.models import Operator
     from .config import SolverConfig
+    from .strategy import PartialSolution
 
 
 class PhaseFunction(Protocol):
@@ -83,6 +84,23 @@ class Pipeline:
                 config=config,
             )
         return total_autofill
+
+    def run_on_state(
+        self,
+        operators: list,
+        config: "SolverConfig | None",
+        state: "PartialSolution",
+        op_lookup: dict[str, "Operator"],
+    ) -> int:
+        """等价于 run()，但接受 PartialSolution 作为状态载体
+
+        用于 Strategy 子类——比手动解包 6 个参数更清晰。
+        """
+        return self.run(
+            operators, config,
+            state.assigned_ids, state.assigned_names, state.assignments,
+            op_lookup, state.locked_support,
+        )
 
     @classmethod
     def default(cls) -> "Pipeline":
