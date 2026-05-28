@@ -13,7 +13,7 @@
 ### 决策记录
 
 - **`ShiftPlan` 从 `__init__.py` 移除**：审查 agent 发现重构后 `ShiftPlan` 在 `solve_mvp()` 中不再使用（构造逻辑迁至 `BaselineStrategy`），已清理死 import。
-+- **`pipeline` 参数从 `solve_mvp()` 签名中移除**：分支审查 agent 发现 `pipeline` 参数静默失效（`BaselineStrategy.execute()` 内部硬编码 `Pipeline.default()`），对应的 `Pipeline` re-export 一并移除。需要自定义 Phase 顺序时通过 Strategy 子类实现。
+- **`pipeline` 参数从 `solve_mvp()` 签名中移除**：分支审查 agent 发现 `pipeline` 参数静默失效，对应的 `Pipeline` re-export 一并移除。自定义 Phase 顺序通过 Strategy 子类实现。
 
 ### 偏离 plan 的情况
 

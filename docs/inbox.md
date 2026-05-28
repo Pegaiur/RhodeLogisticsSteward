@@ -23,3 +23,10 @@
 - [→] **Strategy 策略组合器** — 已路由到 [`docs/strategy-refactor-plan.md`](./strategy-refactor-plan.md) (v0.5.0)，Step 0-2.5 覆盖 Strategy ABC + PartialSolution + Pipeline 适配 + SolverConfig 开关迁移方案。实施中 — 2026-05-28
 - [ ] **瓶颈枚举（互补件一）** — 识别 8-12 个关键瓶颈干员（如黑键该去 Mfg 支撑还是 Trade 主力），枚举所有可行分配方案，对每种方案跑完整求解取最优。将在 Strategy 重构完成后作为 `BottleneckEnumStrategy` 实现 — 2026-05-28 — `solver/strategies/`
 - [ ] **局部搜索策略化** — 支持 best-improvement、simulated annealing、或基于房间类型的加权搜索。`refine_mode` 将作为 Strategy 属性（见 [strategy-refactor-plan §Step 2.5](./strategy-refactor-plan.md)），SolverConfig 开关迁移后实施 — 2026-05-28 — `solver/refine.py`
+- [ ] **JSON 输出格式符合 MAA 基建排班协议** — 当前 `output.py` 生成的 JSON 与 [MAA 协议规范](https://docs.maa.plus/zh-cn/protocol/base-scheduling-schema.html) 及[官方模板 153_layout_3_times_a_day.json](https://github.com/MaaAssistantArknights/MaaAssistantArknights/blob/master-v2/resource/custom_infrast/153_layout_3_times_a_day.json) 存在以下差距：
+  1. **顶层缺失字段**：`id`（随机 GUID）、`buildingType`（243/252/153）、`planTimes`（如 "3班"）、`scheduleType`（`planTimes`/`trading`/`manufacture`/`power`/`dormitory` 数量）
+  2. **plan 缺失字段**：`description`、`description_post`、`Fiammetta.enable/target/order`（菲亚梅塔技能，当前单班次可不启用）
+  3. **drones 缺失 `enable` 字段**：当前只输出 `room`/`index`/`order`
+  4. **rooms 条目字段对齐**：MAA 协议要求 `sort: false` 为默认、支持 `candidates` 备选列表、`skip` 字段语义验证、`product` 值需与 MAA 枚举对齐（已对齐）
+  5. **输出文件命名规范**：参考 MAA 模板命名 `{layout}_layout_{plan_times}_a_day.json`
+  — 2026-05-28 — `steward_core/output.py`
