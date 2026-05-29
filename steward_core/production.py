@@ -13,10 +13,9 @@ from typing import Optional
 
 from steward_core.models import Operator, ShiftPlan, LayoutConfig, RoomAssignment
 from steward_core.synergy import (
-    GlobalBonus, compute_control_global_bonus, compute_buff_pool,
+    GlobalBonus, compute_control_global_bonus,
     compute_effective_power_count,
     control_per_operator_bonus,
-    _B_ROSEMARY, _B_EBENHOLZ,
 )
 from steward_core.constants import FIXED_CONTROL, BASE_POWER_COUNT
 from steward_core.evaluate import evaluate_room
@@ -476,40 +475,11 @@ def calculate(
     # C1: 全局效率加成（使用实际中枢干员）
     global_bonus = compute_control_global_bonus(plan_ctrl_ops)
 
-    # 收集宿舍干员
-    dorm_ops: list[Operator] = []
-    for assignment in plan.assignments:
-        if assignment.room_type in ("Dormitory", "Dorm"):
-            for n in assignment.operators:
-                if n in op_lookup:
-                    dorm_ops.append(op_lookup[n])
-
-    # 检测 B1 感知信息生成者是否在工作设施中
-    has_rosmontis_in_mfg = any(
-        _B_ROSEMARY in a.operators and a.room_type == "Mfg"
-        for a in plan.assignments
-    )
-    has_ebnhlz_in_trade = any(
-        _B_EBENHOLZ in a.operators and a.room_type == "Trade"
-        for a in plan.assignments
-    )
-    has_wuyou_in_trade = any(
-        "乌有" in a.operators and a.room_type == "Trade"
-        for a in plan.assignments
-    )
-
-    # B1: 人间烟火 + 宿舍感知信息预计算（使用实际中枢干员）
-    # 当迷迭香在制造站时，求解器假设令 mood<12 以产出感知信息（非烟火）
-    ling_mood_below_12 = has_rosmontis_in_mfg
-    buff_pool = compute_buff_pool(
-        plan_ctrl_ops, suich_count=5,
-        dorm_operators=dorm_ops, dorm_level=5,
-        has_rosmontis_in_mfg=has_rosmontis_in_mfg,
-        has_ebnhlz_in_trade=has_ebnhlz_in_trade,
-        has_wuyou_in_trade=has_wuyou_in_trade,
-        ling_mood_below_12=ling_mood_below_12,
-        layout=LayoutConfig.layout_243(),
-    )
+    from steward_core.solver.context import GlobalContext
+    from steward_core.solver.params import SolverParams
+    params = SolverParams(shift_hours=hours, dorm_level=5)
+    gctx = GlobalContext.from_plan(plan, operators, params)
+    buff_pool = gctx.buff_pool
 
     # 1. 收集发电站干员，计算无人机产量（按工期比例缩放）
     power_ops: list[Operator] = []
