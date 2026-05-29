@@ -1,6 +1,6 @@
 # 基建排班策略概要
 
-> **版本**: 2026-05-28 · MVP — 全box满练，单次12h排班，产能最大化
+> **版本**: 2026-05-29 · v0.5.0 — Baseline/KBeam/Iterative 三条策略，BuffPool 不动点迭代，Phase 动作语义化
 
 ## 核心原则
 
@@ -46,39 +46,53 @@
 
 ## 求解架构
 
+### 策略层
+
+v0.5.0 引入 **Strategy 抽象层**，将编排逻辑与 Phase 执行分离。`solve_mvp()` 委托给 `Strategy` 子类，支持三种求解策略：
+
+| 策略 | 类 | CLI 键 | 说明 |
+|------|------|------|------|
+| **Baseline** | `BaselineStrategy` | `baseline` | Pipeline 线性流水线（mfg→trade→control→remaining→dorm），Phase 贪心 |
+| **K-Beam** | `KBeamStrategy` | `kbeam3`/`kbeam5` | 制造站 top-K 多路径保留 + 排斥分配器，择优后继续后续 Phase |
+| **Iterative** | `IterativeStrategy` | `iterative`/`iterative3` | BuffPool 不动点迭代，消除跨设施估计误差直至自洽收敛 |
+
+策略通过 `STRATEGY_REGISTRY` 注册，CLI `--strategy` 参数选择。详见 [`.trae/rules/strategy-config.md`](../.trae/rules/strategy-config.md)。
+
+### Baseline 流水线（默认）
+
 ```
 全box干员池 (415人, 全精2)
        │
        ▼
-Phase 1: 制造站穷举（CR 2间 + PG 2间）
+exhaust_mfg: 制造站穷举（CR 2间 + PG 2间）
    按产物分离 (CR ~60人 / PG ~56人)
    剪枝规则过滤 → ~1,500 种组合/产物
    每种组合: 计算个体效率 + A1-A6 同房联动
             + 计算最优支撑干员（中枢/贸易站/宿舍/办公室）
             → 产出积分排序
    跨间贪心分配（冲突时优先高分组合）
-   锁定支撑干员（供后续 Phase 使用）
+   锁定支撑干员（供后续步骤使用）
        │
        ▼
-Phase 2: 贸易站穷举
+exhaust_trade: 贸易站穷举
    C(n,3) 穷举（与制造站同架构）
    含订单机制（孑/但书/鸿雪/佩佩 等）的 LMD 产出评估
    中枢通过 locked_support 估计（Trade combo 贡献自身中枢需求，如孑→灵知、叙拉古→八幡海铃）
        │
        ▼
-Phase 3: 中枢填充
-   来自 Phase 1+2 累计的支撑需求（迷迭香→塑心/爱丽丝，骑士→薇薇安娜/焰尾 等）
+fill_control: 中枢填充
+   来自 exhaust_mfg + exhaust_trade 累计的支撑需求（迷迭香→塑心/爱丽丝，骑士→薇薇安娜/焰尾 等）
    不足 5 人 → 从未分配的 Control 技能持有者中贪心补满
-   此时中枢确定，后续 Phase 可用实际中枢值
+   此时中枢确定，后续步骤可用实际中枢值
        │
        ▼
-Phase 4: 剩余设施贪心
+fill_remaining: 剩余设施贪心
    Power(3人) → Reception(2人) → Office(1人)
    从剩余池按支配偏序贪心取值
-   释放 Phase 1 锁定的 Office 干员参与分配
+   释放 exhaust_mfg 锁定的 Office 干员参与分配
        │
        ▼
-Phase 5: 宿舍填充
+fill_dorm: 宿舍填充
    优先 B 层生成者（塑心/车尔尼/爱丽丝 等）
    任意填充至 20 人
 ```
@@ -94,7 +108,7 @@ Phase 5: 宿舍填充
 | 迷迭香在制造站 | 塑心/爱丽丝↔宿舍，车尔尼↔宿舍，黑键↔贸易站，絮雨↔办公室 |
 | 骑士在制造站 | 薇薇安娜↔中枢，焰尾↔中枢 |
 
-支撑干员在 Phase 1 被锁定（进入 `assigned_ids`），Phase 3 中枢填充时优先使用。
+支撑干员在 `exhaust_mfg` 阶段被锁定（进入 `assigned_ids`），`fill_control` 时优先使用。
 
 ### 制造站穷举与剪枝
 
@@ -155,7 +169,7 @@ A 支配 B  ⇔  e_A(t) ≥ e_B(t)  for all t ∈ [0, 12]
 
 | 联动层 | 范围 | 处理方式 |
 |--------|------|----------|
-| A 层（A1-A7） | 同设施内 | Phase 1 制造站穷举 / Phase 3a 贸易站穷举中完整评估 |
+| A 层（A1-A7） | 同设施内 | 制造站穷举（exhaust_mfg）/ 贸易站穷举（exhaust_trade）中完整评估 |
 | B 层（B1-B7） | 跨设施 | 通过 `evaluate_room()` 注入（buff_pool / 全局阵营 / 跨房配对） |
 | C 层（C1-C2） | 中枢全局 | 中枢确定后计算 global_bonus，注入各房间评估 |
 

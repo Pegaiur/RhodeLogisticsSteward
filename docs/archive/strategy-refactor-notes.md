@@ -1,6 +1,6 @@
 # Strategy 策略层重构：实施笔记
 
-> 对标 `docs/strategy-refactor-plan.md`，记录实施过程中的细节决策、偏离与实际产出。
+> 对标 `strategy-refactor-plan.md`，记录实施过程中的细节决策、偏离与实际产出。
 
 ---
 

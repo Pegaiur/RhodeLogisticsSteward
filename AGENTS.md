@@ -57,21 +57,26 @@ RhodeLogisticsSteward/
 │   │   ├── _derived.py            #   ─ 脚本推导的锚点表+名称集合
 │   │   └── mood.py               #   ─ 中枢心情恢复
 │   ├── solver/                   # 排班求解器子包（15模块）
-│   │   ├── __init__.py           #   ─ solve_mvp() 入口 + config/bundle/refine/LocalSearch 重导出
-│   │   ├── config.py             #   ─ SolverConfig 开关机制（三件套总开关）
+│   │   ├── __init__.py           #   ─ solve_mvp() 入口（委托给 Strategy 子类）
+│   │   ├── config.py             #   ─ SolverConfig 开关 + 策略选择
 │   │   ├── params.py             #   ─ SolverParams 参数注册表（数值参数集中管理）
-│   │   ├── pipeline.py           #   ─ Pipeline 可组合流水线（Phase 顺序可配置）
+│   │   ├── strategy.py           #   ─ Strategy ABC + PartialSolution 状态快照
 │   │   ├── context.py            #   ─ GlobalContext 统一上下文构造
 │   │   ├── bundle.py             #   ─ 支撑包数据结构（SupportBundle + SupportResult）
-│   │   ├── phase1_mfg.py         #   ─ Phase 1: 制造站穷举
-│   │   ├── phase3_trade.py       #   ─ Phase 2: 贸易站穷举（中枢后置）
-│   │   ├── phase2_control.py     #   ─ Phase 3: 中枢填充
-│   │   ├── phase3_remaining.py   #   ─ Phase 4: 剩余设施贪心
-│   │   ├── phase4_dorm.py        #   ─ Phase 5: 宿舍填充
+│   │   ├── exhaust_mfg.py        #   ─ 制造站穷举（CR 2间 + PG 2间）
+│   │   ├── exhaust_trade.py      #   ─ 贸易站穷举 + 订单评估
+│   │   ├── fill_control.py       #   ─ 中枢填充（支撑需求驱动）
+│   │   ├── fill_remaining.py     #   ─ 剩余设施贪心（Power/Reception/Office）
+│   │   ├── fill_dorm.py          #   ─ 宿舍填充（优先 B 层生成者）
 │   │   ├── global_state.py       #   ─ 包级稀缺度评分注入（Step 3 全局状态注入）
 │   │   ├── refine.py             #   ─ 局部搜索后处理（单房间替换 + 干员交换）
 │   │   ├── support.py            #   ─ 支撑干员计算
-│   │   └── greed.py              #   ─ 贪心分配/组合评估/条件验证
+│   │   ├── greed.py              #   ─ 贪心分配/组合评估/条件验证
+│   │   └── strategies/           #   ─ 策略实现子包
+│   │       ├── __init__.py       #     ─ STRATEGY_REGISTRY 注册表
+│   │       ├── baseline.py       #     ─ BaselineStrategy + Pipeline 线性流水线
+│   │       ├── kbeam.py          #     ─ KBeamStrategy（top-K 多路径保留）
+│   │       └── iterative.py      #     ─ IterativeStrategy（BuffPool 不动点迭代）
 │   ├── models.py                 # 核心数据模型
 │   ├── evaluate.py               # 房间效率评估
 │   ├── production.py             # 产出/日产计算
