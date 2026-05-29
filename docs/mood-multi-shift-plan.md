@@ -93,6 +93,19 @@
 - `solver/global_state.py`：纯 bundle_availability 计数，与心情无关
 - `steward_core/models.py`：SteppedSegment 不需要，铅踝梯级衰减通过 `stepped_efficiency()` 已就绪
 
+### 2026-05-29 · blue face 效率衰减（64a8c65）
+
+根因：`constant_efficiency` 有两处缺陷导致双班次产出相同：
+1. `t_red = 24.0 / mood_burn` 写死满心情 → 多班次下 mood_initial=13.2 时 t_red 被高估为 26.67h（实际 14.67h）
+2. 缺少蓝脸衰减建模 → mood<12 时效率不下降
+
+修复：
+- `constant_efficiency` 新增 `mood_initial`/`mood_blue_face` 参数；mood≥12 满效率，0<mood<12 线性衰减 (× mood/12)
+- `evaluate_room` 从 mood_ctx 提取 per-operator mood 并传入 constant_efficiency
+- `after_recovery()` 清除 warmup_hours（宿舍恢复重置爬升进度，菲亚梅塔交换是唯一保留途径）
+
+验证：2×12h 双班次不再相同——蓝脸惩罚使 shift1 工作干员在 shift2 效率降至 56%，求解器自动选择新鲜干员替代。
+
 ### 偏差更新
 
 | 偏差 | 状态 | 说明 |
