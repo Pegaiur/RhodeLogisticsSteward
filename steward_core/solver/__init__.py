@@ -60,6 +60,10 @@ def solve_multi_shift(
 
     mood_ctx = MoodContext.fresh(operators, params)
 
+    effective_threshold = params.mood_work_threshold
+    if effective_threshold <= 0.0 and params.shift_count > 1:
+        effective_threshold = params.mood_blue_face
+
     all_plans: list[ShiftPlan] = []
 
     for shift_idx in range(params.shift_count):
@@ -73,7 +77,7 @@ def solve_multi_shift(
         )
 
         available = [op for op in operators
-                     if mood_ctx.mood_of(op.name) >= params.mood_work_threshold]
+                     if mood_ctx.mood_of(op.name) >= effective_threshold]
 
         result = solve_mvp(available, working_config)
 

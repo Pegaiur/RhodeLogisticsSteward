@@ -98,18 +98,15 @@ def compute_global_burn(
 
     迁移自 synergy/mood.py，保留原接口以兼容存量调用方。
     最终将被 MoodContext.work_burn() 替代。
-    注意：当前使用 _BASE_BURN_3=0.75 作为 3 工位基础值，
-    与 work_burn() 的动态公式 (1.0 - 0.05×(slots-1) = 0.90) 存在差异，
-    mood_burn 激活后统一迁至 MoodContext。
-    worker_count 当前仅用于签名对齐，公式迁移至动态计算后启用。
+    base = 1.0 - 0.05 × (worker_count - 1)，3 工位 → 0.90。
     """
-    from steward_core.synergy.helpers import _BASE_BURN_3
+    base = 1.0 - 0.05 * max(0, worker_count - 1)
 
     modifiers = compute_mood_modifiers(control_operators, buff_pool)
     recovery = modifiers.control_recovery + modifiers.yanhuo_recovery
     if modifiers.mlynar_spread:
         recovery += modifiers.control_recovery + modifiers.global_work_recovery
-    return max(0.0, _BASE_BURN_3 - recovery)
+    return max(0.0, base - recovery)
 
 
 @dataclass
@@ -211,15 +208,10 @@ class MoodContext:
         """计算单干员工作消耗率净值 (mood_burn)
 
         公式: base - recovery_modifiers
-          base = _BASE_BURN_3 (0.75, 3 工位遗留常量，与 compute_global_burn 一致)
+          base = 1.0 - 0.05 × (room_slots - 1)，3 工位 → 0.90
           recovery = control_recovery + yanhuo_recovery + (mlynar spread)
-
-        注意：当前使用 _BASE_BURN_3=0.75 与 compute_global_burn 保持兼容。
-        mood_burn 激活后会迁至动态公式 1.0 - 0.05×(slots-1)。
         """
-        from steward_core.synergy.helpers import _BASE_BURN_3
-
-        base = _BASE_BURN_3
+        base = 1.0 - 0.05 * max(0, room_slots - 1)
         modifiers = self.ensure_modifiers(buff_pool)
         recovery = modifiers.control_recovery + modifiers.yanhuo_recovery
         if modifiers.mlynar_spread:
