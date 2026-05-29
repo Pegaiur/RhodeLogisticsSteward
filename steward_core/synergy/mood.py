@@ -10,4 +10,4 @@ def compute_global_burn(
     worker_count: int = 3,
 ) -> float:
     """计算工作干员的心情消耗率净值 — 委托至 mood_flow"""
-    return _compute_global_burn(control_operators, buff_pool)
+    return _compute_global_burn(control_operators, buff_pool, worker_count)

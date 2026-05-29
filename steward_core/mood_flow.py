@@ -92,6 +92,7 @@ def compute_mood_modifiers(
 def compute_global_burn(
     control_operators: list["Operator"],
     buff_pool: "BuffPool",
+    worker_count: int = 3,
 ) -> float:
     """计算工作干员的心情消耗率净值 (mood_burn)
 
@@ -100,6 +101,7 @@ def compute_global_burn(
     注意：当前使用 _BASE_BURN_3=0.75 作为 3 工位基础值，
     与 work_burn() 的动态公式 (1.0 - 0.05×(slots-1) = 0.90) 存在差异，
     mood_burn 激活后统一迁至 MoodContext。
+    worker_count 当前仅用于签名对齐，公式迁移至动态计算后启用。
     """
     from steward_core.synergy.helpers import _BASE_BURN_3
 
