@@ -2,6 +2,20 @@
 
 > **版本**: 2026-05-29 · 待实施 · 路由自 `docs/inbox.md#L26`、`#L27`、`#L28`、`#L29`
 
+## 实施笔记
+
+### 2026-05-29 · Step 2 完成（f64ffdd）
+
+- `steward_core/mood_flow.py` 新增（325行）：`MoodModifiers`(7字段) + `compute_mood_modifiers()` + `compute_global_burn()` + `MoodContext`(11字段+10方法)
+- **审查修复**：`ensure_modifiers()` 原用伪 Operator(char_id="", name=name) 无 skills，玛恩纳 mlynar_spread 检测永久失效。修复方案：新增 `_op_lookup: dict[str, Operator]` 内部字段，`fresh()` 时注入，`_resolve_control_operators()` 解析时优先查表
+- `work_burn()` 使用 `_BASE_BURN_3=0.75`（与 `compute_global_burn` 一致），非 plan 中的动态公式 1.0-0.05×(n-1)=0.90——**偏差记录**，待 mood_burn 激活后统一修正
+- `dorm_recovery()` 返回 0.0 占位，`after_recovery()` 实质空操作——**偏差记录**，依赖 Step 1
+- `after_shift()` 对所有设施硬编码 room_type="Mfg"/room_slots=3——**偏差记录**，待 per-room burn 修正
+- `synergy/mood.py` 委托至 `mood_flow`（保留旧 `compute_global_burn` 签名，`worker_count` 参数未传递——旧签名中此参数从未被使用，兼容无影响）
+- `solver/config.py` 新增 `mood_ctx: MoodContext | None = None`
+- `solver/params.py` 新增多班次/心情参数（已在 1318aba 提交中一并更新）：`shift_count`, `interval_hours`, `fiammetta_enabled`, `mood_work_threshold`, `mood_blue_face`, `mood_red_face`
+- 存量 428 测试全部通过
+
 ## 1. 问题诊断
 
 ### 1.1 硬编码心情门控 — "令 mood<12" 传染链

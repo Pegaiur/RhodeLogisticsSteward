@@ -251,9 +251,40 @@ class MoodContext:
 
         当 dorm_assignments 已设置时从内部查询同宿舍干员；
         当 dorm_assignments=None 时使用传入的 dorm_mates（评估候选配置）。
-        *Step 1 待实施* — 委托给 evaluate_dorm_recovery() 独立函数。
+        委托给 evaluate_dorm_recovery() 独立函数执行实际计算。
         """
-        return 0.0
+        from steward_core.dorm_recovery import evaluate_dorm_recovery
+        from steward_core.models import Operator as OpModel
+
+        op = self._op_lookup.get(name)
+        if op is None:
+            op = OpModel(char_id="", name=name)
+
+        if dorm_mates is None and self.dorm_assignments is not None:
+            target_dorm = self.dorm_assignments.get(name)
+            if target_dorm is not None:
+                dorm_mates = [
+                    self._op_lookup[n] for n, d in self.dorm_assignments.items()
+                    if d == target_dorm and n in self._op_lookup
+                ]
+            else:
+                dorm_mates = [op]
+
+        if dorm_mates is None:
+            dorm_mates = [op]
+
+        modifiers = self.ensure_modifiers()
+        yanhuo_bonus = 0.0
+        if self.modifiers:
+            yanhuo_bonus = self.modifiers.yanhuo_recovery
+
+        return evaluate_dorm_recovery(
+            dorm_ops=dorm_mates,
+            target_op=op,
+            dorm_bonus_all=modifiers.dorm_bonus_all,
+            dorm_bonus_elite=modifiers.dorm_bonus_elite,
+            yanhuo_bonus=yanhuo_bonus,
+        )
 
     def after_shift(
         self,
