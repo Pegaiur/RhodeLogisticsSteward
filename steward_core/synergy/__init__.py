@@ -48,7 +48,6 @@ from steward_core.synergy.helpers import (
     _GLASGOW_GROUP,
     _FACILITY_LEVEL,
     _DEFAULT_DORM_LEVELS,
-    _BASE_BURN_3,
     _ORDER_ANCHOR_PREFIXES,
     ROSEMARY_SUPPORT,
     _B_ROSEMARY,

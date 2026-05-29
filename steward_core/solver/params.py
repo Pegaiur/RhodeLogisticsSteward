@@ -46,8 +46,8 @@ class SolverParams:
     # === 心情/消耗 ===
     base_burn_per_hour: float = 1.0
     """基础心情消耗率（/h）"""
-    base_burn_rate: float = 0.75
-    """3人工位基础消耗率（中枢净恢复前）"""
+    base_burn_rate: float = 0.90
+    """3人工位基础消耗率（中枢净恢复前，公式 1.0-0.05×(slots-1)）"""
     control_recovery_per_op: float = 0.05
     """中枢每名干员提供的心情恢复（/h）"""
     mood_full: float = 24.0

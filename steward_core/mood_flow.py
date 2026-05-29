@@ -269,8 +269,8 @@ class MoodContext:
 
         modifiers = self.ensure_modifiers()
         yanhuo_bonus = 0.0
-        if self.modifiers:
-            yanhuo_bonus = self.modifiers.yanhuo_recovery
+        if self.modifiers and self.modifiers.yanhuo_recovery > 0.0:
+            yanhuo_bonus = max(0.0, self.modifiers.yanhuo_recovery - 0.05)
 
         return evaluate_dorm_recovery(
             dorm_ops=dorm_mates,
