@@ -21,6 +21,7 @@ from steward_core.synergy import (
 
 if TYPE_CHECKING:
     from steward_core.models import Operator, RoomAssignment, ShiftPlan
+    from steward_core.mood_flow import MoodContext
     from .params import SolverParams
 
 
@@ -52,6 +53,8 @@ class GlobalContext:
         has_ebnhlz_in_trade: bool = False,
         has_wuyou_in_trade: bool = False,
         ling_mood_below_12: bool = False,
+        xi_mood_below_12: bool | None = None,
+        mood_ctx: "MoodContext | None" = None,
         perception_from_office: int = 0,
         effective_power: int | None = None,
     ) -> "GlobalContext":
@@ -61,9 +64,15 @@ class GlobalContext:
         - Phase 1 Mfg 评估：control/dorm 来自 available_support
         - Phase 3a Trade 评估：dorm 为估计占位干员
 
+        mood_ctx 不为 None 时优先从其实值提取心情门控 bool，
+        否则使用显式传入的参数（向后兼容）。
         effective_power 可由调用方预计算传入以跳过全量 _has_power_count_modifier 扫描。
         """
         global_bonus = compute_control_global_bonus(control_operators)
+
+        if mood_ctx is not None:
+            ling_mood_below_12 = mood_ctx.is_below("令", 12.0)
+            xi_mood_below_12 = mood_ctx.is_below("夕", 12.0)
 
         buff_pool = compute_buff_pool(
             control_operators,
@@ -74,6 +83,7 @@ class GlobalContext:
             has_ebnhlz_in_trade=has_ebnhlz_in_trade,
             has_wuyou_in_trade=has_wuyou_in_trade,
             ling_mood_below_12=ling_mood_below_12,
+            xi_mood_below_12=xi_mood_below_12,
             perception_from_office=perception_from_office,
             layout=LayoutConfig.layout_243(),
         )
@@ -104,11 +114,14 @@ class GlobalContext:
         plan: "ShiftPlan",
         all_operators: list[Operator],
         params: "SolverParams",
+        mood_ctx: "MoodContext | None" = None,
     ) -> "GlobalContext":
         """从已完成的排班方案构建上下文（refine/production 评估用）
 
         从实际 assignment 中提取控制中枢、宿舍、以及 buff 生成者是否在
         工作设施中的布尔状态。
+        mood_ctx 不为 None 时优先从其实值提取心情门控 bool，
+        否则回退到旧代理（ling_mood_below_12 = 迷迭香在 Mfg）。
         """
         from steward_core.models import Operator
         from steward_core.synergy import _B_ROSEMARY, _B_EBENHOLZ
@@ -147,7 +160,12 @@ class GlobalContext:
         ):
             office_perception = params.office_perception_base
 
-        ling_mood_below_12 = has_rosmontis
+        if mood_ctx is not None:
+            ling_mood_below_12 = mood_ctx.is_below("令", 12.0)
+            xi_mood_below_12 = mood_ctx.is_below("夕", 12.0)
+        else:
+            ling_mood_below_12 = has_rosmontis
+            xi_mood_below_12 = None
 
         buff_pool = compute_buff_pool(
             control_ops,
@@ -158,6 +176,7 @@ class GlobalContext:
             has_ebnhlz_in_trade=has_ebnhlz,
             has_wuyou_in_trade=has_wuyou,
             ling_mood_below_12=ling_mood_below_12,
+            xi_mood_below_12=xi_mood_below_12,
             perception_from_office=office_perception,
             layout=LayoutConfig.layout_243(),
         )

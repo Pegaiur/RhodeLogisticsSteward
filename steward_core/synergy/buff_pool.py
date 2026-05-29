@@ -55,6 +55,7 @@ def compute_buff_pool(
     has_rosmontis_in_mfg: bool = False,
     has_ebnhlz_in_trade: bool = False,
     ling_mood_below_12: bool = False,
+    xi_mood_below_12: bool | None = None,
     layout: LayoutConfig | None = None,
     perception_from_office: int = 0,
     has_wuyou_in_trade: bool = False,
@@ -64,7 +65,7 @@ def compute_buff_pool(
     中枢源：
     - 令(mood>12): +15 烟火；令(mood≤12): +10 感知信息
     - 重岳: 每个外部岁干员 +5 烟火（默认 5 名）
-    - 夕(mood>12): +10 感知信息
+    - 夕(mood>12): +10 感知信息（xi_mood_below_12=None 时无条件+10，向后兼容）
 
     宿舍源（B1 感知信息）：
     - 迷迭香超感（在制造站）: 宿舍每有1名干员→感知+1
@@ -109,7 +110,11 @@ def compute_buff_pool(
         yanhuo += min(suich_count, 5) * 5
 
     if "夕" in names:
-        perception += 10
+        if xi_mood_below_12 is not None:
+            if not xi_mood_below_12:
+                perception += 10
+        else:
+            perception += 10
 
     if has_rosmontis_in_mfg and dorm_operators:
         perception += len(dorm_operators)

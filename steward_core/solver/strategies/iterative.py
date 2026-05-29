@@ -51,7 +51,7 @@ class IterativeStrategy(Strategy):
         dorm_names_list = get_system_contributors("Dormitory")
         power_names = set(get_system_contributors("Power"))
 
-        pool = self._initial_pool(operators, params)
+        pool = self._initial_pool(operators, params, config)
 
         best_result = None
         best_score = float("-inf")
@@ -77,12 +77,23 @@ class IterativeStrategy(Strategy):
 
         return best_result if best_result else result
 
-    def _initial_pool(self, operators, params):
-        """乐观初始 Pool：假设所有 BuffPool 生产者都在对应设施中"""
+    def _initial_pool(self, operators, params, config=None):
+        """乐观初始 Pool：假设所有 BuffPool 生产者都在对应设施中
+
+        config 中若有 mood_ctx，则从中读取真实的心情门控状态；
+        否则保持硬编码乐观假设（单班次向后兼容）。
+        """
         dorm_est = [
             Operator(char_id=f"_dorm_{i}", name=f"填位宿舍{i}", skills=[])
             for i in range(params.dorm_estimated_count)
         ]
+
+        ling_below = True
+        xi_below = None
+        if config is not None and config.mood_ctx is not None:
+            ling_below = config.mood_ctx.is_below("令", 12.0)
+            xi_below = config.mood_ctx.is_below("夕", 12.0)
+
         ctx = GlobalContext.from_estimated(
             control_operators=[],
             dorm_operators=dorm_est,
@@ -92,7 +103,8 @@ class IterativeStrategy(Strategy):
             has_rosmontis_in_mfg=True,
             has_ebnhlz_in_trade=True,
             has_wuyou_in_trade=True,
-            ling_mood_below_12=True,
+            ling_mood_below_12=ling_below,
+            xi_mood_below_12=xi_below,
             perception_from_office=params.office_perception_base,
         )
         return ctx.buff_pool
