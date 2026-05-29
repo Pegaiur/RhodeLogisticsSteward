@@ -1,7 +1,7 @@
 """全局上下文构造器
 
 统一 buff_pool、global_bonus、effective_power 的构建逻辑，
-消除 support.py / phase3_trade.py / refine.py / production.py 中的重复实现。
+消除 support.py / exhaust_trade.py / refine.py / production.py 中的重复实现。
 """
 
 from __future__ import annotations

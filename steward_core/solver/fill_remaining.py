@@ -1,4 +1,4 @@
-"""Phase 3b: 剩余设施贪心"""
+"""剩余设施贪心"""
 
 from steward_core.models import Operator
 
@@ -6,7 +6,7 @@ from .config import SolverConfig
 from .greed import _greedy_remaining
 
 
-def _phase3_remaining(
+def fill_remaining(
     operators: list[Operator],
     assigned_ids: set[str],
     assigned_names: set[str],

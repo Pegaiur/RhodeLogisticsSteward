@@ -25,7 +25,7 @@ def solve_mvp(
 
     不传 strategy 时使用 BaselineStrategy（等价于当前生产行为）。
     可通过 SolverConfig.strategy 注入自定义策略进行 A/B 测试。
-    需要自定义 Phase 顺序时，通过 Strategy 子类组合 Pipeline 实现。
+    需要自定义求解策略时，实现新的 Strategy 子类。
     """
     if config is None:
         config = SolverConfig()

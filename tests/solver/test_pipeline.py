@@ -1,10 +1,10 @@
-"""Pipeline 可组合流水线测试"""
+"""BaselineStrategy 的 Pipeline 编排器测试"""
 
 import pytest
 
 from steward_core.models import EfficiencyMap, Operator, RoomAssignment, Skill
 from steward_core.solver.config import SolverConfig
-from steward_core.solver.pipeline import Pipeline
+from steward_core.solver.strategies.baseline import Pipeline
 
 
 def _mk_op(name: str = "测试", skills: list[Skill] | None = None) -> Operator:
@@ -79,21 +79,21 @@ class TestPipelineCustom:
 
     def test_with_phases_构造有效流水线(self):
         """with_phases() 可构造自定义 Phase 顺序"""
-        from steward_core.solver.phase1_mfg import _phase1_mfg
+        from steward_core.solver.exhaust_mfg import exhaust_mfg
 
         pipe = Pipeline.with_phases([
-            ("mfg", _phase1_mfg),
+            ("mfg", exhaust_mfg),
         ])
         assert len(pipe.phases) == 1
         assert pipe.phases[0][0] == "mfg"
 
     def test_describe_自定义流水线(self):
         """自定义流水线的 describe 正确反映顺序"""
-        from steward_core.solver.phase1_mfg import _phase1_mfg
-        from steward_core.solver.phase2_control import _phase2_control
+        from steward_core.solver.exhaust_mfg import exhaust_mfg
+        from steward_core.solver.fill_control import fill_control
 
         pipe = Pipeline.with_phases([
-            ("control", _phase2_control),
-            ("mfg", _phase1_mfg),
+            ("control", fill_control),
+            ("mfg", exhaust_mfg),
         ])
         assert pipe.describe() == "control → mfg"

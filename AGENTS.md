@@ -169,6 +169,7 @@ RhodeLogisticsSteward/
 | 干员/buff 数据查询 | `.trae/skills/data-query/query_data.py` (通过 `data-query` skill) |
 | 人工维护/硬编码数据/更新 | AGENTS.md §人工维护数据 |
 | 硬编码数据生成规则 | `.trae/rules/hardcoded-data.md` |
+| 策略注册与 CLI 配置 | `.trae/rules/strategy-config.md` |
 | 重构/模块拆分/架构 | `docs/archive/refactor-plan.md`（已归档） |
 | 求解器优化/三件套 | `docs/archive/solver-improvement-plan.md`（v0.4.0 已实施） |
 | 远期待办/需求登记 | `docs/inbox.md` |

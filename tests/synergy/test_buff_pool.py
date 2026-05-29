@@ -565,4 +565,91 @@ class TestB5SilentResonance:
         # silent_resonance: 感知→共鸣(30) + 塑心宿舍(5) = 35
         assert pool.perception == 30
         assert pool.silent_resonance == 35
-        assert pool.thought_chains == 30
+
+
+# ─── BuffPool 可组合化 (Track B1) ────────────────────────────────
+
+class TestBuffPoolComposition:
+    """BuffPool.__add__ / clone / __eq__ / _derive_pool"""
+
+    def test_add_合并两个非零pool(self):
+        """BuffPool(yanhuo=10) + BuffPool(perception=5)"""
+        from steward_core.synergy import BuffPool
+
+        a = BuffPool(yanhuo=10, perception=0)
+        b = BuffPool(yanhuo=0, perception=5)
+        c = a + b
+        assert c.yanhuo == 10
+        assert c.perception == 5
+
+    def test_add_多字段不互相干扰(self):
+        """7 个字段各设不同值，合并后各字段独立正确"""
+        from steward_core.synergy import BuffPool
+
+        a = BuffPool(yanhuo=1, perception=2, wushu_crystal=3, thought_chains=4,
+                     silent_resonance=5, engineering_robots=6, monster_cuisine=7)
+        b = BuffPool(yanhuo=10, perception=20, wushu_crystal=30, thought_chains=40,
+                     silent_resonance=50, engineering_robots=60, monster_cuisine=70)
+        c = a + b
+        assert c.yanhuo == 11
+        assert c.perception == 22
+        assert c.wushu_crystal == 33
+        assert c.thought_chains == 44
+        assert c.silent_resonance == 55
+        assert c.engineering_robots == 66
+        assert c.monster_cuisine == 77
+
+    def test_clone_深拷贝(self):
+        """clone() 后修改原对象不影响克隆体"""
+        from steward_core.synergy import BuffPool
+
+        a = BuffPool(yanhuo=10, perception=5)
+        b = a.clone()
+        a.yanhuo = 999
+        assert b.yanhuo == 10
+        assert b.perception == 5
+
+    def test_eq_相同值相等(self):
+        """两个独立构造的同值 Pool 相等"""
+        from steward_core.synergy import BuffPool
+
+        a = BuffPool(yanhuo=10, perception=5)
+        b = BuffPool(yanhuo=10, perception=5)
+        assert a == b
+
+    def test_eq_不同值不等(self):
+        """yanhuo 差 1 即不等"""
+        from steward_core.synergy import BuffPool
+
+        a = BuffPool(yanhuo=10)
+        b = BuffPool(yanhuo=11)
+        assert a != b
+
+    def test_eq_合并后相等(self):
+        """a + b == c 当 c 手动填入相同值"""
+        from steward_core.synergy import BuffPool
+
+        a = BuffPool(yanhuo=5, perception=3)
+        b = BuffPool(yanhuo=2, perception=1)
+        c = BuffPool(yanhuo=7, perception=4)
+        assert a + b == c
+
+    def test_derive_pool_烟火转巫术(self):
+        """yanhuo=14 → wushu_crystal=2，同时 thought_chains=perception"""
+        from steward_core.synergy.buff_pool import _derive_pool
+        from steward_core.synergy import BuffPool
+
+        pool = BuffPool(yanhuo=14, perception=8)
+        _derive_pool(pool)
+        assert pool.wushu_crystal == 2
+        assert pool.thought_chains == 8
+
+    def test_derive_pool_零值不变(self):
+        """全零 pool 派生后仍为零"""
+        from steward_core.synergy.buff_pool import _derive_pool
+        from steward_core.synergy import BuffPool
+
+        pool = BuffPool()
+        _derive_pool(pool)
+        assert pool.wushu_crystal == 0
+        assert pool.thought_chains == 0

@@ -1,4 +1,4 @@
-"""Phase 3a: 贸易站穷举"""
+"""贸易站穷举"""
 
 from steward_core.constants import BASE_POWER_COUNT
 from steward_core.models import Operator, RoomAssignment, LayoutConfig
@@ -17,7 +17,7 @@ from .greed import _generate_combos, _greedy_allocate, _evaluate_trade_combo
 from .support import compute_trade_support
 
 
-def _phase3_trade(
+def exhaust_trade(
     operators: list[Operator],
     assigned_ids: set[str],
     assigned_names: set[str],
@@ -26,6 +26,7 @@ def _phase3_trade(
     locked_support: dict[str, set[str]],
     *,
     config: SolverConfig | None = None,
+    override_pool=None,
 ) -> int:
     """Phase 3a: Trade 穷举（使用 locked_support 估计中枢，中枢尚未填充）
 
@@ -81,6 +82,13 @@ def _phase3_trade(
         # 评估所有组合（含宿舍估计用于乌有烟火/黑键感知等B1生成）
         dorm_est = [Operator(char_id=f"_dorm_{i}", name=f"填位宿舍{i}", skills=[])
                     for i in range(params.dorm_estimated_count)]
+        base_pool = compute_buff_pool(
+            ctrl_ops, suich_count=params.suich_count,
+            dorm_operators=dorm_est, dorm_level=params.dorm_level,
+            layout=LayoutConfig.layout_243(),
+        )
+        if override_pool is not None:
+            base_pool = override_pool
         evaluated = []
         for combo_ops in combos:
             combo_names = [op.name for op in combo_ops]
@@ -89,15 +97,21 @@ def _phase3_trade(
             ctrl_bonus = control_per_operator_bonus(
                 ctrl_ops, combo_ops, "Money", room_type="Trade",
             )
-            lmd = _evaluate_trade_combo(
-                combo_ops, effective_power, params.shift_hours, global_bonus,
-                compute_buff_pool(
+            if override_pool is not None:
+                bp = override_pool
+            elif has_wuyou or has_ebnhlz:
+                bp = compute_buff_pool(
                     ctrl_ops, suich_count=params.suich_count,
                     dorm_operators=dorm_est, dorm_level=params.dorm_level,
                     has_ebnhlz_in_trade=has_ebnhlz,
                     has_wuyou_in_trade=has_wuyou,
                     layout=LayoutConfig.layout_243(),
-                ), ctrl_bonus,
+                )
+            else:
+                bp = base_pool
+            lmd = _evaluate_trade_combo(
+                combo_ops, effective_power, params.shift_hours, global_bonus,
+                bp, ctrl_bonus,
                 all_operators=operators,
                 control_operators=ctrl_ops,
             )

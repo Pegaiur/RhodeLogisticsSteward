@@ -1,11 +1,11 @@
-"""Phase 2: 中枢填充"""
+"""中枢填充"""
 
 from steward_core.models import Operator, RoomAssignment
 
 from .config import SolverConfig
 
 
-def _phase2_control(
+def fill_control(
     operators: list[Operator],
     assigned_ids: set[str],
     assigned_names: set[str],
