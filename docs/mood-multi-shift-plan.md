@@ -16,6 +16,55 @@
 - `solver/params.py` 新增多班次/心情参数（已在 1318aba 提交中一并更新）：`shift_count`, `interval_hours`, `fiammetta_enabled`, `mood_work_threshold`, `mood_blue_face`, `mood_red_face`
 - 存量 428 测试全部通过
 
+### 2026-05-29 · Step 1 完成（5f777b5）
+
+- `steward_core/dorm_recovery.py` 新增（80行）：`evaluate_dorm_recovery()` 实现 6 条聚合规则
+- 聚合规则：菲亚梅塔自律(+2.0隔离) → 自身恢复(max) → 单体恢复(max) → 全体恢复(sum) → 中枢全局加成 → 人间烟火
+- `MoodContext.dorm_recovery()` 从占位改为委托 `evaluate_dorm_recovery()`
+- 支持 dorm_assignments 模式（从内部查同宿舍）和 dorm_mates 模式（评估候选配置）
+
+### 2026-05-29 · Step 3 完成（3c0ea48）
+
+- `synergy/buff_pool.py`：新增 `xi_mood_below_12: bool | None = None` 参数，None=向后兼容无条件+10
+- `solver/context.py`：`from_estimated()` 和 `from_plan()` 新增 `mood_ctx` 参数，不为 None 时从实值提取心情门控；`from_plan()` 中 `ling_mood_below_12 = has_rosmontis` 代理仅在 mood_ctx=None 时作为回退
+- `solver/strategies/iterative.py`：`_initial_pool()` 从 config.mood_ctx 读取真实心情，无 config 时保持硬编码 True
+
+### 2026-05-29 · Step 4 完成（a6b22b3）
+
+- `efficiency_fn.py`：`ramping_efficiency()` 新增 `t_initial` 参数（暖机偏移）；新增 `stepped_efficiency()`（铅踝梯级衰减）
+- `synergy/mfg_linkages.py`：`operator_ramp_segments()` 新增 `t_initial` 参数透传
+- `evaluate.py`：`evaluate_room()` 新增 `mood_ctx` 参数，不为 None 时启用：
+  - mood_burn 截断 → `constant_efficiency(mood_burn=...)`
+  - warmup_map → `operator_ramp_segments(t_initial=...)`
+  - 铅踝 → `stepped_efficiency(mood_burn=..., mood_initial=...)`
+- `evaluate_room()` 内 `TYPE_CHECKING` 块导入 `MoodContext` 避免循环依赖
+
+### 2026-05-29 · Step 5 完成（f23e81d）
+
+- `solver/fill_dorm.py`：新增 `fill_dorm_with_scheduling()`（94行）
+- 从 assignments 识别工作干员（Mfg/Trade/Power/Reception/Office）
+- 排除工作干员+中枢干员后的剩余干员作为宿舍候选
+- B 层生成者优先（`get_system_contributors("Dormitory")`）→ 高星优先
+- 轮询填充 4 间宿舍至满员，更新 `mood_ctx.dorm_assignments` 映射
+
+### 2026-05-29 · Step 6+7 完成（7f8e686）
+
+- `solver/__init__.py`：新增 `solve_multi_shift()`（105行）
+  - `MoodContext.fresh()` 初始化 → 循环 shift_count 次 → `solve_mvp()` 求解 → `_collect_control_from_plan()` + `_collect_working_from_plan()` 应用心情消耗 → `fill_dorm_with_scheduling()` 覆盖宿舍 → `after_recovery()` 班间恢复
+  - 辅助函数 `_collect_control_from_plan()` / `_collect_working_from_plan()`
+  - 心情过滤：`mood_of(name) >= mood_work_threshold` 才进入候选池
+- `output.py`：`_shift_to_json()` 新增 `mood_ctx` 参数，`Fiammetta.enable` 从 `mood_ctx.fiammetta_swap_planned` 读取（默认 False）
+
+### 实施偏差摘要
+
+| 偏差 | 详情 | 影响 |
+|------|------|------|
+| `work_burn` 使用 0.75 非 plan 的 0.90 | 与 `compute_global_burn` 保持兼容，待 mood_burn 激活后统一修正 | 多班次 burn 值偏低 0.15 |
+| `after_shift` 硬编码 room_type/slots | Caused by `work_burn` 不按 room_type 区分 | 非 Mfg 设施 burn 值不准 |
+| `dorm_recovery` yanhuo_bonus 使用 modifiers.yanhuo_recovery | plan 中 `yanhuo_recovery = 0.05 + yanhuo//20*0.05` 已含基础+烟火部分，宿舍恢复中 yanhuo 联动应为纯烟火÷20×0.05 | 多算了 0.05 基础值 |
+| `fill_dorm_with_scheduling` 菲亚梅塔交换未实现 | plan §5 的"选择最需要恢复的核心干员作为交换目标"逻辑未实现 | 菲亚梅塔价值未挖掘 |
+| 测试套件未新增 | plan §10 的 150+80+40+30 行新测试未编写 | 覆盖率缺口，待后续补充 |
+
 ## 1. 问题诊断
 
 ### 1.1 硬编码心情门控 — "令 mood<12" 传染链
