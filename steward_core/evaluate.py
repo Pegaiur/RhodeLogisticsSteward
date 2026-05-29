@@ -116,7 +116,11 @@ def evaluate_room(
         if op.name in zero_set:
             continue
         t_init = warmup_map.get(op.name, 0.0)
-        ramp_segs = operator_ramp_segments(op, room_type, product, T, t_initial=t_init)
+        op_mood = mood_map.get(op.name, 24.0)
+        ramp_segs = operator_ramp_segments(
+            op, room_type, product, T, t_initial=t_init,
+            mood_burn=mood_burn, mood_initial=op_mood, mood_blue_face=mood_blue_face,
+        )
         if ramp_segs is not None:
             total += integrate_segments(ramp_segs, T)
         elif op.name == "铅踝" and qiangan_mood is not None:
@@ -128,15 +132,12 @@ def evaluate_room(
         else:
             eff = op.best_efficiency(room_type, product)
             if eff > 0:
-                op_mood = mood_map.get(op.name, 24.0)
                 total += integrate_segments(
                     constant_efficiency(
                         eff, mood_burn=mood_burn, T=T,
                         mood_initial=op_mood, mood_blue_face=mood_blue_face,
                     ), T,
                 )
-
-    # 容量→效率（仅未归零干员的容量参与计算）
     total += integrate_segments(synergy_capacity_to_eff(non_zero_ops, room_type, product, T), T)
 
     # 效率放大器（仅未归零干员的效率参与计算）

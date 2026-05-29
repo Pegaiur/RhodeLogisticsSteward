@@ -207,11 +207,15 @@ def operator_ramp_segments(
     product: str,
     T: float = 12.0,
     t_initial: float = 0.0,
+    mood_burn: float = 0.0,
+    mood_initial: float = 24.0,
+    mood_blue_face: float = 0.0,
 ) -> list[LinearSegment] | None:
     """检查干员是否持有爬升型技能，返回 ramping_efficiency 段
 
     返回值约定: 有爬升技能 → 分段列表，无 → None（由调用方回退到 constant_efficiency）。
     t_initial: 已连续工作小时数（暖机偏移，默认 0）。
+    mood_burn/mood_initial/mood_blue_face: 心情衰减参数，透传至 ramping_efficiency。
     """
     for sk in op.skills:
         if sk.room_type != room_type:
@@ -220,7 +224,8 @@ def operator_ramp_segments(
             k0, r, ceiling = _RAMPING_SKILL_TABLE[sk.buff_id]
             return ramping_efficiency(
                 k0=k0, r=r, ceiling=ceiling,
-                mood_burn=0.0, T=T, t_initial=t_initial,
+                mood_burn=mood_burn, T=T, t_initial=t_initial,
+                mood_initial=mood_initial, mood_blue_face=mood_blue_face,
             )
     return None
 

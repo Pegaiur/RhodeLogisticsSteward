@@ -91,6 +91,7 @@ def ramping_efficiency(
     mood_burn: float = 0.0, T: float = 12.0,
     t_initial: float = 0.0,
     mood_initial: float = 24.0,
+    mood_blue_face: float = 0.0,
 ) -> list[LinearSegment]:
     """时变效率技能 → 分段表示（7 条 buff）
 
@@ -123,9 +124,10 @@ def ramping_efficiency(
 
     t_red = mood_initial / mood_burn
     if t_red >= T:
-        return segments
+        t_red = T
 
     final: list[LinearSegment] = []
+    # 红脸截断
     for seg in segments:
         seg_end = seg.t_start + seg.dt
         if seg_end <= t_red:
@@ -135,6 +137,35 @@ def ramping_efficiency(
         else:
             clipped = LinearSegment(a=seg.a, b=seg.b, t_start=seg.t_start, dt=t_red - seg.t_start)
             final.append(clipped)
+
+    # 蓝脸衰减 — 对 [t_blue_start, t_red] 区间内段施加线性心情衰减
+    if mood_blue_face > 0 and mood_initial < mood_blue_face:
+        t_blue_start = 0.0
+    elif mood_blue_face > 0 and mood_initial > mood_blue_face:
+        t_blue_start = (mood_initial - mood_blue_face) / mood_burn
+    else:
+        t_blue_start = T  # 无蓝脸
+
+    if t_blue_start < min(T, t_red):
+        degraded: list[LinearSegment] = []
+        for seg in final:
+            seg_end = seg.t_start + seg.dt
+            if seg_end <= t_blue_start:
+                degraded.append(seg)
+            elif seg.t_start >= t_blue_start:
+                start_val = seg.a + seg.b * (seg.t_start - seg.t_start)  # = seg.a
+                a_blue = start_val
+                b_blue = seg.b - start_val * mood_burn / mood_blue_face
+                degraded.append(LinearSegment(a=a_blue, b=b_blue, t_start=seg.t_start, dt=seg.dt))
+            else:
+                pre_dt = t_blue_start - seg.t_start
+                degraded.append(LinearSegment(a=seg.a, b=seg.b, t_start=seg.t_start, dt=pre_dt))
+                start_val = seg.a + seg.b * pre_dt
+                a_blue = start_val
+                b_blue = seg.b - start_val * mood_burn / mood_blue_face
+                post_dt = seg_end - t_blue_start
+                degraded.append(LinearSegment(a=a_blue, b=b_blue, t_start=t_blue_start, dt=post_dt))
+        final = degraded
 
     if T > t_red:
         final.append(LinearSegment(a=0.0, b=0.0, t_start=t_red, dt=T - t_red))
