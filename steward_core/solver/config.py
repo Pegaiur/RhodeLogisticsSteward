@@ -12,6 +12,7 @@ from .params import SolverParams
 
 if TYPE_CHECKING:
     from .strategy import Strategy
+    from steward_core.mood_flow import MoodContext
 
 
 @dataclass
@@ -35,6 +36,10 @@ class SolverConfig:
 
     # Step 3: 全局状态评分注入
     global_state_scoring: bool = False
+
+    # 心情上下文（多班次框架层注入，单班次为 None）
+    mood_ctx: "MoodContext | None" = None
+    """多班次心情上下文，通过 Config 传递到 Phase 层，避免修改 Strategy 签名"""
 
     # 可调参数
     params: SolverParams = field(default_factory=SolverParams)
