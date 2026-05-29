@@ -1,11 +1,11 @@
-"""Phase 4: 宿舍填充"""
+"""宿舍填充"""
 
 from steward_core.models import Operator, RoomAssignment
 
 from .config import SolverConfig
 
 
-def _phase4_dorm(
+def fill_dorm(
     operators: list[Operator],
     assigned_ids: set[str],
     assigned_names: set[str],

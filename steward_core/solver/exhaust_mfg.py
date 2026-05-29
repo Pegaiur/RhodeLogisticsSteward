@@ -1,4 +1,4 @@
-"""Phase 1: 制造站穷举（CR 2间 + PG 2间）"""
+"""制造站穷举（CR 2间 + PG 2间）"""
 
 from steward_core.constants import BASE_POWER_COUNT
 from steward_core.models import Operator, RoomAssignment
@@ -36,7 +36,7 @@ def _rough_mfg_score(combo_ops: list[Operator], product: str) -> float:
     return score
 
 
-def _phase1_mfg(
+def exhaust_mfg(
     operators: list[Operator],
     assigned_ids: set[str],
     assigned_names: set[str],

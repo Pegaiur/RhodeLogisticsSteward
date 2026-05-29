@@ -1,4 +1,4 @@
-"""Phase 3a: 贸易站穷举"""
+"""贸易站穷举"""
 
 from steward_core.constants import BASE_POWER_COUNT
 from steward_core.models import Operator, RoomAssignment, LayoutConfig
@@ -17,7 +17,7 @@ from .greed import _generate_combos, _greedy_allocate, _evaluate_trade_combo
 from .support import compute_trade_support
 
 
-def _phase3_trade(
+def exhaust_trade(
     operators: list[Operator],
     assigned_ids: set[str],
     assigned_names: set[str],

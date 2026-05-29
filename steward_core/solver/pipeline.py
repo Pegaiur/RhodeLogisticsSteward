@@ -48,11 +48,11 @@ class Pipeline:
 
         # 实验: 先排 Trade 再排 Mfg
         pipe = Pipeline.with_phases([
-            ("trade", _phase3_trade),
-            ("mfg", _phase1_mfg),
-            ("control", _phase2_control),
-            ("remaining", _phase3_remaining),
-            ("dorm", _phase4_dorm),
+            ("trade", exhaust_trade),
+            ("mfg", exhaust_mfg),
+            ("control", fill_control),
+            ("remaining", fill_remaining),
+            ("dorm", fill_dorm),
         ])
     """
 
@@ -105,11 +105,11 @@ class Pipeline:
     @classmethod
     def default(cls) -> "Pipeline":
         """默认流水线（等价于当前 solve_mvp 行为）"""
-        from .phase1_mfg import _phase1_mfg
-        from .phase2_control import _phase2_control
-        from .phase3_trade import _phase3_trade
-        from .phase3_remaining import _phase3_remaining
-        from .phase4_dorm import _phase4_dorm
+        from .exhaust_mfg import exhaust_mfg
+        from .fill_control import fill_control
+        from .exhaust_trade import exhaust_trade
+        from .fill_remaining import fill_remaining
+        from .fill_dorm import fill_dorm
 
         from steward_core.synergy import get_system_contributors
         from steward_core.synergy._derived import MFG_ANCHORS
@@ -120,14 +120,14 @@ class Pipeline:
         POWER_NAMES = set(get_system_contributors("Power"))
 
         return cls(phases=[
-            ("mfg", partial(_phase1_mfg, anchor_names=ANCHOR_NAMES)),
-            ("trade", _phase3_trade),
+            ("mfg", partial(exhaust_mfg, anchor_names=ANCHOR_NAMES)),
+            ("trade", exhaust_trade),
             ("control", partial(
-                _phase2_control,
+                fill_control,
                 ctrl_global_names=CTRL_GLOBAL_NAMES,
             )),
-            ("remaining", partial(_phase3_remaining, power_names=POWER_NAMES)),
-            ("dorm", partial(_phase4_dorm, dorm_names_list=DORM_NAMES)),
+            ("remaining", partial(fill_remaining, power_names=POWER_NAMES)),
+            ("dorm", partial(fill_dorm, dorm_names_list=DORM_NAMES)),
         ])
 
     @classmethod

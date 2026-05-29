@@ -17,10 +17,10 @@ from steward_core.synergy._derived import MFG_ANCHORS
 from ..config import SolverConfig
 from ..global_state import GlobalState
 from ..greed import _generate_combos, _greedy_allocate_with_support_excluding
-from ..phase2_control import _phase2_control
-from ..phase3_trade import _phase3_trade
-from ..phase3_remaining import _phase3_remaining
-from ..phase4_dorm import _phase4_dorm
+from ..fill_control import fill_control
+from ..exhaust_trade import exhaust_trade
+from ..fill_remaining import fill_remaining
+from ..fill_dorm import fill_dorm
 from ..refine import local_search_refine, _production_score
 from ..strategy import PartialSolution, Strategy
 from ..support import _evaluate_with_support, compute_optimal_support
@@ -46,18 +46,18 @@ class KBeamStrategy(Strategy):
         dorm_names_list = get_system_contributors("Dormitory")
         power_names = set(get_system_contributors("Power"))
 
-        mfg_paths = self._phase1_kbeam(operators, config, op_lookup, anchor_names)
+        mfg_paths = self._kbeam_exhaust_mfg(operators, config, op_lookup, anchor_names)
         if not mfg_paths:
             return self._empty_result(config)
 
         for path in mfg_paths:
-            _phase3_trade(
+            exhaust_trade(
                 operators=operators, assigned_ids=path.assigned_ids,
                 assigned_names=path.assigned_names, assignments=path.assignments,
                 op_lookup=op_lookup, locked_support=path.locked_support,
                 config=config,
             )
-            _phase2_control(
+            fill_control(
                 operators=operators, assigned_ids=path.assigned_ids,
                 assigned_names=path.assigned_names, assignments=path.assignments,
                 op_lookup=op_lookup, locked_support=path.locked_support,
@@ -66,13 +66,13 @@ class KBeamStrategy(Strategy):
 
         best = self._select_best(mfg_paths, operators, params)
 
-        _phase3_remaining(
+        fill_remaining(
             operators=operators, assigned_ids=best.assigned_ids,
             assigned_names=best.assigned_names, assignments=best.assignments,
             op_lookup=op_lookup, locked_support=best.locked_support,
             power_names=power_names, config=config,
         )
-        _phase4_dorm(
+        fill_dorm(
             operators=operators, assigned_ids=best.assigned_ids,
             assigned_names=best.assigned_names, assignments=best.assignments,
             op_lookup=op_lookup, locked_support=best.locked_support,
@@ -92,8 +92,8 @@ class KBeamStrategy(Strategy):
 
     # ── 私有方法 ──
 
-    def _phase1_kbeam(self, operators, config, op_lookup, anchor_names):
-        """Phase 1: CR K 条路径 × PG 1 条 → K 条完整 Mfg 路径"""
+    def _kbeam_exhaust_mfg(self, operators, config, op_lookup, anchor_names):
+        """制造站 K-Beam: CR K 条路径 × PG 1 条 → K 条完整 Mfg 路径"""
         k = self.beam_width
         use_global = config.global_state_scoring if config else False
 
