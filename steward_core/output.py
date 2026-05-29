@@ -56,7 +56,7 @@ def _room_to_json(assignment: RoomAssignment) -> dict:
     return entry
 
 
-def _shift_to_json(plan: ShiftPlan) -> dict:
+def _shift_to_json(plan: ShiftPlan, mood_ctx=None) -> dict:
     rooms: dict[str, list[dict]] = {}
     for assignment in plan.assignments:
         json_key = _ROOM_TO_JSON_KEY.get(assignment.room_type, assignment.room_type.lower())
@@ -69,13 +69,19 @@ def _shift_to_json(plan: ShiftPlan) -> dict:
 
         rooms[json_key][assignment.room_index] = _room_to_json(assignment)
 
+    fiammetta_enable = False
+    fiammetta_target = ""
+    if mood_ctx is not None:
+        fiammetta_enable = mood_ctx.fiammetta_swap_planned
+        fiammetta_target = mood_ctx.fiammetta_target or ""
+
     return {
         "name": plan.name,
         "description": f"由 RhodeLogisticsSteward 自动生成 — {plan.name}",
         "period": [[plan.period_from, plan.period_to]],
         "Fiammetta": {
-            "enable": False,
-            "target": "",
+            "enable": fiammetta_enable,
+            "target": fiammetta_target,
             "order": "pre",
         },
         "drones": {
@@ -89,7 +95,8 @@ def _shift_to_json(plan: ShiftPlan) -> dict:
 
 
 def to_json(result: SolveResult, title: str = "RhodeLogisticsSteward 排班方案") -> dict:
-    plans = [_shift_to_json(p) for p in result.plans]
+    mood_ctx = result.config_used.mood_ctx if result.config_used else None
+    plans = [_shift_to_json(p, mood_ctx) for p in result.plans]
     schedule_type = _build_schedule_type(result.plans[0]) if result.plans else {}
     return {
         "id": _new_id(),

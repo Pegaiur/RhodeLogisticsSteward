@@ -8,10 +8,9 @@ Control 由制造站 combo 的支撑需求动态决定。
 可通过 SolverConfig.strategy 注入自定义策略进行 A/B 测试。
 """
 
-from steward_core.models import Operator, SolveResult
+from steward_core.models import Operator, SolveResult, ShiftPlan
 
 from .config import SolverConfig
-# 以下 re-export 保留以兼容 test_end_to_end.py 等下游 import
 from .greed import _greedy_allocate, _generate_combos, _upper_bound_ok, _evaluate_trade_combo
 from .refine import local_search_refine
 from .strategies import BaselineStrategy
@@ -34,3 +33,109 @@ def solve_mvp(
 
     op_lookup = {op.name: op for op in operators}
     return config.strategy.execute(operators, config, op_lookup)
+
+
+def solve_multi_shift(
+    operators: list[Operator],
+    config: SolverConfig | None = None,
+) -> SolveResult:
+    """多班次编排器 — 对任意 Strategy 透明
+
+    Args:
+        operators: 全部干员池
+        config: 求解器配置（params.shift_count 控制班次数）
+
+    Returns:
+        SolveResult，plans 数组长度 = shift_count
+    """
+    if config is None:
+        config = SolverConfig()
+
+    from steward_core.mood_flow import MoodContext
+    from .fill_dorm import fill_dorm_with_scheduling
+
+    strategy = config.strategy or BaselineStrategy()
+    params = config.params
+    op_lookup = {op.name: op for op in operators}
+
+    mood_ctx = MoodContext.fresh(operators, params)
+
+    all_plans: list[ShiftPlan] = []
+
+    for shift_idx in range(params.shift_count):
+        working_config = SolverConfig(
+            strategy=strategy,
+            exclusive_support_check=config.exclusive_support_check,
+            local_search_enabled=config.local_search_enabled,
+            global_state_scoring=config.global_state_scoring,
+            mood_ctx=mood_ctx,
+            params=params,
+        )
+
+        available = [op for op in operators
+                     if mood_ctx.mood_of(op.name) >= params.mood_work_threshold]
+
+        result = solve_mvp(available, working_config)
+
+        if result.plans:
+            plan = result.plans[0]
+            half_hours = int(params.shift_hours / 2.0)
+            offset = shift_idx * (int(params.shift_hours) + int(params.interval_hours))
+            plan = ShiftPlan(
+                name=f"Shift{shift_idx + 1}-{int(params.shift_hours)}h",
+                assignments=list(plan.assignments),
+                period_from=f"{(half_hours + offset):02d}:00",
+                period_to=f"{(half_hours + offset + int(params.shift_hours) - 1):02d}:59",
+            )
+
+            mood_ctx = _collect_control_from_plan(plan, mood_ctx, op_lookup)
+            mood_ctx = _collect_working_from_plan(plan, mood_ctx, op_lookup)
+
+            # 框架层覆盖宿舍分配
+            fill_dorm_with_scheduling(
+                operators=available,
+                assignments=plan.assignments,
+                op_lookup=op_lookup,
+                config=working_config,
+                mood_ctx=mood_ctx,
+            )
+
+            all_plans.append(plan)
+
+            if shift_idx < params.shift_count - 1:
+                mood_ctx = mood_ctx.after_recovery(params.interval_hours)
+
+    return SolveResult(
+        plans=all_plans,
+        autofill_count=0,
+        config_used=config,
+    )
+
+
+def _collect_control_from_plan(
+    plan: ShiftPlan,
+    mood_ctx: "MoodContext",
+    op_lookup: dict[str, Operator],
+) -> "MoodContext":
+    """从 plan 提取中枢干员，注入 mood_ctx"""
+    from steward_core.mood_flow import MoodContext
+    from dataclasses import replace
+
+    control_names: list[str] = []
+    for a in plan.assignments:
+        if a.room_type == "Control":
+            control_names.extend(a.operators)
+    return replace(mood_ctx, control_operators=control_names)
+
+
+def _collect_working_from_plan(
+    plan: ShiftPlan,
+    mood_ctx: "MoodContext",
+    op_lookup: dict[str, Operator],
+) -> "MoodContext":
+    """从 plan 提取工作干员，应用 after_shift 心情消耗"""
+    working_names: set[str] = set()
+    for a in plan.assignments:
+        if a.room_type in ("Mfg", "Trade", "Power", "Reception", "Office"):
+            working_names.update(a.operators)
+    return mood_ctx.after_shift(working_names, mood_ctx.shift_hours)
