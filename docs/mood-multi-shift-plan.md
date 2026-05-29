@@ -65,6 +65,18 @@
 | `fill_dorm_with_scheduling` 菲亚梅塔交换未实现 | plan §5 的"选择最需要恢复的核心干员作为交换目标"逻辑未实现 | 菲亚梅塔价值未挖掘 |
 | 测试套件未新增 | plan §10 的 150+80+40+30 行新测试未编写 | 覆盖率缺口，待后续补充 |
 
+### 2026-05-29 · 审查修复（f5cbb16）
+
+4 路 solution-evaluator 并行审查发现 5 个阻塞/高优先级问题，已全部修复：
+
+| 修复 | 文件 | 详情 |
+|------|------|------|
+| work_burn 公式一致性 | `mood_flow.py` | `recovery` 新增 `modifiers.control_recovery`（中枢每干员 +0.05/h），与 `compute_global_burn` 对齐 |
+| modifiers 跨班次缓存 | `solver/__init__.py` | `_collect_control_from_plan` 中 `replace(..., modifiers=None)` 强制下一轮重新计算 |
+| fill_dorm 旧分配清理 | `solver/fill_dorm.py` | `fill_dorm_with_scheduling` 开头清除已有 Dormitory 类型 assignment，避免重复条目 |
+| mood_ctx 输出传递 | `solver/__init__.py` | `solve_multi_shift` 返回 `_build_output_config(config, mood_ctx)` 替代原始 config，使 `output.py` 能读取最终 Fiammetta 状态 |
+| 死代码/文档修正 | `context.py`/`buff_pool.py` | 移除 `effective_power is not None` 冗余检查；修正 `mood>=12` docstring 阈值
+
 ## 1. 问题诊断
 
 ### 1.1 硬编码心情门控 — "令 mood<12" 传染链
