@@ -81,6 +81,11 @@ def exhaust_trade(
         # 评估所有组合（含宿舍估计用于乌有烟火/黑键感知等B1生成）
         dorm_est = [Operator(char_id=f"_dorm_{i}", name=f"填位宿舍{i}", skills=[])
                     for i in range(params.dorm_estimated_count)]
+        base_pool = compute_buff_pool(
+            ctrl_ops, suich_count=params.suich_count,
+            dorm_operators=dorm_est, dorm_level=params.dorm_level,
+            layout=LayoutConfig.layout_243(),
+        )
         evaluated = []
         for combo_ops in combos:
             combo_names = [op.name for op in combo_ops]
@@ -89,15 +94,19 @@ def exhaust_trade(
             ctrl_bonus = control_per_operator_bonus(
                 ctrl_ops, combo_ops, "Money", room_type="Trade",
             )
-            lmd = _evaluate_trade_combo(
-                combo_ops, effective_power, params.shift_hours, global_bonus,
-                compute_buff_pool(
+            if has_wuyou or has_ebnhlz:
+                bp = compute_buff_pool(
                     ctrl_ops, suich_count=params.suich_count,
                     dorm_operators=dorm_est, dorm_level=params.dorm_level,
                     has_ebnhlz_in_trade=has_ebnhlz,
                     has_wuyou_in_trade=has_wuyou,
                     layout=LayoutConfig.layout_243(),
-                ), ctrl_bonus,
+                )
+            else:
+                bp = base_pool
+            lmd = _evaluate_trade_combo(
+                combo_ops, effective_power, params.shift_hours, global_bonus,
+                bp, ctrl_bonus,
                 all_operators=operators,
                 control_operators=ctrl_ops,
             )

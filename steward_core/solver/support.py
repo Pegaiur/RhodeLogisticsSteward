@@ -93,6 +93,7 @@ def _evaluate_with_support(
     *,
     op_lookup: dict[str, Operator] | None = None,
     effective_power: int | None = None,
+    override_pool=None,
 ) -> tuple[float, dict[str, list[str]]]:
     """评估 combo 含最优支撑的完整评分
 
@@ -102,6 +103,7 @@ def _evaluate_with_support(
     4. 评估房间效率积分
 
     op_lookup 和 effective_power 可由调用方预计算传入，避免每组合重复构建/扫描。
+    override_pool: 若提供则跳过 GlobalContext 中的 pool 构造，直接使用此 pool。
 
     Returns:
         (score, support_map) — support_map 仅含可用的支撑干员
@@ -147,10 +149,11 @@ def _evaluate_with_support(
     )
 
     ctrl_bonus = control_per_operator_bonus(control_ops, combo_ops, product)
+    pool = override_pool if override_pool is not None else ctx.buff_pool
 
     score = evaluate_room(
         combo_ops, room_type, product, ctx.effective_power, T,
-        ctx.global_bonus, ctx.buff_pool,
+        ctx.global_bonus, pool,
         ctrl_per_op_bonus=ctrl_bonus,
         all_operators=all_operators,
         control_operators=control_ops,

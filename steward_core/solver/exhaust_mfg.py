@@ -1,10 +1,11 @@
 """制造站穷举（CR 2间 + PG 2间）"""
 
 from steward_core.constants import BASE_POWER_COUNT
-from steward_core.models import Operator, RoomAssignment
+from steward_core.models import Operator, RoomAssignment, LayoutConfig
 from steward_core.synergy import classify_mfg_operators, build_candidate_pool, get_synergy_enablers
 from steward_core.synergy.facility_linkages import _has_power_count_modifier
 from steward_core.synergy.helpers import _is_knight, _PINUS_GROUP, _B_ROSEMARY, _DURIN_NAMES
+from steward_core.synergy.buff_pool import compute_buff_pool
 
 from .config import SolverConfig
 from .global_state import GlobalState
@@ -93,13 +94,22 @@ def exhaust_mfg(
             combos_to_eval = combos
 
         # 评估所有组合（含最优支撑）
+        # 预计算不含 combo 特定标志的 base_pool（多数组合共享）
+        base_pool = compute_buff_pool(
+            [], suich_count=config.params.suich_count,
+            dorm_operators=[], dorm_level=config.params.dorm_level,
+            has_rosmontis_in_mfg=False,
+            layout=LayoutConfig.layout_243(),
+        )
         evaluated = []
         for combo_ops in combos_to_eval:
+            has_rosmontis = any(op.name == _B_ROSEMARY for op in combo_ops)
             score, support_map = _evaluate_with_support(
                 combo_ops, "Mfg", product, operators, assigned_names,
                 params=config.params,
                 op_lookup=op_lookup,
                 effective_power=effective_power,
+                override_pool=base_pool if not has_rosmontis else None,
             )
             combo_names = [op.name for op in combo_ops]
             all_support_names = [n for names in support_map.values() for n in names]
