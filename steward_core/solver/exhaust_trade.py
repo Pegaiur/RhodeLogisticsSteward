@@ -26,6 +26,7 @@ def exhaust_trade(
     locked_support: dict[str, set[str]],
     *,
     config: SolverConfig | None = None,
+    override_pool=None,
 ) -> int:
     """Phase 3a: Trade 穷举（使用 locked_support 估计中枢，中枢尚未填充）
 
@@ -86,6 +87,8 @@ def exhaust_trade(
             dorm_operators=dorm_est, dorm_level=params.dorm_level,
             layout=LayoutConfig.layout_243(),
         )
+        if override_pool is not None:
+            base_pool = override_pool
         evaluated = []
         for combo_ops in combos:
             combo_names = [op.name for op in combo_ops]
@@ -94,7 +97,9 @@ def exhaust_trade(
             ctrl_bonus = control_per_operator_bonus(
                 ctrl_ops, combo_ops, "Money", room_type="Trade",
             )
-            if has_wuyou or has_ebnhlz:
+            if override_pool is not None:
+                bp = override_pool
+            elif has_wuyou or has_ebnhlz:
                 bp = compute_buff_pool(
                     ctrl_ops, suich_count=params.suich_count,
                     dorm_operators=dorm_est, dorm_level=params.dorm_level,

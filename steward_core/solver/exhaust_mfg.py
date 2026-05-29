@@ -47,6 +47,7 @@ def exhaust_mfg(
     *,
     anchor_names: set[str],
     config: SolverConfig | None = None,
+    override_pool=None,
 ) -> int:
     """Phase 1: 制造站穷举（CR 2间 + PG 2间）
 
@@ -109,7 +110,9 @@ def exhaust_mfg(
                 params=config.params,
                 op_lookup=op_lookup,
                 effective_power=effective_power,
-                override_pool=base_pool if not has_rosmontis else None,
+                override_pool=override_pool if override_pool is not None else (
+                    base_pool if not has_rosmontis else None
+                ),
             )
             combo_names = [op.name for op in combo_ops]
             all_support_names = [n for names in support_map.values() for n in names]
