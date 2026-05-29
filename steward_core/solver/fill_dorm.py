@@ -83,6 +83,9 @@ def fill_dorm_with_scheduling(
     params = config.params
     autofill_count = 0
 
+    # 0. 清除旧的 Dormitory 分配（Strategy 阶段可能已产生旧条目）
+    assignments[:] = [a for a in assignments if a.room_type != "Dormitory"]
+
     # 1. 识别工作干员（需要恢复的目标）
     working_names: list[str] = []
     working_rooms: dict[str, str] = {}

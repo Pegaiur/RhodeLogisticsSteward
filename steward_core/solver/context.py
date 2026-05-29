@@ -94,7 +94,7 @@ class GlobalContext:
                 if op.name not in assigned_names and _has_power_count_modifier(op)
             )
         # 森蚺"我寻思能行"：Lancet-2 可用时若森蚺在中枢则+2
-        if effective_power is not None and any(op.name == "Lancet-2" for op in all_operators):
+        if any(op.name == "Lancet-2" for op in all_operators):
             for op in control_operators:
                 if any(s.buff_id == "control_pow_bot[000]" for s in op.skills):
                     effective_power += 2

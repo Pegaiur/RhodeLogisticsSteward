@@ -88,8 +88,8 @@ def solve_multi_shift(
                 period_to=f"{(half_hours + offset + int(params.shift_hours) - 1):02d}:59",
             )
 
-            mood_ctx = _collect_control_from_plan(plan, mood_ctx, op_lookup)
-            mood_ctx = _collect_working_from_plan(plan, mood_ctx, op_lookup)
+            mood_ctx = _collect_control_from_plan(plan, mood_ctx)
+            mood_ctx = _collect_working_from_plan(plan, mood_ctx)
 
             # 框架层覆盖宿舍分配
             fill_dorm_with_scheduling(
@@ -108,30 +108,39 @@ def solve_multi_shift(
     return SolveResult(
         plans=all_plans,
         autofill_count=0,
-        config_used=config,
+        config_used=_build_output_config(config, mood_ctx),
+    )
+
+
+def _build_output_config(config: SolverConfig, mood_ctx) -> SolverConfig:
+    """构造输出用 SolverConfig，携带最终 mood_ctx 供 output.py 读取 Fiammetta"""
+    return SolverConfig(
+        strategy=config.strategy,
+        exclusive_support_check=config.exclusive_support_check,
+        local_search_enabled=config.local_search_enabled,
+        global_state_scoring=config.global_state_scoring,
+        mood_ctx=mood_ctx,
+        params=config.params,
     )
 
 
 def _collect_control_from_plan(
     plan: ShiftPlan,
     mood_ctx: "MoodContext",
-    op_lookup: dict[str, Operator],
 ) -> "MoodContext":
-    """从 plan 提取中枢干员，注入 mood_ctx"""
-    from steward_core.mood_flow import MoodContext
+    """从 plan 提取中枢干员，注入 mood_ctx 并重置 modifiers 缓存"""
     from dataclasses import replace
 
     control_names: list[str] = []
     for a in plan.assignments:
         if a.room_type == "Control":
             control_names.extend(a.operators)
-    return replace(mood_ctx, control_operators=control_names)
+    return replace(mood_ctx, control_operators=control_names, modifiers=None)
 
 
 def _collect_working_from_plan(
     plan: ShiftPlan,
     mood_ctx: "MoodContext",
-    op_lookup: dict[str, Operator],
 ) -> "MoodContext":
     """从 plan 提取工作干员，应用 after_shift 心情消耗"""
     working_names: set[str] = set()

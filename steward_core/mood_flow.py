@@ -210,7 +210,7 @@ class MoodContext:
 
         公式: base - recovery_modifiers
           base = _BASE_BURN_3 (0.75, 3 工位遗留常量，与 compute_global_burn 一致)
-          recovery = MoodModifiers 提供的全局恢复（玛恩纳扩散/重岳）
+          recovery = control_recovery + yanhuo_recovery + (mlynar spread)
 
         注意：当前使用 _BASE_BURN_3=0.75 与 compute_global_burn 保持兼容。
         mood_burn 激活后会迁至动态公式 1.0 - 0.05×(slots-1)。
@@ -219,7 +219,7 @@ class MoodContext:
 
         base = _BASE_BURN_3
         modifiers = self.ensure_modifiers(buff_pool)
-        recovery = modifiers.yanhuo_recovery
+        recovery = modifiers.control_recovery + modifiers.yanhuo_recovery
         if modifiers.mlynar_spread:
             recovery += modifiers.control_recovery + modifiers.global_work_recovery
         return max(0.0, base - recovery)
