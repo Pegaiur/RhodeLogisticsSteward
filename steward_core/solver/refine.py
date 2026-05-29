@@ -14,7 +14,7 @@ from steward_core.synergy import control_per_operator_bonus
 from .context import GlobalContext
 
 
-def evaluate_full_plan(plan: ShiftPlan, operators: list[Operator], params=None) -> float:
+def evaluate_full_plan(plan: ShiftPlan, operators: list[Operator], params=None, mood_ctx=None) -> float:
     """评估完整排班方案的总效率积分（用于 A/B 对比）"""
     if params is None:
         from .params import SolverParams
@@ -24,7 +24,7 @@ def evaluate_full_plan(plan: ShiftPlan, operators: list[Operator], params=None) 
     if not plan.assignments:
         return 0.0
 
-    ctx = GlobalContext.from_plan(plan, operators, params)
+    ctx = GlobalContext.from_plan(plan, operators, params, mood_ctx=mood_ctx)
     op_lookup = {op.name: op for op in operators}
 
     def _room_ops(room_type: str) -> list[Operator]:
@@ -51,13 +51,14 @@ def evaluate_full_plan(plan: ShiftPlan, operators: list[Operator], params=None) 
             all_operators=operators,
             control_operators=ctx.control_operators,
             all_assignments=ctx.all_assignments,
+            mood_ctx=mood_ctx,
         )
         total += score
 
     return total
 
 
-def _production_score(plan: ShiftPlan, operators: list[Operator], params) -> float:
+def _production_score(plan: ShiftPlan, operators: list[Operator], params, mood_ctx=None) -> float:
     """用真实经济产出作为局部搜索的目标函数
 
     综合经验产出与有效 LMD（已处理赤金供需平衡），
@@ -69,6 +70,7 @@ def _production_score(plan: ShiftPlan, operators: list[Operator], params) -> flo
     dp = production.calculate(
         plan, operators, hours=params.shift_hours,
         external_gold_per_day=params.daily_task_lmd / production._GOLD_LMD_PER_UNIT,
+        mood_ctx=mood_ctx,
     )
     exp_value = dp.total_records_per_day * _RECORD_EXP_PER_UNIT
     lmd_value = dp.effective_lmd_per_day
@@ -91,7 +93,7 @@ def local_search_refine(
     params = config.params
     plan = result.plans[0]
     best_plan = plan
-    best_score = _production_score(best_plan, operators, params)
+    best_score = _production_score(best_plan, operators, params, mood_ctx=config.mood_ctx)
     op_lookup = {op.name: op for op in operators}
 
     for _round in range(params.local_search_max_rounds):
@@ -144,7 +146,7 @@ def local_search_refine(
                 period_from=best_plan.period_from,
                 period_to=best_plan.period_to,
             )
-            new_score = _production_score(new_plan, operators, params)
+            new_score = _production_score(new_plan, operators, params, mood_ctx=config.mood_ctx)
 
             if new_score > best_score:
                 best_plan = new_plan

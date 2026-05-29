@@ -64,7 +64,7 @@ class KBeamStrategy(Strategy):
                 ctrl_global_names=ctrl_global_names, config=config,
             )
 
-        best = self._select_best(mfg_paths, operators, params)
+        best = self._select_best(mfg_paths, operators, params, mood_ctx=config.mood_ctx)
 
         fill_remaining(
             operators=operators, assigned_ids=best.assigned_ids,
@@ -207,13 +207,13 @@ class KBeamStrategy(Strategy):
             })
         return results
 
-    def _select_best(self, paths, operators, params):
+    def _select_best(self, paths, operators, params, mood_ctx=None):
         """用 production.calculate() 选真实经济产出最高的路径"""
         best_path = paths[0]
         best_score = -float("inf")
         for path in paths:
             plan = ShiftPlan(name="_eval", assignments=path.assignments)
-            score = _production_score(plan, operators, params)
+            score = _production_score(plan, operators, params, mood_ctx=mood_ctx)
             if score > best_score:
                 best_score = score
                 best_path = path

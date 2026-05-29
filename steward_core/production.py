@@ -354,6 +354,7 @@ class _CalcCtx:
     drone_room_type: str
     drone_room_index: int
     all_operators: list[Operator] = field(default_factory=list)
+    mood_ctx: "MoodContext | None" = None
 
 
 def _drone_boost(assignment: RoomAssignment, ctx: _CalcCtx, minutes_per_drone: float) -> float:
@@ -372,7 +373,8 @@ def _calc_mfg_record(
     eff_int = evaluate_room(ops, "Mfg", "CombatRecord", ctx.power_count, ctx.hours,
                             ctx.global_bonus, ctx.buff_pool, ctrl_per_op_bonus=ctrl_bonus,
                             all_operators=ctx.all_operators,
-                            control_operators=ctx.plan_ctrl_ops)
+                            control_operators=ctx.plan_ctrl_ops,
+                            mood_ctx=ctx.mood_ctx)
     productivity_int = ctx.hours * (1.0 + 0.01 * n) + eff_int / 100.0
     display_productivity = 1.0 + eff_int / (100.0 * ctx.hours)
     drone_boost = _drone_boost(assignment, ctx, _DRONE_MINUTES_MFG)
@@ -396,7 +398,8 @@ def _calc_mfg_gold(
     eff_int = evaluate_room(ops, "Mfg", "PureGold", ctx.power_count, ctx.hours,
                             ctx.global_bonus, ctx.buff_pool, ctrl_per_op_bonus=ctrl_bonus,
                             all_operators=ctx.all_operators,
-                            control_operators=ctx.plan_ctrl_ops)
+                            control_operators=ctx.plan_ctrl_ops,
+                            mood_ctx=ctx.mood_ctx)
     productivity_int = ctx.hours * (1.0 + 0.01 * n) + eff_int / 100.0
     display_productivity = 1.0 + eff_int / (100.0 * ctx.hours)
     drone_boost = _drone_boost(assignment, ctx, _DRONE_MINUTES_MFG)
@@ -423,7 +426,8 @@ def _calc_trade(
     eff_int = evaluate_room(ops, "Trade", "Money", ctx.power_count, ctx.hours,
                             ctx.global_bonus, ctx.buff_pool, ctrl_per_op_bonus=ctrl_bonus,
                             all_operators=ctx.all_operators,
-                            control_operators=ctx.plan_ctrl_ops)
+                            control_operators=ctx.plan_ctrl_ops,
+                            mood_ctx=ctx.mood_ctx)
     efficiency_integrated = ctx.hours * (1.0 + 0.01 * n) + eff_int / 100.0
     display_productivity = 1.0 + eff_int / (100.0 * ctx.hours)
     drone_boost = _drone_boost(assignment, ctx, _DRONE_MINUTES_TRADE)
@@ -450,6 +454,7 @@ def calculate(
     operators: list[Operator],
     hours: float = 24.0,
     external_gold_per_day: float = 0.0,
+    mood_ctx=None,
 ) -> DailyProduction:
     """计算排班方案的精确产出（含无人机加速）
 
@@ -458,6 +463,7 @@ def calculate(
         operators: 全量干员池
         hours: 该班次覆盖的小时数（默认 24h 即全天）
         external_gold_per_day: 外部来源赤金（赤金/天），如日常任务等效赤金收入
+        mood_ctx: 多班次心情上下文，非 None 时传入 evaluate_room 以激活心情截断
     """
     op_lookup = _operator_lookup(operators)
     production = DailyProduction()
@@ -478,7 +484,7 @@ def calculate(
     from steward_core.solver.context import GlobalContext
     from steward_core.solver.params import SolverParams
     params = SolverParams(shift_hours=hours, dorm_level=5)
-    gctx = GlobalContext.from_plan(plan, operators, params)
+    gctx = GlobalContext.from_plan(plan, operators, params, mood_ctx=mood_ctx)
     buff_pool = gctx.buff_pool
 
     # 1. 收集发电站干员，计算无人机产量（按工期比例缩放）
@@ -510,6 +516,7 @@ def calculate(
         drone_room_type=drone_room_type,
         drone_room_index=drone_room_index,
         all_operators=operators,
+        mood_ctx=mood_ctx,
     )
 
     for assignment in plan.assignments:
