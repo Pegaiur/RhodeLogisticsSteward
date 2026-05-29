@@ -9,7 +9,10 @@ from .helpers import ROSEMARY_SUPPORT, _B_ROSEMARY, _B_EBENHOLZ
 
 @dataclass
 class BuffPool:
-    """全局 buff 点数池"""
+    """全局 buff 点数池
+
+    新增字段时需同步更新 __add__、clone 方法的字段列表。
+    """
     yanhuo: int = 0            # 人间烟火
     perception: int = 0        # 感知信息
     wushu_crystal: int = 0     # 巫术结晶
@@ -17,6 +20,31 @@ class BuffPool:
     silent_resonance: int = 0  # 无声共鸣 (B5) — 由塑心宿舍 + 黑键感知转化生成
     engineering_robots: int = 0  # 工程机器人 (B2)
     monster_cuisine: int = 0     # 魔物料理 (B4)
+
+    def __add__(self, other: "BuffPool") -> "BuffPool":
+        return BuffPool(
+            yanhuo=self.yanhuo + other.yanhuo,
+            perception=self.perception + other.perception,
+            wushu_crystal=self.wushu_crystal + other.wushu_crystal,
+            thought_chains=self.thought_chains + other.thought_chains,
+            silent_resonance=self.silent_resonance + other.silent_resonance,
+            engineering_robots=self.engineering_robots + other.engineering_robots,
+            monster_cuisine=self.monster_cuisine + other.monster_cuisine,
+        )
+
+    def clone(self) -> "BuffPool":
+        return BuffPool(
+            yanhuo=self.yanhuo, perception=self.perception,
+            wushu_crystal=self.wushu_crystal, thought_chains=self.thought_chains,
+            silent_resonance=self.silent_resonance, engineering_robots=self.engineering_robots,
+            monster_cuisine=self.monster_cuisine,
+        )
+
+
+def _derive_pool(pool: BuffPool) -> None:
+    """原地更新派生字段：烟火→巫术结晶（//5），感知→思维链环（1:1）"""
+    pool.wushu_crystal = pool.yanhuo // 5
+    pool.thought_chains = pool.perception
 
 
 def compute_buff_pool(
@@ -103,8 +131,6 @@ def compute_buff_pool(
     if _dorm_has_buff(dorm_operators, "dorm_rec_bd_dungeon[000]"):
         monster_cuisine += dorm_level
 
-    wushu_crystal = yanhuo // 5
-    thought_chains = perception
     eng_robots = compute_engineering_robots(layout) if layout is not None else 0
 
     silent_resonance = 0
@@ -115,13 +141,14 @@ def compute_buff_pool(
         if "塑心" in suxin_names:
             silent_resonance += len(dorm_operators)
 
-    return BuffPool(
+    pool = BuffPool(
         yanhuo=yanhuo, perception=perception,
-        wushu_crystal=wushu_crystal, thought_chains=thought_chains,
         monster_cuisine=monster_cuisine,
         engineering_robots=eng_robots,
         silent_resonance=silent_resonance,
     )
+    _derive_pool(pool)
+    return pool
 
 
 def _dorm_has_buff(dorm_operators: list[Operator], buff_id: str) -> bool:
