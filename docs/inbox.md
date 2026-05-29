@@ -27,10 +27,4 @@
 - [ ] **宿舍 Phase 从填充升级为恢复调度** — 当前 `fill_dorm` 仅填充 20 个空位（优先 B 层生成者），2 班次下宿舍需要精确调度：哪些工作干员进入哪间宿舍、恢复多少小时、何时可重返工作。决策维度从"填满"变为"最小化整体轮换空窗期" — 2026-05-29 — `fill_dorm.py`
 - [ ] **MultiShiftPlan 数据模型** — 当前 `ShiftPlan` 和 `SolveResult.plans` 为单班次设计，2 班次需要：① `ShiftSchedule` 或 `MultiShiftPlan` 建模多班次时间线（每班的起止时间、干员分配、宿舍分配）；② 班次间的 operator 状态追踪（工作→宿舍→空闲）；③ 全周期产出评估（两班合计产能，而非单班独立最大化）。SolveResult.plans 已是 list 形式，可直接放两个 ShiftPlan，但 solving pipeline 需感知多班次语义 — 2026-05-29 — `models.py`
 - [ ] **Phase 多班次轮换感知** — 当前各 Phase 通过 `assigned_ids`/`assigned_names` 互斥干员，2 班次下此机制需升级：① Shift 1 已工作的干员在 Shift 2 中不可用（除非宿舍恢复完毕）；② 中枢干员可跨班次常驻（无心情消耗）；③ Trade/Mfg 的"最优组合"在两个班次间需要 trade-off——把最强组合放 Shift 1 可能导致 Shift 2 无人可用。K-Beam 的多路径保留在此场景下价值放大（可同时探索两个班次的组合分配） — 2026-05-29 — 所有 `exhaust_*`/`fill_*` 模块
-- [ ] **JSON 输出格式符合 MAA 基建排班协议** — 当前 `output.py` 生成的 JSON 与 [MAA 协议规范](https://docs.maa.plus/zh-cn/protocol/base-scheduling-schema.html) 及[官方模板 153_layout_3_times_a_day.json](https://github.com/MaaAssistantArknights/MaaAssistantArknights/blob/master-v2/resource/custom_infrast/153_layout_3_times_a_day.json) 存在以下差距：
-  1. **顶层缺失字段**：`id`（随机 GUID）、`buildingType`（243/252/153）、`planTimes`（如 "3班"）、`scheduleType`（`planTimes`/`trading`/`manufacture`/`power`/`dormitory` 数量）
-  2. **plan 缺失字段**：`description`、`description_post`、`Fiammetta.enable/target/order`（菲亚梅塔技能，当前单班次可不启用）
-  3. **drones 缺失 `enable` 字段**：当前只输出 `room`/`index`/`order`
-  4. **rooms 条目字段对齐**：MAA 协议要求 `sort: false` 为默认、支持 `candidates` 备选列表、`skip` 字段语义验证、`product` 值需与 MAA 枚举对齐（已对齐）
-  5. **输出文件命名规范**：参考 MAA 模板命名 `{layout}_layout_{plan_times}_a_day.json`
-  — 2026-05-28 — `steward_core/output.py`
+- [x] **JSON 输出格式符合 MAA 基建排班协议** — 已实施于 v0.5.1。顶层字段 id/buildingType/planTimes/scheduleType、plan 内 description/Fiammetta、drones.enable、sort:false 均已对齐协议 v5.x。详见 `steward_core/output.py` — 2026-05-28 → 2026-05-29
