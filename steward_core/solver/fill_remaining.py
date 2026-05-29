@@ -1,6 +1,7 @@
 """剩余设施贪心"""
 
 from steward_core.models import Operator
+from steward_core.synergy import _B_GLOBAL_FACTION_TABLE
 
 from .config import SolverConfig
 from .greed import _greedy_remaining
@@ -33,5 +34,30 @@ def fill_remaining(
     remaining = _greedy_remaining(assigned_ids, operators, priority, params=config.params)
     assignments.extend(remaining)
     autofill_count += sum(1 for a in remaining if a.autofill)
+
+    for a in remaining:
+        for name in a.operators:
+            entry = _B_GLOBAL_FACTION_TABLE.get(name)
+            if entry is None:
+                continue
+            if entry.target_room is not None and a.room_type != entry.target_room:
+                continue
+            assigned_faction = sum(
+                1 for op in operators
+                if getattr(op, entry.field, None) == entry.value
+                and op.char_id in assigned_ids
+            )
+            if entry.exclude_self:
+                assigned_faction = max(0, assigned_faction - 1)
+            needed = entry.cap - assigned_faction
+            if needed <= 0:
+                continue
+            faction_candidates = [
+                op for op in operators
+                if getattr(op, entry.field, None) == entry.value
+                and op.char_id not in assigned_ids
+            ]
+            for op in faction_candidates[:needed]:
+                locked_support["Dormitory"].add(op.name)
 
     return autofill_count

@@ -26,6 +26,9 @@ def fill_dorm(
     autofill_count = 0
 
     dorm_names: list[str] = list(locked_support["Dormitory"])
+    for name in dorm_names:
+        if name in op_lookup:
+            assigned_ids.add(op_lookup[name].char_id)
 
     for name in dorm_names_list:
         if name not in dorm_names and name in op_lookup and op_lookup[name].char_id not in assigned_ids:
