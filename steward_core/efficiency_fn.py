@@ -80,8 +80,6 @@ def constant_efficiency(
     elif t_red < T:
         # 仅红脸截断（无蓝脸建模）
         segments.append(LinearSegment(a=value, b=0.0, t_start=0.0, dt=t_red))
-    else:
-        segments.append(LinearSegment(a=value, b=0.0, t_start=0.0, dt=T))
 
     if 0 < t_red < T:
         segments.append(LinearSegment(a=0.0, b=0.0, t_start=t_red, dt=T - t_red))
@@ -92,6 +90,7 @@ def ramping_efficiency(
     k0: float, r: float, ceiling: float,
     mood_burn: float = 0.0, T: float = 12.0,
     t_initial: float = 0.0,
+    mood_initial: float = 24.0,
 ) -> list[LinearSegment]:
     """时变效率技能 → 分段表示（7 条 buff）
 
@@ -101,6 +100,7 @@ def ramping_efficiency(
     mood_burn: 净心情消耗率
     T: 排班时长
     t_initial: 已连续工作小时数（暖机偏移，默认 0 = 从零爬升）
+    mood_initial: 干员初始心情值，默认 24（当前 mood_burn 恒为 0 不触发截断）
     """
     segments: list[LinearSegment] = []
     t_start = 0.0
@@ -121,7 +121,7 @@ def ramping_efficiency(
     if mood_burn <= 0:
         return segments
 
-    t_red = 24.0 / mood_burn
+    t_red = mood_initial / mood_burn
     if t_red >= T:
         return segments
 
