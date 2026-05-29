@@ -192,8 +192,8 @@ def main():
     else:
         print(f"  赤金缺口: {abs(dp.gold_surplus):.1f} 个 → 有效收入 {dp.effective_lmd_per_day:,.0f} LMD/{shift_hours:.0f}h")
 
-    suffix = f"{strategy_key}_{shift_hours:.0f}h"
-    output_path = project_root / "output" / "custom_infrast" / f"mvp_{suffix}.json"
+    suffix = f"243_layout_单班_a_day"
+    output_path = project_root / "output" / "custom_infrast" / f"{suffix}.json"
     save_json(result, output_path, title=f"排班方案 {strategy_key} {shift_hours:.0f}h")
 
 
