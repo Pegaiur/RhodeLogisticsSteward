@@ -71,6 +71,10 @@ class SolverParams:
     global_state_alpha: float = 0.3
     """全局状态评分权重（0=忽略全局状态, 1=完全平衡）"""
 
+    # === 制造站穷举预筛选 ===
+    rough_score_keep_top: int = 0
+    """粗评分预筛选保留的组合数（0 或负数表示禁用预筛选，全量评估）"""
+
     # === 局部搜索 ===
     local_search_max_rounds: int = 3
     """局部搜索最大轮次"""

@@ -90,6 +90,9 @@ def _evaluate_with_support(
     all_operators: list[Operator],
     assigned_ids: set[str],
     params: SolverParams | None = None,
+    *,
+    op_lookup: dict[str, Operator] | None = None,
+    effective_power: int | None = None,
 ) -> tuple[float, dict[str, list[str]]]:
     """评估 combo 含最优支撑的完整评分
 
@@ -97,6 +100,8 @@ def _evaluate_with_support(
     2. 过滤已被分配的支撑干员
     3. 用可用支撑构建 global_bonus + buff_pool
     4. 评估房间效率积分
+
+    op_lookup 和 effective_power 可由调用方预计算传入，避免每组合重复构建/扫描。
 
     Returns:
         (score, support_map) — support_map 仅含可用的支撑干员
@@ -106,7 +111,8 @@ def _evaluate_with_support(
     T = params.shift_hours
 
     support_map = compute_optimal_support(combo_ops).support_map
-    op_lookup = {op.name: op for op in all_operators}
+    if op_lookup is None:
+        op_lookup = {op.name: op for op in all_operators}
 
     available_support: dict[str, list[str]] = {}
     for facility, names in support_map.items():
@@ -137,6 +143,7 @@ def _evaluate_with_support(
         has_ebnhlz_in_trade=has_ebnhlz,
         ling_mood_below_12=has_rosmontis,
         perception_from_office=office_perception,
+        effective_power=effective_power,
     )
 
     ctrl_bonus = control_per_operator_bonus(control_ops, combo_ops, product)
