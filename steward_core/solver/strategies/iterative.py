@@ -101,7 +101,7 @@ class IterativeStrategy(Strategy):
         self, operators, config, op_lookup, pool,
         ctrl_global_names, dorm_names_list, power_names,
     ):
-        """以固定 BuffPool 执行完整求解（绕过 Pipeline，直接调用 Phase）"""
+        """以固定 BuffPool 执行完整求解（直接编排 Phase，不使用 Pipeline）"""
         params = config.params
         state = PartialSolution.empty()
 

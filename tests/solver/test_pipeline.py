@@ -1,10 +1,10 @@
-"""Pipeline 可组合流水线测试"""
+"""BaselineStrategy 的 Pipeline 编排器测试"""
 
 import pytest
 
 from steward_core.models import EfficiencyMap, Operator, RoomAssignment, Skill
 from steward_core.solver.config import SolverConfig
-from steward_core.solver.pipeline import Pipeline
+from steward_core.solver.strategies.baseline import Pipeline
 
 
 def _mk_op(name: str = "测试", skills: list[Skill] | None = None) -> Operator:
