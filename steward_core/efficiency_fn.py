@@ -51,6 +51,7 @@ def constant_efficiency(value: float, mood_burn: float = 0.0, T: float = 12.0) -
 def ramping_efficiency(
     k0: float, r: float, ceiling: float,
     mood_burn: float = 0.0, T: float = 12.0,
+    t_initial: float = 0.0,
 ) -> list[LinearSegment]:
     """时变效率技能 → 分段表示（7 条 buff）
 
@@ -59,19 +60,23 @@ def ramping_efficiency(
     ceiling: 效率上限
     mood_burn: 净心情消耗率
     T: 排班时长
+    t_initial: 已连续工作小时数（暖机偏移，默认 0 = 从零爬升）
     """
     segments: list[LinearSegment] = []
     t_start = 0.0
 
     t_sat = (ceiling - k0) / r if r > 0 else float("inf")
+    remaining_sat = max(0.0, t_sat - t_initial)
 
-    if t_sat <= 0:
+    if t_initial >= t_sat:
         segments.append(LinearSegment(a=ceiling, b=0.0, t_start=0.0, dt=T))
-    elif t_sat < T:
-        segments.append(LinearSegment(a=k0, b=r, t_start=0.0, dt=t_sat))
-        segments.append(LinearSegment(a=ceiling, b=0.0, t_start=t_sat, dt=T - t_sat))
+    elif remaining_sat < T:
+        start_eff = k0 + r * t_initial
+        segments.append(LinearSegment(a=start_eff, b=r, t_start=0.0, dt=remaining_sat))
+        segments.append(LinearSegment(a=ceiling, b=0.0, t_start=remaining_sat, dt=T - remaining_sat))
     else:
-        segments.append(LinearSegment(a=k0, b=r, t_start=0.0, dt=T))
+        start_eff = k0 + r * t_initial
+        segments.append(LinearSegment(a=start_eff, b=r, t_start=0.0, dt=T))
 
     if mood_burn <= 0:
         return segments
@@ -198,3 +203,52 @@ def rank_by_dominance(
             in_degree[j] -= 1
 
     return result
+
+
+def stepped_efficiency(
+    base: float,
+    step_size: float = 5.0,
+    step_interval: float = 4.0,
+    mood_burn: float = 0.0,
+    T: float = 12.0,
+    mood_initial: float = 24.0,
+) -> list[LinearSegment]:
+    """梯级衰减效率：e(t) = base - step_size × ⌊(24 - mood(t)) / step_interval⌋
+
+    mood(t) = mood_initial - burn × t
+    每 step_interval 点心情落差触发一级衰减，每段内效率为常数。
+
+    Args:
+        base: 基础效率值（百分值）
+        step_size: 每级衰减量（百分值）
+        step_interval: 心情间隔（h）
+        mood_burn: 净心情消耗率（/h）
+        T: 排班时长（h）
+        mood_initial: 初始心情值
+    """
+    if mood_burn <= 0:
+        return [LinearSegment(a=base, b=0.0, t_start=0.0, dt=T)]
+
+    segments: list[LinearSegment] = []
+    t = 0.0
+    while t < T:
+        current_mood = mood_initial - mood_burn * t
+        if current_mood <= 0:
+            segments.append(LinearSegment(a=0.0, b=0.0, t_start=t, dt=T - t))
+            break
+        steps_down = int((24.0 - current_mood) / step_interval)
+        eff = max(0.0, base - max(0, steps_down) * step_size)
+
+        next_step_mood = max(0.0, 24.0 - (steps_down + 1) * step_interval)
+        if mood_burn > 0 and mood_initial - mood_burn * t > next_step_mood:
+            dt_to_next = min(
+                T - t,
+                max(0.0, (current_mood - next_step_mood) / mood_burn),
+            )
+        else:
+            dt_to_next = T - t
+
+        segments.append(LinearSegment(a=eff, b=0.0, t_start=t, dt=dt_to_next))
+        t += dt_to_next
+
+    return segments

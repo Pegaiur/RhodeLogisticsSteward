@@ -4,8 +4,12 @@
 确保排班评分与产出报告使用完全一致的计算口径。
 """
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
 from steward_core.models import Operator, LayoutConfig
-from steward_core.efficiency_fn import constant_efficiency, integrate_segments
+from steward_core.efficiency_fn import constant_efficiency, integrate_segments, stepped_efficiency
 from steward_core.synergy import (
     synergy_pair, synergy_skill_count, synergy_skill_alias, synergy_automation,
     synergy_facility_count, synergy_buff_pool_consumer,
@@ -37,12 +41,17 @@ def evaluate_room(
     all_assignments: dict[str, list[Operator]] | None = None,
     all_operators: list[Operator] | None = None,
     control_operators: list[Operator] | None = None,
+    mood_ctx: "MoodContext | None" = None,
 ) -> float:
     """评估一个房间组合的 T 小时总效率积分 Σ∫e(t)dt
 
     含联动(A1/A3/A4/A5/A6) + 个人效率 + B层消费(B1-B5) + 全局阵营计数(B6)
     + 跨房间配对(B7) + 全局加成(C1) + 中枢条件加成。
+    mood_ctx 不为 None 时启用心情截断和铅踝梯级衰减。
     """
+    if TYPE_CHECKING:
+        from steward_core.mood_flow import MoodContext
+
     if not operators:
         return 0.0
 
@@ -50,6 +59,18 @@ def evaluate_room(
         global_bonus = GlobalBonus()
     if layout is None:
         layout = _LAYOUT_243
+
+    # 心情截断参数
+    mood_burn = 0.0
+    qiangan_mood = None
+    warmup_map: dict[str, float] = {}
+    if mood_ctx is not None:
+        mood_burn = mood_ctx.room_burn(operators, room_type)
+        qiangan_mood = mood_ctx.qiangan_decay_basis(operators, room_type)
+        for op in operators:
+            w = mood_ctx.warmup_hours.get(op.name, 0.0)
+            if w > 0:
+                warmup_map[op.name] = w
 
     # 第一步：计算所有归零来源（自动化/低语/归零变体），确定 zero_set
     # 必须在其他联动函数之前执行，避免被归零干员的效率加成泄漏到 total
@@ -90,13 +111,22 @@ def evaluate_room(
     for op in operators:
         if op.name in zero_set:
             continue
-        ramp_segs = operator_ramp_segments(op, room_type, product, T)
+        t_init = warmup_map.get(op.name, 0.0)
+        ramp_segs = operator_ramp_segments(op, room_type, product, T, t_initial=t_init)
         if ramp_segs is not None:
             total += integrate_segments(ramp_segs, T)
+        elif op.name == "铅踝" and qiangan_mood is not None:
+            qiangan_segs = stepped_efficiency(
+                base=30, step_size=5, step_interval=4,
+                mood_burn=mood_burn, T=T, mood_initial=qiangan_mood,
+            )
+            total += integrate_segments(qiangan_segs, T)
         else:
             eff = op.best_efficiency(room_type, product)
             if eff > 0:
-                total += integrate_segments(constant_efficiency(eff, mood_burn=0.0, T=T), T)
+                total += integrate_segments(
+                    constant_efficiency(eff, mood_burn=mood_burn, T=T), T,
+                )
 
     # 容量→效率（仅未归零干员的容量参与计算）
     total += integrate_segments(synergy_capacity_to_eff(non_zero_ops, room_type, product, T), T)
