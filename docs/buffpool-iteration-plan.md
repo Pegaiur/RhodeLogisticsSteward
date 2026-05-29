@@ -476,3 +476,39 @@ steward_core/solver/
 - [ ] B4: `production.py` 统一使用 `GlobalContext.from_plan()`
 - [ ] 全量 TrueData 端到端：`IterativeStrategy` 不崩溃、产出 ≥ Baseline
 - [ ] `python -m pytest tests/ -v` 全绿，无用例减少
+
+---
+
+## 八、实施笔记（2026-05-29）
+
+### Step A 偏差
+- kbeam.py 的 `_phase1_kbeam` 方法同步更名为 `_kbeam_exhaust_mfg`
+- 5 个 Phase 模块的 docstring 去除了旧 Phase 编号，改为纯描述
+
+### Step B1 偏差
+- `_derive_pool` 作为内部函数不导出到 `__init__.py`，测试直接 import 自 `steward_core.synergy.buff_pool`
+- `compute_buff_pool` 改用 `_derive_pool` 原地更新，语义完全等价
+
+### Step B2 偏差
+- Trade 循环：`base_pool` 变量名改为 `bp` 避免与函数级 `pool`（干员列表）冲突
+- Mfg 循环：预计算的 `base_pool` 需传入 `layout=LayoutConfig.layout_243()`（初版遗漏导致审查 Bug）
+- Mfg 循环：仅非迷迭香组合使用 `base_pool`，迷迭香组合走原有 `from_estimated` 路径（因其支撑干员变化影响池）
+- `_evaluate_with_support` 新增 `override_pool` 参数——迭代模式下用外部注入池覆盖 `from_estimated` 的计算结果
+
+### Step B3 偏差
+- 绕过 Pipeline 直接调用 Phase（与 kbeam.py 一致），因为 Pipeline 不支持传递 `override_pool`
+- `exhaust_mfg` 和 `exhaust_trade` 均新增 `override_pool` 参数——迭代模式下调用方传入统一池
+- `IterativeStrategy` 导出到 `strategies/__init__.py`
+
+### Step B4 偏差
+- `production.py` 中通过局部 import `GlobalContext` + `SolverParams` 替代重复的 26 行代码
+- 未移除顶层 import 的 `_B_ROSEMARY` 和 `_B_EBENHOLZ`（原用于此段代码，现无其他引用但保留不影响）
+
+### 提交历史
+```
+63a5a7f refactor(production): 统一使用GlobalContext.from_plan替代重复的buff_pool构造
+880511f feat(solver): 实现IterativeStrategy不动点迭代策略
+c8a9004 refactor(solver): Trade和Mfg循环BuffPool提到外部预计算
+d4842b5 feat(synergy): BuffPool 支持可组合化(__add__/clone/_derive_pool)
+d639db7 refactor(solver): Phase文件重命名为动作语义(exhaust_*/fill_*)
+```
