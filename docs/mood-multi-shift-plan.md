@@ -8,7 +8,7 @@
 
 - `steward_core/mood_flow.py` 新增（325行）：`MoodModifiers`(7字段) + `compute_mood_modifiers()` + `compute_global_burn()` + `MoodContext`(11字段+10方法)
 - **审查修复**：`ensure_modifiers()` 原用伪 Operator(char_id="", name=name) 无 skills，玛恩纳 mlynar_spread 检测永久失效。修复方案：新增 `_op_lookup: dict[str, Operator]` 内部字段，`fresh()` 时注入，`_resolve_control_operators()` 解析时优先查表
-- `work_burn()` 使用 `_BASE_BURN_3=0.75`（与 `compute_global_burn` 一致），非 plan 中的动态公式 1.0-0.05×(n-1)=0.90——**偏差记录**，待 mood_burn 激活后统一修正
+- `work_burn()` 原使用 `_BASE_BURN_3=0.75`（已于 `761995d` 迁移至动态公式 `1.0-0.05×(slots-1)=0.90`）
 - `dorm_recovery()` 返回 0.0 占位，`after_recovery()` 实质空操作——**偏差记录**，依赖 Step 1
 - `after_shift()` 对所有设施硬编码 room_type="Mfg"/room_slots=3——**偏差记录**，待 per-room burn 修正
 - `synergy/mood.py` 委托至 `mood_flow`（保留旧 `compute_global_burn` 签名，`worker_count` 参数未传递——旧签名中此参数从未被使用，兼容无影响）
@@ -99,11 +99,12 @@
 |------|:---:|------|
 | ~~`work_burn` 使用 0.75 非 0.90~~ | ✅ 已修复 | `761995d` 迁移至 `1.0-0.05×(slots-1)` |
 | `after_shift` 硬编码 room_type/slots | 持续 | 需 per-room burn 计算，burn 公式已修复但 after_shift 仍用单值 |
-| `dorm_recovery` yanhuo_bonus 多算 0.05 | 持续 | 需拆分 yanhuo_recovery 为基础+烟火两部分 |
+| ~~`dorm_recovery` yanhuo_bonus 多算 0.05~~ | ✅ 已修复 | `73a4967` yanhuo_recovery 扣除重岳基值 0.05，仅保留烟火联动 |
 | 菲亚梅塔交换未实现 | 持续 | `fill_dorm_with_scheduling` 尚未实现交换逻辑 |
 | 测试套件未新增 | 持续 | plan §10 测试未编写 |
 | ~~worker_count 静默丢弃~~ | ✅ 已修复 | `c236347` 已透传 |
 | ~~mood_work_threshold 默认 0.0~~ | ✅ 已修复 | `761995d` 多班次自动使用 mood_blue_face=12.0 |
+| ~~`_BASE_BURN_3` 死代码残留~~ | ✅ 已修复 | `73a4967` 从 helpers/__init__/params 清理 |
 
 ### 2026-05-29 · burn 公式修正 + 阈值激活（761995d）
 
