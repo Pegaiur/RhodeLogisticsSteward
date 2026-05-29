@@ -94,6 +94,7 @@ def _evaluate_with_support(
     op_lookup: dict[str, Operator] | None = None,
     effective_power: int | None = None,
     override_pool=None,
+    mood_ctx=None,
 ) -> tuple[float, dict[str, list[str]]]:
     """评估 combo 含最优支撑的完整评分
 
@@ -131,6 +132,13 @@ def _evaluate_with_support(
     has_rosmontis = any(op.name == _B_ROSEMARY for op in combo_ops)
     has_ebnhlz = _B_EBENHOLZ in available_support.get("Trade", [])
 
+    if mood_ctx is not None:
+        ling_mood_below_12 = mood_ctx.is_below("令", 12.0)
+        xi_mood_below_12 = mood_ctx.is_below("夕", 12.0)
+    else:
+        ling_mood_below_12 = has_rosmontis
+        xi_mood_below_12 = None
+
     office_perception = 0
     if "絮雨" in available_support.get("Office", []):
         office_perception = params.office_perception_base
@@ -143,9 +151,11 @@ def _evaluate_with_support(
         params=params,
         has_rosmontis_in_mfg=has_rosmontis,
         has_ebnhlz_in_trade=has_ebnhlz,
-        ling_mood_below_12=has_rosmontis,
+        ling_mood_below_12=ling_mood_below_12,
+        xi_mood_below_12=xi_mood_below_12,
         perception_from_office=office_perception,
         effective_power=effective_power,
+        mood_ctx=mood_ctx,
     )
 
     ctrl_bonus = control_per_operator_bonus(control_ops, combo_ops, product)
@@ -157,6 +167,7 @@ def _evaluate_with_support(
         ctrl_per_op_bonus=ctrl_bonus,
         all_operators=all_operators,
         control_operators=control_ops,
+        mood_ctx=mood_ctx,
     )
 
     return score, available_support

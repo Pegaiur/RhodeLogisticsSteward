@@ -113,6 +113,7 @@ def exhaust_mfg(
                 override_pool=override_pool if override_pool is not None else (
                     base_pool if not has_rosmontis else None
                 ),
+                mood_ctx=config.mood_ctx,
             )
             combo_names = [op.name for op in combo_ops]
             all_support_names = [n for names in support_map.values() for n in names]

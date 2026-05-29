@@ -156,6 +156,7 @@ class KBeamStrategy(Strategy):
             score, support_map = _evaluate_with_support(
                 combo_ops, "Mfg", product, operators, assigned_ids,
                 params=config.params,
+                mood_ctx=config.mood_ctx,
             )
             combo_names = [op.name for op in combo_ops]
             all_support_names = [n for names2 in support_map.values() for n in names2]
