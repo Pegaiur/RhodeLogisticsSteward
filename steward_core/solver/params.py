@@ -71,6 +71,10 @@ class SolverParams:
     global_state_alpha: float = 0.3
     """全局状态评分权重（0=忽略全局状态, 1=完全平衡）"""
 
+    # === 制造站穷举预筛选 ===
+    rough_score_keep_top: int = 0
+    """粗评分预筛选保留的组合数（0 或负数表示禁用预筛选，全量评估）"""
+
     # === 局部搜索 ===
     local_search_max_rounds: int = 3
     """局部搜索最大轮次"""
@@ -107,6 +111,19 @@ class SolverParams:
         data = {f.name: getattr(self, f.name) for f in fields(self)}
         with open(path, "w", encoding="utf-8") as f:
             json.dump(data, f, indent=2, ensure_ascii=False)
+
+    def apply_overrides(self, **kwargs) -> "SolverParams":
+        """返回新实例，仅覆盖显式传入的非 None 字段（用于 CLI 参数优先级合并）"""
+        updates = {k: v for k, v in kwargs.items() if v is not None}
+        if not updates:
+            return self
+        data = {f.name: getattr(self, f.name) for f in fields(self)}
+        data.update(updates)
+        result = SolverParams(**data)
+        errors = result.validate()
+        if errors:
+            raise ValueError(f"参数覆盖后校验失败: {errors}")
+        return result
 
     def diff(self, other: "SolverParams") -> list[str]:
         """比较两个参数集，返回差异字段列表"""

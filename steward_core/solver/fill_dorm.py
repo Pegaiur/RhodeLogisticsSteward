@@ -1,11 +1,11 @@
-"""Phase 4: 宿舍填充"""
+"""宿舍填充"""
 
 from steward_core.models import Operator, RoomAssignment
 
 from .config import SolverConfig
 
 
-def _phase4_dorm(
+def fill_dorm(
     operators: list[Operator],
     assigned_ids: set[str],
     assigned_names: set[str],
@@ -26,6 +26,9 @@ def _phase4_dorm(
     autofill_count = 0
 
     dorm_names: list[str] = list(locked_support["Dormitory"])
+    for name in dorm_names:
+        if name in op_lookup:
+            assigned_ids.add(op_lookup[name].char_id)
 
     for name in dorm_names_list:
         if name not in dorm_names and name in op_lookup and op_lookup[name].char_id not in assigned_ids:

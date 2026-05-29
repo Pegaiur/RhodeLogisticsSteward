@@ -86,7 +86,8 @@ RhodeLogisticsSteward/
 │   ├── efficiency-function-design.md  # 效率函数建模
 │   ├── synergy-systems.md        # 联动体系建模
 │   ├── inbox.md                  # 需求收件箱（远期待办登记）
-│   ├── solver-improvement-plan.md # 求解器优化计划（v0.4.0 已实施）
+│   ├── strategy-refactor-plan.md  # Strategy 策略层重构计划（v0.5.0）
+│   ├── strategy-refactor-notes.md # 重构实施笔记
 │   ├── archive/
 │   │   ├── index.md               # 里程碑索引
 │   │   ├── roadmap-mvp.md         # 开发路线图（已归档）
@@ -168,6 +169,7 @@ RhodeLogisticsSteward/
 | 干员/buff 数据查询 | `.trae/skills/data-query/query_data.py` (通过 `data-query` skill) |
 | 人工维护/硬编码数据/更新 | AGENTS.md §人工维护数据 |
 | 硬编码数据生成规则 | `.trae/rules/hardcoded-data.md` |
+| 策略注册与 CLI 配置 | `.trae/rules/strategy-config.md` |
 | 重构/模块拆分/架构 | `docs/archive/refactor-plan.md`（已归档） |
 | 求解器优化/三件套 | `docs/archive/solver-improvement-plan.md`（v0.4.0 已实施） |
 | 远期待办/需求登记 | `docs/inbox.md` |

@@ -1,7 +1,7 @@
 """全局上下文构造器
 
 统一 buff_pool、global_bonus、effective_power 的构建逻辑，
-消除 support.py / phase3_trade.py / refine.py / production.py 中的重复实现。
+消除 support.py / exhaust_trade.py / refine.py / production.py 中的重复实现。
 """
 
 from __future__ import annotations
@@ -53,12 +53,15 @@ class GlobalContext:
         has_wuyou_in_trade: bool = False,
         ling_mood_below_12: bool = False,
         perception_from_office: int = 0,
+        effective_power: int | None = None,
     ) -> "GlobalContext":
         """从估计数据构建上下文（Phase 1/3a 预评估用）
 
         用于尚未完成完整排班的阶段：
         - Phase 1 Mfg 评估：control/dorm 来自 available_support
         - Phase 3a Trade 评估：dorm 为估计占位干员
+
+        effective_power 可由调用方预计算传入以跳过全量 _has_power_count_modifier 扫描。
         """
         global_bonus = compute_control_global_bonus(control_operators)
 
@@ -75,12 +78,13 @@ class GlobalContext:
             layout=LayoutConfig.layout_243(),
         )
 
-        effective_power = BASE_POWER_COUNT + sum(
-            1 for op in all_operators
-            if op.name not in assigned_names and _has_power_count_modifier(op)
-        )
+        if effective_power is None:
+            effective_power = BASE_POWER_COUNT + sum(
+                1 for op in all_operators
+                if op.name not in assigned_names and _has_power_count_modifier(op)
+            )
         # 森蚺"我寻思能行"：Lancet-2 可用时若森蚺在中枢则+2
-        if any(op.name == "Lancet-2" for op in all_operators):
+        if effective_power is not None and any(op.name == "Lancet-2" for op in all_operators):
             for op in control_operators:
                 if any(s.buff_id == "control_pow_bot[000]" for s in op.skills):
                     effective_power += 2

@@ -4,13 +4,17 @@ r"""优化策略 A/B 对比测试
 用法: python compare_solver.py
 """
 
+import sys
 from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent))
 
 from steward_core.data_loader import load_operators_v2
 from steward_core.solver import solve_mvp
 from steward_core.solver.config import SolverConfig
 from steward_core.solver.refine import evaluate_full_plan
 from steward_core.solver.params import SolverParams
+from steward_core.solver.strategies import KBeamStrategy
 from steward_core import production
 
 
@@ -43,7 +47,7 @@ def run_and_score(operators, config, label):
 
 
 def main():
-    project_root = Path(__file__).resolve().parent
+    project_root = Path(__file__).resolve().parent.parent.parent
     ci_path = project_root / "character_identity.json"
     bi_path = project_root / "buffs_infrastructure.json"
 
@@ -68,6 +72,8 @@ def main():
             local_search_enabled=True,
          ), "独占检查 + 局部搜索"),
         (SolverConfig.all_on(), "all_on (三项全开)"),
+        (SolverConfig(strategy=KBeamStrategy(beam_width=3)), "K-Beam K=3"),
+        (SolverConfig(strategy=KBeamStrategy(beam_width=5)), "K-Beam K=5"),
     ]
 
     results = []
