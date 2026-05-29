@@ -112,6 +112,15 @@ class SolverParams:
         with open(path, "w", encoding="utf-8") as f:
             json.dump(data, f, indent=2, ensure_ascii=False)
 
+    def apply_overrides(self, **kwargs) -> "SolverParams":
+        """返回新实例，仅覆盖显式传入的非 None 字段（用于 CLI 参数优先级合并）"""
+        updates = {k: v for k, v in kwargs.items() if v is not None}
+        if not updates:
+            return self
+        data = {f.name: getattr(self, f.name) for f in fields(self)}
+        data.update(updates)
+        return SolverParams(**data)
+
     def diff(self, other: "SolverParams") -> list[str]:
         """比较两个参数集，返回差异字段列表"""
         diffs = []
