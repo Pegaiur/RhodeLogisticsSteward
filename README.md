@@ -33,11 +33,12 @@ python run_solver.py --strategy kbeam5 --kw "beam_width=7"
 
 ## 数据文件
 
-需在项目根目录放置以下文件：
+项目根目录已包含所需的三个清洗文件，无需额外下载：
 
-| 文件 | 获取方式 |
-|------|----------|
-| `character_identity.json` | 从 [ArknightsGameData](https://github.com/Kengxxiao/ArknightsGameData) 清洗 |
-| `buffs_infrastructure.json` | 同上 |
+| 文件 | 说明 |
+|------|------|
+| `character_identity.json` | 干员身份与技能映射 |
+| `buffs_infrastructure.json` | 基建 buff 效率值 |
+| `buffs_non_production.json` | 非生产设施 buff（宿舍/会客室等） |
 
 输出目录：`output/custom_infrast/`，将生成的 JSON 放入 MAA `resource/custom_infrast/` 即可使用。
