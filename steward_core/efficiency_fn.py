@@ -24,26 +24,66 @@ def integrate_segments(segments: list[LinearSegment], T: float) -> float:
     return total
 
 
-def constant_efficiency(value: float, mood_burn: float = 0.0, T: float = 12.0) -> list[LinearSegment]:
+def constant_efficiency(
+    value: float,
+    mood_burn: float = 0.0,
+    T: float = 12.0,
+    mood_initial: float = 24.0,
+    mood_blue_face: float = 0.0,
+) -> list[LinearSegment]:
     """常数效率技能 → 分段表示
 
     value: 技能效率值（百分值，如 30 表示 +30%）
     mood_burn: 净心情消耗率（/h），0 表示不截断
     T: 排班时长（h）
+    mood_initial: 干员初始心情值，默认 24
+    mood_blue_face: 蓝脸阈值，0 表示不建模蓝脸衰减
 
-    若 mood_burn > 0，在 t_red = 24 / mood_burn 处截断为归零段。
+    mood >= mood_blue_face: 满效率
+    0 < mood < mood_blue_face: 效率线性衰减 (× mood/mood_blue_face)
+    mood <= 0: 效率归零
     """
     if mood_burn <= 0:
         return [LinearSegment(a=value, b=0.0, t_start=0.0, dt=T)]
 
-    t_red = 24.0 / mood_burn
+    t_red = mood_initial / mood_burn
     if t_red >= T:
-        return [LinearSegment(a=value, b=0.0, t_start=0.0, dt=T)]
+        if mood_blue_face <= 0 or mood_initial < mood_blue_face:
+            if mood_blue_face <= 0:
+                return [LinearSegment(a=value, b=0.0, t_start=0.0, dt=T)]
+            t_red = T
+        else:
+            t_blue_start = (mood_initial - mood_blue_face) / mood_burn
+            if t_blue_start >= T:
+                return [LinearSegment(a=value, b=0.0, t_start=0.0, dt=T)]
+            t_red = T
 
-    segments = [
-        LinearSegment(a=value, b=0.0, t_start=0.0, dt=t_red),
-    ]
-    if T > t_red:
+    segments: list[LinearSegment] = []
+
+    if mood_blue_face > 0 and mood_initial < mood_blue_face:
+        # 起始已在蓝脸区 — 全程线性衰减直至归零
+        a_blue = value * mood_initial / mood_blue_face
+        b_blue = -value * mood_burn / mood_blue_face
+        dt_blue = min(T, t_red)
+        segments.append(LinearSegment(a=a_blue, b=b_blue, t_start=0.0, dt=dt_blue))
+    elif mood_blue_face > 0:
+        # 满效率 → 蓝脸衰减
+        t_blue_start = (mood_initial - mood_blue_face) / mood_burn
+        if t_blue_start > 0:
+            segments.append(LinearSegment(a=value, b=0.0, t_start=0.0, dt=min(T, t_blue_start)))
+        if t_blue_start < T and t_blue_start < t_red:
+            a_blue = value
+            b_blue = -value * mood_burn / mood_blue_face
+            dt_blue = min(T, t_red) - t_blue_start
+            if dt_blue > 0:
+                segments.append(LinearSegment(a=a_blue, b=b_blue, t_start=t_blue_start, dt=dt_blue))
+    elif t_red < T:
+        # 仅红脸截断（无蓝脸建模）
+        segments.append(LinearSegment(a=value, b=0.0, t_start=0.0, dt=t_red))
+    else:
+        segments.append(LinearSegment(a=value, b=0.0, t_start=0.0, dt=T))
+
+    if 0 < t_red < T:
         segments.append(LinearSegment(a=0.0, b=0.0, t_start=t_red, dt=T - t_red))
     return segments
 

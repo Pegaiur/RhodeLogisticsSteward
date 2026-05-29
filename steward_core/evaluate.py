@@ -62,15 +62,19 @@ def evaluate_room(
 
     # 心情截断参数
     mood_burn = 0.0
+    mood_blue_face = 0.0
     qiangan_mood = None
     warmup_map: dict[str, float] = {}
+    mood_map: dict[str, float] = {}
     if mood_ctx is not None:
         mood_burn = mood_ctx.room_burn(operators, room_type)
+        mood_blue_face = mood_ctx.params.mood_blue_face if mood_ctx.params else 12.0
         qiangan_mood = mood_ctx.qiangan_decay_basis(operators, room_type)
         for op in operators:
             w = mood_ctx.warmup_hours.get(op.name, 0.0)
             if w > 0:
                 warmup_map[op.name] = w
+            mood_map[op.name] = mood_ctx.mood_of(op.name)
 
     # 第一步：计算所有归零来源（自动化/低语/归零变体），确定 zero_set
     # 必须在其他联动函数之前执行，避免被归零干员的效率加成泄漏到 total
@@ -124,8 +128,12 @@ def evaluate_room(
         else:
             eff = op.best_efficiency(room_type, product)
             if eff > 0:
+                op_mood = mood_map.get(op.name, 24.0)
                 total += integrate_segments(
-                    constant_efficiency(eff, mood_burn=mood_burn, T=T), T,
+                    constant_efficiency(
+                        eff, mood_burn=mood_burn, T=T,
+                        mood_initial=op_mood, mood_blue_face=mood_blue_face,
+                    ), T,
                 )
 
     # 容量→效率（仅未归零干员的容量参与计算）

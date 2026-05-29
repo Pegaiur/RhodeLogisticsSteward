@@ -319,8 +319,8 @@ class MoodContext:
         hours: 恢复时长
         宿舍中的干员按 dorm_recovery() 速率恢复，上限 24.0。
         中枢干员不受影响。
-        注意：当前 dorm_recovery() 为占位实现（返回 0.0），
-        实际恢复需等待 Step 1 evaluate_dorm_recovery() 完成后激活。
+        暖机状态（warmup_hours）在宿舍恢复后归零——干员离开工位后爬升进度重置。
+        菲亚梅塔交换是唯一保留暖机的途径（尚未实现，待后续建模）。
         """
         new_moods = dict(self.operator_moods)
 
@@ -331,7 +331,7 @@ class MoodContext:
             if recovery_rate > 0:
                 new_moods[name] = min(24.0, new_moods[name] + recovery_rate * hours)
 
-        return replace(self, operator_moods=new_moods)
+        return replace(self, operator_moods=new_moods, warmup_hours={})
 
     def qiangan_decay_basis(
         self,
