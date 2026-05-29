@@ -169,6 +169,20 @@ def main():
             product_str = f" ({a.product})" if a.product else ""
             print(f"  {a.room_type}[{a.room_index}]{product_str}: {a.operators}{tag}")
 
+    # ── 多班次心情变化 ──
+    if result.mood_snapshots and len(result.mood_snapshots) > 0:
+        print()
+        for pi, snapshot in enumerate(result.mood_snapshots):
+            if not snapshot:
+                continue
+            print(f"── 心情变化·班次 {pi + 1} (开始→结束) ──")
+            for name in sorted(snapshot, key=lambda n: (snapshot[n][1] - snapshot[n][0], n)):
+                before, after = snapshot[name]
+                delta = after - before
+                sign = "+" if delta >= 0 else ""
+                print(f"  {name:8s}  {before:5.1f} → {after:5.1f}  ({sign}{delta:+.1f})")
+            print()
+
     # ── 产出计算 ──
     for pi, plan in enumerate(result.plans):
         if len(result.plans) > 1:

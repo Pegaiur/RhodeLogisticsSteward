@@ -208,3 +208,5 @@ class SolveResult:
     plans: list[ShiftPlan] = field(default_factory=list)
     autofill_count: int = 0
     config_used: Optional["SolverConfig"] = None
+    mood_snapshots: list[dict[str, tuple[float, float]]] = field(default_factory=list)
+    """每班次心情快照: [{干员名: (班次前心情, 班次后心情)}, ...]，由 solve_multi_shift 填充"""

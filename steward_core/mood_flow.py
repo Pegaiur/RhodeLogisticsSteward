@@ -280,6 +280,22 @@ class MoodContext:
             yanhuo_bonus=yanhuo_bonus,
         )
 
+    def _control_burn(self) -> float:
+        """计算控制中枢干员的心情消耗率净值 (mood_burn/h)
+
+        公式：base - control_recovery - yanhuo_recovery。
+        mlynar_spread 不纳入——玛恩纳扩散效果是将 control_recovery
+        传播至其他设施，中枢干员本身已在控制中枢内天然享受减免。
+
+        5 人中枢 → base=0.80，扣除 recovery 后净消耗约 0.50-0.60/h。
+        """
+        control_count = len(self.control_operators)
+        if control_count == 0:
+            return 0.0
+        base = 1.0 - 0.05 * max(0, control_count - 1)
+        modifiers = self.ensure_modifiers()
+        return max(0.0, base - modifiers.control_recovery - modifiers.yanhuo_recovery)
+
     def after_shift(
         self,
         working_names: set[str],
@@ -287,16 +303,17 @@ class MoodContext:
     ) -> "MoodContext":
         """应用一个班次后的心情变化（不可变，返回新实例）
 
-        working_names: 本班次工作的干员名集合
+        working_names: 本班次工作的干员名集合（含中枢干员）
         shift_hours_override: 覆盖默认班次时长（用于测试/自定义班次）
 
+        工作设施干员按 work_burn 消耗，中枢干员按 _control_burn 消耗。
         注意：当前对所有工作设施使用相同的 work_burn 公式（3 工位基础）。
-        不同工位数设施（Trade 2/3 工位、Power 1 工位）的 burn 差异
-        将在 mood_burn 激活后通过 per-room 计算修正。
         """
         hours = shift_hours_override if shift_hours_override is not None else self.shift_hours
         new_moods = dict(self.operator_moods)
         new_warmup = dict(self.warmup_hours)
+
+        control_burn_rate = self._control_burn()
 
         for name in self.operator_moods:
             if name in working_names:
@@ -304,6 +321,8 @@ class MoodContext:
                     burn = self.work_burn(name, "Mfg", 3)
                     new_moods[name] = max(0.0, new_moods[name] - burn * hours)
                 new_warmup[name] = self.warmup_hours.get(name, 0.0) + hours
+            elif name in self.control_operators:
+                new_moods[name] = max(0.0, new_moods[name] - control_burn_rate * hours)
             else:
                 new_warmup.pop(name, None)
 

@@ -65,6 +65,7 @@ def solve_multi_shift(
         effective_threshold = params.mood_blue_face
 
     all_plans: list[ShiftPlan] = []
+    mood_snapshots: list[dict[str, tuple[float, float]]] = []
 
     for shift_idx in range(params.shift_count):
         working_config = SolverConfig(
@@ -92,8 +93,17 @@ def solve_multi_shift(
                 period_to=f"{(half_hours + offset + int(params.shift_hours) - 1):02d}:59",
             )
 
+            mood_before = dict(mood_ctx.operator_moods)
             mood_ctx = _collect_control_from_plan(plan, mood_ctx)
             mood_ctx = _collect_working_from_plan(plan, mood_ctx)
+
+            # 记录本班次心情变化快照
+            snapshot: dict[str, tuple[float, float]] = {}
+            for name, after in mood_ctx.operator_moods.items():
+                before = mood_before.get(name, 24.0)
+                if abs(before - after) > 0.005:
+                    snapshot[name] = (before, after)
+            mood_snapshots.append(snapshot)
 
             # 框架层覆盖宿舍分配
             fill_dorm_with_scheduling(
@@ -113,6 +123,7 @@ def solve_multi_shift(
         plans=all_plans,
         autofill_count=0,
         config_used=_build_output_config(config, mood_ctx),
+        mood_snapshots=mood_snapshots,
     )
 
 
