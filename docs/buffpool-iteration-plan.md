@@ -502,7 +502,8 @@ steward_core/solver/
 
 ### Step B4 偏差
 - `production.py` 中通过局部 import `GlobalContext` + `SolverParams` 替代重复的 26 行代码
-- 未移除顶层 import 的 `_B_ROSEMARY` 和 `_B_EBENHOLZ`（原用于此段代码，现无其他引用但保留不影响）
+- 同时移除了 `_B_ROSEMARY`、`_B_EBENHOLZ` 和 `compute_buff_pool` 的顶层 import，无残留引用
+- 附带修复：`perception_from_office` 从默认 0 变为按 plan 实际计算（絮雨在 Office 时 =20）
 
 ### 提交历史
 ```
