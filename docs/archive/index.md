@@ -16,6 +16,5 @@
 | [roadmap-mvp.md](./roadmap-mvp.md) | v0.2.0 | 开发路线图，MVP完成后归档 |
 | [refactor-plan.md](./refactor-plan.md) | v0.3.0 | 子包拆分重构计划，完成后归档 |
 | [solver-improvement-plan.md](./solver-improvement-plan.md) | v0.4.0 | 求解器三件套优化计划，全部实施后归档 |
-| [strategy-refactor-plan.md](./strategy-refactor-plan.md) | v0.5.0 | Strategy 策略层重构计划，全部实施后归档 |
-| [strategy-refactor-notes.md](./strategy-refactor-notes.md) | v0.5.0 | Strategy 重构实施笔记（决策记录与偏离） |
+| [strategy-refactor-plan.md](./strategy-refactor-plan.md) | v0.5.0 | Strategy 策略层重构计划 + 实施笔记（合并），全部实施后归档 |
 | [buffpool-iteration-plan.md](./buffpool-iteration-plan.md) | v0.5.0 | BuffPool 不动点迭代 + Phase 命名计划，全部实施后归档 |

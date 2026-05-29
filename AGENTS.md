@@ -91,13 +91,13 @@ RhodeLogisticsSteward/
 │   ├── efficiency-function-design.md  # 效率函数建模
 │   ├── synergy-systems.md        # 联动体系建模
 │   ├── inbox.md                  # 需求收件箱（远期待办登记）
-│   ├── strategy-refactor-plan.md  # Strategy 策略层重构计划（v0.5.0）
-│   ├── strategy-refactor-notes.md # 重构实施笔记
 │   ├── archive/
 │   │   ├── index.md               # 里程碑索引
-│   │   ├── roadmap-mvp.md         # 开发路线图（已归档）
-│   │   ├── refactor-plan.md       # 重构计划（已归档）
-│   │   └── solver-improvement-plan.md  # 求解器优化计划（已实施，已归档）
+│   │   ├── roadmap-mvp.md         # 开发路线图（v0.2.0 已归档）
+│   │   ├── refactor-plan.md       # 重构计划（v0.3.0 已归档）
+│   │   ├── solver-improvement-plan.md  # 求解器优化计划（v0.4.0 已归档）
+│   │   ├── strategy-refactor-plan.md   # Strategy 重构计划 + 实施笔记（v0.5.0 已实施）
+│   │   └── buffpool-iteration-plan.md  # BuffPool 迭代计划（v0.5.0 已实施）
 └── output/                       # 生成的排班文件（不入库）
     └── custom_infrast/
 ```
@@ -156,7 +156,7 @@ RhodeLogisticsSteward/
 2. **读取 `docs/strategy-brief.md`** → 理解当前策略与算法骨架
 3. **按需深入到子包**：
    - 联动体系逻辑 → `steward_core/synergy/`：先读 `__init__.py` 了解公开 API，再按需进入对应模块（A层→`mfg_linkages`/`trade_linkages`/`facility_linkages`，B层→`buff_pool`/`global_linkages`，C层→`control_linkages`/`mood`）
-   - 求解/排班逻辑 → `steward_core/solver/`：先读 `__init__.py` 的 `solve_mvp()` Pipeline 编排，再按需进入 `pipeline.py`（Phase 顺序）、各 `phase*.py`（具体阶段）、`refine.py`（局部搜索）、`global_state.py`（全局状态评分）
+   - 求解/排班逻辑 → `steward_core/solver/`：先读 `__init__.py` 的 `solve_mvp()`（委托给 Strategy），再按需进入 `strategy.py`（Strategy ABC + PartialSolution）、`strategies/baseline.py`（Pipeline 流水线编排）、各 `exhaust_*/fill_*` 模块（具体阶段）、`refine.py`（局部搜索）、`global_state.py`（全局状态评分）
    - 数据模型/常量 → `steward_core/models.py` / `constants.py`
    - 表维护/新增 → `synergy/types.py` TABLES 注册器 + `synergy/registry.py` 系统贡献者 + AGENTS.md §人工维护数据
    - 硬编码数据维护规则 → `.trae/rules/hardcoded-data.md`（锚点生成、名称集合同步、分类覆盖率）
@@ -179,7 +179,10 @@ RhodeLogisticsSteward/
 | 求解器优化/三件套 | `docs/archive/solver-improvement-plan.md`（v0.4.0 已实施） |
 | 远期待办/需求登记 | `docs/inbox.md` |
 | 联动体系代码 | `steward_core/synergy/` → `__init__.py` 重导出一览，`types.py` TABLES 注册器索引全部表 |
-| 求解/排班代码 | `steward_core/solver/` → `__init__.py` solve_mvp() 入口，各 `phase*.py` 按阶段独立，`pipeline.py` 配置 Phase 顺序 |
+| 求解/排班代码 | `steward_core/solver/` → `__init__.py` solve_mvp() 入口，`strategy.py` Strategy ABC，`strategies/baseline.py` Pipeline 编排，各 `exhaust_*/fill_*` 模块按阶段独立 |
+| 策略实现/CLI | `.trae/rules/strategy-config.md` + `solver/strategies/__init__.py` STRATEGY_REGISTRY |
+| Strategy 重构（已完成） | `docs/archive/strategy-refactor-plan.md`（v0.5.0 已实施） |
+| BuffPool 迭代（已完成） | `docs/archive/buffpool-iteration-plan.md`（v0.5.0 已实施） |
 
 ## 版本管理
 
@@ -208,8 +211,9 @@ master ────────────────────────�
 | 通过 Step 1 验证 | 0.2.0 | 核心算法验证 |
 | 通过 Step 2 验证 | 0.3.0 | 横向重构完成 |
 | 求解器三件套优化 | 0.4.0 | 支撑包+局部搜索+全局状态 |
+| Strategy 策略层重构 | 0.5.0 | Baseline/KBeam/Iterative 三条策略 + Phase 重命名 + BuffPool 迭代 + CLI 策略选择 |
 | 首个正式版 | 1.0.0 | 全验证通过 |
-| MAA 发版需适配 | PATCH +1 | 0.4.1 |
+| MAA 发版需适配 | PATCH +1 | 0.5.1 |
 
 ### 提交约定
 
@@ -230,6 +234,7 @@ v0.1.0  → M1: Step 1 验证通过
 v0.2.0  → M2: Step 2 验证通过
 v0.3.0  → M3: Step 3 验证通过
 v0.4.0  → M4: 求解器三件套优化（支撑包+局部搜索+全局状态）
+v0.5.0  → M5: Strategy 策略层重构（3 条策略 + Phase 重命名 + BuffPool 迭代 + CLI）
 v1.0.0  → 首个正式版
 ```
 
