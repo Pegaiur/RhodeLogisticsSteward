@@ -420,7 +420,7 @@ class TestEngineeringRobots:
 
         assert pool.engineering_robots == 64
 
-    def test_机械辅助α_42机器人_加10percent(self):
+    def test_机械辅助alpha_42机器人_加10percent(self):
         """至简 α: 每16机器人→+5%，42机器人 → 42//16×5 = 10%"""
         from steward_core.synergy import synergy_buff_pool_consumer, BuffPool
 

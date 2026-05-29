@@ -24,7 +24,7 @@ class IterativeStrategy(Strategy):
     """不动点迭代策略
 
     算法：
-      1. 用乐观估计生成初始 Pool P₀（假设所有 BuffPool 生产者都在工作设施中）
+      1. 用乐观估计生成初始 Pool P0（假设所有 BuffPool 生产者都在工作设施中）
       2. 以 P_k 为全局基准评估所有 combo，贪心分配各设施
       3. 从分配结果反向构建 GlobalContext → 计算实际 Pool P_{k+1}
       4. 若 P_{k+1} == P_k → 收敛（Pool 与分配自洽），返回结果

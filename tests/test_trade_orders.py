@@ -90,7 +90,7 @@ class TestTradeOrderMultiplier:
         assert lmd_per_day == pytest.approx(12000.0, rel=0.01)
         assert gold_per_day == pytest.approx(24 / 2.4 * 2.0, rel=0.01)  # 20
 
-    def test_龙舌兰加裁缝β_高品质投资倍数(self):
+    def test_龙舌兰加裁缝beta_高品质投资倍数(self):
         """龙舌兰投资β + 裁缝β → LMD 约12669，文档基准12740"""
         # Arrange
         tequila = _mk_op("龙舌兰", [
@@ -132,7 +132,7 @@ class TestTradeOrderMultiplier:
         assert lmd_per_day == pytest.approx(10265 * expected_lmd_mult, rel=0.002)
         assert gold_per_day == pytest.approx(24 * 2.9 / 3.39 * expected_gold_mult, rel=0.002)
 
-    def test_裁缝α_高品质小幅倍数(self):
+    def test_裁缝alpha_高品质小幅倍数(self):
         """裁缝·α 单独 → 24h等效P4≈0.509，加权平均耗时~3.86h"""
         # Arrange
         tailor_a = _mk_op("明椒", [
@@ -252,7 +252,7 @@ class TestTradeEquivalentGold:
         _, _, equiv_gold = _get_trade_order_multiplier([closure])
         assert equiv_gold == pytest.approx(4.0, rel=0.01)
 
-    def test_龙舌兰加裁缝β_等效产金(self):
+    def test_龙舌兰加裁缝beta_等效产金(self):
         """龙舌兰+裁缝β → 等效赤金 = 4赤金订单×1赤金/单"""
         tequila = _mk_op("龙舌兰", [
             Skill(buff_id="trade_ord_long[010]", buff_name="投资·β", skill_icon="test",

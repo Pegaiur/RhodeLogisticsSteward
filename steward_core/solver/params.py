@@ -52,6 +52,20 @@ class SolverParams:
     """中枢每名干员提供的心情恢复（/h）"""
     mood_full: float = 24.0
     """满心情值（h）"""
+    mood_work_threshold: float = 0.0
+    """可参与工作的最低心情值（低于此值不可用）"""
+    mood_blue_face: float = 12.0
+    """蓝脸阈值（效率下降的边界，不影响 e(t) 但标记状态）"""
+    mood_red_face: float = 0.0
+    """红脸阈值（效率归零）"""
+
+    # === 多班次 ===
+    shift_count: int = 1
+    """班次数（1=单班次，2=双班次）"""
+    interval_hours: float = 8.0
+    """班间间隔（小时），用于恢复模拟"""
+    fiammetta_enabled: bool = False
+    """是否启用菲亚梅塔心情交换"""
 
     # === Buff 池 ===
     suich_count: int = 5
@@ -141,13 +155,13 @@ class SolverParams:
         if self.shift_hours <= 0:
             errors.append("shift_hours 必须 > 0")
         if self.control_max_slots < 1:
-            errors.append("control_max_slots 必须 ≥ 1")
+            errors.append("control_max_slots 必须 >= 1")
         if self.combo_upper_bound_threshold < 0 or self.combo_upper_bound_threshold > 1:
             errors.append("combo_upper_bound_threshold 必须在 [0, 1] 区间")
         if self.global_state_alpha < 0 or self.global_state_alpha > 1:
             errors.append("global_state_alpha 必须在 [0, 1] 区间")
         if self.local_search_max_rounds < 1:
-            errors.append("local_search_max_rounds 必须 ≥ 1")
+            errors.append("local_search_max_rounds 必须 >= 1")
         if self.dorm_max_operators < self.dorm_room_size:
             errors.append("dorm_max_operators 应 >= dorm_room_size")
         if self.daily_task_lmd < 0:

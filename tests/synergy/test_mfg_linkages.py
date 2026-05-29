@@ -386,7 +386,7 @@ class TestSynergyAutomation:
         assert "B" in zero_set
         assert "温蒂" not in zero_set
 
-    def test_森蚺持有α和β_取最高版本(self):
+    def test_森蚺持有alpha和beta_取最高版本(self):
         """森蚺同时持有 automation[000](α/5%) 和 [010](β/10%) → 应取 β(10%/站)"""
         from steward_core.synergy import synergy_automation
 
@@ -404,7 +404,7 @@ class TestSynergyAutomation:
         assert len(segs) == 1
         assert segs[0].a == 30.0  # 不是 15.0 (α)
 
-    def test_掠风仅有α_取5percent(self):
+    def test_掠风仅有alpha_取5percent(self):
         """掠风仅持有 automation[000](α) → 应取 5%/站"""
         from steward_core.synergy import synergy_automation
 
@@ -637,7 +637,7 @@ class TestZeroingVariant:
 class TestTokenProd:
     """作业平台联动: synergy_token_prod — 机械精通α/β"""
 
-    def test_机械精通α_2台作业平台_贵金属加10(self):
+    def test_机械精通alpha_2台作业平台_贵金属加10(self):
         """阿兰娜机械精通α: 2台作业平台在发电站 → +10%"""
         from steward_core.synergy import synergy_token_prod
 
@@ -650,7 +650,7 @@ class TestTokenProd:
         assert len(segs) == 1
         assert segs[0].a == 10.0
 
-    def test_机械精通α_贵金属专属_作战记录不触发(self):
+    def test_机械精通alpha_贵金属专属_作战记录不触发(self):
         """α仅在贵金属配方生效"""
         from steward_core.synergy import synergy_token_prod
 
@@ -662,7 +662,7 @@ class TestTokenProd:
         segs = synergy_token_prod([alanna], "Mfg", "CombatRecord", platforms, 12.0)
         assert segs == []
 
-    def test_机械精通β_3台作业平台_贵金属加30(self):
+    def test_机械精通beta_3台作业平台_贵金属加30(self):
         """β: 每台+10%，3台 → 30%"""
         from steward_core.synergy import synergy_token_prod
 

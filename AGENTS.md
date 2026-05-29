@@ -108,7 +108,7 @@ RhodeLogisticsSteward/
 2. **不修改 MAA 源码**。本项目通过 MAA API 调用，不 fork、不重编译 MAA。
 3. **玩家数据不入库**。`operators_data.json`、`building_data.json` 均被 `.gitignore` 排除。
 4. **文档优先**。策略变更前先更新对应文档，再写代码。
-5. **代码风格**：Python 遵循 PEP 8，缩进 4 空格，函数/类使用中文 docstring。
+5. **编码规范**：Python 遵循 PEP 8 + 项目约定，详见 `.trae/rules/python-coding-convention.md`。
 6. **新文件创建**前检查现有文件是否可复用，避免重复。
 7. **不引入非必要依赖**。能用标准库解决的不引入第三方包。
 
