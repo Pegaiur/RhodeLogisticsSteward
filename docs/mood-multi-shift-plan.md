@@ -97,12 +97,19 @@
 
 | 偏差 | 状态 | 说明 |
 |------|:---:|------|
-| `work_burn` 使用 0.75 非 0.90 | 持续 | 计划 mood_burn 激活后统一修正，当前保持兼容 |
-| `after_shift` 硬编码 room_type/slots | 持续 | 需 per-room burn 计算，依赖偏差 1 先修正 |
+| ~~`work_burn` 使用 0.75 非 0.90~~ | ✅ 已修复 | `761995d` 迁移至 `1.0-0.05×(slots-1)` |
+| `after_shift` 硬编码 room_type/slots | 持续 | 需 per-room burn 计算，burn 公式已修复但 after_shift 仍用单值 |
 | `dorm_recovery` yanhuo_bonus 多算 0.05 | 持续 | 需拆分 yanhuo_recovery 为基础+烟火两部分 |
 | 菲亚梅塔交换未实现 | 持续 | `fill_dorm_with_scheduling` 尚未实现交换逻辑 |
 | 测试套件未新增 | 持续 | plan §10 测试未编写 |
 | ~~worker_count 静默丢弃~~ | ✅ 已修复 | `c236347` 已透传 |
+| ~~mood_work_threshold 默认 0.0~~ | ✅ 已修复 | `761995d` 多班次自动使用 mood_blue_face=12.0 |
+
+### 2026-05-29 · burn 公式修正 + 阈值激活（761995d）
+
+- `work_burn()` 与 `compute_global_burn()` 迁移至动态公式：`base = 1.0 - 0.05 × (slots-1)`，3 工位 → 0.90
+- `solve_multi_shift()`：`mood_work_threshold=0` 时自动使用 `mood_blue_face=12.0` 作为有效阈值
+- 2×12h 班次验证：shift1 后工作干员 mood=13.2 > 12.0，仍可通过阈值。两班次产出相同是数学最优解（干员有余量完成两班），非 bug。3 班次模式下 shift3 才会自然触发过滤
 
 ## 1. 问题诊断
 
