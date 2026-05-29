@@ -31,7 +31,10 @@ def fill_remaining(
             assigned_ids.discard(op_lookup[name].char_id)
             assigned_names.discard(name)
     priority = power_names | locked_support["Office"]
-    remaining = _greedy_remaining(assigned_ids, operators, priority, params=config.params)
+    remaining = _greedy_remaining(
+        assigned_ids, operators, priority,
+        params=config.params, mood_ctx=config.mood_ctx,
+    )
     assignments.extend(remaining)
     autofill_count += sum(1 for a in remaining if a.autofill)
 

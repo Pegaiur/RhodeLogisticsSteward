@@ -33,6 +33,7 @@ def _evaluate_trade_combo(
     ctrl_per_op_bonus: float = 0.0,
     all_operators: list[Operator] | None = None,
     control_operators: list[Operator] | None = None,
+    mood_ctx=None,
 ) -> float:
     """评估 Trade 三人组合的 LMD 日产
 
@@ -48,6 +49,7 @@ def _evaluate_trade_combo(
         global_bonus, buff_pool, ctrl_per_op_bonus=ctrl_per_op_bonus,
         all_operators=all_operators,
         control_operators=control_operators,
+        mood_ctx=mood_ctx,
     )
     efficiency_integrated = hours * (1.0 + 0.01 * n) + eff_int / 100.0
     lmd_per_day, _gold, _equiv = _get_trade_order_multiplier(combo_ops, hours)
@@ -190,10 +192,12 @@ def _greedy_remaining(
     operators: list[Operator],
     priority_names: set[str] | None = None,
     params=None,
+    mood_ctx=None,
 ) -> list[RoomAssignment]:
     """剩余设施（Trade/Power/Reception/Office）支配偏序贪心
 
     priority_names: 锁定的支撑干员名集合，即使已在 assigned_ids 中也会被强制分配
+    mood_ctx: 多班次心情上下文，非 None 时从 work_burn 计算 mood_burn 截断
     """
     if priority_names is None:
         priority_names = set()
@@ -232,7 +236,10 @@ def _greedy_remaining(
                 eff = sum(s.a for s in a6_segs)
             if eff <= 0:
                 continue
-            seg = constant_efficiency(eff, mood_burn=0.0, T=T)
+            burn = 0.0
+            if mood_ctx is not None:
+                burn = mood_ctx.work_burn(op.name, room.room_type, room.slots)
+            seg = constant_efficiency(eff, mood_burn=burn, T=T)
             candidates.append((seg, op))
 
         if not candidates and not taken:

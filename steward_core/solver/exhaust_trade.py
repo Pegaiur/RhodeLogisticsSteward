@@ -114,6 +114,7 @@ def exhaust_trade(
                 bp, ctrl_bonus,
                 all_operators=operators,
                 control_operators=ctrl_ops,
+                mood_ctx=config.mood_ctx,
             )
             evaluated.append((lmd, combo_names))
         evaluated.sort(key=lambda x: -x[0])
