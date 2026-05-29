@@ -119,7 +119,11 @@ class SolverParams:
             return self
         data = {f.name: getattr(self, f.name) for f in fields(self)}
         data.update(updates)
-        return SolverParams(**data)
+        result = SolverParams(**data)
+        errors = result.validate()
+        if errors:
+            raise ValueError(f"参数覆盖后校验失败: {errors}")
+        return result
 
     def diff(self, other: "SolverParams") -> list[str]:
         """比较两个参数集，返回差异字段列表"""

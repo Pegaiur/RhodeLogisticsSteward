@@ -8,10 +8,10 @@ globs: steward_core/solver/strategies/*.py,steward_core/solver/config.py,run_sol
 ## 新增 Strategy 的步骤
 
 1. 在 `steward_core/solver/strategies/<name>.py` 中实现 Strategy 子类
-2. 设置 `cli_key`（短键名）、`cli_desc`（一行描述）、`default_kwargs`（构造参数默认值）
+2. 设置 `name` 属性（单行描述，如 `"kbeam"`）
 3. 在 `steward_core/solver/strategies/__init__.py` 中：
    - import 新类
-   - 注册到 `STRATEGY_REGISTRY` 字典
+   - 在 `STRATEGY_REGISTRY` 字典中添加条目（格式：`"键名": (策略类, {默认kwarg})`）
    - 加入 `__all__`
 4. 编写测试 `tests/solver/test_<name>.py`，使用 `tests/strategy_helpers.py`
 5. 运行 `python -m pytest tests/ -v` 确认全绿

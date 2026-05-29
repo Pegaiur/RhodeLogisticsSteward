@@ -44,11 +44,15 @@ def _parse_cli():
         elif args[i] == "--hours" and i + 1 < len(args):
             hours_override = float(args[i + 1]); i += 2
         elif args[i] == "--kw" and i + 1 < len(args):
-            for kv in args[i + 1].split(","):
+            kw_val = args[i + 1]
+            if kw_val.startswith("-"):
+                print(f"[错误] --kw 的值不能以 '-' 开头: {kw_val}")
+                return None
+            for kv in kw_val.split(","):
                 if "=" in kv:
                     k, v = kv.split("=", 1)
                     try:
-                        strategy_kwargs[k] = int(v) if v.isdigit() else float(v)
+                        strategy_kwargs[k] = int(v) if v.lstrip("-").isdigit() else float(v)
                     except ValueError:
                         strategy_kwargs[k] = v
             i += 2
@@ -57,7 +61,7 @@ def _parse_cli():
         elif args[i] in ("--list",):
             _print_strategies(); return None
         else:
-            i += 1
+            print(f"[警告] 未知参数: {args[i]}"); i += 1
 
     return strategy_key, params_file, hours_override, all_on, strategy_kwargs
 
