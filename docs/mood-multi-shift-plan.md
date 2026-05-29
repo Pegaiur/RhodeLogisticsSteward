@@ -77,6 +77,33 @@
 | mood_ctx 输出传递 | `solver/__init__.py` | `solve_multi_shift` 返回 `_build_output_config(config, mood_ctx)` 替代原始 config，使 `output.py` 能读取最终 Fiammetta 状态 |
 | 死代码/文档修正 | `context.py`/`buff_pool.py` | 移除 `effective_power is not None` 冗余检查；修正 `mood>=12` docstring 阈值
 
+### 2026-05-29 · §7 下游透传补齐（c236347→3ed0d8c）
+
+4 笔提交完成 plan §7 标记的 7 个 mood_ctx 未透传文件的衔接工作：
+
+| 提交 | 文件 | 改动 |
+|------|------|------|
+| `c236347` fix | `mood_flow.py` `synergy/mood.py` | `compute_global_burn` 新增 `worker_count` 参数并透传，消除静默丢弃隐患 |
+| `60b9af0` feat | `greed.py` `fill_remaining.py` `exhaust_trade.py` | `_evaluate_trade_combo`/`_greedy_remaining` 新增 mood_ctx 参数，激活 constant_efficiency 的 mood_burn 截断；`fill_remaining`/`exhaust_trade` 透传 config.mood_ctx |
+| `bae1b75` feat | `production.py` `refine.py` `kbeam.py` | `_CalcCtx` 新增 mood_ctx 字段；`calculate()`/`_production_score()`/`evaluate_full_plan()`/`_select_best()` 全链路透传；`_CalcCtx.mood_ctx` 类型标注 `MoodContext \| None` 与 evaluate.py 一致 |
+| `3ed0d8c` feat | `support.py` `exhaust_mfg.py` `kbeam.py` | `_evaluate_with_support` 新增 mood_ctx 参数，非 None 时从 `mood_ctx.is_below()` 提取令/夕门控替代 `has_rosmontis` 代理；透传至 `from_estimated` + `evaluate_room` |
+
+**未完成的 §7 文件（无需 mood_ctx 透传）**：
+- `solver/strategies/baseline.py`：Pipeline 通过 config 被动携带 mood_ctx，各 Phase 函数已独立消费，无需显式改动
+- `solver/global_state.py`：纯 bundle_availability 计数，与心情无关
+- `steward_core/models.py`：SteppedSegment 不需要，铅踝梯级衰减通过 `stepped_efficiency()` 已就绪
+
+### 偏差更新
+
+| 偏差 | 状态 | 说明 |
+|------|:---:|------|
+| `work_burn` 使用 0.75 非 0.90 | 持续 | 计划 mood_burn 激活后统一修正，当前保持兼容 |
+| `after_shift` 硬编码 room_type/slots | 持续 | 需 per-room burn 计算，依赖偏差 1 先修正 |
+| `dorm_recovery` yanhuo_bonus 多算 0.05 | 持续 | 需拆分 yanhuo_recovery 为基础+烟火两部分 |
+| 菲亚梅塔交换未实现 | 持续 | `fill_dorm_with_scheduling` 尚未实现交换逻辑 |
+| 测试套件未新增 | 持续 | plan §10 测试未编写 |
+| ~~worker_count 静默丢弃~~ | ✅ 已修复 | `c236347` 已透传 |
+
 ## 1. 问题诊断
 
 ### 1.1 硬编码心情门控 — "令 mood<12" 传染链
