@@ -1,4 +1,4 @@
-# RhodeLogisticsSteward（罗德物流管家）
+# RhodeLogisticsSteward（罗德基建管家）
 
 基于 MAA（MaaAssistantArknights）API 的《明日方舟》基建排班求解器。读取玩家干员数据，计算 243 布局下最优排班方案，输出 MAA 基建排班协议 JSON。
 
