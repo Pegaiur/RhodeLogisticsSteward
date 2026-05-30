@@ -14,7 +14,6 @@ from .helpers import (
 _C_CONTROL_GLOBAL_TABLE: dict[str, GlobalBonusEntry] = {
     "凯尔希": GlobalBonusEntry(2.0, 0.0),
     "Mon3tr": GlobalBonusEntry(2.0, 0.0),
-    "望": GlobalBonusEntry(2.0, 7.0),
     "阿米娅": GlobalBonusEntry(0.0, 7.0),
     "诗怀雅": GlobalBonusEntry(0.0, 7.0),
     "佩佩": GlobalBonusEntry(0.0, 7.0),
@@ -32,10 +31,16 @@ class GlobalBonus:
 def compute_control_global_bonus(
     control_operators: list[Operator],
     power_platforms: dict[str, bool] | None = None,
+    mfg_rooms: int = 0,
+    trade_rooms: int = 0,
+    power_rooms: int = 0,
 ) -> GlobalBonus:
     """计算中枢干员提供的全局制造/贸易加成
 
     同种效果取最高值（游戏内描述"同种效果取最高"）。
+
+    望的技能为条件型——外势(trade_rooms + power_rooms) >= 实地(mfg_rooms)
+    时仅提供贸易 +7%，实地 > 外势时仅提供制造 +2%，二者不共存。
     """
     if power_platforms is None:
         power_platforms = {}
@@ -50,6 +55,14 @@ def compute_control_global_bonus(
             m, t = entry.mfg_bonus, entry.trade_bonus
             best_mfg = max(best_mfg, m)
             best_trade = max(best_trade, t)
+
+    if "望" in names:
+        waishi = trade_rooms + power_rooms
+        shidi = mfg_rooms
+        if waishi >= shidi:
+            best_trade = max(best_trade, 7.0)
+        else:
+            best_mfg = max(best_mfg, 2.0)
 
     if "布丁" in names:
         platform_count = sum(1 for n in _OP_PLATFORM_NAMES if power_platforms.get(n))

@@ -524,6 +524,8 @@ def _compute_type3_contribution(
     Mfg 槽位级基数 × 槽位数 ≡ 房间级基数 × 房间数（等价），
     但 Trade 的 _TRADE_BASE_LMD_PER_HOUR 已是房间级基数，
     必须用房间数而非槽位数。
+
+    望的外势/实地条件判断需要传入 Mfg/Trade/Power 房间数。
     """
     from steward_core.synergy import compute_control_global_bonus
 
@@ -531,10 +533,12 @@ def _compute_type3_contribution(
         len(a.operators) for a in assignments
         if a.room_type == "Mfg" and a.operators
     )
+    mfg_rooms = len({a.room_index for a in assignments if a.room_type == "Mfg"})
     trade_rooms = len({
         a.room_index for a in assignments
         if a.room_type == "Trade"
     })
+    power_rooms = len({a.room_index for a in assignments if a.room_type == "Power"})
 
     control_ops = _room_ops_by_type(assignments, "Control", {op.name: op})
     if op.name not in {o.name for o in control_ops}:
@@ -542,7 +546,12 @@ def _compute_type3_contribution(
     else:
         simulated = control_ops
 
-    bonus = compute_control_global_bonus(simulated)
+    bonus = compute_control_global_bonus(
+        simulated,
+        mfg_rooms=mfg_rooms,
+        trade_rooms=trade_rooms,
+        power_rooms=power_rooms,
+    )
 
     mfg_base_avg = (
         0.5 * _MFG_CR_BASE_RATE * _CR_EXP_PER_UNIT / 1.3

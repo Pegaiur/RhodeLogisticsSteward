@@ -152,26 +152,46 @@ class TestControlGlobalExtended:
 # ─── C1 中枢全局扩展（望） ────────────────────────────────────────
 
 class TestC1Wang:
-    """C1: compute_control_global_bonus — 望（外势实地）"""
+    """C1: compute_control_global_bonus — 望（外势实地条件型）"""
 
-    def test_望_外势_贸易加7(self):
-        """望在中枢 → 贸易 +7%（外势）"""
+    def test_望_243布局_外势大于实地_仅贸易加7(self):
+        """243布局(Mfg=4, Trade=2, Power=3): 外势(5) >= 实地(4) → 仅 Trade +7%"""
+        from steward_core.synergy import compute_control_global_bonus
+
+        wang = _mk_op("望")
+        bonus = compute_control_global_bonus([wang], mfg_rooms=4, trade_rooms=2, power_rooms=3)
+
+        assert bonus.trade_bonus == 7.0
+        assert bonus.mfg_bonus == 0.0
+
+    def test_望_实地大于外势_仅制造加2(self):
+        """外势(trade+power=3) < 实地(mfg=4) → 仅 Mfg +2%"""
+        from steward_core.synergy import compute_control_global_bonus
+
+        wang = _mk_op("望")
+        bonus = compute_control_global_bonus([wang], mfg_rooms=4, trade_rooms=1, power_rooms=2)
+
+        assert bonus.mfg_bonus == 2.0
+        assert bonus.trade_bonus == 0.0
+
+    def test_望_默认参数_外势实地均为零_贸易加7(self):
+        """默认参数(0,0,0): 外势(0) >= 实地(0) → Trade +7%（向后兼容）"""
         from steward_core.synergy import compute_control_global_bonus
 
         wang = _mk_op("望")
         bonus = compute_control_global_bonus([wang])
 
-        # 望：外势 → Trade +7%，实地 → Mfg +2%
         assert bonus.trade_bonus == 7.0
+        assert bonus.mfg_bonus == 0.0
 
-    def test_望与凯尔希共存_同种取最高(self):
-        """望 + 凯尔希 → Trade 取最高(望7 > 凯尔希0), Mfg 取最高(凯尔希2 > 望2)"""
+    def test_望与凯尔希共存_243_同种取最高(self):
+        """243布局: 凯尔希 Mfg +2% + 望 Trade +7%（望无制造加成）"""
         from steward_core.synergy import compute_control_global_bonus
 
         wang = _mk_op("望")
         kalts = _mk_op("凯尔希")
 
-        bonus = compute_control_global_bonus([wang, kalts])
+        bonus = compute_control_global_bonus([wang, kalts], mfg_rooms=4, trade_rooms=2, power_rooms=3)
         assert bonus.mfg_bonus == 2.0   # 凯尔希2
         assert bonus.trade_bonus == 7.0  # 望7
 
