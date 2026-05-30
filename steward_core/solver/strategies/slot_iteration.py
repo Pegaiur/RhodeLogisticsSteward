@@ -13,10 +13,12 @@ from steward_core.models import Operator, RoomAssignment, ShiftPlan, SolveResult
 from ..config import SolverConfig
 from ..strategy import PartialSolution, Strategy
 from ..slot_iteration import (
+    S_MAX,
     IterationContext,
     extract_state_vector,
     compute_partial_derivatives,
     contribution,
+    update_lambda_bisection,
 )
 
 if TYPE_CHECKING:
@@ -44,18 +46,42 @@ class SlotIterationStrategy(Strategy):
         config: SolverConfig,
         op_lookup: dict[str, Operator],
     ) -> SolveResult:
-        max_rounds = config.params.slot_max_rounds if hasattr(config.params, "slot_max_rounds") else 5
+        if config.params.slot_cold_start:
+            return self._execute_cold_start(operators, config, op_lookup)
+
+        hot_result = self._execute_single(operators, config, op_lookup,
+                                          cold_start=False)
+        return hot_result
+
+    def _execute_single(
+        self,
+        operators: list[Operator],
+        config: SolverConfig,
+        op_lookup: dict[str, Operator],
+        cold_start: bool = False,
+    ) -> SolveResult:
+        """单次求解：热启动或冷启动迭代"""
+        max_rounds = config.params.slot_max_rounds
         shift_hours = config.params.shift_hours
 
-        baseline_result = self._hot_start(operators, config, op_lookup)
-        A = self._assignments_from_result(baseline_result)
+        if cold_start:
+            A = self._cold_start_init(operators, config, op_lookup)
+        else:
+            baseline_result = self._hot_start(operators, config, op_lookup)
+            A = self._assignments_from_result(baseline_result)
+            if not A:
+                return baseline_result
 
-        if not A:
-            return baseline_result
-
-        S_vec = extract_state_vector(A, op_lookup)
+        if cold_start:
+            S_vec = dict(S_MAX)
+        else:
+            S_vec = extract_state_vector(A, op_lookup)
         D_vec = compute_partial_derivatives(A, shift_hours, op_lookup)
         V: set[tuple] = set()
+        lambda_op: dict[str, float] = {}
+        best_A = A
+        best_S = S_vec
+        best_D = D_vec
 
         for _round in range(max_rounds):
             ctx = IterationContext(
@@ -63,9 +89,10 @@ class SlotIterationStrategy(Strategy):
                 window_hours=shift_hours,
                 S=S_vec,
                 D=D_vec,
-                lambda_op={},
+                lambda_op=lambda_op,
             )
 
+            A_prev = A
             A = self._phase_ab_mfg_trade(ctx, A, operators, op_lookup, config)
             A = self._phase_c_control(ctx, A, operators, op_lookup, config)
             A = self._phase_d_remaining(ctx, A, operators, op_lookup, config)
@@ -73,12 +100,135 @@ class SlotIterationStrategy(Strategy):
             S_vec = extract_state_vector(A, op_lookup)
             D_vec = compute_partial_derivatives(A, shift_hours, op_lookup)
 
+            lambda_op = update_lambda_bisection(lambda_op, A, A_prev, op_lookup, ctx)
+
             key = self._assignment_key(A)
             if key in V:
+                A = self._joint_perturbation(A, A_prev, ctx, V, operators, op_lookup, config)
+                if A is not None:
+                    S_vec = extract_state_vector(A, op_lookup)
+                    D_vec = compute_partial_derivatives(A, shift_hours, op_lookup)
+                    lambda_op = update_lambda_bisection(lambda_op, A, A_prev, op_lookup, ctx)
+                    best_A = A
+                    best_S = S_vec
+                    best_D = D_vec
                 break
             V.add(key)
 
-        return self._result_from_assignments(A, operators, config, op_lookup)
+            best_A = A
+            best_S = S_vec
+            best_D = D_vec
+
+        return self._result_from_assignments(best_A, operators, config, op_lookup)
+
+    def _execute_cold_start(
+        self,
+        operators: list[Operator],
+        config: SolverConfig,
+        op_lookup: dict[str, Operator],
+    ) -> SolveResult:
+        """多启动策略：热启动 + 冷启动中取较优者"""
+        hot_result = self._execute_single(operators, config, op_lookup, cold_start=False)
+        cold_result = self._execute_single(operators, config, op_lookup, cold_start=True)
+        hot_A = self._assignments_from_result(hot_result)
+        cold_A = self._assignments_from_result(cold_result)
+        hot_D = compute_partial_derivatives(hot_A, config.params.shift_hours, op_lookup)
+        cold_D = compute_partial_derivatives(cold_A, config.params.shift_hours, op_lookup)
+        hot_sum = sum(hot_D.values())
+        cold_sum = sum(cold_D.values())
+        if cold_sum > hot_sum:
+            return cold_result
+        return hot_result
+
+    def _cold_start_init(
+        self,
+        operators: list[Operator],
+        config: SolverConfig,
+        op_lookup: dict[str, Operator],
+    ) -> list[RoomAssignment]:
+        """S₀_max 冷启动：构建仅有 Mfg/Trade（空填充）的初始分配，
+        D 基于 S_MAX 上界计算
+
+        不依赖 BaselineStrategy——仅填充 Mfg/Trade 为 autofill 空房间，
+        让第一轮迭代的偏导数 以 S_MAX 乐观上界驱动 Control/Dorm 选人。
+        """
+        A: list[RoomAssignment] = []
+        room_types = [("Mfg", 0, "CombatRecord"), ("Mfg", 1, "CombatRecord"),
+                      ("Mfg", 2, "PureGold"), ("Mfg", 3, "PureGold"),
+                      ("Trade", 0, "Money"), ("Trade", 1, "Money"),
+                      ("Control", 0, None), ("Power", 0, None),
+                      ("Power", 1, None), ("Power", 2, None),
+                      ("Reception", 0, "General"), ("Office", 0, "HR"),
+                      ("Training", 0, None), ("Workshop", 0, None),
+                      ("Dormitory", 0, "Rest"), ("Dormitory", 1, "Rest"),
+                      ("Dormitory", 2, "Rest"), ("Dormitory", 3, "Rest")]
+        for rt, ri, prod in room_types:
+            A.append(RoomAssignment(
+                room_type=rt, room_index=ri,
+                operators=[], product=prod,
+                autofill=True,
+            ))
+        return A
+
+    def _joint_perturbation(
+        self,
+        A: list[RoomAssignment],
+        A_prev: list[RoomAssignment],
+        ctx: IterationContext,
+        V: set[tuple],
+        operators: list[Operator],
+        op_lookup: dict[str, Operator],
+        config: SolverConfig,
+    ) -> list[RoomAssignment] | None:
+        """联合扰动：攻击跨 Phase 鞍点
+
+        耦合对 = 类型 1f 读取者所在 Mfg/Trade 房间 ↔ 写入其消费维度的 Control/Dorm 写入者
+        同时替换读者和写入者的 top-3 替代者，检查是否打破鞍点。
+        """
+        readers_dim = {}
+        for a in A:
+            if a.room_type not in ("Mfg", "Trade") or not a.operators:
+                continue
+            for name in a.operators:
+                dim = _reader_dimension(name)
+                if dim and a.operators:
+                    readers_dim[dim] = readers_dim.get(dim, []) + [(a, name)]
+
+        writers_dim = {}
+        for a in A:
+            if a.room_type not in ("Control", "Dormitory") or not a.operators:
+                continue
+            for name in a.operators:
+                delta = _compute_state_delta_simple(name, a.room_type, A, operators, op_lookup)
+                for dim in delta:
+                    if delta[dim] != 0:
+                        writers_dim[dim] = writers_dim.get(dim, []) + [(a, name)]
+
+        for dim in set(readers_dim.keys()) & set(writers_dim.keys()):
+            for reader_a, reader_name in readers_dim[dim][:2]:
+                alt_readers = _find_alternatives(
+                    reader_a, reader_name, operators, op_lookup, ctx, A, config,
+                    count=3,
+                )
+                for writer_a, writer_name in writers_dim[dim][:2]:
+                    alt_writers = _find_alternatives(
+                        writer_a, writer_name, operators, op_lookup, ctx, A, config,
+                        count=3,
+                    )
+                    for alt_r in alt_readers:
+                        for alt_w in alt_writers:
+                            new_A = [RoomAssignment(
+                                room_type=a.room_type, room_index=a.room_index,
+                                operators=list(a.operators), product=a.product,
+                                autofill=a.autofill,
+                            ) for a in A]
+                            _replace_in_assignments(new_A, reader_name, alt_r, reader_a.room_type)
+                            _replace_in_assignments(new_A, writer_name, alt_w, writer_a.room_type)
+                            key = self._assignment_key(new_A)
+                            if key not in V:
+                                return new_A
+
+        return None
 
     def _hot_start(
         self,
@@ -548,3 +698,72 @@ class SlotIterationStrategy(Strategy):
             autofill_count=sum(1 for a in A if a.autofill),
             config_used=config,
         )
+
+
+def _reader_dimension(name: str) -> str | None:
+    from steward_core.synergy import _B_BUFF_CONSUMER_TABLE
+    from ..slot_iteration import _BUFF_CONSUMER_DIMENSION
+    if name not in _B_BUFF_CONSUMER_TABLE:
+        return None
+    entry = _B_BUFF_CONSUMER_TABLE[name]
+    if entry.bonus_per <= 0:
+        return None
+    return _BUFF_CONSUMER_DIMENSION.get(name)
+
+
+def _compute_state_delta_simple(
+    name: str,
+    facility: str,
+    assignments: list[RoomAssignment],
+    operators: list[Operator],
+    op_lookup: dict[str, Operator],
+) -> dict[str, float]:
+    from ..slot_iteration import _compute_state_delta_for_control, _compute_state_delta_for_dorm
+    op = op_lookup.get(name)
+    if op is None:
+        return {}
+    if facility == "Control":
+        return _compute_state_delta_for_control(op, assignments, op_lookup)
+    elif facility == "Dormitory":
+        return _compute_state_delta_for_dorm(op, assignments, op_lookup)
+    return {}
+
+
+def _find_alternatives(
+    room_a: RoomAssignment,
+    current_name: str,
+    operators: list[Operator],
+    op_lookup: dict[str, Operator],
+    ctx: IterationContext,
+    A: list[RoomAssignment],
+    config: SolverConfig,
+    count: int = 3,
+) -> list[str]:
+    """为指定房间找 top-N 替代干员"""
+    from ..slot_iteration import contribution
+
+    assigned = {n for a in A for n in a.operators if n != current_name}
+    candidates = [
+        op for op in operators
+        if op.has_skill_for(room_a.room_type, room_a.product)
+        and op.name not in assigned
+    ]
+    scored = []
+    for op in candidates:
+        c = contribution(op.name, room_a.room_type, ctx, op_lookup, A)
+        if c > float("-inf"):
+            scored.append((c, op.name))
+    scored.sort(key=lambda x: -x[0])
+    return [name for _, name in scored[:count]]
+
+
+def _replace_in_assignments(
+    A: list[RoomAssignment],
+    old_name: str,
+    new_name: str,
+    target_room_type: str,
+) -> None:
+    for a in A:
+        if a.room_type == target_room_type and old_name in a.operators:
+            a.operators = [new_name if n == old_name else n for n in a.operators]
+            return

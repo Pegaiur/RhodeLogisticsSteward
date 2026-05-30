@@ -54,6 +54,14 @@ for _name, _entry in _B_BUFF_CONSUMER_TABLE.items():
     else:
         _BUFF_CONSUMER_DIMENSION[_name] = pool_key
 
+S_MAX: dict[str, float] = {
+    "perception": 60.0,
+    "yanhuo": 95.0,
+    "engineering_robots": 64.0,
+    "monster_cuisine": 5.0,
+    "silent_resonance": 10.0,
+}
+
 
 @dataclass(frozen=True)
 class _Ratios:
@@ -432,7 +440,7 @@ def contribution(
 ) -> float:
     """统一的 contribution 计算入口，按 facility 分派到内部 helper
 
-    首期 lambda ≡ 0，公式中不含 -lambda × hours 项（留待第二期添加）。
+    含 -lambda × hours 项（第二期新增）。
 
     Returns:
         该干员在指定设施中的预期边际贡献值（LMD 等值/天量纲）。
@@ -441,18 +449,22 @@ def contribution(
     if op is None:
         return float("-inf")
 
+    lambda_penalty = ctx.lambda_op.get(op_name, 0.0) * ctx.window_hours
+
     if facility == "Control":
-        return _contribution_control(op, ctx, operators, assignments)
+        base = _contribution_control(op, ctx, operators, assignments)
     elif facility == "Power":
-        return _contribution_power(op, ctx)
+        base = _contribution_power(op, ctx)
     elif facility == "Reception":
-        return _contribution_reception(op, ctx)
+        base = _contribution_reception(op, ctx)
     elif facility == "Office":
-        return _contribution_office(op, ctx)
+        base = _contribution_office(op, ctx)
     elif facility == "Dormitory":
-        return _contribution_dorm(op, ctx, assignments, operators)
+        base = _contribution_dorm(op, ctx, assignments, operators)
     else:
         return float("-inf")
+
+    return base - lambda_penalty
 
 
 def _contribution_control(
@@ -469,6 +481,108 @@ def _contribution_control(
     )
     type3_value = _compute_type3_contribution(op, assignments)
     return state_value + type3_value
+
+
+def update_lambda_bisection(
+    lambda_op: dict[str, float],
+    A: list["RoomAssignment"],
+    A_prev: list["RoomAssignment"],
+    operators: dict[str, "Operator"],
+    ctx: IterationContext,
+) -> dict[str, float]:
+    """λ 离散 bisection 更新
+
+    对每轮迭代中发生变动的干员调整其影子乘子：
+    - 从高贡献设施移出 → λ 翻倍（收紧约束）
+    - 移入新设施 → λ 减半（释放容量）
+    - 未变动 → λ 维持 + 微小衰减
+
+    Returns:
+        更新后的 lambda_op 字典（原地修改并返回）
+    """
+    prev_map: dict[str, str] = {}
+    for a in A_prev:
+        for name in a.operators:
+            prev_map[name] = a.room_type
+
+    curr_map: dict[str, str] = {}
+    for a in A:
+        for name in a.operators:
+            curr_map[name] = a.room_type
+
+    all_names = set(prev_map.keys()) | set(curr_map.keys())
+
+    for name in all_names:
+        prev_fac = prev_map.get(name)
+        curr_fac = curr_map.get(name)
+        if prev_fac is None and curr_fac is not None:
+            lambda_op[name] = lambda_op.get(name, 0.0) * 0.5
+        elif prev_fac is not None and curr_fac is None:
+            lambda_op[name] = lambda_op.get(name, 0.0) * 2.0 + 0.01
+        elif prev_fac != curr_fac:
+            prev_contrib = contribution(name, prev_fac, ctx, operators, A_prev)
+            curr_contrib = contribution(name, curr_fac, ctx, operators, A)
+            if curr_contrib > prev_contrib:
+                lambda_op[name] = lambda_op.get(name, 0.0) * 0.5
+            else:
+                lambda_op[name] = lambda_op.get(name, 0.0) * 2.0 + 0.01
+        else:
+            current = lambda_op.get(name, 0.0)
+            lambda_op[name] = current * 0.9
+
+    for name in list(lambda_op.keys()):
+        lambda_op[name] = max(lambda_op[name], 0.0)
+        lambda_op[name] = min(lambda_op[name], 100.0)
+
+    return lambda_op
+
+
+def effective_perception_mood(
+    op_name: str,
+    base_value: float,
+    window_hours: float,
+    mood_ctx: "MoodContext | None",
+) -> float:
+    """心情展平：计算夕的感知有效通量
+
+    夕(mood>=12 → +10 perception, mood<12 → 0)
+    effective = base_value × min(1.0, t_cross / window_hours)
+    """
+    if mood_ctx is None:
+        return base_value
+    mood = getattr(mood_ctx, "mood_of", lambda n: 24.0)(op_name)
+    burn = getattr(mood_ctx, "control_burn", 0.75)
+    if burn <= 0:
+        return base_value
+    t_cross = (mood - 12.0) / burn
+    if t_cross <= 0:
+        return 0.0
+    return base_value * min(1.0, t_cross / window_hours)
+
+
+def effective_yanhuo_ling(
+    base_yanhuo: float,
+    base_perception: float,
+    window_hours: float,
+    mood_ctx: "MoodContext | None",
+) -> tuple[float, float]:
+    """心情展平：计算令的双态展平
+
+    令(mood>=12 → yanhuo=15, mood<12 → perception=10)
+    effective_yanhuo = 15 × t_switch / window_hours
+    effective_perception = 10 × (window_hours - t_switch) / window_hours
+    """
+    if mood_ctx is None:
+        return base_yanhuo, base_perception
+    mood = getattr(mood_ctx, "mood_of", lambda n: 24.0)("令")
+    burn = getattr(mood_ctx, "control_burn", 0.75)
+    if burn <= 0:
+        return base_yanhuo, 0.0
+    t_switch = (mood - 12.0) / burn
+    t_switch = max(0.0, min(t_switch, window_hours))
+    eff_yanhuo = base_yanhuo * t_switch / window_hours
+    eff_perception = base_perception * (window_hours - t_switch) / window_hours
+    return eff_yanhuo, eff_perception
 
 
 def _contribution_power(
@@ -530,7 +644,7 @@ def _contribution_dorm(
 ) -> float:
     """Dormitory 干员 contribution = 类型 2 状态写入 × D + recovery_rate × hours × lambda
 
-    首期 lambda ≡ 0，恢复贡献简化为仅计算状态写入部分。
+    recovery_rate × hours × λ 项已在 contribution() 入口的 lambda_penalty 中统一减去。
     """
     state_delta = _compute_state_delta_for_dorm(op, assignments, operators)
     state_value = sum(
