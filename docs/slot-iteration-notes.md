@@ -1,7 +1,37 @@
-# 槽位迭代第一期实施笔记
+# 槽位模型实施笔记
+
+> 分支：`feat/slot-iteration`
+> 最新更新：2026-05-30
+
+## 架构路线变更（2026-05-30）
+
+SlotIterationStrategy（本分支前四期）已验证 D[d] 反馈框架在真实数据上成立——单班次积分反超 BaselineStrategy（+1,356）。但架构负重过大：
+
+| 问题 | 表现 |
+|------|------|
+| Pipe 式加工 | Pipeline 线性串联，Phase 间通过 `locked_support` / `assigned_ids` / `assigned_names` 三个可变 dict 通信 |
+| 信息断裂 | Phase A/B 穷举在空白中枢上下文中计算 buff_pool，Phase C 结果对穷举不可见（需 override_pool 补丁） |
+| 补丁累积 | per-operator 贡献、type3 互斥、边际差分——每一项都是事后发现事后补 |
+| 策略层增生 | `strategies/slot_iteration.py` 作为 `baseline.py` 的 fork，复用 exhaust_* 的 Phase 函数签名但覆盖控制流 |
+
+**决策：不修 SlotIterationStrategy，改做 SlotSolver。**
+
+SlotSolver 直接实现 [slot-processing-model-draft.md](slot-processing-model-draft.md) §9.5 混合状态迭代策略。新架构：
+
+- `solver/slot/` 子包，SlotSolver 类为唯一求解入口
+- SlotContext 统一状态载体（替代 `locked_support` + `assigned_ids` + `assigned_names`）
+- Mfg/Trade 穷举逻辑提取到 `slot/mfg.py` / `slot/trade.py`（复用 `evaluate_room`）
+- 中枢/宿舍/发电/会客/办公室统一用 D[d]-based contribution 贪心
+- 机会成本内置于贡献评分（巫恋 whisper 不再吃错人）
+- 迭代 + 记忆 → 收敛于邻域局部最优
+
+以下为 V1 实验（SlotIterationStrategy）的完整实施记录，作为 V2 设计的经验基线保留。
+
+---
+
+# 槽位迭代第一期实施笔记（历史实验）
 
 > 实施日期：2026-05-30
-> 分支：`feat/slot-iteration`
 
 ## 偏离决策
 
@@ -13,9 +43,8 @@
 计划 §3.3 规定"禁止导入任何 solver/ 下的模块"。初始实现中 `extract_state_vector()` / `_compute_state_delta_for_control()` / `_compute_state_delta_for_dorm()` 内部动态导入了 `SolverParams`，违反规则。
 修复：将默认值 `suich_count=5`、`dorm_level=5` 硬编码为模块常量 `_DEFAULT_SUICH_COUNT` / `_DEFAULT_DORM_LEVEL`，消除 solver/ 导入依赖。
 
-### D3: Control Phase 单槽位而非多槽位
-计划 §9.5 Phase C 描述为"对每个 Control 槽位，选 contribution 最高"，实际实现中 Control 的 5 个槽位依序填充得分最高的 5 名干员。这是因为 `RoomAssignment` 模型中 Control 只有一个 assignment（含 5 个 operator 名），而非 5 个独立 assignment。
-影响：槽位间无差异化竞争——第 1-5 名统一按 contribution 排序，不模拟工位特异性。
+### D3: Control Phase 顺序贪心取代批量评分 ⚠️ 已演进
+计划 §9.5 Phase C 描述为"对每个 Control 槽位，选 contribution 最高"。初期实现为批量评分取 Top-N（槽位间无差异化）。第三期改为**顺序贪心**：每选一人后重建中枢基线，下一人重算边际——type3 同种取最高和 per-operator 条件加成均依赖此机制生效。
 
 ### D4: Phase A/B 复用 exhaust_mfg/exhaust_trade 模块
 计划要求 `fill_control.py` / `fill_remaining.py` / `fill_dorm.py` 零修改。Phase A/B 直接调用已有的 `exhaust_mfg()` / `exhaust_trade()` 函数，通过 PartialSolution 快照进行状态管理。这确保了 Mfg/Trade 的组合级穷举逻辑与 BaselineStrategy 完全一致。
@@ -54,8 +83,10 @@
    -> **第二期已实现**：`_joint_perturbation()` 对 1f 读者↔类型 2 写入者耦合对做 top-3×3 替换
 4. **✅ 心情展平已实现**：令/夕/铅踝的心情门控展平（待第二期 §2.2 #11）
    -> **第二期已实现**：`effective_perception_mood()` + `effective_yanhuo_ling()`（mood_ctx 通路已就绪，铅踝展平依赖 stepped_efficiency 已编码未激活）
-5. **precomputed_support 实际电线**：exhaust_mfg/exhaust_trade 仅接受参数，Phase A/B 尚未实际传入预计算支撑（留待性能优化时启用）
-6. **type2 vs type3 量级差距**：Contribution 贪心排序中 type3 全局注入（望 3376）远超 type2 状态写入（令 1212），需 Control 组合穷举或冷启动预填充才能突破
+5. **✅ override_pool 已传入**：exhaust_mfg/exhaust_trade 仅接受参数，Phase A/B 尚未实际传入预计算支撑（留待性能优化时启用）
+   -> **第四期已修复**：`_phase_ab_mfg_trade` 从 A 中实际中枢/宿舍/Office 构造 BuffPool 通过 `override_pool` 传入，对齐 IterativeStrategy 架构模式
+6. **✅ type2 vs type3 已缓解**：Contribution 贪心排序中 type3 全局注入远超 type2 状态写入
+   -> **第四期已修复**：望从 3376→1437（外势条件互斥），type3 同种取最高互斥消除冗余，per-operator 条件加成路径补全。当前中枢已能混合 type2+type3。
 7. **153 布局 Trade 折扣**：`_reader_marginal_prod` 的 `layout_mfg_room_ratio` 参数已就绪但调用方未按布局差异化传入
 8. **截云 wushu_crystal 维度转换**：`wushu_crystal = yanhuo // 5` 未在 `_reader_marginal_prod` 和 `compute_partial_derivatives` 中处理
 
@@ -144,32 +175,32 @@ Mfg 因 `slots×slot_base ≡ rooms×room_base` 碰巧抵消，未暴露此问�
 测试发现热启动下 Mfg/Trade 满员（12/12），检查永远返回 False → link_value 全零。
 改为乐观上界（假设读者可入岗），与冷启动用 S_MAX 的逻辑一致。
 
-### 审计结论（其余函数）
+### 审计结论（其余函数，第四期修正）
 
-| 函数 | 结论 |
-|------|------|
-| `_contribution_power` | 基数一致性正确 |
-| `_contribution_reception` | 同 Power 模式 |
-| `_contribution_office` | 同 Power 模式 |
-| `compute_partial_derivatives` | Trade base_rate room/slot 不一致但无重复计数 |
+| 函数 | 第三期结论 | 第四期修正 |
+|------|-----------|-----------|
+| `_contribution_power` | 基数一致性正确 | ✅ 已接入 `synergy_global_faction`，缪尔赛思莱茵生命加成生效 |
+| `_contribution_reception` | 同 Power 模式 | 签名对齐，暂未接入 synergy |
+| `_contribution_office` | 同 Power 模式 | 签名对齐，暂未接入 synergy |
+| `compute_partial_derivatives` | Trade base_rate room/slot 不一致但无重复计数 | 不变 |
 
-### 对比验收结果
+### 对比验收结果（第四期终态，12h 单班次）
 
-| 阶段 | 经验/12h | autofill | 中枢 | 冷/热差异 |
-|------|---------|----------|------|----------|
-| 修复前 | 15,400 | 3 | 望(单) + 4空 | 无 |
-| F1-F5 后 | 16,600 | 0 | 望+凯尔希+Mon3tr+诗怀雅+阿斯卡纶 | 无 |
-| +SL1-SL4 后 | 16,600 | 0 | 同上 | 无 |
+| 阶段 | 经验/12h | 积分 | 中枢 | 关键修复 |
+|------|---------|------|------|---------|
+| 修复前 | 15,400 | — | 望(单) + 4空 | — |
+| F1-F5 + SL1-SL4 | 16,600 | 19,704 | 望+凯尔希+Mon3tr+诗怀雅+阿斯卡纶 | 边际差分/link_value/宿舍修正 |
+| +望外势互斥 | 16,600 | 19,704 | 凯尔希+重岳+Mon3tr+望+诗怀雅 | 望 3376→1437 |
+| +type3 同种互斥+顺序贪心 | 15,600 | 19,704 | 凯尔希+重岳+望+令+灵知 | 冗余 type3 消除，令入选 |
+| +override_pool | 17,000 | 19,884 | 凯尔希+重岳+望+令+灵知 | 信息断裂修复，Mfg 对齐 |
+| +缪尔赛思条件加成 | 17,000 | 19,884 | 同上 | Power 换入缪尔赛思 |
+| **+per-operator 贡献** | **18,000** | **21,480** | 凯尔希+重岳+望+**薇薇安娜**+令 | 骑士组入选，积分反超 baseline |
 
-### 已知限制
+### 已知限制（第四期更新）
 
-1. **type2 vs type3 量级差距**：link_value 使令 contribution 0→1212，但望的 type3=3376 仍远超。
-   贪心 Top-5 始终全选 type3，type2 写入者（令/夕）被淘汰。需要组合穷举 C(15,5) 或冷启动预填充
-   才能超越个体排序的局限。
+1. **中枢组合穷举**：个体贡献评分选出中枢组合优于 baseline 单班次（积分 +1,356），但仍可能存在更优的 5 人组合。C(15,5) 组合穷举是下一步方向。
 
-2. **百分比 buff 差分盲视**：八幡海铃/焰尾/薇薇安娜 的 `_compute_state_delta_for_control` 返回全零，
-   边际差分法只捕获绝对值写入，百分比叠加型 buff（"每个红松骑士团 Mfg 干员→+10% CR"）
-   在单干员差分中不可见。
+2. **百分比 buff 差分盲视**：✅ 已解决。per-operator 条件加成路径（`_compute_per_operator_contribution`）已覆盖焰尾/薇薇安娜/涤火杰西卡/八幡海铃/戴菲恩。
 
 3. **153 布局 Trade 折扣缺失**：153 下 Trade=9 槽位（vs 243 的 6），乌有入场概率更高但未对称调整。
    `_reader_marginal_prod` 的 `layout_mfg_room_ratio` 参数已就绪，调用方可按布局传入。
@@ -177,3 +208,38 @@ Mfg 因 `slots×slot_base ≡ rooms×room_base` 碰巧抵消，未暴露此问�
 4. **截云 wushu_crystal 维度单位**：`wushu_crystal = yanhuo // 5` 的中间转换在
    `_reader_marginal_prod` 和 `compute_partial_derivatives` 中均未处理，per-yanhuo 边际高估 5 倍。
    与现有代码共享的缺陷，非本次引入。
+
+
+## 第四期实施笔记（2026-05-30 建模补全）
+
+第四期围绕"贡献公式缺项"展开，从验收退化中识别出三条信息/建模缺口并逐一补齐。
+
+### F6: 望的外势/实地条件互斥（655e5ae）
+望从 `_C_CONTROL_GLOBAL_TABLE` 同时提供 mfg 2% + trade 7%，实际为条件互斥型（外势=Trade+Power间数 vs 实地=Mfg间数）。修正后 243 布局下仅 trade 7%（外势 5≥实地 4），contribution 3376→1437。
+
+### F7: type3 同种取最高互斥 + 顺序贪心（a3bf576）
+`_compute_type3_contribution` 对候选单独评估（simulated=[op]），未实现"同种取最高"——第二个 trade 7% 与第一个同分但边际为 0。
+修复：边际差分（bonus_with - bonus_without）+ Phase C 顺序贪心（每选一人重算基线）。
+隐藏 bug：`{op.name: op}` 而非完整 operators 字典，已选中枢对候选不可见。
+
+### F8: 中枢信息断裂——override_pool（ed00ec5）
+`_phase_ab_mfg_trade` 未传 override_pool → exhaust 在空白中枢上下文中计算 buff_pool → Phase C 选出的中枢对穷举不可见。
+修复后 EXP 15,600→17,000（+9%），黑键回归 Trade，Mfg 配置与 baseline 对齐。
+
+### F9: Power 条件加成——synergy_global_faction（1325b93）
+缪尔赛思 Power 技能基础 10% + 莱茵生命条件加成（最高 25%），`_contribution_power` 仅取裸效率 → 排在 #5。
+修复：委托 synergy 层已有的 `synergy_global_faction` 获取条件加成。缪尔赛思入选 Power[0]。
+
+### F10: per-operator 条件加成——control_per_operator_bonus（82c8cd2）
+焰尾/薇薇安娜/涤火杰西卡/八幡海铃/戴菲恩 五人的真实贡献在 `control_per_operator_bonus` 中，但贡献公式仅含 state_value + type3_value，缺失此路径。
+修复：`_compute_per_operator_contribution`——边际差分模式与 type3 同构，遍历 Mfg/Trade 房间取 per-operator 加成边际。Mfg 用 product_rate × LMD，Trade 用 _TRADE_BASE_LMD_PER_HOUR。
+验收：EXP 17,000→18,000，积分 19,884→21,480 反超 baseline（+1,356），薇薇安娜入选中枢。
+
+### Contribution 公式全貌（最终态）
+```
+contribution = state_value       ← ΔS[d] × max(D[d], link_value[d])   [type2 buff写入]
+             + type3_value       ← ΔGlobalBonus × capacity × rate     [type3 全局注入]
+             + per_op_value      ← ΔPerOpBonus × rate × 24h           [type2 per-op条件]
+             + per_op_value      ← 同模式，Trade 用 TRADE_BASE_LMD   [同上，Trade分支]
+             - λ × hours         ← λ bisection 惩罚项                [跨轮收敛]
+```
