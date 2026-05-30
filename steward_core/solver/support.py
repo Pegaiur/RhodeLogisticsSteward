@@ -95,16 +95,18 @@ def _evaluate_with_support(
     effective_power: int | None = None,
     override_pool=None,
     mood_ctx=None,
+    precomputed_support: SupportResult | None = None,
 ) -> tuple[float, dict[str, list[str]]]:
     """评估 combo 含最优支撑的完整评分
 
-    1. 计算 combo 所需支撑干员
+    1. 计算 combo 所需支撑干员（若 precomputed_support 非 None 则跳过）
     2. 过滤已被分配的支撑干员
     3. 用可用支撑构建 global_bonus + buff_pool
     4. 评估房间效率积分
 
     op_lookup 和 effective_power 可由调用方预计算传入，避免每组合重复构建/扫描。
     override_pool: 若提供则跳过 GlobalContext 中的 pool 构造，直接使用此 pool。
+    precomputed_support: 若提供则跳过内部 compute_optimal_support() 调用。
 
     Returns:
         (score, support_map) — support_map 仅含可用的支撑干员
@@ -113,7 +115,10 @@ def _evaluate_with_support(
         params = SolverParams()
     T = params.shift_hours
 
-    support_map = compute_optimal_support(combo_ops).support_map
+    if precomputed_support is not None:
+        support_map = precomputed_support.support_map
+    else:
+        support_map = compute_optimal_support(combo_ops).support_map
     if op_lookup is None:
         op_lookup = {op.name: op for op in all_operators}
 

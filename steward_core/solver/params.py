@@ -93,6 +93,12 @@ class SolverParams:
     local_search_max_rounds: int = 3
     """局部搜索最大轮次"""
 
+    # === 槽位迭代 ===
+    slot_max_rounds: int = 5
+    """槽位迭代最大轮次"""
+    slot_cold_start: bool = False
+    """槽位迭代是否使用冷启动（S₀_max 初始化）"""
+
     @classmethod
     def baseline(cls) -> "SolverParams":
         """基线参数（默认值）"""
@@ -162,6 +168,8 @@ class SolverParams:
             errors.append("global_state_alpha 必须在 [0, 1] 区间")
         if self.local_search_max_rounds < 1:
             errors.append("local_search_max_rounds 必须 >= 1")
+        if self.slot_max_rounds < 1:
+            errors.append("slot_max_rounds 必须 >= 1")
         if self.dorm_max_operators < self.dorm_room_size:
             errors.append("dorm_max_operators 应 >= dorm_room_size")
         if self.daily_task_lmd < 0:

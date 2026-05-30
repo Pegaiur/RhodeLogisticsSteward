@@ -11,6 +11,7 @@ from .config import SolverConfig
 from .global_state import GlobalState
 from .greed import _generate_combos, _greedy_allocate_with_support
 from .support import _evaluate_with_support, compute_optimal_support
+from .bundle import SupportResult
 
 
 def _rough_mfg_score(combo_ops: list[Operator], product: str) -> float:
@@ -48,6 +49,7 @@ def exhaust_mfg(
     anchor_names: set[str],
     config: SolverConfig | None = None,
     override_pool=None,
+    precomputed_support: SupportResult | None = None,
 ) -> int:
     """Phase 1: 制造站穷举（CR 2间 + PG 2间）
 
@@ -114,6 +116,7 @@ def exhaust_mfg(
                     base_pool if not has_rosmontis else None
                 ),
                 mood_ctx=config.mood_ctx,
+                precomputed_support=precomputed_support,
             )
             combo_names = [op.name for op in combo_ops]
             all_support_names = [n for names in support_map.values() for n in names]
