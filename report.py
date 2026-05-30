@@ -19,11 +19,6 @@ def _bar(v, ref, w=10):
     return "#" * n + "-" * (w - n)
 
 
-def _fmt_names(names, width=28):
-    s = ", ".join(names)
-    return s if len(s) <= width else s[:width - 2] + ".."
-
-
 def _room_ops(plan, ftype, ridx):
     for a in plan.assignments:
         if a.room_type == ftype and a.room_index == ridx:
@@ -78,33 +73,19 @@ def main():
 
     # 制造站
     print(f"\n  [制造站]")
-    print(f"  {'Room':<14}", end="")
-    for pi in range(len(plans)):
-        print(f"{'Window ' + str(pi):<30}", end="")
-    print()
-    print(f"  {'-' * 14}{'-' * (30 * len(plans))}")
     for ridx, prod in mfg_rooms:
-        label = f"  Mfg[{ridx}] {prod}"
-        print(f"{label:<14}", end="")
-        for pi in range(len(plans)):
-            names = _room_ops(plans[pi], "Mfg", ridx)
-            print(f"{_fmt_names(names, 28):<30}", end="")
-        print()
+        print(f"  Mfg[{ridx}] {prod}")
+        for pi, plan in enumerate(plans):
+            names = _room_ops(plan, "Mfg", ridx)
+            print(f"    W{pi}  {', '.join(names)}")
 
     # 贸易站
     print(f"\n  [贸易站]")
-    print(f"  {'Room':<14}", end="")
-    for pi in range(len(plans)):
-        print(f"{'Window ' + str(pi):<30}", end="")
-    print()
-    print(f"  {'-' * 14}{'-' * (30 * len(plans))}")
     for (ridx,) in trade_rooms:
-        label = f"  Trade[{ridx}]"
-        print(f"{label:<14}", end="")
-        for pi in range(len(plans)):
-            names = _room_ops(plans[pi], "Trade", ridx)
-            print(f"{_fmt_names(names, 28):<30}", end="")
-        print()
+        print(f"  Trade[{ridx}]")
+        for pi, plan in enumerate(plans):
+            names = _room_ops(plan, "Trade", ridx)
+            print(f"    W{pi}  {', '.join(names)}")
 
     # ════════════════════════════════════════════════════
     #  第二部分：产能分析
@@ -138,9 +119,7 @@ def main():
     print(f"\n  [制造站 分间产出]")
     for ridx, prod in mfg_rooms:
         unit = "经验" if prod == "CombatRecord" else "LMD"
-        label = f"  Mfg[{ridx}] {prod}"
-        print(f"  {'-' * 40}")
-        print(f"{label}")
+        print(f"  Mfg[{ridx}] {prod}")
         for pi, plan in enumerate(plans):
             names = _room_ops(plan, "Mfg", ridx)
             dp = _dp(plan)
@@ -149,21 +128,19 @@ def main():
             for r in rooms:
                 if r.room_index == ridx:
                     val = r.output_per_day * (_RECORD_EXP_PER_UNIT if prod == "CombatRecord" else _GOLD_LMD_PER_UNIT)
-            print(f"    W{pi}: {_fmt_names(names, 24):<26} {val:>10,.0f} {unit}")
+            print(f"    W{pi}  {val:>10,.0f} {unit}")
 
     # 贸易站分间
     print(f"\n  [贸易站 分间产出]")
     for (ridx,) in trade_rooms:
-        print(f"  {'-' * 40}")
         print(f"  Trade[{ridx}]")
         for pi, plan in enumerate(plans):
-            names = _room_ops(plan, "Trade", ridx)
             dp = _dp(plan)
             val = 0
             for r in dp.trade_rooms:
                 if r.room_index == ridx:
                     val = r.output_per_day
-            print(f"    W{pi}: {_fmt_names(names, 24):<26} {val:>10,.0f} LMD")
+            print(f"    W{pi}  {val:>10,.0f} LMD")
 
     print()
 
