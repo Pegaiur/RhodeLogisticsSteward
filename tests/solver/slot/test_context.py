@@ -191,7 +191,7 @@ class TestSlotContext:
 
     def test_op_lookup(self, ops, empty_ctx):
         ctx = empty_ctx
-        assert ctx.op_lookup["char_001"].name == "阿米娅"
+        assert ctx.op_lookup["阿米娅"].char_id == "char_001"
 
     def test_place_unknown_op_no_error(self, empty_ctx):
         ctx = empty_ctx

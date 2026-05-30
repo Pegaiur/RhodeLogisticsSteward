@@ -47,16 +47,7 @@ def contribution(
     Returns:
         该干员在指定设施中的边际贡献（LMD 等值/天量纲）
     """
-    from steward_core.models import Operator as OpType
-
-    op = None
-    if op_name in ctx.op_lookup:
-        op = ctx.op_lookup[op_name]
-    else:
-        for o in ctx.op_lookup.values():
-            if o.name == op_name:
-                op = o
-                break
+    op = ctx.op_lookup.get(op_name)
     if op is None:
         return float("-inf")
 

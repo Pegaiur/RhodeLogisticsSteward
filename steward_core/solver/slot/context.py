@@ -130,7 +130,7 @@ class SlotContext:
         """
         from steward_core.models import Operator
 
-        op_lookup = {op.char_id: op for op in operators}
+        op_lookup = {op.name: op for op in operators}
 
         windows = []
         for _ in range(num_windows):
@@ -184,11 +184,10 @@ class SlotContext:
 
     def assigned_ids(self, window_idx: int = 0) -> set[str]:
         """已分配干员的 char_id 集合"""
-        name_to_id = {op.name: op.char_id for op in self.op_lookup.values()}
         result = set()
         for a in self.windows[window_idx].assignments:
-            if a.operator_name and a.operator_name in name_to_id:
-                result.add(name_to_id[a.operator_name])
+            if a.operator_name and a.operator_name in self.op_lookup:
+                result.add(self.op_lookup[a.operator_name].char_id)
         return result
 
     def assigned_names(self, window_idx: int = 0) -> set[str]:
