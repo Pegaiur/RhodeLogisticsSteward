@@ -293,13 +293,19 @@ class SlotIterationStrategy(Strategy):
         op_lookup: dict[str, Operator],
         config: SolverConfig,
     ) -> list[RoomAssignment]:
-        """Phase A/B: Mfg + Trade 穷举（复用 BaselineStrategy 的 exhaust_mfg/exhaust_trade）
+        """Phase A/B: Mfg + Trade 穷举（复用 exhaust_mfg/exhaust_trade）
 
-        构建 PartialSolution 快照 → 调用 exhaust 模块 → 提取 Mfg/Trade 分配。
+        从 A 中的实际中枢/宿舍/Office 构造 BuffPool，通过 override_pool
+        传入 exhaust 模块，使穷举评估基于真实中枢上下文而非空白估计。
         """
         from ..exhaust_mfg import exhaust_mfg
         from ..exhaust_trade import exhaust_trade
         from steward_core.synergy._derived import MFG_ANCHORS
+        from steward_core.solver.slot_iteration import (
+            _DEFAULT_SUICH_COUNT, _DEFAULT_DORM_LEVEL, _room_ops_by_type,
+            _LAYOUT_243,
+        )
+        from steward_core.synergy.buff_pool import compute_buff_pool
 
         state = PartialSolution.empty()
 
@@ -318,6 +324,33 @@ class SlotIterationStrategy(Strategy):
                     state.assigned_ids.add(op_lookup[name].char_id)
                     state.assigned_names.add(name)
 
+        ctrl_ops = _room_ops_by_type(A, "Control", op_lookup)
+        dorm_ops = _room_ops_by_type(A, "Dormitory", op_lookup)
+        office_ops = _room_ops_by_type(A, "Office", op_lookup)
+
+        has_rosmontis = any(
+            a.room_type == "Mfg" and "迷迭香" in a.operators for a in A
+        )
+        has_ebnhlz = any(
+            a.room_type == "Trade" and "黑键" in a.operators for a in A
+        )
+        has_wuyou = any(
+            a.room_type == "Trade" and "乌有" in a.operators for a in A
+        )
+        office_perception = 20 if any(o.name == "絮雨" for o in office_ops) else 0
+
+        override_pool = compute_buff_pool(
+            control_operators=ctrl_ops,
+            suich_count=_DEFAULT_SUICH_COUNT,
+            dorm_operators=dorm_ops if dorm_ops else None,
+            dorm_level=_DEFAULT_DORM_LEVEL,
+            has_rosmontis_in_mfg=has_rosmontis,
+            has_ebnhlz_in_trade=has_ebnhlz,
+            has_wuyou_in_trade=has_wuyou,
+            perception_from_office=office_perception,
+            layout=_LAYOUT_243,
+        )
+
         mfg_result = exhaust_mfg(
             operators=operators,
             assigned_ids=state.assigned_ids,
@@ -327,6 +360,7 @@ class SlotIterationStrategy(Strategy):
             locked_support=state.locked_support,
             anchor_names=MFG_ANCHORS,
             config=config,
+            override_pool=override_pool,
         )
 
         trade_result = exhaust_trade(
@@ -337,6 +371,7 @@ class SlotIterationStrategy(Strategy):
             op_lookup=op_lookup,
             locked_support=state.locked_support,
             config=config,
+            override_pool=override_pool,
         )
 
         new_A: list[RoomAssignment] = []
