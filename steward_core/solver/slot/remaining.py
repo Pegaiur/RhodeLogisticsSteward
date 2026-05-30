@@ -10,6 +10,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from .contribution import contribution
+from .partials import compute_partial_derivatives
 
 if TYPE_CHECKING:
     from .context import SlotContext
@@ -25,16 +26,16 @@ def phase_remaining(
     每种设施按槽位数取 contribution 最高的未分配干员。
     顺序贪心：每选一人后更新 assigned_ids，下一人从剩余池选。
     """
-    from .partials import compute_partial_derivatives
-
     if D is None:
         D = compute_partial_derivatives(ctx, window_idx)
+
+    dorm_max = ctx.params.dorm_max_operators if ctx.params else 20
 
     facility_configs = [
         ("Power", 3),
         ("Reception", 2),
         ("Office", 1),
-        ("Dormitory", 20),
+        ("Dormitory", dorm_max),
     ]
 
     assigned_ids = ctx.assigned_ids(window_idx)

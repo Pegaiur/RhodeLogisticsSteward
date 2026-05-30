@@ -6,10 +6,12 @@
 
 from __future__ import annotations
 
+import itertools
 from typing import TYPE_CHECKING
 
 from steward_core.constants import BASE_POWER_COUNT
 from steward_core.models import LayoutConfig
+from steward_core.production import _get_trade_order_multiplier
 from steward_core.synergy import (
     classify_trade_operators,
     build_candidate_pool,
@@ -49,8 +51,6 @@ def phase_trade(
     4. 联合最优分配（2间 × 3人 非重叠配对）
     5. 写入 ctx
     """
-    import itertools
-
     assigned_ids = ctx.assigned_ids(window_idx)
     assigned_names = ctx.assigned_names(window_idx)
 
@@ -109,8 +109,6 @@ def phase_trade(
     effective_power = BASE_POWER_COUNT + len(
         power_modifier_names - assigned_names
     )
-
-    from steward_core.production import _get_trade_order_multiplier
 
     evaluated = []
     whisper_combos = []

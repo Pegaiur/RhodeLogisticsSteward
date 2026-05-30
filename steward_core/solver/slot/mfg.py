@@ -6,6 +6,7 @@
 
 from __future__ import annotations
 
+import itertools
 from typing import TYPE_CHECKING
 
 from steward_core.constants import BASE_POWER_COUNT
@@ -43,8 +44,6 @@ def phase_mfg(
     4. evaluate_room 评分
     5. 贪心分配并写入 ctx
     """
-    import itertools
-
     assigned_ids = ctx.assigned_ids(window_idx)
     assigned_names = ctx.assigned_names(window_idx)
 

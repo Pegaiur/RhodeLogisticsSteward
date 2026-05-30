@@ -12,6 +12,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from .contribution import contribution
+from .partials import compute_partial_derivatives
 
 if TYPE_CHECKING:
     from .context import SlotContext
@@ -30,8 +31,6 @@ def phase_control(
 
     中枢容量从 ctx.params.control_max_slots 读取（默认 5）。
     """
-    from .partials import compute_partial_derivatives
-
     params = ctx.params
     max_slots = params.control_max_slots if params else 5
 

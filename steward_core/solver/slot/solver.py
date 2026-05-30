@@ -8,6 +8,8 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from steward_core.models import LayoutConfig, SolveResult
+from steward_core.solver.config import SolverConfig
+from steward_core.solver.refine import local_search_refine
 from steward_core.solver.slot.context import SlotContext, StateVector
 from steward_core.solver.slot.mfg import phase_mfg
 from steward_core.solver.slot.trade import phase_trade
@@ -75,9 +77,6 @@ def solve_slot(
 
     if best_ctx is None:
         best_ctx = ctx
-
-    from steward_core.solver.refine import local_search_refine
-    from steward_core.solver.config import SolverConfig
 
     result = _ctx_to_result(best_ctx, operators, params)
     config = SolverConfig(params=params)

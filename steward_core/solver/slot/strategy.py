@@ -33,5 +33,5 @@ class SlotStrategy(Strategy):
             operators=operators,
             params=config.params,
             mood_ctx=config.mood_ctx,
-            max_iterations=config.params.slot_max_rounds if config.params.slot_max_rounds > 0 else 5,
+            max_iterations=config.params.slot_max_rounds,
         )
