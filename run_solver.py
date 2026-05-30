@@ -1,15 +1,15 @@
 r"""全 box 满练度求解器 — 槽位加工模型
 
 用法:
-    python run_solver.py                              # 默认单班 12h
-    python run_solver.py --hours 8                    # 单班 8h
-    python run_solver.py --single                     # 单班 8h（快捷方式）
+    python run_solver.py                              # 默认 3班×8h+8h
+    python run_solver.py --hours 12                   # 3班×12h+8h
     python run_solver.py --params custom.json         # 自定义参数文件
 
 数据文件 (character_identity.json + buffs_infrastructure.json) 需在项目根目录。
 输出 output/custom_infrast/ 目录。
 """
 
+from dataclasses import replace
 from pathlib import Path
 
 from steward_core.data_loader import load_operators_v2
@@ -19,13 +19,14 @@ from steward_core.solver.config import SolverConfig
 from steward_core.solver.params import SolverParams
 from steward_core import production
 from steward_core.production import _RECORD_EXP_PER_UNIT, _GOLD_LMD_PER_UNIT
+from steward_core.models import ShiftPlan
 
 
 def _parse_cli():
     args = list(__import__("sys").argv[1:])
 
     params_file = None
-    hours_override = 12.0
+    hours_override = 8.0
 
     i = 0
     while i < len(args):
@@ -33,8 +34,6 @@ def _parse_cli():
             params_file = args[i + 1]; i += 2
         elif args[i] == "--hours" and i + 1 < len(args):
             hours_override = float(args[i + 1]); i += 2
-        elif args[i] == "--single":
-            hours_override = 8.0; i += 1
         else:
             print(f"[警告] 未知参数: {args[i]}"); i += 1
 
@@ -50,9 +49,10 @@ def main():
     else:
         params = SolverParams()
 
-    params = params.apply_overrides(shift_hours=hours_override)
-
-    config = SolverConfig(params=params)
+    shift_hours = hours_override
+    interval_hours = 8.0
+    shift_count = 3
+    params = params.apply_overrides(shift_hours=shift_hours)
 
     project_root = Path(__file__).resolve().parent
     ci_path = project_root / "character_identity.json"
@@ -76,26 +76,62 @@ def main():
     ctrl_ops = [op for op in all_operators if op.has_skill_for("Control")]
     print(f"[统计] 制造站: {len(mfg_ops)}, 贸易站: {len(trade_ops)}, 控制中枢: {len(ctrl_ops)}")
 
-    shift_hours = params.shift_hours
-    print(f"\n[求解] SlotStrategy, {shift_hours:.0f}h 单班次...")
+    mode_desc = f"{shift_count}×{shift_hours:.0f}h+{interval_hours:.0f}h"
+    print(f"\n[求解] SlotStrategy, {mode_desc}...")
 
-    result = solve_mvp(all_operators, config=config)
+    from steward_core.mood_flow import MoodContext
+    mood_ctx = MoodContext.fresh(all_operators, params)
 
-    print(f"[结果] 班次数: {len(result.plans)}, 补位房间数: {result.autofill_count}\n")
+    all_plans: list[ShiftPlan] = []
 
-    for pi, plan in enumerate(result.plans):
-        if len(result.plans) > 1:
-            print(f"── 班次 {pi + 1}: {plan.name} ──")
+    for shift_idx in range(shift_count):
+        available = [
+            op for op in all_operators
+            if mood_ctx.mood_of(op.name) >= params.mood_blue_face
+        ]
+
+        config = SolverConfig(params=params, mood_ctx=mood_ctx)
+        result = solve_mvp(available, config=config)
+
+        if result.plans:
+            plan = result.plans[0]
+
+            half_hours = int(shift_hours / 2.0)
+            offset = shift_idx * (int(shift_hours) + int(interval_hours))
+            plan = ShiftPlan(
+                name=f"Shift{shift_idx + 1}-{int(shift_hours)}h",
+                assignments=list(plan.assignments),
+                period_from=f"{(half_hours + offset):02d}:00",
+                period_to=f"{(half_hours + offset + int(shift_hours) - 1):02d}:59",
+            )
+            all_plans.append(plan)
+
+            working_names: set[str] = set()
+            for a in plan.assignments:
+                if a.room_type in ("Mfg", "Trade", "Power", "Reception", "Office"):
+                    working_names.update(a.operators)
+                if a.room_type == "Control":
+                    mood_ctx = replace(mood_ctx, control_operators=a.operators, modifiers=None)
+            mood_ctx = mood_ctx.after_shift(working_names, shift_hours)
+
+            if shift_idx < shift_count - 1:
+                mood_ctx = mood_ctx.after_recovery(interval_hours)
+
+            print(f"[Shift {shift_idx + 1}] 配员 {len(plan.assignments)} 房间")
+
+    result = type(result)(plans=all_plans, autofill_count=0, config_used=None)
+
+    print(f"[结果] 班次数: {len(all_plans)}\n")
+
+    for pi, plan in enumerate(all_plans):
+        print(f"── 班次 {pi + 1}: {plan.name} ──")
         for a in plan.assignments:
             tag = " [autofill]" if a.autofill else ""
             product_str = f" ({a.product})" if a.product else ""
             print(f"  {a.room_type}[{a.room_index}]{product_str}: {a.operators}{tag}")
 
-    for pi, plan in enumerate(result.plans):
-        if len(result.plans) > 1:
-            print(f"\n[产出·班次{pi + 1}] {shift_hours:.0f}h 生产结果...\n")
-        else:
-            print(f"\n[产出] 计算 {shift_hours:.0f}h 生产结果...\n")
+    for pi, plan in enumerate(all_plans):
+        print(f"\n[产出·班次{pi + 1}] {shift_hours:.0f}h 生产结果...\n")
 
         dp = production.calculate(
             plan, all_operators, hours=shift_hours,
@@ -142,9 +178,9 @@ def main():
         else:
             print(f"  赤金缺口: {abs(dp.gold_surplus):.1f} 个 -> 有效收入 {dp.effective_lmd_per_day:,.0f} LMD/{shift_hours:.0f}h")
 
-    suffix = f"243_layout_slot_{shift_hours:.0f}h"
+    suffix = f"243_layout_slot_{shift_hours:.0f}h_x{shift_count}"
     output_path = project_root / "output" / "custom_infrast" / f"{suffix}.json"
-    save_json(result, output_path, title=f"排班方案 slot {shift_hours:.0f}h")
+    save_json(result, output_path, title=f"排班方案 slot {shift_count}×{shift_hours:.0f}h")
 
 
 if __name__ == "__main__":
