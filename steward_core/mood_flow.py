@@ -336,16 +336,13 @@ class MoodContext:
         """应用恢复间隔后的心情变化（不可变，返回新实例）
 
         hours: 恢复时长
-        宿舍中的干员按 dorm_recovery() 速率恢复，上限 24.0。
-        中枢干员不受影响。
+        所有非工作干员按 dorm_recovery() 速率恢复，上限 24.0。
         暖机状态（warmup_hours）在宿舍恢复后归零——干员离开工位后爬升进度重置。
         菲亚梅塔交换是唯一保留暖机的途径（尚未实现，待后续建模）。
         """
         new_moods = dict(self.operator_moods)
 
         for name in self.operator_moods:
-            if name in self.control_operators:
-                continue
             recovery_rate = self.dorm_recovery(name)
             if recovery_rate > 0:
                 new_moods[name] = min(24.0, new_moods[name] + recovery_rate * hours)

@@ -79,6 +79,7 @@ def solve_slot(
             phase_remaining(ctx, w, D, mood_ctx=mc)
 
             if mc is not None:
+                mc.control_operators = ctx.ops_of_type(w, "Control")
                 working_names = {
                     a.operator_name for a in ctx.windows[w].assignments
                     if a.operator_name and a.facility_type not in _NON_WORK_FACILITIES
@@ -142,11 +143,12 @@ def _update_lambda_shadow(
     对每个干员:
       pool = mood_full/base_burn + (num_windows-1)*interval*avg_recovery
       used = ctx.hours_used[op]
-      overflow_ratio = max(0, used - 0.8*pool) / pool
+      overflow_ratio = max(0, used - 0.6*pool) / pool
 
     λ_op = overflow_ratio * base_hourly_value * lambda_damping
     其中 base_hourly_value 为 Mfg CR 槽位的每小时 LMD 等值。
     lambda_damping 在 SolverParams 中可调（默认 0.5），用于控制 λ 敏感度。
+    0.6 阈值使 3 班次×12h 的中枢干员（36h > 0.6×50.7≈30.4h）触发惩罚。
 
     返回最大 λ 值（用于判断收敛——全 0 时终止迭代）。
     """
@@ -163,11 +165,11 @@ def _update_lambda_shadow(
 
     for op in operators:
         used = ctx.hours_used.get(op.name, 0.0)
-        if used <= 0.8 * pool_base:
+        if used <= 0.6 * pool_base:
             ctx.lambda_ops[op.name] = 0.0
             continue
 
-        overflow_ratio = (used - 0.8 * pool_base) / pool_base
+        overflow_ratio = (used - 0.6 * pool_base) / pool_base
         lambda_val = overflow_ratio * hourly_value * damping
         if lambda_val > max_lambda:
             max_lambda = lambda_val
