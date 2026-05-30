@@ -192,9 +192,10 @@ def _apply_whisper_opportunity(
     """对 whisper 组合应用机会成本扣减
 
     归零干员的替代价值正比于其个人最佳 Trade 效率。
-    目的：打破 whisper 组合间的平分，优选用低价值 filler 的组合。
+    公式: adjusted_cost * TRADE_BASE_LMD_PER_HOUR * shift_hours / 100
+    TRADE_BASE_LMD_PER_HOUR = 10265/24 ≈ 427.7 LMD/h（日 LMD 基准 ÷ 24）
     """
-    TRADE_BASE_LMD_PER_HOUR = 10265.0 / 24.0
+    _TRADE_BASE = 10265.0 / 24.0
 
     whisper_min_cost = min(cost for _, _, cost in whisper_combos) if whisper_combos else 0.0
 
@@ -204,7 +205,8 @@ def _apply_whisper_opportunity(
         for _, w_names, cost in whisper_combos:
             if w_names == names:
                 adjusted_cost = max(cost - whisper_min_cost, 0.0)
-                lmd = lmd - adjusted_cost * shift_hours * TRADE_BASE_LMD_PER_HOUR / 24.0 / 100.0
+                penalty = adjusted_cost * _TRADE_BASE * shift_hours / 100.0
+                lmd = lmd - penalty
                 is_whisper = True
                 break
         result.append((lmd, names))

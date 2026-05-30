@@ -45,7 +45,7 @@ def solve_slot(
     ctx = SlotContext.from_layout(operators, layout, params)
 
     visited = set()
-    best_ctx = ctx.clone()
+    best_ctx = None
     best_P = 0.0
 
     for iteration in range(max_iterations):
@@ -59,6 +59,9 @@ def solve_slot(
             phase_control(ctx, w, D)
             phase_remaining(ctx, w, D)
 
+        if best_ctx is None:
+            best_ctx = ctx.clone()
+
         sig = ctx.signature()
         if sig in visited:
             break
@@ -69,6 +72,9 @@ def solve_slot(
             best_P = P
             best_ctx = ctx.clone()
         ctx.prev_P = P
+
+    if best_ctx is None:
+        best_ctx = ctx
 
     from steward_core.solver.refine import local_search_refine
     from steward_core.solver.config import SolverConfig

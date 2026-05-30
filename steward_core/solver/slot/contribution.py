@@ -241,21 +241,10 @@ def _power_contribution(
     window_idx: int,
     D: dict[str, float],
 ) -> float:
-    """发电站贡献 = type2状态写入*D + 发电效率->无人机等价"""
+    """发电站贡献 = type2状态写入*D + 发电效率->无人机等价
+    Power 干员不通过 BuffPool 写入全局状态，仅计算直接效率贡献。
+    """
     total = 0.0
-
-    existing_names = ctx.ops_of_type(window_idx, "Power")
-    ctrl_names = ctx.ops_of_type(window_idx, "Control")
-
-    with_sv = _compute_state_snapshot(ctx, window_idx, ctrl_names + [op.name])
-    without_sv = _compute_state_snapshot(
-        ctx, window_idx, [n for n in ctrl_names if n != op.name],
-    )
-
-    for d in STATE_DIMS:
-        delta = with_sv[d] - without_sv[d]
-        if delta != 0.0 and D.get(d, 0.0) > 0:
-            total += delta * D[d]
 
     eff = op.best_efficiency("Power", "")
     if eff <= 0:
@@ -272,19 +261,10 @@ def _reception_contribution(
     window_idx: int,
     D: dict[str, float],
 ) -> float:
-    """会客室贡献 = type2状态写入*D + 会客效率->等效Mfg"""
+    """会客室贡献 = type2状态写入*D + 会客效率->等效Mfg
+    Reception 干员不通过 BuffPool 写入全局状态，仅计算直接效率贡献。
+    """
     total = 0.0
-
-    ctrl_names = ctx.ops_of_type(window_idx, "Control")
-    with_sv = _compute_state_snapshot(ctx, window_idx, ctrl_names + [op.name])
-    without_sv = _compute_state_snapshot(
-        ctx, window_idx, [n for n in ctrl_names if n != op.name],
-    )
-
-    for d in STATE_DIMS:
-        delta = with_sv[d] - without_sv[d]
-        if delta != 0.0 and D.get(d, 0.0) > 0:
-            total += delta * D[d]
 
     eff = max(op.best_efficiency("Reception", "General"), 0.0)
     base_lmd = _mfg_base_rate_lmd_avg()
@@ -299,19 +279,10 @@ def _office_contribution(
     window_idx: int,
     D: dict[str, float],
 ) -> float:
-    """办公室贡献 = type2状态写入*D + 办公室效率->等效Mfg"""
+    """办公室贡献 = type2状态写入*D + 办公室效率->等效Mfg
+    Office 干员不通过 BuffPool 写入全局状态，仅计算直接效率贡献。
+    """
     total = 0.0
-
-    ctrl_names = ctx.ops_of_type(window_idx, "Control")
-    with_sv = _compute_state_snapshot(ctx, window_idx, ctrl_names + [op.name])
-    without_sv = _compute_state_snapshot(
-        ctx, window_idx, [n for n in ctrl_names if n != op.name],
-    )
-
-    for d in STATE_DIMS:
-        delta = with_sv[d] - without_sv[d]
-        if delta != 0.0 and D.get(d, 0.0) > 0:
-            total += delta * D[d]
 
     eff = max(op.best_efficiency("Office", "HR"), 0.0)
     base_lmd = _mfg_base_rate_lmd_avg()
