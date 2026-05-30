@@ -8,6 +8,10 @@ from .partials import compute_partial_derivatives
 from .contribution import contribution
 from .mfg import phase_mfg
 from .trade import phase_trade
+from .control import phase_control
+from .remaining import phase_remaining
+from .solver import solve_slot
+from .strategy import SlotStrategy
 
 __all__ = [
     "SlotContext",
@@ -19,4 +23,8 @@ __all__ = [
     "contribution",
     "phase_mfg",
     "phase_trade",
+    "phase_control",
+    "phase_remaining",
+    "solve_slot",
+    "SlotStrategy",
 ]
