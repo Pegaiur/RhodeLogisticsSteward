@@ -23,11 +23,11 @@ from steward_core.synergy.facility_linkages import _has_power_count_modifier
 from steward_core.synergy.buff_pool import compute_buff_pool
 from steward_core.evaluate import evaluate_room
 from steward_core.synergy._derived import TRADE_ANCHORS
+from .context import SlotContext, mood_is_viable
 
 if TYPE_CHECKING:
     from steward_core.models import Operator
     from steward_core.mood_flow import MoodContext
-    from .context import SlotContext
 
 _LAYOUT_243 = LayoutConfig.layout_243()
 
@@ -54,13 +54,19 @@ def phase_trade(
     assigned_ids = ctx.assigned_ids(window_idx)
     assigned_names = ctx.assigned_names(window_idx)
 
+    params = ctx.params
+    mood_threshold = params.mood_work_threshold if params else 0.0
+
     trade_ops = [
         op for op in ctx.operators
         if op.char_id not in assigned_ids
         and op.has_skill_for("Trade", "Money")
+        and mood_is_viable(op.name, mood_ctx, mood_threshold)
     ]
     for op in ctx.operators:
         if op.char_id in assigned_ids or op in trade_ops:
+            continue
+        if not mood_is_viable(op.name, mood_ctx, mood_threshold):
             continue
         if any(
             s.buff_id.startswith(_ORDER_MECHANISM_PREFIXES) for s in op.skills
@@ -85,7 +91,6 @@ def phase_trade(
     if not combos:
         return
 
-    params = ctx.params
     shift_hours = params.shift_hours if params else 12.0
 
     ctrl_names = ctx.ops_of_type(window_idx, "Control")

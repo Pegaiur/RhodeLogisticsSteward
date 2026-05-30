@@ -317,12 +317,12 @@ class MoodContext:
 
         for name in self.operator_moods:
             if name in working_names:
-                if name not in self.control_operators:
+                if name in self.control_operators:
+                    new_moods[name] = max(0.0, new_moods[name] - control_burn_rate * hours)
+                else:
                     burn = self.work_burn(name, "Mfg", 3)
                     new_moods[name] = max(0.0, new_moods[name] - burn * hours)
                 new_warmup[name] = self.warmup_hours.get(name, 0.0) + hours
-            elif name in self.control_operators:
-                new_moods[name] = max(0.0, new_moods[name] - control_burn_rate * hours)
             else:
                 new_warmup.pop(name, None)
 

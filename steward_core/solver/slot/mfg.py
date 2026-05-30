@@ -21,11 +21,11 @@ from steward_core.synergy import (
 from steward_core.synergy.facility_linkages import _has_power_count_modifier
 from steward_core.synergy.buff_pool import compute_buff_pool
 from steward_core.evaluate import evaluate_room
+from .context import SlotContext, mood_is_viable
 
 if TYPE_CHECKING:
     from steward_core.models import Operator
     from steward_core.mood_flow import MoodContext
-    from .context import SlotContext
 
 _LAYOUT_243 = LayoutConfig.layout_243()
 
@@ -53,6 +53,7 @@ def phase_mfg(
 
     params = ctx.params
     shift_hours = params.shift_hours if params else 12.0
+    mood_threshold = params.mood_work_threshold if params else 0.0
 
     for product, count in [("CombatRecord", 2), ("PureGold", 2)]:
         effective_power = BASE_POWER_COUNT + len(
@@ -63,6 +64,7 @@ def phase_mfg(
             op for op in ctx.operators
             if op.char_id not in assigned_ids
             and op.has_skill_for("Mfg", product)
+            and mood_is_viable(op.name, mood_ctx, mood_threshold)
         ]
         if not mfg_ops:
             continue

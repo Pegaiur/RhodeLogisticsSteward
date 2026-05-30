@@ -12,6 +12,7 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from steward_core.models import Operator, LayoutConfig
     from steward_core.solver.params import SolverParams
+    from steward_core.mood_flow import MoodContext
 
 
 STATE_DIMS = ("yanhuo", "perception", "engineering_robots", "monster_cuisine", "silent_resonance")
@@ -258,3 +259,17 @@ def _make_slot_id(facility_type: str, room_index: int, slot_index: int) -> str:
     """
     prefix = _FACILITY_PREFIX.get(facility_type, facility_type.lower())
     return f"{prefix}_{room_index}_{slot_index}"
+
+
+def mood_is_viable(
+    op_name: str,
+    mood_ctx: "MoodContext | None",
+    threshold: float,
+) -> bool:
+    """检查干员心情是否满足工作阈值
+
+    mood_ctx 为 None 时视为无心情约束（单班次兼容模式）。
+    """
+    if mood_ctx is None:
+        return True
+    return mood_ctx.mood_of(op_name) >= threshold

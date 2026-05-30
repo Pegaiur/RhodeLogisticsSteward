@@ -11,25 +11,31 @@ from typing import TYPE_CHECKING
 
 from .contribution import contribution
 from .partials import compute_partial_derivatives
+from .context import mood_is_viable
 
 if TYPE_CHECKING:
     from .context import SlotContext
+    from steward_core.mood_flow import MoodContext
 
 
 def phase_remaining(
     ctx: "SlotContext",
     window_idx: int = 0,
     D: dict[str, float] | None = None,
+    mood_ctx: "MoodContext | None" = None,
 ) -> None:
     """填充 Power/Reception/Office/Dormitory 槽位
 
     每种设施按槽位数取 contribution 最高的未分配干员。
     顺序贪心：每选一人后更新 assigned_ids，下一人从剩余池选。
+    Dormitory 不受心情阈值约束（宿舍干员不消耗心情）。
     """
     if D is None:
         D = compute_partial_derivatives(ctx, window_idx)
 
-    dorm_max = ctx.params.dorm_max_operators if ctx.params else 20
+    params = ctx.params
+    dorm_max = params.dorm_max_operators if params else 20
+    mood_threshold = params.mood_work_threshold if params else 0.0
 
     facility_configs = [
         ("Power", 3),
@@ -53,6 +59,8 @@ def phase_remaining(
                 if op.char_id in assigned_ids:
                     continue
                 if not op.has_skill_for(facility_type, _product_for(facility_type)):
+                    continue
+                if facility_type != "Dormitory" and not mood_is_viable(op.name, mood_ctx, mood_threshold):
                     continue
 
                 score = contribution(ctx, op.name, facility_type, window_idx, D)

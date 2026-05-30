@@ -13,15 +13,18 @@ from typing import TYPE_CHECKING
 
 from .contribution import contribution
 from .partials import compute_partial_derivatives
+from .context import mood_is_viable
 
 if TYPE_CHECKING:
     from .context import SlotContext
+    from steward_core.mood_flow import MoodContext
 
 
 def phase_control(
     ctx: "SlotContext",
     window_idx: int = 0,
     D: dict[str, float] | None = None,
+    mood_ctx: "MoodContext | None" = None,
 ) -> None:
     """执行 D-aware 中枢填充
 
@@ -33,6 +36,7 @@ def phase_control(
     """
     params = ctx.params
     max_slots = params.control_max_slots if params else 5
+    mood_threshold = params.mood_work_threshold if params else 0.0
 
     existing = ctx.ops_of_type(window_idx, "Control")
     slots_filled = len(existing)
@@ -53,6 +57,8 @@ def phase_control(
             if op.char_id in assigned_ids:
                 continue
             if not op.has_skill_for("Control"):
+                continue
+            if not mood_is_viable(op.name, mood_ctx, mood_threshold):
                 continue
 
             score = contribution(ctx, op.name, "Control", window_idx, D)

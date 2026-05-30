@@ -38,28 +38,42 @@ def solve_slot(
 
     1. 初始化 SlotContext（冷启动或空分配）
     2. 迭代：Phase A/B/C/D + D[d]反馈 + 记忆收敛
-    3. 后处理：局部搜索
-    4. 输出 SolveResult
+    3. 多窗口心情流转：after_shift 消耗 → after_recovery 恢复
+    4. 后处理：局部搜索
+    5. 输出 SolveResult
     """
     if layout is None:
         layout = LayoutConfig.layout_243()
 
     ctx = SlotContext.from_layout(operators, layout, params)
 
+    interval_hours = params.interval_hours if params else 8.0
+    _NON_WORK_FACILITIES = frozenset({"Dormitory", "Training", "Workshop"})
+
     visited = set()
     best_ctx = None
     best_P = 0.0
 
     for iteration in range(max_iterations):
+        mc = mood_ctx
         for w in range(ctx.num_windows):
-            phase_mfg(ctx, w, mood_ctx=mood_ctx)
-            phase_trade(ctx, w, mood_ctx=mood_ctx)
+            phase_mfg(ctx, w, mood_ctx=mc)
+            phase_trade(ctx, w, mood_ctx=mc)
 
             D = compute_partial_derivatives(ctx, w)
             ctx.windows[w].D = D
 
-            phase_control(ctx, w, D)
-            phase_remaining(ctx, w, D)
+            phase_control(ctx, w, D, mood_ctx=mc)
+            phase_remaining(ctx, w, D, mood_ctx=mc)
+
+            if mc is not None:
+                working_names = {
+                    a.operator_name for a in ctx.windows[w].assignments
+                    if a.operator_name and a.facility_type not in _NON_WORK_FACILITIES
+                }
+                mc = mc.after_shift(working_names)
+                if w < ctx.num_windows - 1:
+                    mc = mc.after_recovery(interval_hours)
 
         if best_ctx is None:
             best_ctx = ctx.clone()
