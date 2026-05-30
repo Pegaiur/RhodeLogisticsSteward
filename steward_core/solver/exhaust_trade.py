@@ -27,11 +27,13 @@ def exhaust_trade(
     *,
     config: SolverConfig | None = None,
     override_pool=None,
+    score_extra_fn=None,
 ) -> int:
     """Phase 3a: Trade 穷举（使用 locked_support 估计中枢，中枢尚未填充）
 
     中枢后置于 Trade 之后——此处用 Mfg 锁定的中枢支撑干员做评估估计。
     分配完毕后，将 Trade combo 自身的中枢支撑需求合并到 locked_support。
+    score_extra_fn(combo_ops, product) -> float: 贡献信用回调，返回值须与 combo 评分同量纲(LMD/天)。
 
     返回本阶段新增的 autofill_count。
     """
@@ -116,6 +118,8 @@ def exhaust_trade(
                 control_operators=ctrl_ops,
                 mood_ctx=config.mood_ctx,
             )
+            if score_extra_fn is not None:
+                lmd += score_extra_fn(combo_ops, "Money")
             evaluated.append((lmd, combo_names))
         evaluated.sort(key=lambda x: -x[0])
 

@@ -305,6 +305,8 @@ class SlotIterationStrategy(Strategy):
         from steward_core.solver.slot_iteration import (
             _DEFAULT_SUICH_COUNT, _DEFAULT_DORM_LEVEL, _room_ops_by_type,
             _LAYOUT_243, compute_combo_consumer_credit,
+            _B_BUFF_CONSUMER_TABLE, _BUFF_CONSUMER_DIMENSION, _pool_to_state_vec,
+            _TRADE_BASE_LMD_PER_HOUR,
         )
         from steward_core.synergy.buff_pool import compute_buff_pool
 
@@ -353,6 +355,7 @@ class SlotIterationStrategy(Strategy):
         )
 
         score_extra_fn = None
+        trade_score_extra_fn = None
         credit_alpha = config.params.combo_consumer_credit_alpha
         if credit_alpha > 0:
             S = ctx.S
@@ -363,6 +366,27 @@ class SlotIterationStrategy(Strategy):
                 return compute_combo_consumer_credit(
                     combo_ops, _pool, S, _hours, alpha=credit_alpha,
                 )
+
+            _TRADE_LMD_PER_PCT = _TRADE_BASE_LMD_PER_HOUR * 24.0 / 300.0
+
+            def trade_score_extra_fn(combo_ops, product):
+                """Trade 消费信用：bonus_pct → LMD/天，与 _evaluate_trade_combo 返回值同量纲"""
+                credit = 0.0
+                for op in combo_ops:
+                    if op.name not in _B_BUFF_CONSUMER_TABLE:
+                        continue
+                    dim = _BUFF_CONSUMER_DIMENSION.get(op.name)
+                    if dim is None:
+                        continue
+                    pool_val = _pool_to_state_vec(_pool).get(dim, 0.0)
+                    if pool_val <= 0:
+                        continue
+                    entry = _B_BUFF_CONSUMER_TABLE[op.name]
+                    effective = min(pool_val, S.get(dim, 0.0))
+                    batches = effective // entry.per_unit if entry.per_unit > 0 else 0
+                    bonus_pct = batches * entry.bonus_per
+                    credit += bonus_pct * _TRADE_LMD_PER_PCT * credit_alpha
+                return credit
 
         mfg_result = exhaust_mfg(
             operators=operators,
@@ -386,6 +410,7 @@ class SlotIterationStrategy(Strategy):
             locked_support=state.locked_support,
             config=config,
             override_pool=override_pool,
+            score_extra_fn=trade_score_extra_fn,
         )
 
         new_A: list[RoomAssignment] = []
