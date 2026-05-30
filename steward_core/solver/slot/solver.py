@@ -50,8 +50,8 @@ def solve_slot(
 
     for iteration in range(max_iterations):
         for w in range(ctx.num_windows):
-            phase_mfg(ctx, w)
-            phase_trade(ctx, w)
+            phase_mfg(ctx, w, mood_ctx=mood_ctx)
+            phase_trade(ctx, w, mood_ctx=mood_ctx)
 
             D = compute_partial_derivatives(ctx, w)
             ctx.windows[w].D = D
@@ -64,7 +64,7 @@ def solve_slot(
             break
         visited.add(sig)
 
-        P = _estimate_total_production(ctx)
+        P = _estimate_total_production(ctx, mood_ctx=mood_ctx)
         if P > best_P:
             best_P = P
             best_ctx = ctx.clone()
@@ -79,7 +79,10 @@ def solve_slot(
     return result
 
 
-def _estimate_total_production(ctx: SlotContext) -> float:
+def _estimate_total_production(
+    ctx: SlotContext,
+    mood_ctx: "MoodContext | None" = None,
+) -> float:
     """估算总产能（用于收敛检测的近似值）"""
     from steward_core.evaluate import evaluate_room
     from steward_core.synergy import (
@@ -129,6 +132,7 @@ def _estimate_total_production(ctx: SlotContext) -> float:
                 room_ops, a.facility_type, a.product,
                 3, hours, global_bonus, pool,
                 ctrl_per_op_bonus=ctrl_bonus,
+                mood_ctx=mood_ctx,
             )
             total += score
 

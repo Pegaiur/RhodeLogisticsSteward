@@ -23,12 +23,17 @@ from steward_core.evaluate import evaluate_room
 
 if TYPE_CHECKING:
     from steward_core.models import Operator
+    from steward_core.mood_flow import MoodContext
     from .context import SlotContext
 
 _LAYOUT_243 = LayoutConfig.layout_243()
 
 
-def phase_mfg(ctx: "SlotContext", window_idx: int = 0) -> None:
+def phase_mfg(
+    ctx: "SlotContext",
+    window_idx: int = 0,
+    mood_ctx: "MoodContext | None" = None,
+) -> None:
     """执行制造站穷举分配
 
     对 CombatRecord(2间) 和 PureGold(2间) 分别：
@@ -104,6 +109,7 @@ def phase_mfg(ctx: "SlotContext", window_idx: int = 0) -> None:
                 ctrl_per_op_bonus=ctrl_bonus,
                 all_operators=ctx.operators,
                 control_operators=ctrl_ops,
+                mood_ctx=mood_ctx,
             )
             combo_names = [op.name for op in combo_ops]
             evaluated.append((score, combo_names))
