@@ -7,6 +7,7 @@ from .context import SlotContext, StateVector, SlotAssignment, WindowState, STAT
 from .partials import compute_partial_derivatives
 from .contribution import contribution
 from .mfg import phase_mfg
+from .trade import phase_trade
 
 __all__ = [
     "SlotContext",
@@ -17,4 +18,5 @@ __all__ = [
     "compute_partial_derivatives",
     "contribution",
     "phase_mfg",
+    "phase_trade",
 ]
