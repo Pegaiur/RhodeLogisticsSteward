@@ -77,6 +77,11 @@ def solve_slot(
             D = compute_partial_derivatives(ctx, w)
             ctx.windows[w].D = D
 
+            if mc is not None and num_windows > 1:
+                lambda_w = _update_lambda_shadow(ctx, operators, params)
+                if lambda_w > lambda_init:
+                    lambda_init = lambda_w
+
             phase_control(ctx, w, D, mood_ctx=mc)
             phase_remaining(ctx, w, D, mood_ctx=mc)
 
@@ -90,11 +95,7 @@ def solve_slot(
                 if w < num_windows - 1:
                     mc = mc.after_recovery(interval_hours)
 
-            if mc is not None and iteration > 0:
-                _track_hours_used(ctx, w, shift_hours)
-
-        if mc is not None and num_windows > 1:
-            lambda_init = _update_lambda_shadow(ctx, operators, params)
+            _track_hours_used(ctx, w, shift_hours)
 
         if best_ctx is None:
             best_ctx = ctx.clone()
@@ -158,12 +159,12 @@ def _update_lambda_shadow(
     对每个干员:
       pool = mood_full/base_burn + (num_windows-1)*interval*avg_recovery
       used = ctx.hours_used[op]
-      overflow_ratio = max(0, used - 0.6*pool) / pool
+      overflow_ratio = max(0, used - 0.35*pool) / pool
 
     λ_op = overflow_ratio * base_hourly_value * lambda_damping
     其中 base_hourly_value 为 Mfg CR 槽位的每小时 LMD 等值。
     lambda_damping 在 SolverParams 中可调（默认 0.5），用于控制 λ 敏感度。
-    0.6 阈值使 3 班次×12h 的中枢干员（36h > 0.6×50.7≈30.4h）触发惩罚。
+    0.35 阈值使 2 班次×12h 的中枢干员（24h > 0.35×50.7≈17.7h）触发惩罚。
 
     返回最大 λ 值（用于判断收敛——全 0 时终止迭代）。
     """
@@ -180,12 +181,12 @@ def _update_lambda_shadow(
 
     for op in operators:
         used = ctx.hours_used.get(op.name, 0.0)
-        if used <= 0.6 * pool_base:
+        if used <= 0.35 * pool_base:
             ctx.lambda_ops[op.name] = 0.0
             continue
 
-        overflow_ratio = (used - 0.6 * pool_base) / pool_base
-        lambda_val = overflow_ratio * hourly_value * damping
+        overflow_ratio = max(0.0, used - 0.35 * pool_base) / pool_base
+        lambda_val = max(0.0, overflow_ratio * hourly_value * damping)
         if lambda_val > max_lambda:
             max_lambda = lambda_val
         ctx.lambda_ops[op.name] = lambda_val
