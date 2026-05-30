@@ -45,7 +45,21 @@ SlotSolver 直接实现 [slot-processing-model-draft.md](slot-processing-model-d
 - `op_lookup` 以 `char_id` 为键，`assigned_ids()` 内部构建 `name_to_id` 反向映射
 - SlotContext 设计为 mutable（通过 `place`/`vacate` 原地修改），迭代分支通过 `clone()` 深拷贝
 
-**测试**：tests/solver/slot/test_context.py — 27 例全绿（StateVector 7 + SlotID 4 + SlotAssignment 2 + SlotContext 14）
+**测试**：tests/solver/slot/test_context.py — 27 例全绿
+
+### Step 2: slot/partials.py（2026-05-30）
+
+实现 D[d] = ∂P/∂S[d] 偏导数计算：
+
+- `compute_partial_derivatives(ctx, window_idx)` — 遍历 SlotContext 中 Mfg/Trade 的已分配干员，匹配 `_B_BUFF_CONSUMER_TABLE` 中的 type1f 读取者，按公式 `base_rate × hours × (bonus_per/per_unit) / 100 × unit_lmd` 累加各维度 D[d]
+- `_BUFF_CONSUMER_DIMENSION` — 模块级缓存，从 `_B_BUFF_CONSUMER_TABLE` 推导干员名→维度名映射（含 wushu_crystal→yanhuo、thought_chains→perception 派生维度处理）
+- 产品基数/单位价值通过 `_product_base_rate()` / `_product_lmd_per_unit()` 统一折算为 LMD 等值
+
+**偏离记录**：
+- 与 V1 的 `compute_partial_derivatives` 核心公式一致，差异仅在输入源从 `RoomAssignment` 列表改为 SlotContext
+- 未复制 `_reader_marginal_prod` 和 `_build_slot_links`（link_value 链路上限在 Step 3 contribution 中实现，作为 D[d]=0 时的 fallback）
+
+**测试**：tests/solver/slot/test_partials.py — 10 例全绿（ProductRates 7 + ComputePartials 3）
 
 ---
 
