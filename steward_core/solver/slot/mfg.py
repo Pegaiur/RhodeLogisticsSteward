@@ -30,6 +30,30 @@ if TYPE_CHECKING:
 _LAYOUT_243 = LayoutConfig.layout_243()
 
 
+def _cold_start_ctrl_ops(ctx: "SlotContext") -> list["Operator"]:
+    """冷启动预估：按 best_efficiency 取前 N 个中枢干员作为 BuffPool 估算输入"""
+    params = ctx.params
+    max_slots = params.control_max_slots if params else 5
+    candidates = sorted(
+        [op for op in ctx.operators if op.has_skill_for("Control")],
+        key=lambda o: o.best_efficiency("Control", ""),
+        reverse=True,
+    )
+    return candidates[:max_slots]
+
+
+def _cold_start_dorm_ops(ctx: "SlotContext") -> list["Operator"]:
+    """冷启动预估：按 best_efficiency 取前 N 个宿舍干员作为 BuffPool 估算输入"""
+    params = ctx.params
+    dorm_max = params.dorm_max_operators if params else 20
+    candidates = sorted(
+        [op for op in ctx.operators if op.has_skill_for("Dormitory", "Rest")],
+        key=lambda o: o.best_efficiency("Dormitory", "Rest"),
+        reverse=True,
+    )
+    return candidates[:dorm_max]
+
+
 def phase_mfg(
     ctx: "SlotContext",
     window_idx: int = 0,
@@ -86,27 +110,50 @@ def phase_mfg(
 
         ctrl_names = ctx.ops_of_type(window_idx, "Control")
         ctrl_ops = [ctx.op_lookup[n] for n in ctrl_names if n in ctx.op_lookup]
+        if not ctrl_ops:
+            ctrl_ops = _cold_start_ctrl_ops(ctx)
         global_bonus = compute_control_global_bonus(ctrl_ops)
 
         dorm_names = ctx.ops_of_type(window_idx, "Dormitory")
         dorm_ops_list = [ctx.op_lookup[n] for n in dorm_names if n in ctx.op_lookup]
+        if not dorm_ops_list:
+            dorm_ops_list = _cold_start_dorm_ops(ctx)
 
-        buff_pool = compute_buff_pool(
+        office_perception = params.office_perception_base if params else 20
+
+        base_buff_pool = compute_buff_pool(
             ctrl_ops,
             suich_count=params.suich_count if params else 5,
             dorm_operators=[o for o in dorm_ops_list if o],
             dorm_level=params.dorm_level if params else 5,
             layout=ctx.layout if ctx.layout else _LAYOUT_243,
+            perception_from_office=office_perception,
         )
+
+        _ROS_NAME = "迷迭香"
 
         evaluated = []
         for combo_ops in combos:
+            has_rosmontis = any(op.name == _ROS_NAME for op in combo_ops)
+            if has_rosmontis:
+                combo_pool = compute_buff_pool(
+                    ctrl_ops,
+                    suich_count=params.suich_count if params else 5,
+                    dorm_operators=[o for o in dorm_ops_list if o],
+                    dorm_level=params.dorm_level if params else 5,
+                    layout=ctx.layout if ctx.layout else _LAYOUT_243,
+                    perception_from_office=office_perception,
+                    has_rosmontis_in_mfg=True,
+                )
+            else:
+                combo_pool = base_buff_pool
+
             ctrl_bonus = control_per_operator_bonus(
                 ctrl_ops, combo_ops, product, room_type="Mfg",
             )
             score = evaluate_room(
                 combo_ops, "Mfg", product, effective_power,
-                shift_hours, global_bonus, buff_pool,
+                shift_hours, global_bonus, combo_pool,
                 ctrl_per_op_bonus=ctrl_bonus,
                 all_operators=ctx.operators,
                 control_operators=ctrl_ops,
