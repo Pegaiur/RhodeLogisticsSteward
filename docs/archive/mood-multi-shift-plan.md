@@ -1,6 +1,13 @@
 # 心情建模与多班次排班计划
 
-> **版本**: 2026-05-29 · 待实施 · 路由自 `docs/inbox.md#L26`、`#L27`、`#L28`、`#L29`
+> **版本**: 2026-05-29 · 已实施 · 合并至 master（未打 tag）
+> **归档日期**: 2026-05-30
+> 
+> Steps 1-7 全部实施完毕（29 commits），含 MoodContext、MoodModifiers、宿舍恢复评估、反硬编码、
+> mood_burn 截断 + 蓝脸衰减、fill_dorm_with_scheduling、solve_multi_shift() 编排器、菲亚梅塔输出激活。
+> 
+> **已知未完成**：跨班次轮换调度（中枢干员重复分配）、菲亚梅塔交换决策、测试套件。
+> 后续由 `slot-processing-model-draft.md` 槽位加工模型替代。
 
 ## 实施笔记
 

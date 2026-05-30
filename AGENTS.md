@@ -57,7 +57,7 @@ RhodeLogisticsSteward/
 │   │   ├── _derived.py            #   ─ 脚本推导的锚点表+名称集合
 │   │   └── mood.py               #   ─ 中枢心情恢复
 │   ├── solver/                   # 排班求解器子包（15模块）
-│   │   ├── __init__.py           #   ─ solve_mvp() 入口（委托给 Strategy 子类）
+│   │   ├── __init__.py           #   ─ solve_mvp() + solve_multi_shift() 入口
 │   │   ├── config.py             #   ─ SolverConfig 开关 + 策略选择
 │   │   ├── params.py             #   ─ SolverParams 参数注册表（数值参数集中管理）
 │   │   ├── strategy.py           #   ─ Strategy ABC + PartialSolution 状态快照
@@ -67,7 +67,7 @@ RhodeLogisticsSteward/
 │   │   ├── exhaust_trade.py      #   ─ 贸易站穷举 + 订单评估
 │   │   ├── fill_control.py       #   ─ 中枢填充（支撑需求驱动）
 │   │   ├── fill_remaining.py     #   ─ 剩余设施贪心（Power/Reception/Office）
-│   │   ├── fill_dorm.py          #   ─ 宿舍填充（优先 B 层生成者）
+│   │   ├── fill_dorm.py          #   ─ 宿舍填充 + 多班次恢复调度
 │   │   ├── global_state.py       #   ─ 包级稀缺度评分注入（Step 3 全局状态注入）
 │   │   ├── refine.py             #   ─ 局部搜索后处理（单房间替换 + 干员交换）
 │   │   ├── support.py            #   ─ 支撑干员计算
@@ -81,9 +81,11 @@ RhodeLogisticsSteward/
 │   ├── evaluate.py               # 房间效率评估
 │   ├── production.py             # 产出/日产计算
 │   ├── output.py                 # MAA 基建排班协议输出
-│   ├── efficiency_fn.py          # 效率函数（常数/爬升）
+│   ├── efficiency_fn.py          # 效率函数（常数/爬升/梯级衰减）
 │   ├── data_loader.py            # 数据加载器（v2）
-│   ├── mood.py                   # 心情/消耗模型
+│   ├── mood.py                   # 心情/消耗模型（单班次分析报告）
+│   ├── mood_flow.py              # 心情流转引擎（MoodContext + MoodModifiers）
+│   ├── dorm_recovery.py          # 宿舍恢复速率评估
 │   └── constants.py              # 布局/设施常量
 ├── docs/
 │   ├── constraints-and-data-baseline.md  # 约束体系与数据基线
@@ -98,6 +100,7 @@ RhodeLogisticsSteward/
 │   │   ├── solver-improvement-plan.md  # 求解器优化计划（v0.4.0 已归档）
 │   │   ├── strategy-refactor-plan.md   # Strategy 重构计划 + 实施笔记（v0.5.0 已实施）
 │   │   └── buffpool-iteration-plan.md  # BuffPool 迭代计划（v0.5.0 已实施）
+│   │   └── mood-multi-shift-plan.md    # 心情建模与多班次计划（v0.6.0-dev 已实施）
 └── output/                       # 生成的排班文件（不入库）
     └── custom_infrast/
 ```
@@ -156,7 +159,8 @@ RhodeLogisticsSteward/
 2. **读取 `docs/strategy-brief.md`** → 理解当前策略与算法骨架
 3. **按需深入到子包**：
    - 联动体系逻辑 → `steward_core/synergy/`：先读 `__init__.py` 了解公开 API，再按需进入对应模块（A层→`mfg_linkages`/`trade_linkages`/`facility_linkages`，B层→`buff_pool`/`global_linkages`，C层→`control_linkages`/`mood`）
-   - 求解/排班逻辑 → `steward_core/solver/`：先读 `__init__.py` 的 `solve_mvp()`（委托给 Strategy），再按需进入 `strategy.py`（Strategy ABC + PartialSolution）、`strategies/baseline.py`（Pipeline 流水线编排）、各 `exhaust_*/fill_*` 模块（具体阶段）、`refine.py`（局部搜索）、`global_state.py`（全局状态评分）
+   - 求解/排班逻辑 → `steward_core/solver/`：先读 `__init__.py` 的 `solve_mvp()` / `solve_multi_shift()`（委托给 Strategy），再按需进入 `strategy.py`（Strategy ABC + PartialSolution）、`strategies/baseline.py`（Pipeline 流水线编排）、各 `exhaust_*/fill_*` 模块（具体阶段）、`refine.py`（局部搜索）、`global_state.py`（全局状态评分）
+   - 心情建模 → `steward_core/mood_flow.py`（MoodContext + MoodModifiers） + `steward_core/dorm_recovery.py`（宿舍恢复评估）
    - 数据模型/常量 → `steward_core/models.py` / `constants.py`
    - 表维护/新增 → `synergy/types.py` TABLES 注册器 + `synergy/registry.py` 系统贡献者 + AGENTS.md §人工维护数据
    - 硬编码数据维护规则 → `.trae/rules/hardcoded-data.md`（锚点生成、名称集合同步、分类覆盖率）
@@ -171,6 +175,9 @@ RhodeLogisticsSteward/
 | 效率函数/e(t) | `docs/efficiency-function-design.md` |
 | 联动/体系建模 | `docs/synergy-systems.md` |
 | 设施容量/约束/多班次 | `docs/strategy-brief.md` §设施容量/§约束/§策略 |
+| 心情建模/多班次 | `docs/archive/mood-multi-shift-plan.md` |
+| 心情流转引擎 | `steward_core/mood_flow.py` |
+| 宿舍恢复速率 | `steward_core/dorm_recovery.py` |
 | 干员/buff 数据查询 | `.trae/skills/data-query/query_data.py` (通过 `data-query` skill) |
 | 人工维护/硬编码数据/更新 | AGENTS.md §人工维护数据 |
 | 硬编码数据生成规则 | `.trae/rules/hardcoded-data.md` |
@@ -179,10 +186,12 @@ RhodeLogisticsSteward/
 | 求解器优化/三件套 | `docs/archive/solver-improvement-plan.md`（v0.4.0 已实施） |
 | 远期待办/需求登记 | `docs/inbox.md` |
 | 联动体系代码 | `steward_core/synergy/` → `__init__.py` 重导出一览，`types.py` TABLES 注册器索引全部表 |
-| 求解/排班代码 | `steward_core/solver/` → `__init__.py` solve_mvp() 入口，`strategy.py` Strategy ABC，`strategies/baseline.py` Pipeline 编排，各 `exhaust_*/fill_*` 模块按阶段独立 |
+| 求解/排班代码 | `steward_core/solver/` → `__init__.py` solve_mvp()/solve_multi_shift() 入口，`strategy.py` Strategy ABC，`strategies/baseline.py` Pipeline 编排，各 `exhaust_*/fill_*` 模块按阶段独立 |
 | 策略实现/CLI | `.trae/rules/strategy-config.md` + `solver/strategies/__init__.py` STRATEGY_REGISTRY |
 | Strategy 重构（已完成） | `docs/archive/strategy-refactor-plan.md`（v0.5.0 已实施） |
 | BuffPool 迭代（已完成） | `docs/archive/buffpool-iteration-plan.md`（v0.5.0 已实施） |
+| 心情建模/多班次（已完成） | `docs/archive/mood-multi-shift-plan.md`（已实施，合并至 master，未打 tag） |
+| 槽位加工模型（即将实践） | `docs/slot-processing-model-draft.md` |
 
 ## 版本管理
 
@@ -213,6 +222,7 @@ master ────────────────────────�
 | 求解器三件套优化 | 0.4.0 | 支撑包+局部搜索+全局状态 |
 | Strategy 策略层重构 | 0.5.0 | Baseline/KBeam/Iterative 三条策略 + Phase 重命名 + BuffPool 迭代 + CLI 策略选择 |
 | JSON 输出协议对齐 | 0.5.1 | 输出符合 MAA 基建排班协议 v5.x、README、文档归档合并 |
+| 心情建模与多班次基础 | — (dev) | MoodContext + MoodModifiers + dorm_recovery + mood_burn/蓝脸衰减 + solve_multi_shift() 编排器。已合并至 master，因轮换调度不完整未打 tag |
 | 首个正式版 | 1.0.0 | 全验证通过 |
 | MAA 发版需适配 | PATCH +1 | 0.5.1 |
 
@@ -237,6 +247,7 @@ v0.3.0  → M3: Step 3 验证通过
 v0.4.0  → M4: 求解器三件套优化（支撑包+局部搜索+全局状态）
 v0.5.0  → M5: Strategy 策略层重构（3 条策略 + Phase 重命名 + BuffPool 迭代 + CLI）
 v0.5.1  → M5.1: JSON 输出协议对齐 + README + 文档归档
+—      → 心情建模与多班次基础（已合并，未打 tag，后续由槽位加工模型替代）
 v1.0.0  → 首个正式版
 ```
 
