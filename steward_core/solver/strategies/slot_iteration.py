@@ -382,7 +382,12 @@ class SlotIterationStrategy(Strategy):
         op_lookup: dict[str, Operator],
         config: SolverConfig,
     ) -> list[RoomAssignment]:
-        """Phase C: Control 槽位 contribution 贪心"""
+        """Phase C: Control 槽位顺序贪心——每选一人后重算边际贡献
+
+        对每个候选干员计算 contribution 时使用当前已选中中枢干员作为
+        评估基线，使得"同种效果取最高"的互斥语义生效——
+        第二个同类型全局注入者边际贡献为零。
+        """
         from steward_core.synergy import get_system_contributors
 
         max_slots = config.params.control_max_slots
@@ -400,52 +405,60 @@ class SlotIterationStrategy(Strategy):
 
         ctrl_global_names = set(get_system_contributors("Control", "global_bonus"))
 
-        scored = []
-        for op in control_candidates:
-            c = contribution(op.name, "Control", ctx, op_lookup, A)
-            if c > float("-inf"):
-                bias = config.params.control_global_sort_bias if op.name in ctrl_global_names else 0.0
-                scored.append((c + bias, op.name))
+        base_A = [a for a in A if a.room_type != "Control"]
 
-        scored.sort(key=lambda x: -x[0])
-
+        selected_control: list[Operator] = []
         selected_names: list[str] = []
-        for _, name in scored:
-            if len(selected_names) >= max_slots:
-                break
-            if name not in assigned_names:
-                selected_names.append(name)
-                assigned_names.add(name)
 
-        new_A: list[RoomAssignment] = []
-        control_slot = 0
-        for a in A:
-            if a.room_type == "Control":
-                slot_names = selected_names[control_slot:control_slot + 1] if control_slot < len(selected_names) else []
+        for _slot in range(max_slots):
+            remaining = [op for op in control_candidates
+                         if op.name not in selected_names and op.name not in assigned_names]
+            if not remaining:
+                break
+
+            temp_control = RoomAssignment(
+                room_type="Control", room_index=0,
+                operators=[o.name for o in selected_control],
+                product=None,
+            )
+            eval_A = [*base_A, temp_control]
+
+            best_score = float("-inf")
+            best_op: Operator | None = None
+            for op in remaining:
+                c = contribution(op.name, "Control", ctx, op_lookup, eval_A)
+                if c <= float("-inf"):
+                    continue
+                bias = config.params.control_global_sort_bias if op.name in ctrl_global_names else 0.0
+                score = c + bias
+                if score > best_score:
+                    best_score = score
+                    best_op = op
+
+            if best_op is None or best_score <= 0.0:
+                break
+            selected_control.append(best_op)
+            selected_names.append(best_op.name)
+            assigned_names.add(best_op.name)
+
+        new_A: list[RoomAssignment] = list(base_A)
+
+        for i in range(5):
+            if i < len(selected_names):
                 new_A.append(RoomAssignment(
                     room_type="Control",
-                    room_index=a.room_index,
-                    operators=list(slot_names),
-                    product=a.product,
+                    room_index=i,
+                    operators=[selected_names[i]],
+                    product=None,
                 ))
-                control_slot += 1
             else:
                 new_A.append(RoomAssignment(
-                    room_type=a.room_type,
-                    room_index=a.room_index,
-                    operators=list(a.operators),
-                    product=a.product,
-                    autofill=a.autofill,
+                    room_type="Control",
+                    room_index=i,
+                    operators=[],
+                    product=None,
+                    autofill=True,
                 ))
-
-        for i in range(control_slot, 5):
-            new_A.append(RoomAssignment(
-                room_type="Control",
-                room_index=i,
-                operators=[],
-                product=None,
-                autofill=True,
-            ))
 
         return new_A
 

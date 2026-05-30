@@ -517,14 +517,15 @@ def _compute_state_delta_for_dorm(
 def _compute_type3_contribution(
     op: "Operator",
     assignments: list["RoomAssignment"],
+    operators: dict[str, "Operator"],
 ) -> float:
-    """计算类型 3 全局注入的贡献值
+    """计算类型 3 全局注入的边际贡献值
+
+    通过差分评估：计算当前中枢有/无该干员时的 GlobalBonus，
+    取增量作为边际贡献。这实现了"同种效果取最高"的互斥语义——
+    第二个同类型全局注入者（如第二个 trade +7%）边际贡献为零。
 
     全局注入对每间 Mfg/Trade 站加成一次（非每槽位）。
-    Mfg 槽位级基数 × 槽位数 ≡ 房间级基数 × 房间数（等价），
-    但 Trade 的 _TRADE_BASE_LMD_PER_HOUR 已是房间级基数，
-    必须用房间数而非槽位数。
-
     望的外势/实地条件判断需要传入 Mfg/Trade/Power 房间数。
     """
     from steward_core.synergy import compute_control_global_bonus
@@ -540,18 +541,23 @@ def _compute_type3_contribution(
     })
     power_rooms = len({a.room_index for a in assignments if a.room_type == "Power"})
 
-    control_ops = _room_ops_by_type(assignments, "Control", {op.name: op})
-    if op.name not in {o.name for o in control_ops}:
-        simulated = [op]
-    else:
-        simulated = control_ops
+    control_ops = _room_ops_by_type(assignments, "Control", operators)
+    existing_names = {o.name for o in control_ops}
 
-    bonus = compute_control_global_bonus(
-        simulated,
-        mfg_rooms=mfg_rooms,
-        trade_rooms=trade_rooms,
-        power_rooms=power_rooms,
+    bonus_kwargs = dict(
+        mfg_rooms=mfg_rooms, trade_rooms=trade_rooms, power_rooms=power_rooms,
     )
+
+    if op.name in existing_names:
+        others = [o for o in control_ops if o.name != op.name]
+        bonus_without = compute_control_global_bonus(others, **bonus_kwargs)
+        bonus_with = compute_control_global_bonus(control_ops, **bonus_kwargs)
+    else:
+        bonus_without = compute_control_global_bonus(control_ops, **bonus_kwargs)
+        bonus_with = compute_control_global_bonus(control_ops + [op], **bonus_kwargs)
+
+    marginal_mfg = bonus_with.mfg_bonus - bonus_without.mfg_bonus
+    marginal_trade = bonus_with.trade_bonus - bonus_without.trade_bonus
 
     mfg_base_avg = (
         0.5 * _MFG_CR_BASE_RATE * _CR_EXP_PER_UNIT / 1.3
@@ -559,8 +565,8 @@ def _compute_type3_contribution(
     )
 
     value = 0.0
-    value += bonus.mfg_bonus * mfg_slots * mfg_base_avg * 24.0 / 100.0
-    value += bonus.trade_bonus * trade_rooms * _TRADE_BASE_LMD_PER_HOUR * 24.0 / 100.0
+    value += marginal_mfg * mfg_slots * mfg_base_avg * 24.0 / 100.0
+    value += marginal_trade * trade_rooms * _TRADE_BASE_LMD_PER_HOUR * 24.0 / 100.0
 
     return value
 
@@ -623,7 +629,7 @@ def _contribution_control(
             state_value += delta * ctx.D[d]
         else:
             state_value += delta * ctx.link_value.get(d, 0.0)
-    type3_value = _compute_type3_contribution(op, assignments)
+    type3_value = _compute_type3_contribution(op, assignments, operators)
     return state_value + type3_value
 
 
