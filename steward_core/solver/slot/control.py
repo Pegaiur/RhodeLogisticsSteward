@@ -61,7 +61,7 @@ def phase_control(
                 best_score = score
                 best_op_name = op.name
 
-        if best_op_name is None or best_score <= 0:
+        if best_op_name is None:
             break
 
         existing = ctx.ops_of_type(window_idx, "Control")
