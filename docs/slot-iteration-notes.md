@@ -29,6 +29,26 @@ SlotSolver 直接实现 [slot-processing-model-draft.md](slot-processing-model-d
 
 ---
 
+## SlotSolver 实施记录
+
+### Step 1: slot/context.py（2026-05-30）
+
+新增 `solver/slot/` 子包，实现统一状态载体：
+
+- **StateVector**：5 维全局状态向量（yanhuo/perception/engineering_robots/monster_cuisine/silent_resonance），`__getitem__`/`__setitem__` 接口 + `to_dict`/`from_dict` 序列化 + `s_max()` 冷启动上界
+- **SlotAssignment**：单槽位分配记录（slot_id/facility_type/product/operator_name/room_index）
+- **WindowState**：单窗口状态快照（assignments + S + D）
+- **SlotContext**：统一状态载体，替代旧的 locked_support/assigned_ids/assigned_names/GlobalContext 四个碎片化结构。提供 `place()`/`vacate()`/`get_op()` 槽位读写 + `slots_of_type()`/`room_ops()` 按类型查询 + `signature()` 迭代去重 + `clone()` 深拷贝
+
+**偏离记录**：
+- 槽位 ID 格式统一为 `{prefix}_{room_index}_{slot_index}`（如 `mfg_0_0`），不区分 CR/PG（product 由 `SlotAssignment.product` 字段存储）
+- `op_lookup` 以 `char_id` 为键，`assigned_ids()` 内部构建 `name_to_id` 反向映射
+- SlotContext 设计为 mutable（通过 `place`/`vacate` 原地修改），迭代分支通过 `clone()` 深拷贝
+
+**测试**：tests/solver/slot/test_context.py — 27 例全绿（StateVector 7 + SlotID 4 + SlotAssignment 2 + SlotContext 14）
+
+---
+
 # 槽位迭代第一期实施笔记（历史实验）
 
 > 实施日期：2026-05-30
