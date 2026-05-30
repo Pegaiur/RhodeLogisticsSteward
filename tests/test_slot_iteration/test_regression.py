@@ -8,7 +8,7 @@ from steward_core.solver.strategies.baseline import BaselineStrategy
 from steward_core.solver.strategies.kbeam import KBeamStrategy
 from steward_core.solver.strategies.iterative import IterativeStrategy
 
-from tests.strategy_helpers import make_ops, assert_plan_structure, assert_no_duplicate_operators
+from tests.strategy_helpers import make_ops, assert_no_duplicate_operators
 
 
 _STRATEGY_POOL = make_ops(
@@ -86,10 +86,13 @@ class TestSlotIterationModuleBoundary:
 
     def test_no_wildcard_imports(self):
         import subprocess
-        result = subprocess.run(
-            ["python", "-m", "ruff", "check", "--select", "F403", "steward_core/"],
-            capture_output=True, text=True, cwd=".",
-        )
+        try:
+            result = subprocess.run(
+                ["python", "-m", "ruff", "check", "--select", "F403", "steward_core/"],
+                capture_output=True, text=True, cwd=".",
+            )
+        except FileNotFoundError:
+            pytest.skip("ruff 未安装")
         for line in result.stdout.strip().split("\n"):
             if line.strip() and "slot_iteration" in line:
                 pytest.fail(f"检测到 import *: {line}")

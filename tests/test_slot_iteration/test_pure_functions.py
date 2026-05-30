@@ -10,26 +10,7 @@ from steward_core.solver.slot_iteration import (
     contribution,
 )
 
-
-def make_op(name, char_id, room_type, *, efficiency=0.0, product=None, buff_id="", rarity=5):
-    skills = []
-    if buff_id or efficiency > 0:
-        eff_raw = {}
-        if product:
-            eff_raw[product] = efficiency
-        else:
-            eff_raw["all"] = efficiency
-        skills = [Skill(
-            buff_id=buff_id or f"test_{char_id}",
-            buff_name="",
-            skill_icon="",
-            room_type=room_type,
-            efficient=EfficiencyMap(raw=eff_raw),
-        )]
-    return Operator(
-        char_id=char_id, name=name, rarity=rarity,
-        skills=skills, nation_id="test", group_id="test",
-    )
+from tests.strategy_helpers import make_op
 
 
 def _ctx(window_hours=12.0):

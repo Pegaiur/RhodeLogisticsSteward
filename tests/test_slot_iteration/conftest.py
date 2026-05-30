@@ -1,29 +1,7 @@
 """槽位迭代测试共享 fixtures"""
 
 import pytest
-from steward_core.models import Operator, Skill, EfficiencyMap, RoomAssignment, LayoutConfig
-
-
-def make_op(name, char_id, room_type, *, efficiency=0.0, product=None, buff_id="", rarity=5):
-    """快速构造测试用 Operator"""
-    skills = []
-    if buff_id or efficiency > 0:
-        eff_raw = {}
-        if product:
-            eff_raw[product] = efficiency
-        else:
-            eff_raw["all"] = efficiency
-        skills = [Skill(
-            buff_id=buff_id or f"test_{char_id}",
-            buff_name="",
-            skill_icon="",
-            room_type=room_type,
-            efficient=EfficiencyMap(raw=eff_raw),
-        )]
-    return Operator(
-        char_id=char_id, name=name, rarity=rarity,
-        skills=skills, nation_id="test", group_id="test",
-    )
+from steward_core.models import RoomAssignment, LayoutConfig
 
 
 @pytest.fixture

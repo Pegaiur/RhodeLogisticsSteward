@@ -6,7 +6,7 @@ from steward_core.models import Operator, Skill, EfficiencyMap, RoomAssignment
 from steward_core.solver.config import SolverConfig
 from steward_core.solver.strategies.slot_iteration import SlotIterationStrategy
 
-from tests.strategy_helpers import make_op, make_ops, assert_plan_structure, assert_no_duplicate_operators
+from tests.strategy_helpers import make_ops, assert_no_duplicate_operators
 
 
 class TestSlotIterationStrategy:
@@ -70,7 +70,7 @@ class TestSlotIterationStrategy:
 
         assert len(result.plans) == 1
 
-    def test_hot_start_first_round_not_worse_than_baseline(self):
+    def test_hot_start_executes_without_crash(self):
         ops = make_ops(
             ("制造1", "mfg_1", "Mfg", {"efficiency": 30.0, "product": "CombatRecord"}),
             ("制造2", "mfg_2", "Mfg", {"efficiency": 25.0, "product": "CombatRecord"}),
