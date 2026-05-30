@@ -5,7 +5,7 @@
 正向计算 contribution = Delta S[d] × D[d]，
 使得 Control/Dorm/Power/Reception/Office 干员在同一量纲下可比。
 
-依赖：仅 models, synergy/__init__, 标准库
+依赖：仅 models, synergy/__init__, mood_flow(TYPE_CHECKING), 标准库
 禁止导入：solver/ 下任何模块（模块边界规则 §1.3）
 """
 
@@ -14,7 +14,6 @@ from typing import TYPE_CHECKING
 
 from steward_core.models import LayoutConfig
 from steward_core.synergy import (
-    BuffPool,
     _B_BUFF_CONSUMER_TABLE,
     compute_buff_pool,
     compute_engineering_robots,

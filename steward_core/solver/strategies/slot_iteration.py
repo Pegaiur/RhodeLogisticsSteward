@@ -8,7 +8,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from steward_core.models import Operator, RoomAssignment, ShiftPlan, SolveResult, LayoutConfig
+from steward_core.models import Operator, RoomAssignment, ShiftPlan, SolveResult
 
 from ..config import SolverConfig
 from ..strategy import PartialSolution, Strategy
@@ -22,10 +22,7 @@ from ..slot_iteration import (
 )
 
 if TYPE_CHECKING:
-    from ..strategy import PartialSolution as PartialSolutionType
-
-_LAYOUT_243 = LayoutConfig.layout_243()
-
+    pass
 
 class SlotIterationStrategy(Strategy):
     """混合迭代求解策略

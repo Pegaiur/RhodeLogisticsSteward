@@ -3,6 +3,8 @@
 import pytest
 from steward_core.models import RoomAssignment, LayoutConfig
 
+from tests.strategy_helpers import make_op
+
 
 @pytest.fixture
 def layout_243():
