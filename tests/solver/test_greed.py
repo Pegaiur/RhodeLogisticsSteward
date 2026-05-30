@@ -9,7 +9,7 @@ class TestGreedyAllocation:
 
     def test_无冲突_直接取前N(self):
         """两间房无冲突 → 直接取前2组合"""
-        from steward_core.solver import _greedy_allocate
+        from steward_core.solver.greed import _greedy_allocate
 
         # Arrange: 三个独立组合，互不冲突
         combos = [
@@ -28,7 +28,7 @@ class TestGreedyAllocation:
 
     def test_有冲突_跳过选下一个(self):
         """组合1和2共享D → 跳过组合2选组合3"""
-        from steward_core.solver import _greedy_allocate
+        from steward_core.solver.greed import _greedy_allocate
 
         # Arrange
         combos = [
@@ -47,7 +47,7 @@ class TestGreedyAllocation:
 
     def test_候选不足_提前终止(self):
         """仅1个组合可用 → 只分配1间"""
-        from steward_core.solver import _greedy_allocate
+        from steward_core.solver.greed import _greedy_allocate
 
         # Arrange
         combos = [(100.0, ["A", "B", "C"])]

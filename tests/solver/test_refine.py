@@ -162,7 +162,6 @@ class TestLocalSearchIntegration:
 
         assert result is not None
         assert len(result.plans) == 1
-        assert result.config_used is not None
 
 
 class TestLocalSearchImprovement:

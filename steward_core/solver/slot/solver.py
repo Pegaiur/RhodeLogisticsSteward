@@ -71,9 +71,11 @@ def solve_slot(
         ctx.prev_P = P
 
     from steward_core.solver.refine import local_search_refine
+    from steward_core.solver.config import SolverConfig
 
     result = _ctx_to_result(best_ctx, operators, params)
-    result = local_search_refine(result, operators)
+    config = SolverConfig(params=params)
+    result = local_search_refine(result, operators, config)
     return result
 
 

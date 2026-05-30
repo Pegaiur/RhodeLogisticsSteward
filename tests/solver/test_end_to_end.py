@@ -60,7 +60,7 @@ class TestRealDataEndToEnd:
         """端到端求解不崩溃"""
         # 此测试用纯内存数据跑通路径，不验证结果正确性
         from steward_core.synergy import classify_mfg_operators, build_candidate_pool
-        from steward_core.solver import _generate_combos, _greedy_allocate
+        from steward_core.solver.greed import _generate_combos, _greedy_allocate
         from steward_core.evaluate import evaluate_room
 
         # Arrange: 构造 6 个制造站干员（模拟真实分布）
