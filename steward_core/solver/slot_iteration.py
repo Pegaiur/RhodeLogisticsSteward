@@ -72,7 +72,11 @@ class _Ratios:
 
 @dataclass(frozen=True)
 class IterationContext:
-    """单窗口迭代上下文（不可变，防止副作用）"""
+    """单窗口迭代上下文（不可变，防止副作用）
+
+    link_value: D[d]=0 时的维度链路上界估算（槽位级链路补充），
+    使 type2 中枢写入者在无当前消费者时也能获得非零贡献估值。
+    """
 
     window_index: int
     window_hours: float
@@ -80,6 +84,7 @@ class IterationContext:
     D: dict[str, float]
     lambda_op: dict[str, float]
     ratios: _Ratios = field(default_factory=_Ratios)
+    link_value: dict[str, float] = field(default_factory=dict)
 
 
 def _room_ops_by_type(
@@ -266,6 +271,101 @@ def compute_partial_derivatives(
     return D
 
 
+def _can_reader_join(
+    reader_name: str,
+    target_room: str,
+    assignments: list["RoomAssignment"],
+) -> bool:
+    """检查 type1f 读者是否可在目标设施入岗（基于布局容量上限）
+
+    不检查快照空位以避免迭代振荡——只要布局总容量>当前占用，
+    读者就有入岗可能。λ bisection 自动处理机会成本。
+    153 布局下 Mfg 容量=3（1间），probabilistic 折扣在外层处理。
+    """
+    if target_room == "Mfg":
+        total_slots = 12
+    elif target_room == "Trade":
+        total_slots = 6
+    else:
+        return False
+
+    current = sum(
+        len(a.operators) for a in assignments
+        if a.room_type == target_room
+    )
+    return current < total_slots
+
+
+def _reader_marginal_prod(
+    reader_name: str,
+    window_hours: float,
+    layout_mfg_room_ratio: float = 0.5,
+) -> float:
+    """计算 type1f 读者单位 S[d] 的边际产出（LMD 等值）
+
+    仅计 _B_BUFF_CONSUMER_TABLE 中的 type1f 消费贡献，
+    不含读者的直接生产技能——后者由 Phase A/B 穷举独立评估。
+
+    layout_mfg_room_ratio: Mfg 中 CR 间的比例（243→0.5=2/4, 153→1.0=1/1），
+    用于按实际布局加权 CR/PG 基数。
+    """
+    entry = _B_BUFF_CONSUMER_TABLE.get(reader_name)
+    if entry is None or entry.bonus_per <= 0 or entry.per_unit <= 0:
+        return 0.0
+
+    target = entry.target_room
+    if target == "Mfg":
+        base_rate_lmd = (
+            layout_mfg_room_ratio * _MFG_CR_BASE_RATE * _CR_EXP_PER_UNIT / _Ratios().xp_lmd
+            + (1.0 - layout_mfg_room_ratio) * _MFG_PG_BASE_RATE * _PG_LMD_PER_UNIT
+        )
+    elif target == "Trade":
+        base_rate_lmd = _TRADE_BASE_LMD_PER_HOUR
+    else:
+        return 0.0
+
+    rate = entry.bonus_per / entry.per_unit
+    return base_rate_lmd * window_hours * rate / 100.0
+
+
+def _build_slot_links(
+    assignments: list["RoomAssignment"],
+    window_hours: float,
+) -> dict[str, float]:
+    """构建槽位级维度链路估值表
+
+    对每个状态维度 d，若当前无消费者在 Mfg/Trade（D[d]≈0），
+    则从 _B_BUFF_CONSUMER_TABLE 查询所有可能的 type1f 读者，
+    取最佳读者的单位边际产出作为该维度的链路上界估算。
+
+    链路值是乐观上界——不检查读者是否能立即入岗，
+    而是假设读者可被排入对应设施。若读者实际无法入岗，
+    下一轮 D 会反映现实，λ bisection 自然纠正高估。
+
+    链路值由 _contribution_control 在 D[d]=0 时替代 state_value 的对应分量，
+    使 type2 中枢写入者（令/夕）不会因"无当前消费者"而被错误零分淘汰。
+
+    Returns:
+        {dimension: best_marginal}，有消费者的维度 value=0（不参与计算）
+    """
+    link_value: dict[str, float] = {d: 0.0 for d in STATE_DIMENSIONS}
+
+    for d in STATE_DIMENSIONS:
+        readers = [n for n in _B_BUFF_CONSUMER_TABLE
+                   if _BUFF_CONSUMER_DIMENSION.get(n) == d]
+        if not readers:
+            continue
+
+        best = 0.0
+        for reader in readers:
+            marginal = _reader_marginal_prod(reader, window_hours)
+            if marginal > best:
+                best = marginal
+        link_value[d] = best
+
+    return link_value
+
+
 def _op_eff_for_room(op: "Operator", room_type: str, product: str | None = None) -> float:
     """干员对指定设施的有效效率值（取最高技能效率）"""
     best = -999.0
@@ -280,27 +380,31 @@ def _op_eff_for_room(op: "Operator", room_type: str, product: str | None = None)
     return max(best, 0.0)
 
 
+def _pool_to_state_vec(pool) -> dict[str, float]:
+    eng_robots = compute_engineering_robots(_LAYOUT_243)
+    return {
+        "perception": pool.perception,
+        "yanhuo": pool.yanhuo,
+        "engineering_robots": eng_robots,
+        "monster_cuisine": pool.monster_cuisine,
+        "silent_resonance": pool.silent_resonance,
+    }
+
+
 def _compute_state_delta_for_control(
     op: "Operator",
     assignments: list["RoomAssignment"],
     operators: dict[str, "Operator"],
     mood_ctx: "MoodContext | None" = None,
 ) -> dict[str, float]:
-    """计算干员在 Control 中对各状态维度的预期写入量
+    """计算干员在 Control 中对各状态维度的边际贡献
 
-    通过差分模拟：将 op 加入当前中枢后重新计算 S 向量，
-    返回增量。已在中枢的干员返回全零。
+    计算 S(Control \\ {op}) → S(Control) 的差分，
+    即该干员在岗与不在岗的真实状态增量。
+    已在岗的干员不会被误判为零贡献。
     """
     control_ops = _room_ops_by_type(assignments, "Control", operators)
     control_names = {o.name for o in control_ops}
-    if op.name in control_names:
-        return {d: 0.0 for d in STATE_DIMENSIONS}
-
-    S_before = extract_state_vector(assignments, operators, mood_ctx=mood_ctx)
-
-    simulated_op_names = [o.name for o in control_ops] + [op.name]
-    simulated_ctrl = [operators[n] for n in simulated_op_names if n in operators]
-    new_ctrl_names = set(simulated_op_names)
 
     dorm_ops = _room_ops_by_type(assignments, "Dormitory", operators)
     has_rosmontis = _room_has_operator(assignments, "Mfg", "迷迭香")
@@ -318,27 +422,40 @@ def _compute_state_delta_for_control(
         ling_mood_below_12 = mood_ctx.is_below("令", 12.0)
         xi_mood_below_12 = mood_ctx.is_below("夕", 12.0)
 
-    pool_after = compute_buff_pool(
-        control_operators=simulated_ctrl,
-        suich_count=_DEFAULT_SUICH_COUNT,
-        dorm_operators=dorm_ops if dorm_ops else None,
-        dorm_level=_DEFAULT_DORM_LEVEL,
-        has_rosmontis_in_mfg=has_rosmontis,
-        has_ebnhlz_in_trade=has_ebnhlz,
-        has_wuyou_in_trade=has_wuyou,
-        ling_mood_below_12=ling_mood_below_12,
-        xi_mood_below_12=xi_mood_below_12,
-        perception_from_office=office_perception,
-        layout=_LAYOUT_243,
-    )
-
-    S_after: dict[str, float] = {
-        "perception": pool_after.perception,
-        "yanhuo": pool_after.yanhuo,
-        "engineering_robots": compute_engineering_robots(_LAYOUT_243),
-        "monster_cuisine": pool_after.monster_cuisine,
-        "silent_resonance": pool_after.silent_resonance,
-    }
+    if op.name in control_names:
+        others = [o for o in control_ops if o.name != op.name]
+        pool_before = compute_buff_pool(
+            control_operators=others,
+            suich_count=_DEFAULT_SUICH_COUNT,
+            dorm_operators=dorm_ops if dorm_ops else None,
+            dorm_level=_DEFAULT_DORM_LEVEL,
+            has_rosmontis_in_mfg=has_rosmontis,
+            has_ebnhlz_in_trade=has_ebnhlz,
+            has_wuyou_in_trade=has_wuyou,
+            ling_mood_below_12=ling_mood_below_12,
+            xi_mood_below_12=xi_mood_below_12,
+            perception_from_office=office_perception,
+            layout=_LAYOUT_243,
+        )
+        S_before = _pool_to_state_vec(pool_before)
+        S_after = extract_state_vector(assignments, operators, mood_ctx=mood_ctx)
+    else:
+        S_before = extract_state_vector(assignments, operators, mood_ctx=mood_ctx)
+        simulated_ctrl = control_ops + [op]
+        pool_after = compute_buff_pool(
+            control_operators=simulated_ctrl,
+            suich_count=_DEFAULT_SUICH_COUNT,
+            dorm_operators=dorm_ops if dorm_ops else None,
+            dorm_level=_DEFAULT_DORM_LEVEL,
+            has_rosmontis_in_mfg=has_rosmontis,
+            has_ebnhlz_in_trade=has_ebnhlz,
+            has_wuyou_in_trade=has_wuyou,
+            ling_mood_below_12=ling_mood_below_12,
+            xi_mood_below_12=xi_mood_below_12,
+            perception_from_office=office_perception,
+            layout=_LAYOUT_243,
+        )
+        S_after = _pool_to_state_vec(pool_after)
 
     return {d: S_after[d] - S_before[d] for d in STATE_DIMENSIONS}
 
@@ -348,15 +465,14 @@ def _compute_state_delta_for_dorm(
     assignments: list["RoomAssignment"],
     operators: dict[str, "Operator"],
 ) -> dict[str, float]:
-    """计算干员在 Dormitory 中对各状态维度的预期写入量（差分模拟）"""
+    """计算干员在 Dormitory 中对各状态维度的边际贡献
+
+    计算 S(Dorm \\ {op}) → S(Dorm) 的差分，
+    即该干员在岗与不在岗的真实状态增量。
+    """
     dorm_ops = _room_ops_by_type(assignments, "Dormitory", operators)
     dorm_names = {o.name for o in dorm_ops}
-    if op.name in dorm_names:
-        return {d: 0.0 for d in STATE_DIMENSIONS}
 
-    S_before = extract_state_vector(assignments, operators)
-
-    simulated_dorm = dorm_ops + [op]
     control_ops = _room_ops_by_type(assignments, "Control", operators)
     has_rosmontis = _room_has_operator(assignments, "Mfg", "迷迭香")
     has_ebnhlz = _room_has_operator(assignments, "Trade", "黑键")
@@ -367,25 +483,33 @@ def _compute_state_delta_for_dorm(
     if any(o.name == "絮雨" for o in office_ops):
         office_perception = 20
 
-    pool_after = compute_buff_pool(
-        control_operators=control_ops,
-        suich_count=_DEFAULT_SUICH_COUNT,
-        dorm_operators=simulated_dorm,
-        dorm_level=_DEFAULT_DORM_LEVEL,
-        has_rosmontis_in_mfg=has_rosmontis,
-        has_ebnhlz_in_trade=has_ebnhlz,
-        has_wuyou_in_trade=has_wuyou,
-        perception_from_office=office_perception,
-        layout=_LAYOUT_243,
-    )
-
-    S_after: dict[str, float] = {
-        "perception": pool_after.perception,
-        "yanhuo": pool_after.yanhuo,
-        "engineering_robots": compute_engineering_robots(_LAYOUT_243),
-        "monster_cuisine": pool_after.monster_cuisine,
-        "silent_resonance": pool_after.silent_resonance,
-    }
+    if op.name in dorm_names:
+        others = [o for o in dorm_ops if o.name != op.name]
+        S_before = _pool_to_state_vec(compute_buff_pool(
+            control_operators=control_ops,
+            suich_count=_DEFAULT_SUICH_COUNT,
+            dorm_operators=others if others else None,
+            dorm_level=_DEFAULT_DORM_LEVEL,
+            has_rosmontis_in_mfg=has_rosmontis,
+            has_ebnhlz_in_trade=has_ebnhlz,
+            has_wuyou_in_trade=has_wuyou,
+            perception_from_office=office_perception,
+            layout=_LAYOUT_243,
+        ))
+        S_after = extract_state_vector(assignments, operators)
+    else:
+        S_before = extract_state_vector(assignments, operators)
+        S_after = _pool_to_state_vec(compute_buff_pool(
+            control_operators=control_ops,
+            suich_count=_DEFAULT_SUICH_COUNT,
+            dorm_operators=dorm_ops + [op],
+            dorm_level=_DEFAULT_DORM_LEVEL,
+            has_rosmontis_in_mfg=has_rosmontis,
+            has_ebnhlz_in_trade=has_ebnhlz,
+            has_wuyou_in_trade=has_wuyou,
+            perception_from_office=office_perception,
+            layout=_LAYOUT_243,
+        ))
 
     return {d: S_after[d] - S_before[d] for d in STATE_DIMENSIONS}
 
@@ -396,8 +520,10 @@ def _compute_type3_contribution(
 ) -> float:
     """计算类型 3 全局注入的贡献值
 
-    按"受影响槽位数 × 槽位均值"估算。
-    首期简化：仅处理阿米娅和杜宾这种有明确全局注入的干员。
+    全局注入对每间 Mfg/Trade 站加成一次（非每槽位）。
+    Mfg 槽位级基数 × 槽位数 ≡ 房间级基数 × 房间数（等价），
+    但 Trade 的 _TRADE_BASE_LMD_PER_HOUR 已是房间级基数，
+    必须用房间数而非槽位数。
     """
     from steward_core.synergy import compute_control_global_bonus
 
@@ -405,10 +531,10 @@ def _compute_type3_contribution(
         len(a.operators) for a in assignments
         if a.room_type == "Mfg" and a.operators
     )
-    trade_slots = sum(
-        len(a.operators) for a in assignments
-        if a.room_type == "Trade" and a.operators
-    )
+    trade_rooms = len({
+        a.room_index for a in assignments
+        if a.room_type == "Trade"
+    })
 
     control_ops = _room_ops_by_type(assignments, "Control", {op.name: op})
     if op.name not in {o.name for o in control_ops}:
@@ -425,7 +551,7 @@ def _compute_type3_contribution(
 
     value = 0.0
     value += bonus.mfg_bonus * mfg_slots * mfg_base_avg * 24.0 / 100.0
-    value += bonus.trade_bonus * trade_slots * _TRADE_BASE_LMD_PER_HOUR * 24.0 / 100.0
+    value += bonus.trade_bonus * trade_rooms * _TRADE_BASE_LMD_PER_HOUR * 24.0 / 100.0
 
     return value
 
@@ -472,12 +598,22 @@ def _contribution_control(
     operators: dict[str, "Operator"],
     assignments: list["RoomAssignment"],
 ) -> float:
-    """Control 干员 contribution = 类型 2 状态写入 × D + 类型 3 全局注入"""
+    """Control 干员 contribution = 类型 2 状态写入 × D + 类型 3 全局注入
+
+    D[d]=0 时用 link_value[d] 替代，使无当前消费者的维度写入者也能获得
+    非零估值（基于潜在 type1f 读者的链路上界估算）。
+    link_value 替代而非补充 state_value，避免双重计量。
+    """
     state_delta = _compute_state_delta_for_control(op, assignments, operators)
-    state_value = sum(
-        state_delta.get(d, 0.0) * ctx.D.get(d, 0.0)
-        for d in STATE_DIMENSIONS
-    )
+    state_value = 0.0
+    for d in STATE_DIMENSIONS:
+        delta = state_delta.get(d, 0.0)
+        if delta == 0.0:
+            continue
+        if ctx.D.get(d, 0.0) > 0:
+            state_value += delta * ctx.D[d]
+        else:
+            state_value += delta * ctx.link_value.get(d, 0.0)
     type3_value = _compute_type3_contribution(op, assignments)
     return state_value + type3_value
 

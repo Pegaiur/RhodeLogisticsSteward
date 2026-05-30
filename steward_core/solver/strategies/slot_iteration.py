@@ -15,6 +15,7 @@ from ..strategy import PartialSolution, Strategy
 from ..slot_iteration import (
     S_MAX,
     IterationContext,
+    _build_slot_links,
     extract_state_vector,
     compute_partial_derivatives,
     contribution,
@@ -87,10 +88,23 @@ class SlotIterationStrategy(Strategy):
                 S=S_vec,
                 D=D_vec,
                 lambda_op=lambda_op,
+                link_value=_build_slot_links(A, shift_hours),
             )
 
             A_prev = A
             A = self._phase_ab_mfg_trade(ctx, A, operators, op_lookup, config)
+
+            S_vec = extract_state_vector(A, op_lookup)
+            D_vec = compute_partial_derivatives(A, shift_hours, op_lookup)
+            ctx = IterationContext(
+                window_index=0,
+                window_hours=shift_hours,
+                S=S_vec,
+                D=D_vec,
+                lambda_op=lambda_op,
+                link_value=_build_slot_links(A, shift_hours),
+            )
+
             A = self._phase_c_control(ctx, A, operators, op_lookup, config)
             A = self._phase_d_remaining(ctx, A, operators, op_lookup, config)
 
@@ -632,8 +646,8 @@ class SlotIterationStrategy(Strategy):
 
         scored.sort(key=lambda x: -x[0])
 
-        dorm_configs = [(5, 4)]
-        total_slots = sum(slots for slots, _ in dorm_configs)
+        dorm_room_size = config.params.dorm_room_size
+        total_slots = config.params.dorm_max_operators
         selected = [name for _, name in scored[:total_slots]]
 
         filler_pool = [op.name for op in candidates if op.name not in {s for _, s in scored}]
@@ -645,8 +659,7 @@ class SlotIterationStrategy(Strategy):
         room_idx = 0
         for a in A:
             if a.room_type == "Dormitory":
-                slots = 5
-                names = selected[slot_ptr:slot_ptr + slots]
+                names = selected[slot_ptr:slot_ptr + dorm_room_size]
                 new_A.append(RoomAssignment(
                     room_type="Dormitory",
                     room_index=room_idx,
@@ -654,7 +667,7 @@ class SlotIterationStrategy(Strategy):
                     product=a.product,
                     autofill=not names,
                 ))
-                slot_ptr += slots
+                slot_ptr += dorm_room_size
                 room_idx += 1
             elif a.room_type in ("Training", "Workshop"):
                 new_A.append(RoomAssignment(

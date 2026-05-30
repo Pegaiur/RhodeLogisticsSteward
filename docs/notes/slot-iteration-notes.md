@@ -46,15 +46,18 @@
 
 ## 遗留问题
 
-1. **冷启动未实现**：`slot_iter_cold` 已注册但 `SlotIterationStrategy(cold_start=True)` 仍走热启动路径（待第二期 §2.2 #10）
+1. **✅ 冷启动已实现**：`slot_iter_cold` 已注册但 `SlotIterationStrategy(cold_start=True)` 仍走热启动路径（待第二期 §2.2 #10）
    -> **第二期已实现**：`_cold_start_init()` 构建空填充初始分配，`_execute_cold_start()` 多启动取 max(S, D)
-2. **λ bisection 未实现**：contribution 公式中不含 `-λ×hours` 项（待第二期 §2.2 #8）
+2. **✅ λ bisection 已实现**：contribution 公式中不含 `-λ×hours` 项（待第二期 §2.2 #8）
    -> **第二期已实现**：`update_lambda_bisection()` + contribution 含 `-λ×hours`
-3. **联合扰动未实现**：跨 Phase 耦合对替换（待第二期 §2.2 #9）
+3. **✅ 联合扰动已实现**：跨 Phase 耦合对替换（待第二期 §2.2 #9）
    -> **第二期已实现**：`_joint_perturbation()` 对 1f 读者↔类型 2 写入者耦合对做 top-3×3 替换
-4. **心情展平未实现**：令/夕/铅踝的心情门控展平（待第二期 §2.2 #11）
+4. **✅ 心情展平已实现**：令/夕/铅踝的心情门控展平（待第二期 §2.2 #11）
    -> **第二期已实现**：`effective_perception_mood()` + `effective_yanhuo_ling()`（mood_ctx 通路已就绪，铅踝展平依赖 stepped_efficiency 已编码未激活）
 5. **precomputed_support 实际电线**：exhaust_mfg/exhaust_trade 仅接受参数，Phase A/B 尚未实际传入预计算支撑（留待性能优化时启用）
+6. **type2 vs type3 量级差距**：Contribution 贪心排序中 type3 全局注入（望 3376）远超 type2 状态写入（令 1212），需 Control 组合穷举或冷启动预填充才能突破
+7. **153 布局 Trade 折扣**：`_reader_marginal_prod` 的 `layout_mfg_room_ratio` 参数已就绪但调用方未按布局差异化传入
+8. **截云 wushu_crystal 维度转换**：`wushu_crystal = yanhuo // 5` 未在 `_reader_marginal_prod` 和 `compute_partial_derivatives` 中处理
 
 
 ## 第二期实施笔记（2026-05-30 追加）
@@ -77,3 +80,100 @@
 - 心情展平: 2 例（无 mood_ctx 直通）
 - contribution+λ: 2 例（惩罚生效/无关干员不受影响）
 - 冷启动策略: 2 例（基本执行/不依赖 baseline）
+
+---
+
+## 第三期实施笔记（2026-05-30 验收与建模修复）
+
+本次验收发现产出退化（经验 20,400→15,400, -25%），经诊断定位为三个层面的问题：
+技能建模错误、状态向量盲区、贪心策略局限。
+
+### 技能建模修复（slot_iteration.py）
+
+#### F1: `_compute_state_delta_for_control` 边际差分修正
+原逻辑：`op.name in control_names → return {全零}`。已在岗的中枢干员被误判为零贡献。
+修正：计算 S(Control \ {op}) → S(Control) 的真实差分，即该干员在岗与不在岗的边际状态增量。
+影响：夕 contribution 0→308，八幡海铃/焰尾/薇薇安娜 仍为零（百分比 buff，差分盲视）。
+
+#### F2: `_compute_state_delta_for_dorm` 同模式修正
+同 F1 模式修正，已在岗的宿舍干员不再返回全零。
+
+#### F3: `_compute_type3_contribution` Trade 基数修正
+原逻辑：`bonus.trade_bonus × trade_slots(槽位数=6) × _TRADE_BASE_LMD_PER_HOUR(房间级基数)`。
+Trade 的 `_TRADE_BASE_LMD_PER_HOUR` 已是房间级基数（10265/24 LMD/h/站），
+但乘的是槽位数(6)而非房间数(2)，导致 type3 贡献 3× 虚高。
+Mfg 因 `slots×slot_base ≡ rooms×room_base` 碰巧抵消，未暴露此问题。
+修正：`trade_slots`(6) → `trade_rooms`(2)。
+影响：望 6250→3376，诗怀雅/阿斯卡纶 4311→1437。
+
+#### F4: `_phase_d_dormitory` 槽位计算修正
+原逻辑：`dorm_configs = [(5, 4)]; total_slots = 5`（应为 4×5=20），
+导致仅 5 名宿舍干员被选中，后 3 间空置。
+修正：从 `config.params.dorm_room_size` / `config.params.dorm_max_operators` 读取。
+影响：宿舍 4/4 满员，autofill 3→0。
+
+#### F5: Phase A/B 后 D 向量重算（冷/热启动统一）
+原逻辑：每轮末尾统一重算 S/D，Phase C/D 使用轮初的冻结 D。
+若 Phase A/B 重新穷举改变了 Mfg/Trade 中的 type1f 消费者，D 已过时。
+修正：Phase A/B 后立即重算 S/D 并重建 ctx，Phase C/D 使用最新偏导数。
+冷启动因 Mfg/Trade 初空→D₀=0→Phase C/D 无引导信号的问题也由此修复。
+
+### 槽位级链路系统（slot_iteration.py + strategies/slot_iteration.py）
+
+#### SL1: `_build_slot_links()` 维度链路上界估算
+背景：D[d]=0 时（无消费者在该维度），type2 中枢写入者 contribution=0。
+根因是当前实现只看到"令写入 yanhuo=15"，看不到"黍可以消费 yanhuo"。
+新增 `_build_slot_links(A, window_hours) → {dimension: best_marginal}`，
+从 `_B_BUFF_CONSUMER_TABLE` 查询每个维度的所有可能 type1f 读者，
+取最佳读者的单位边际产出作为该维度的链路上界估算。
+链路值是乐观上界——不检查读者能否立即入岗（λ bisection 在迭代中自然纠正）。
+
+#### SL2: `_reader_marginal_prod()` 读者边际产出锚定
+计算 `base_rate_lmd × window_hours × (bonus_per/per_unit) / 100`，
+仅从 `_B_BUFF_CONSUMER_TABLE` 取 type1f 消费贡献，不含读者的直接生产技能。
+锚定：Mfg → CR+PG 加权均值（243→0.5:0.5），Trade → `_TRADE_BASE_LMD_PER_HOUR`。
+迷迭香（通用生产力，CR+PG 双产品）的 50:50 均值正确。
+
+#### SL3: `IterationContext.link_value` 字段
+新增 `link_value: dict[str, float]` 字段（`frozen=True`，默认 `{}`）。
+由 `_build_slot_links()` 在 Phase A/B 后生成，Phase C 的 `_contribution_control` 在 D[d]=0 时
+用 `link_value[d]` 替代 state_value 的零分量（替代而非补充，避免双重计量）。
+
+#### SL4: `_can_reader_join()` 容量检查的放弃
+初版 `_build_slot_links` 通过 `_can_reader_join` 检查读者能否入岗（布局容量上限）。
+测试发现热启动下 Mfg/Trade 满员（12/12），检查永远返回 False → link_value 全零。
+改为乐观上界（假设读者可入岗），与冷启动用 S_MAX 的逻辑一致。
+
+### 审计结论（其余函数）
+
+| 函数 | 结论 |
+|------|------|
+| `_contribution_power` | 基数一致性正确 |
+| `_contribution_reception` | 同 Power 模式 |
+| `_contribution_office` | 同 Power 模式 |
+| `compute_partial_derivatives` | Trade base_rate room/slot 不一致但无重复计数 |
+
+### 对比验收结果
+
+| 阶段 | 经验/12h | autofill | 中枢 | 冷/热差异 |
+|------|---------|----------|------|----------|
+| 修复前 | 15,400 | 3 | 望(单) + 4空 | 无 |
+| F1-F5 后 | 16,600 | 0 | 望+凯尔希+Mon3tr+诗怀雅+阿斯卡纶 | 无 |
+| +SL1-SL4 后 | 16,600 | 0 | 同上 | 无 |
+
+### 已知限制
+
+1. **type2 vs type3 量级差距**：link_value 使令 contribution 0→1212，但望的 type3=3376 仍远超。
+   贪心 Top-5 始终全选 type3，type2 写入者（令/夕）被淘汰。需要组合穷举 C(15,5) 或冷启动预填充
+   才能超越个体排序的局限。
+
+2. **百分比 buff 差分盲视**：八幡海铃/焰尾/薇薇安娜 的 `_compute_state_delta_for_control` 返回全零，
+   边际差分法只捕获绝对值写入，百分比叠加型 buff（"每个红松骑士团 Mfg 干员→+10% CR"）
+   在单干员差分中不可见。
+
+3. **153 布局 Trade 折扣缺失**：153 下 Trade=9 槽位（vs 243 的 6），乌有入场概率更高但未对称调整。
+   `_reader_marginal_prod` 的 `layout_mfg_room_ratio` 参数已就绪，调用方可按布局传入。
+
+4. **截云 wushu_crystal 维度单位**：`wushu_crystal = yanhuo // 5` 的中间转换在
+   `_reader_marginal_prod` 和 `compute_partial_derivatives` 中均未处理，per-yanhuo 边际高估 5 倍。
+   与现有代码共享的缺陷，非本次引入。
