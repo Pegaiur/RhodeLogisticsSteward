@@ -22,36 +22,13 @@ from steward_core.synergy.facility_linkages import _has_power_count_modifier
 from steward_core.synergy.buff_pool import compute_buff_pool
 from steward_core.evaluate import evaluate_room
 from .context import SlotContext, mood_is_viable
+from ._cold_start import cold_start_ctrl_ops, cold_start_dorm_ops
 
 if TYPE_CHECKING:
     from steward_core.models import Operator
     from steward_core.mood_flow import MoodContext
 
 _LAYOUT_243 = LayoutConfig.layout_243()
-
-
-def _cold_start_ctrl_ops(ctx: "SlotContext") -> list["Operator"]:
-    """冷启动预估：按 best_efficiency 取前 N 个中枢干员作为 BuffPool 估算输入"""
-    params = ctx.params
-    max_slots = params.control_max_slots if params else 5
-    candidates = sorted(
-        [op for op in ctx.operators if op.has_skill_for("Control")],
-        key=lambda o: o.best_efficiency("Control", ""),
-        reverse=True,
-    )
-    return candidates[:max_slots]
-
-
-def _cold_start_dorm_ops(ctx: "SlotContext") -> list["Operator"]:
-    """冷启动预估：按 best_efficiency 取前 N 个宿舍干员作为 BuffPool 估算输入"""
-    params = ctx.params
-    dorm_max = params.dorm_max_operators if params else 20
-    candidates = sorted(
-        [op for op in ctx.operators if op.has_skill_for("Dormitory", "Rest")],
-        key=lambda o: o.best_efficiency("Dormitory", "Rest"),
-        reverse=True,
-    )
-    return candidates[:dorm_max]
 
 
 def phase_mfg(
@@ -111,13 +88,13 @@ def phase_mfg(
         ctrl_names = ctx.ops_of_type(window_idx, "Control")
         ctrl_ops = [ctx.op_lookup[n] for n in ctrl_names if n in ctx.op_lookup]
         if not ctrl_ops:
-            ctrl_ops = _cold_start_ctrl_ops(ctx)
+            ctrl_ops = cold_start_ctrl_ops(ctx, window_idx)
         global_bonus = compute_control_global_bonus(ctrl_ops)
 
         dorm_names = ctx.ops_of_type(window_idx, "Dormitory")
         dorm_ops_list = [ctx.op_lookup[n] for n in dorm_names if n in ctx.op_lookup]
         if not dorm_ops_list:
-            dorm_ops_list = _cold_start_dorm_ops(ctx)
+            dorm_ops_list = cold_start_dorm_ops(ctx, window_idx)
 
         office_perception = params.office_perception_base if params else 20
 

@@ -24,6 +24,7 @@ from steward_core.synergy.buff_pool import compute_buff_pool
 from steward_core.evaluate import evaluate_room
 from steward_core.synergy._derived import TRADE_ANCHORS
 from .context import SlotContext, mood_is_viable
+from ._cold_start import cold_start_ctrl_ops, cold_start_dorm_ops
 
 if TYPE_CHECKING:
     from steward_core.models import Operator
@@ -95,18 +96,28 @@ def phase_trade(
 
     ctrl_names = ctx.ops_of_type(window_idx, "Control")
     ctrl_ops = [ctx.op_lookup[n] for n in ctrl_names if n in ctx.op_lookup]
+    if not ctrl_ops:
+        ctrl_ops = cold_start_ctrl_ops(ctx, window_idx)
     global_bonus = compute_control_global_bonus(ctrl_ops)
 
     dorm_names = ctx.ops_of_type(window_idx, "Dormitory")
     dorm_ops_list = [ctx.op_lookup[n] for n in dorm_names if n in ctx.op_lookup]
+    if not dorm_ops_list:
+        dorm_ops_list = cold_start_dorm_ops(ctx, window_idx)
 
-    buff_pool = compute_buff_pool(
+    office_perception = params.office_perception_base if params else 20
+
+    base_buff_pool = compute_buff_pool(
         ctrl_ops,
         suich_count=params.suich_count if params else 5,
         dorm_operators=[o for o in dorm_ops_list if o],
         dorm_level=params.dorm_level if params else 5,
         layout=ctx.layout if ctx.layout else _LAYOUT_243,
+        perception_from_office=office_perception,
     )
+
+    _EBEN_NAME = "黑键"
+    _WUYOU_NAME = "乌有"
 
     power_modifier_names = {
         op.name for op in ctx.operators if _has_power_count_modifier(op)
@@ -119,12 +130,29 @@ def phase_trade(
     whisper_combos = []
 
     for combo_ops in combos:
+        combo_names = [op.name for op in combo_ops]
+        has_eben = any(op.name == _EBEN_NAME for op in combo_ops)
+        has_wuyou = any(op.name == _WUYOU_NAME for op in combo_ops)
+        if has_eben or has_wuyou:
+            combo_pool = compute_buff_pool(
+                ctrl_ops,
+                suich_count=params.suich_count if params else 5,
+                dorm_operators=[o for o in dorm_ops_list if o],
+                dorm_level=params.dorm_level if params else 5,
+                layout=ctx.layout if ctx.layout else _LAYOUT_243,
+                perception_from_office=office_perception,
+                has_ebnhlz_in_trade=has_eben,
+                has_wuyou_in_trade=has_wuyou,
+            )
+        else:
+            combo_pool = base_buff_pool
+
         ctrl_bonus = control_per_operator_bonus(
             ctrl_ops, combo_ops, "Money", room_type="Trade",
         )
         eff_int = evaluate_room(
             combo_ops, "Trade", "Money", effective_power,
-            shift_hours, global_bonus, buff_pool,
+            shift_hours, global_bonus, combo_pool,
             ctrl_per_op_bonus=ctrl_bonus,
             all_operators=ctx.operators,
             control_operators=ctrl_ops,
@@ -137,7 +165,6 @@ def phase_trade(
         )
         lmd = efficiency_integrated / 24.0 * lmd_per_day
 
-        combo_names = [op.name for op in combo_ops]
         is_whisper = _has_whisper(combo_ops)
         if is_whisper:
             whisper_combos.append((lmd, combo_names, _zeroed_efficiency_sum(combo_ops)))
