@@ -466,6 +466,7 @@ def _compute_state_delta_for_dorm(
     op: "Operator",
     assignments: list["RoomAssignment"],
     operators: dict[str, "Operator"],
+    mood_ctx: "MoodContext | None" = None,
 ) -> dict[str, float]:
     """计算干员在 Dormitory 中对各状态维度的边际贡献
 
@@ -485,6 +486,12 @@ def _compute_state_delta_for_dorm(
     if any(o.name == "絮雨" for o in office_ops):
         office_perception = 20
 
+    ling_mood_below_12 = False
+    xi_mood_below_12: bool | None = None
+    if mood_ctx is not None:
+        ling_mood_below_12 = mood_ctx.is_below("令", 12.0)
+        xi_mood_below_12 = mood_ctx.is_below("夕", 12.0)
+
     if op.name in dorm_names:
         others = [o for o in dorm_ops if o.name != op.name]
         S_before = _pool_to_state_vec(compute_buff_pool(
@@ -495,12 +502,14 @@ def _compute_state_delta_for_dorm(
             has_rosmontis_in_mfg=has_rosmontis,
             has_ebnhlz_in_trade=has_ebnhlz,
             has_wuyou_in_trade=has_wuyou,
+            ling_mood_below_12=ling_mood_below_12,
+            xi_mood_below_12=xi_mood_below_12,
             perception_from_office=office_perception,
             layout=_LAYOUT_243,
         ))
-        S_after = extract_state_vector(assignments, operators)
+        S_after = extract_state_vector(assignments, operators, mood_ctx=mood_ctx)
     else:
-        S_before = extract_state_vector(assignments, operators)
+        S_before = extract_state_vector(assignments, operators, mood_ctx=mood_ctx)
         S_after = _pool_to_state_vec(compute_buff_pool(
             control_operators=control_ops,
             suich_count=_DEFAULT_SUICH_COUNT,
@@ -509,6 +518,8 @@ def _compute_state_delta_for_dorm(
             has_rosmontis_in_mfg=has_rosmontis,
             has_ebnhlz_in_trade=has_ebnhlz,
             has_wuyou_in_trade=has_wuyou,
+            ling_mood_below_12=ling_mood_below_12,
+            xi_mood_below_12=xi_mood_below_12,
             perception_from_office=office_perception,
             layout=_LAYOUT_243,
         ))
@@ -579,10 +590,12 @@ def contribution(
     ctx: IterationContext,
     operators: dict[str, "Operator"],
     assignments: list["RoomAssignment"],
+    mood_ctx: "MoodContext | None" = None,
 ) -> float:
     """统一的 contribution 计算入口，按 facility 分派到内部 helper
 
     含 -lambda × hours 项（第二期新增）。
+    mood_ctx 不为 None 时启用令/夕心情门控。
 
     Returns:
         该干员在指定设施中的预期边际贡献值（LMD 等值/天量纲）。
@@ -594,7 +607,7 @@ def contribution(
     lambda_penalty = ctx.lambda_op.get(op_name, 0.0) * ctx.window_hours
 
     if facility == "Control":
-        base = _contribution_control(op, ctx, operators, assignments)
+        base = _contribution_control(op, ctx, operators, assignments, mood_ctx=mood_ctx)
     elif facility == "Power":
         base = _contribution_power(op, ctx, operators, assignments)
     elif facility == "Reception":
@@ -602,7 +615,7 @@ def contribution(
     elif facility == "Office":
         base = _contribution_office(op, ctx, operators, assignments)
     elif facility == "Dormitory":
-        base = _contribution_dorm(op, ctx, assignments, operators)
+        base = _contribution_dorm(op, ctx, assignments, operators, mood_ctx=mood_ctx)
     else:
         return float("-inf")
 
@@ -665,6 +678,7 @@ def _contribution_control(
     ctx: IterationContext,
     operators: dict[str, "Operator"],
     assignments: list["RoomAssignment"],
+    mood_ctx: "MoodContext | None" = None,
 ) -> float:
     """Control 干员 contribution = 类型 2 状态写入 × D + 类型 2 per-op 条件 + 类型 3 全局注入
 
@@ -672,7 +686,7 @@ def _contribution_control(
     非零估值（基于潜在 type1f 读者的链路上界估算）。
     link_value 替代而非补充 state_value，避免双重计量。
     """
-    state_delta = _compute_state_delta_for_control(op, assignments, operators)
+    state_delta = _compute_state_delta_for_control(op, assignments, operators, mood_ctx=mood_ctx)
     state_value = 0.0
     for d in STATE_DIMENSIONS:
         delta = state_delta.get(d, 0.0)
@@ -862,12 +876,13 @@ def _contribution_dorm(
     ctx: IterationContext,
     assignments: list["RoomAssignment"],
     operators: dict[str, "Operator"],
+    mood_ctx: "MoodContext | None" = None,
 ) -> float:
     """Dormitory 干员 contribution = 类型 2 状态写入 × D + recovery_rate × hours × lambda
 
     recovery_rate × hours × λ 项已在 contribution() 入口的 lambda_penalty 中统一减去。
     """
-    state_delta = _compute_state_delta_for_dorm(op, assignments, operators)
+    state_delta = _compute_state_delta_for_dorm(op, assignments, operators, mood_ctx=mood_ctx)
     state_value = sum(
         state_delta.get(d, 0.0) * ctx.D.get(d, 0.0)
         for d in STATE_DIMENSIONS

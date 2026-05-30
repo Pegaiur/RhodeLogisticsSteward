@@ -210,7 +210,8 @@ class SlotIterationStrategy(Strategy):
             if a.room_type not in ("Control", "Dormitory") or not a.operators:
                 continue
             for name in a.operators:
-                delta = _compute_state_delta_simple(name, a.room_type, A, operators, op_lookup)
+                delta = _compute_state_delta_simple(name, a.room_type, A, operators, op_lookup,
+                                                       mood_ctx=config.mood_ctx)
                 for dim in delta:
                     if delta[dim] != 0:
                         writers_dim[dim] = writers_dim.get(dim, []) + [(a, name)]
@@ -461,7 +462,8 @@ class SlotIterationStrategy(Strategy):
             best_score = float("-inf")
             best_op: Operator | None = None
             for op in remaining:
-                c = contribution(op.name, "Control", ctx, op_lookup, eval_A)
+                c = contribution(op.name, "Control", ctx, op_lookup, eval_A,
+                                 mood_ctx=config.mood_ctx)
                 if c <= float("-inf"):
                     continue
                 bias = config.params.control_global_sort_bias if op.name in ctrl_global_names else 0.0
@@ -541,7 +543,8 @@ class SlotIterationStrategy(Strategy):
 
         scored = []
         for op in candidates:
-            c = contribution(op.name, "Power", ctx, op_lookup, A)
+            c = contribution(op.name, "Power", ctx, op_lookup, A,
+                             mood_ctx=config.mood_ctx)
             if c > float("-inf"):
                 scored.append((c, op.name))
 
@@ -688,7 +691,8 @@ class SlotIterationStrategy(Strategy):
 
         scored = []
         for op in dorm_candidates:
-            c = contribution(op.name, "Dormitory", ctx, op_lookup, A)
+            c = contribution(op.name, "Dormitory", ctx, op_lookup, A,
+                             mood_ctx=config.mood_ctx)
             if c > float("-inf"):
                 scored.append((c, op.name))
 
@@ -775,15 +779,16 @@ def _compute_state_delta_simple(
     assignments: list[RoomAssignment],
     operators: list[Operator],
     op_lookup: dict[str, Operator],
+    mood_ctx=None,
 ) -> dict[str, float]:
     from ..slot_iteration import _compute_state_delta_for_control, _compute_state_delta_for_dorm
     op = op_lookup.get(name)
     if op is None:
         return {}
     if facility == "Control":
-        return _compute_state_delta_for_control(op, assignments, op_lookup)
+        return _compute_state_delta_for_control(op, assignments, op_lookup, mood_ctx=mood_ctx)
     elif facility == "Dormitory":
-        return _compute_state_delta_for_dorm(op, assignments, op_lookup)
+        return _compute_state_delta_for_dorm(op, assignments, op_lookup, mood_ctx=mood_ctx)
     return {}
 
 
@@ -808,7 +813,8 @@ def _find_alternatives(
     ]
     scored = []
     for op in candidates:
-        c = contribution(op.name, room_a.room_type, ctx, op_lookup, A)
+        c = contribution(op.name, room_a.room_type, ctx, op_lookup, A,
+                         mood_ctx=config.mood_ctx)
         if c > float("-inf"):
             scored.append((c, op.name))
     scored.sort(key=lambda x: -x[0])
