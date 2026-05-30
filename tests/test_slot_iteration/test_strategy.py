@@ -99,3 +99,32 @@ class TestSlotIterationStrategy:
         assert len(slot_result.plans) == 1
         assert len(baseline_result.plans) == 1
         assert_no_duplicate_operators(slot_result)
+
+    def test_cold_start_executes_without_crash(self):
+        ops = make_ops(
+            ("制造1", "mfg_1", "Mfg", {"efficiency": 30.0, "product": "CombatRecord"}),
+            ("制造2", "mfg_2", "Mfg", {"efficiency": 25.0, "product": "CombatRecord"}),
+            ("贸易1", "tr_1", "Trade", {"efficiency": 30.0, "product": "Money"}),
+            ("发电1", "pw_1", "Power", {"efficiency": 20.0, "product": "Drone"}),
+        )
+
+        strategy = SlotIterationStrategy(cold_start=True)
+        config = SolverConfig(strategy=strategy)
+        from steward_core.solver import solve_mvp
+        result = solve_mvp(ops, config=config)
+
+        assert len(result.plans) == 1
+        assert_no_duplicate_operators(result)
+
+    def test_cold_start_no_baseline_dependency(self):
+        ops = make_ops(
+            ("发电1", "pw_1", "Power", {"efficiency": 20.0, "product": "Drone"}),
+            ("发电2", "pw_2", "Power", {"efficiency": 15.0, "product": "Drone"}),
+        )
+
+        strategy = SlotIterationStrategy(cold_start=True)
+        config = SolverConfig(strategy=strategy)
+        from steward_core.solver import solve_mvp
+        result = solve_mvp(ops, config=config)
+
+        assert len(result.plans) == 1

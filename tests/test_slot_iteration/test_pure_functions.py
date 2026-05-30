@@ -4,10 +4,14 @@ import pytest
 from steward_core.models import Operator, Skill, EfficiencyMap, RoomAssignment, LayoutConfig
 from steward_core.solver.slot_iteration import (
     STATE_DIMENSIONS,
+    S_MAX,
     IterationContext,
     extract_state_vector,
     compute_partial_derivatives,
     contribution,
+    update_lambda_bisection,
+    effective_perception_mood,
+    effective_yanhuo_ling,
 )
 
 from tests.strategy_helpers import make_op
@@ -183,3 +187,108 @@ class TestIterationContext:
         assert ctx.ratios.office_to_mfg == 1.10
         assert ctx.ratios.drone_to_mfg == 0.5
         assert ctx.ratios.xp_lmd == 1.3
+
+
+class TestLambdaBisection:
+
+    def test_empty_both(self):
+        lambda_op = {}
+        result = update_lambda_bisection(lambda_op, [], [], {}, _ctx())
+        assert isinstance(result, dict)
+
+    def test_new_assignment_adds_lambda(self):
+        lambda_op = {}
+        ops = {"测试": make_op("测试", "test_001", "Control", efficiency=10.0)}
+        A_prev: list[RoomAssignment] = []
+        A_curr = [RoomAssignment(room_type="Control", room_index=0, operators=["测试"])]
+        ctx = _ctx()
+        result = update_lambda_bisection(lambda_op, A_curr, A_prev, ops, ctx)
+        assert "测试" in result
+        assert result["测试"] >= 0.0
+
+    def test_removal_increases_lambda(self):
+        ops = {"测试": make_op("测试", "test_001", "Control", efficiency=10.0)}
+        A_prev = [RoomAssignment(room_type="Control", room_index=0, operators=["测试"])]
+        A_curr: list[RoomAssignment] = []
+        lambda_op = {}
+        ctx = _ctx()
+        result = update_lambda_bisection(lambda_op, A_curr, A_prev, ops, ctx)
+        assert result["测试"] > 0.0
+
+    def test_unchanged_decays_lambda(self):
+        ops = {"测试": make_op("测试", "test_001", "Control", efficiency=10.0)}
+        A = [RoomAssignment(room_type="Control", room_index=0, operators=["测试"])]
+        lambda_op = {"测试": 10.0}
+        ctx = _ctx()
+        result = update_lambda_bisection(lambda_op, A, A, ops, ctx)
+        assert result["测试"] < 10.0
+
+    def test_lambda_bounds(self):
+        lambda_op = {"测试": -5.0, "干员2": 200.0}
+        A = [RoomAssignment(room_type="Control", room_index=0, operators=["测试"])]
+        ctx = _ctx()
+        result = update_lambda_bisection(lambda_op, A, A, {}, ctx)
+        assert result["测试"] >= 0.0
+        assert result["测试"] <= 100.0
+
+
+class TestSMax:
+
+    def test_all_dimensions_present(self):
+        for d in STATE_DIMENSIONS:
+            assert d in S_MAX
+
+    def test_values_positive(self):
+        for d in STATE_DIMENSIONS:
+            assert S_MAX[d] > 0.0
+
+    def test_perception_and_yanhuo_max(self):
+        assert S_MAX["perception"] == 60.0
+        assert S_MAX["yanhuo"] == 95.0
+
+
+class TestMoodFlattening:
+
+    def test_perception_without_mood_ctx(self):
+        result = effective_perception_mood("夕", 10.0, 12.0, None)
+        assert result == 10.0
+
+    def test_yanhuo_ling_without_mood_ctx(self):
+        yanhuo, perception = effective_yanhuo_ling(15.0, 10.0, 12.0, None)
+        assert yanhuo == 15.0
+        assert perception == 10.0
+
+
+class TestContributionWithLambda:
+
+    def test_lambda_penalty_reduces_contribution(self):
+        op = make_op("测试", "test_001", "Control", efficiency=10.0)
+        ops = {"测试": op}
+        assignments: list[RoomAssignment] = []
+        ctx_no_lambda = IterationContext(
+            window_index=0, window_hours=12.0,
+            S={d: 0.0 for d in STATE_DIMENSIONS},
+            D={d: 0.0 for d in STATE_DIMENSIONS},
+            lambda_op={},
+        )
+        ctx_with_lambda = IterationContext(
+            window_index=0, window_hours=12.0,
+            S={d: 0.0 for d in STATE_DIMENSIONS},
+            D={d: 0.0 for d in STATE_DIMENSIONS},
+            lambda_op={"测试": 5.0},
+        )
+        c_no = contribution("测试", "Control", ctx_no_lambda, ops, assignments)
+        c_with = contribution("测试", "Control", ctx_with_lambda, ops, assignments)
+        assert c_with < c_no
+
+    def test_lambda_penalty_zero_when_op_not_in_lambda(self):
+        op = make_op("测试", "test_001", "Power", efficiency=20.0)
+        ops = {"测试": op}
+        ctx = IterationContext(
+            window_index=0, window_hours=12.0,
+            S={d: 0.0 for d in STATE_DIMENSIONS},
+            D={d: 0.0 for d in STATE_DIMENSIONS},
+            lambda_op={"其他干员": 99.0},
+        )
+        c = contribution("测试", "Power", ctx, ops, [])
+        assert c > 0.0

@@ -47,7 +47,33 @@
 ## 遗留问题
 
 1. **冷启动未实现**：`slot_iter_cold` 已注册但 `SlotIterationStrategy(cold_start=True)` 仍走热启动路径（待第二期 §2.2 #10）
+   -> **第二期已实现**：`_cold_start_init()` 构建空填充初始分配，`_execute_cold_start()` 多启动取 max(S, D)
 2. **λ bisection 未实现**：contribution 公式中不含 `-λ×hours` 项（待第二期 §2.2 #8）
+   -> **第二期已实现**：`update_lambda_bisection()` + contribution 含 `-λ×hours`
 3. **联合扰动未实现**：跨 Phase 耦合对替换（待第二期 §2.2 #9）
+   -> **第二期已实现**：`_joint_perturbation()` 对 1f 读者↔类型 2 写入者耦合对做 top-3×3 替换
 4. **心情展平未实现**：令/夕/铅踝的心情门控展平（待第二期 §2.2 #11）
+   -> **第二期已实现**：`effective_perception_mood()` + `effective_yanhuo_ling()`（mood_ctx 通路已就绪，铅踝展平依赖 stepped_efficiency 已编码未激活）
 5. **precomputed_support 实际电线**：exhaust_mfg/exhaust_trade 仅接受参数，Phase A/B 尚未实际传入预计算支撑（留待性能优化时启用）
+
+
+## 第二期实施笔记（2026-05-30 追加）
+
+### D6: λ bisection 简化
+单窗口下 λ 的主要作用是控制 Control 槽位的干员竞争——通过惩罚跨轮变动的干员，迫使迭代收敛到稳定分配。多窗口下的完整 bisection（跨窗口 Σ hours ≤ pool）在当前单窗口框架中不适用，简化为"移出→翻倍/移入→减半/不变→衰减"的三态更新。
+
+### D7: 冷启动仅填充空房间
+`_cold_start_init()` 构建 18 间空房间的模板分配（Mfg 4间 + Trade 2间 + Control/Power/Reception/Office/Dormitory），不依赖 BaselineStrategy。第一轮迭代的 D 基于 S_MAX 上界计算，驱动 Control/Dorm 的 contribution 贪心选出状态写入者。
+
+### D8: 多启动取 D 和
+`_execute_cold_start()` 运行热启动和冷启动各一次，用 ΣD（偏导数和，反映状态读取者的边际价值）作为择优选指标——更高的 ΣD 意味着更强健的联动体系。此方案在不增加迭代成本的前提下提高覆盖度。
+
+### D9: 联合扰动简化
+完整模型中的耦合对枚举（~25 对 × 3×3 = 225 次尝试）在当前仅测试数据集中可能不触发。实现保留完整的耦合对检测和 top-3 替换框架，但仅在记忆重访（即单轮无法再找到新分配）时触发。
+
+### 第二期新增测试（14 例）
+- λ bisection: 5 例（空/新增/移除/不变/边界）
+- S_MAX: 3 例（维度/正值/具体值）
+- 心情展平: 2 例（无 mood_ctx 直通）
+- contribution+λ: 2 例（惩罚生效/无关干员不受影响）
+- 冷启动策略: 2 例（基本执行/不依赖 baseline）
