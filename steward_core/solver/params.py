@@ -52,8 +52,8 @@ class SolverParams:
     """中枢每名干员提供的心情恢复（/h）"""
     mood_full: float = 24.0
     """满心情值（h）"""
-    mood_work_threshold: float = 0.0
-    """可参与工作的最低心情值（低于此值不可用）"""
+    mood_work_threshold: float = 1.0
+    """可参与工作的最低心情值（低于此值不可用）。默认 1.0 确保至少留 1 小时缓冲"""
     mood_blue_face: float = 12.0
     """蓝脸阈值（效率下降的边界，不影响 e(t) 但标记状态）"""
     mood_red_face: float = 0.0
@@ -100,6 +100,8 @@ class SolverParams:
     """槽位迭代是否使用冷启动（S₀_max 初始化）"""
     combo_consumer_credit_alpha: float = 0.0
     """组合消费信用权重（0=关闭, 1=全量），Phase A/B 叠加 Σ(consumption[d]×D[d]) 到穷举评分"""
+    lambda_damping: float = 0.5
+    """λ 影子乘子阻尼因子，降低 λ 对 contribution 的敏感度。0=无惩罚, 1=全额惩罚"""
 
     @classmethod
     def baseline(cls) -> "SolverParams":

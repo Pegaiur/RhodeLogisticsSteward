@@ -10,7 +10,7 @@ from typing import TYPE_CHECKING
 from steward_core.models import LayoutConfig, SolveResult
 from steward_core.solver.config import SolverConfig
 from steward_core.solver.refine import local_search_refine
-from steward_core.solver.slot.context import SlotContext, StateVector
+from steward_core.solver.slot.context import SlotContext
 from steward_core.solver.slot.mfg import phase_mfg
 from steward_core.solver.slot.trade import phase_trade
 from steward_core.solver.slot.control import phase_control
@@ -26,6 +26,9 @@ if TYPE_CHECKING:
 _MAX_ITERATIONS = 10
 """默认最大迭代轮数"""
 
+_NON_WORK_FACILITIES = frozenset({"Dormitory", "Training", "Workshop"})
+"""不消耗心情的设施类型集合"""
+
 
 def solve_slot(
     operators: list["Operator"],
@@ -36,19 +39,27 @@ def solve_slot(
 ) -> SolveResult:
     """槽位加工模型求解入口
 
-    1. 初始化 SlotContext（冷启动或空分配）
-    2. 迭代：Phase A/B/C/D + D[d]反馈 + 记忆收敛
-    3. 多窗口心情流转：after_shift 消耗 → after_recovery 恢复
-    4. 后处理：局部搜索
-    5. 输出 SolveResult
+    1. 初始化 SlotContext（num_windows = params.shift_count）
+    2. 自动创建 MoodContext（若未传入且多窗口）
+    3. 迭代：Phase A/B/C/D + D[d]反馈 + 记忆收敛
+    4. 多窗口心情流转：after_shift 消耗 → after_recovery 恢复
+    5. λ 影子乘子更新：工作时长池稀缺性传导
+    6. 后处理：局部搜索
+    7. 输出多 ShiftPlan SolveResult
     """
     if layout is None:
         layout = LayoutConfig.layout_243()
 
-    ctx = SlotContext.from_layout(operators, layout, params)
+    num_windows = max(1, params.shift_count if params else 1)
+
+    if mood_ctx is None and num_windows > 1:
+        from steward_core.mood_flow import MoodContext
+        mood_ctx = MoodContext.fresh(operators, params)
+
+    ctx = SlotContext.from_layout(operators, layout, params, num_windows=num_windows)
 
     interval_hours = params.interval_hours if params else 8.0
-    _NON_WORK_FACILITIES = frozenset({"Dormitory", "Training", "Workshop"})
+    shift_hours = params.shift_hours if params else 12.0
 
     visited = set()
     best_ctx = None
@@ -56,7 +67,8 @@ def solve_slot(
 
     for iteration in range(max_iterations):
         mc = mood_ctx
-        for w in range(ctx.num_windows):
+        lambda_init = 0.0
+        for w in range(num_windows):
             phase_mfg(ctx, w, mood_ctx=mc)
             phase_trade(ctx, w, mood_ctx=mc)
 
@@ -72,8 +84,14 @@ def solve_slot(
                     if a.operator_name and a.facility_type not in _NON_WORK_FACILITIES
                 }
                 mc = mc.after_shift(working_names)
-                if w < ctx.num_windows - 1:
+                if w < num_windows - 1:
                     mc = mc.after_recovery(interval_hours)
+
+            if mc is not None and iteration > 0:
+                _track_hours_used(ctx, w, shift_hours)
+
+        if mc is not None and num_windows > 1:
+            lambda_init = _update_lambda_shadow(ctx, operators, params)
 
         if best_ctx is None:
             best_ctx = ctx.clone()
@@ -89,13 +107,104 @@ def solve_slot(
             best_ctx = ctx.clone()
         ctx.prev_P = P
 
+        if num_windows > 1 and lambda_init < 0.001 and iteration > 0:
+            break
+
     if best_ctx is None:
         best_ctx = ctx
 
-    result = _ctx_to_result(best_ctx, operators, params)
+    result = _ctx_to_multi_result(best_ctx, operators, params)
+    if num_windows > 1:
+        return result
+
     config = SolverConfig(params=params)
     result = local_search_refine(result, operators, config)
     return result
+
+
+def _track_hours_used(ctx: SlotContext, window_idx: int, hours: float) -> None:
+    """累加窗口 w 中工作干员的工作时长（λ 算力准备）"""
+    for a in ctx.windows[window_idx].assignments:
+        if not a.operator_name:
+            continue
+        if a.facility_type in _NON_WORK_FACILITIES:
+            continue
+        ctx.hours_used[a.operator_name] = ctx.hours_used.get(a.operator_name, 0.0) + hours
+
+
+def _update_lambda_shadow(
+    ctx: SlotContext,
+    operators: list,
+    params: "SolverParams",
+) -> float:
+    """更新影子乘子 λ_op：工作时长池稀缺性传导
+
+    对每个干员:
+      pool = mood_full/base_burn + (num_windows-1)*interval*avg_recovery
+      used = ctx.hours_used[op]
+      overflow_ratio = max(0, used - 0.8*pool) / pool
+
+    λ_op = overflow_ratio * base_hourly_value * lambda_damping
+    其中 base_hourly_value 为 Mfg CR 槽位的每小时 LMD 等值。
+    lambda_damping 在 SolverParams 中可调（默认 0.5），用于控制 λ 敏感度。
+
+    返回最大 λ 值（用于判断收敛——全 0 时终止迭代）。
+    """
+    mood_full = params.mood_full if params else 24.0
+    base_burn = params.base_burn_rate if params else 0.90
+    interval = params.interval_hours if params else 8.0
+    damping = params.lambda_damping if params else 0.5
+
+    avg_recovery = _estimate_avg_recovery(operators, params)
+    pool_base = mood_full / base_burn + (ctx.num_windows - 1) * interval * avg_recovery
+    hourly_value = _MFG_CR_BASE_RATE * _CR_LMD_PER_UNIT
+
+    max_lambda = 0.0
+
+    for op in operators:
+        used = ctx.hours_used.get(op.name, 0.0)
+        if used <= 0.8 * pool_base:
+            ctx.lambda_ops[op.name] = 0.0
+            continue
+
+        overflow_ratio = (used - 0.8 * pool_base) / pool_base
+        lambda_val = overflow_ratio * hourly_value * damping
+        if lambda_val > max_lambda:
+            max_lambda = lambda_val
+        ctx.lambda_ops[op.name] = lambda_val
+
+    return max_lambda
+
+
+_MFG_CR_BASE_RATE = 1.0 / 3.0
+_CR_LMD_PER_UNIT = 1000.0 / 1.3
+
+
+def _estimate_avg_recovery(
+    operators: list,
+    params: "SolverParams",
+) -> float:
+    """估算平均宿舍恢复速率（/h）"""
+    from steward_core.mood_flow import MoodContext
+
+    mood_full = params.mood_full if params else 24.0
+    sample_size = min(20, len(operators))
+    recovery_samples = []
+
+    mock_mc = MoodContext(
+        operator_moods={op.name: mood_full for op in operators},
+        _op_lookup={op.name: op for op in operators},
+    )
+
+    for op in operators[:sample_size]:
+        try:
+            r = mock_mc.dorm_recovery(op.name, dorm_mates=[op])
+            if r > 0:
+                recovery_samples.append(r)
+        except Exception:
+            pass
+
+    return sum(recovery_samples) / max(len(recovery_samples), 1) if recovery_samples else 1.5
 
 
 def _estimate_total_production(
@@ -158,36 +267,39 @@ def _estimate_total_production(
     return total
 
 
-def _ctx_to_result(
+def _ctx_to_multi_result(
     ctx: SlotContext,
     operators: list,
     params: "SolverParams",
 ) -> SolveResult:
-    """将 SlotContext 转换为 SolveResult（兼容旧接口）"""
+    """将 SlotContext 所有窗口转换为多 ShiftPlan SolveResult"""
     from steward_core.models import RoomAssignment, ShiftPlan
 
-    assignments = []
-    rooms_done = set()
-    for a in ctx.windows[0].assignments:
-        key = (a.facility_type, a.room_index)
-        if key in rooms_done:
-            continue
-        rooms_done.add(key)
-        names = ctx.room_ops(0, a.facility_type, a.room_index)
-        assignments.append(RoomAssignment(
-            room_type=a.facility_type,
-            room_index=a.room_index,
-            operators=names,
-            product=a.product,
-        ))
-
     hours = params.shift_hours if params else 12.0
-    half_hours = int(hours / 2.0)
-    plan = ShiftPlan(
-        name=f"Slot-{int(hours)}h",
-        assignments=assignments,
-        period_from=f"{half_hours:02d}:00",
-        period_to=f"{half_hours + int(hours) - 1:02d}:59",
-    )
+    plans = []
 
-    return SolveResult(plans=[plan], autofill_count=0, config_used=None)
+    for w in range(ctx.num_windows):
+        assignments = []
+        rooms_done = set()
+        for a in ctx.windows[w].assignments:
+            key = (a.facility_type, a.room_index)
+            if key in rooms_done:
+                continue
+            rooms_done.add(key)
+            names = ctx.room_ops(w, a.facility_type, a.room_index)
+            assignments.append(RoomAssignment(
+                room_type=a.facility_type,
+                room_index=a.room_index,
+                operators=names,
+                product=a.product,
+            ))
+
+        plan = ShiftPlan(
+            name=f"Slot-S{w}-{int(hours)}h",
+            assignments=assignments,
+            period_from=f"{w * int(hours + (params.interval_hours if params else 8)):02d}:00",
+            period_to=f"{min(w * int(hours + (params.interval_hours if params else 8)) + int(hours) - 1, 23):02d}:59",
+        )
+        plans.append(plan)
+
+    return SolveResult(plans=plans, autofill_count=0, config_used=SolverConfig(params=params))
