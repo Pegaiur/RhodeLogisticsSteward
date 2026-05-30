@@ -280,18 +280,15 @@ def _greedy_allocate_with_support(
     initial_control: set[str] | None = None,
     config=None,
 ) -> list[tuple[list[str], dict[str, list[str]]]]:
-    """从排序组合中贪心取无冲突的 N 间（含支撑干员冲突检查 + 中枢容量限制）
+    """从排序组合中贪心取无冲突的 N 间（含支撑干员冲突检查）
 
     evaluated: [(score, combo_names, all_support_names, support_map), ...]
-    initial_control: 已占用的中枢支撑干员集合（跨产物轮次传递容量状态）
     config: SolverConfig，exclusive_support_check=True 时仅检查独占支撑冲突
-    容量不足时跳过当前组合，尝试下一个。
+    中枢容量不再在贪心阶段限制，超出部分由 fill_control 阶段统一择优。
     """
     use_exclusive = config is not None and config.exclusive_support_check
-    max_slots = config.params.control_max_slots if config is not None else max_control_slots
     assigned: set[str] = set()
     exclusive_assigned: set[str] = set()
-    control_assigned: set[str] = set(initial_control) if initial_control else set()
     result = []
     for _score, combo_names, all_support_names, support_map in evaluated:
         if any(n in assigned for n in combo_names):
@@ -305,17 +302,12 @@ def _greedy_allocate_with_support(
             # 旧逻辑：全部支撑扁平冲突检查
             if any(n in assigned for n in all_support_names):
                 continue
-        new_control = set(support_map.get("Control", []))
-        if len(control_assigned | new_control) > max_slots:
-            continue
         result.append((combo_names, support_map))
         assigned.update(combo_names)
         if use_exclusive:
             exclusive_assigned.update(exclusive_names)
-            control_assigned.update(new_control)
         else:
             assigned.update(all_support_names)
-            control_assigned.update(new_control)
         if len(result) >= room_count:
             break
     return result

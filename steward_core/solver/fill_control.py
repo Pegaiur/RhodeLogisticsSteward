@@ -26,6 +26,24 @@ def fill_control(
     params = config.params
 
     ctrl_names = sorted(locked_support["Control"])
+
+    if len(ctrl_names) > params.control_max_slots:
+        ranked = []
+        for n in ctrl_names:
+            if n in op_lookup:
+                eff = max(op_lookup[n].best_efficiency("Control"), 0.0)
+                ranked.append((eff, n))
+            else:
+                ranked.append((0.0, n))
+        ranked.sort(key=lambda x: -x[0])
+        selected = [n for _, n in ranked[:params.control_max_slots]]
+        for n in ctrl_names:
+            if n not in selected and n in op_lookup:
+                assigned_ids.discard(op_lookup[n].char_id)
+                assigned_names.discard(n)
+        ctrl_names = selected
+        locked_support["Control"] = set(selected)
+
     for n in ctrl_names:
         if n in op_lookup:
             assigned_ids.add(op_lookup[n].char_id)

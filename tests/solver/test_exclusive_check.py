@@ -135,28 +135,28 @@ class TestExclusiveSupportCheckOn:
 
 
 class TestControlCapacity:
-    """中枢容量限制（独立于独占检查，双方都生效）"""
+    """中枢容量不再在贪心阶段限制，由 fill_control 阶段统一择优"""
 
-    def test_旧逻辑_容量超限跳过(self):
-        """Control 累计超 5 人 → 跳过，尝试下一个"""
+    def test_旧逻辑_容量不再限制(self):
+        """Control 不再因容量跳过：combo2 不含冲突支撑，正常接受"""
         from steward_core.solver.greed import _greedy_allocate_with_support
 
         evaluated = [
             _make_entry(500, ["A", "B", "C"],
                         control_support=["C1", "C2", "C3"]),
             _make_entry(400, ["D", "E", "F"],
-                        control_support=["C4", "C5", "C6"]),  # 总计 6 > 5
+                        control_support=["C4", "C5", "C6"]),
             _make_entry(300, ["G", "H", "I"],
-                        control_support=["C4"]),  # 总计 5 ≤ 5
+                        control_support=["C4"]),
         ]
 
         result = _greedy_allocate_with_support(evaluated, room_count=2, config=None)
         assert len(result) == 2
         assert result[0][0] == ["A", "B", "C"]
-        assert result[1][0] == ["G", "H", "I"]  # 跳过了中间的超限组合
+        assert result[1][0] == ["D", "E", "F"]  # 不再因容量跳过
 
-    def test_新逻辑_容量超限仍跳过(self):
-        """独占检查模式下 Control 容量仍受限制"""
+    def test_新逻辑_容量不再限制(self):
+        """独占检查模式下 Control 容量也不再限制"""
         from steward_core.solver.greed import _greedy_allocate_with_support
 
         config = SolverConfig(exclusive_support_check=True)
@@ -164,7 +164,7 @@ class TestControlCapacity:
             _make_entry(500, ["A", "B", "C"],
                         control_support=["C1", "C2", "C3"]),
             _make_entry(400, ["D", "E", "F"],
-                        control_support=["C4", "C5", "C6"]),  # 总计 6 > 5
+                        control_support=["C4", "C5", "C6"]),
             _make_entry(300, ["G", "H", "I"],
                         control_support=["C4"]),
         ]
@@ -174,7 +174,7 @@ class TestControlCapacity:
         )
         assert len(result) == 2
         assert result[0][0] == ["A", "B", "C"]
-        assert result[1][0] == ["G", "H", "I"]
+        assert result[1][0] == ["D", "E", "F"]
 
 
 class TestConfigDefault:
