@@ -304,7 +304,7 @@ class SlotIterationStrategy(Strategy):
         from steward_core.synergy._derived import MFG_ANCHORS
         from steward_core.solver.slot_iteration import (
             _DEFAULT_SUICH_COUNT, _DEFAULT_DORM_LEVEL, _room_ops_by_type,
-            _LAYOUT_243,
+            _LAYOUT_243, compute_combo_consumer_credit,
         )
         from steward_core.synergy.buff_pool import compute_buff_pool
 
@@ -352,6 +352,18 @@ class SlotIterationStrategy(Strategy):
             layout=_LAYOUT_243,
         )
 
+        score_extra_fn = None
+        credit_alpha = config.params.combo_consumer_credit_alpha
+        if credit_alpha > 0:
+            S = ctx.S
+            _pool = override_pool
+            _hours = ctx.window_hours
+
+            def score_extra_fn(combo_ops, product):
+                return compute_combo_consumer_credit(
+                    combo_ops, _pool, S, _hours, alpha=credit_alpha,
+                )
+
         mfg_result = exhaust_mfg(
             operators=operators,
             assigned_ids=state.assigned_ids,
@@ -362,6 +374,7 @@ class SlotIterationStrategy(Strategy):
             anchor_names=MFG_ANCHORS,
             config=config,
             override_pool=override_pool,
+            score_extra_fn=score_extra_fn,
         )
 
         trade_result = exhaust_trade(
@@ -424,8 +437,6 @@ class SlotIterationStrategy(Strategy):
         评估基线，使得"同种效果取最高"的互斥语义生效——
         第二个同类型全局注入者边际贡献为零。
         """
-        from steward_core.synergy import get_system_contributors
-
         max_slots = config.params.control_max_slots
 
         assigned_names: set[str] = set()
@@ -438,8 +449,6 @@ class SlotIterationStrategy(Strategy):
             op for op in operators
             if op.has_skill_for("Control", None) and op.name not in assigned_names
         ]
-
-        ctrl_global_names = set(get_system_contributors("Control", "global_bonus"))
 
         base_A = [a for a in A if a.room_type != "Control"]
 
@@ -466,10 +475,8 @@ class SlotIterationStrategy(Strategy):
                                  mood_ctx=config.mood_ctx)
                 if c <= float("-inf"):
                     continue
-                bias = config.params.control_global_sort_bias if op.name in ctrl_global_names else 0.0
-                score = c + bias
-                if score > best_score:
-                    best_score = score
+                if c > best_score:
+                    best_score = c
                     best_op = op
 
             if best_op is None or best_score <= 0.0:

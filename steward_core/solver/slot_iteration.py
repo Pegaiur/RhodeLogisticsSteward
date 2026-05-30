@@ -543,10 +543,6 @@ def _compute_type3_contribution(
     """
     from steward_core.synergy import compute_control_global_bonus
 
-    mfg_slots = sum(
-        len(a.operators) for a in assignments
-        if a.room_type == "Mfg" and a.operators
-    )
     mfg_rooms = len({a.room_index for a in assignments if a.room_type == "Mfg"})
     trade_rooms = len({
         a.room_index for a in assignments
@@ -578,7 +574,7 @@ def _compute_type3_contribution(
     )
 
     value = 0.0
-    value += marginal_mfg * mfg_slots * mfg_base_avg * 24.0 / 100.0
+    value += marginal_mfg * mfg_rooms * mfg_base_avg * 24.0 / 100.0
     value += marginal_trade * trade_rooms * _TRADE_BASE_LMD_PER_HOUR * 24.0 / 100.0
 
     return value
@@ -889,3 +885,43 @@ def _contribution_dorm(
     )
 
     return state_value
+
+
+def compute_combo_consumer_credit(
+    combo_ops: list["Operator"],
+    buff_pool: "BuffPool",
+    S: dict[str, float],
+    hours: float,
+    alpha: float = 1.0,
+) -> float:
+    """计算 Mfg/Trade 组合的 BuffPool 消费信用
+
+    对组合中每个 type1f 消费者，计算其从 BuffPool 中可获得的直接效率增益
+    （与 evaluate_room 同量纲：效率% × 小时），乘以 alpha 作为方向性信号。
+    使贡献模型的 S/D 估值信息反哺到穷举评分中。
+
+    信用 = Σ consumer_bonus% × hours × alpha
+    consumer_bonus% = bonus_per × min(pool[d], S[d]) / per_unit
+    """
+    if alpha <= 0:
+        return 0.0
+
+    pool_dict = _pool_to_state_vec(buff_pool)
+    credit = 0.0
+
+    for op in combo_ops:
+        if op.name not in _B_BUFF_CONSUMER_TABLE:
+            continue
+        dim = _BUFF_CONSUMER_DIMENSION.get(op.name)
+        if dim is None:
+            continue
+        pool_val = pool_dict.get(dim, 0.0)
+        if pool_val <= 0:
+            continue
+        entry = _B_BUFF_CONSUMER_TABLE[op.name]
+        effective = min(pool_val, S.get(dim, 0.0))
+        batches = effective // entry.per_unit if entry.per_unit > 0 else 0
+        bonus_pct = batches * entry.bonus_per
+        credit += bonus_pct * hours * alpha
+
+    return credit

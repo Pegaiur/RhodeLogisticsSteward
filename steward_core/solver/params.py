@@ -98,6 +98,8 @@ class SolverParams:
     """槽位迭代最大轮次"""
     slot_cold_start: bool = False
     """槽位迭代是否使用冷启动（S₀_max 初始化）"""
+    combo_consumer_credit_alpha: float = 0.0
+    """组合消费信用权重（0=关闭, 1=全量），Phase A/B 叠加 Σ(consumption[d]×D[d]) 到穷举评分"""
 
     @classmethod
     def baseline(cls) -> "SolverParams":

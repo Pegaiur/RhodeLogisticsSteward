@@ -50,10 +50,12 @@ def exhaust_mfg(
     config: SolverConfig | None = None,
     override_pool=None,
     precomputed_support: SupportResult | None = None,
+    score_extra_fn=None,
 ) -> int:
     """Phase 1: 制造站穷举（CR 2间 + PG 2间）
 
     共享 assigned_ids 防跨产物冲突。
+    score_extra_fn(combo_ops, product) -> float: 贡献信用回调，SlotIterationStrategy 注入。
     返回本阶段新增的 autofill_count。
     """
     autofill_count = 0
@@ -120,6 +122,9 @@ def exhaust_mfg(
             )
             combo_names = [op.name for op in combo_ops]
             all_support_names = [n for names in support_map.values() for n in names]
+
+            if score_extra_fn is not None:
+                score += score_extra_fn(combo_ops, product)
 
             # 全局状态评分修正：稀缺包消耗越多惩罚越重
             if use_global:
