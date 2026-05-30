@@ -17,6 +17,7 @@ from steward_core.synergy import (
     _B_BUFF_CONSUMER_TABLE,
     compute_buff_pool,
     compute_engineering_robots,
+    synergy_global_faction,
 )
 
 if TYPE_CHECKING:
@@ -594,11 +595,11 @@ def contribution(
     if facility == "Control":
         base = _contribution_control(op, ctx, operators, assignments)
     elif facility == "Power":
-        base = _contribution_power(op, ctx)
+        base = _contribution_power(op, ctx, operators, assignments)
     elif facility == "Reception":
-        base = _contribution_reception(op, ctx)
+        base = _contribution_reception(op, ctx, operators, assignments)
     elif facility == "Office":
-        base = _contribution_office(op, ctx)
+        base = _contribution_office(op, ctx, operators, assignments)
     elif facility == "Dormitory":
         base = _contribution_dorm(op, ctx, assignments, operators)
     else:
@@ -738,9 +739,22 @@ def effective_yanhuo_ling(
 def _contribution_power(
     op: "Operator",
     ctx: IterationContext,
+    operators: dict[str, "Operator"],
+    assignments: list["RoomAssignment"],
 ) -> float:
-    """Power 干员 contribution = power_eff × drone_to_mfg_ratio × mfg_base_rate_avg / xp_lmd_ratio × 24h"""
-    eff = _op_eff_for_room(op, "Power")
+    """Power 干员 contribution = (base + 条件加成) × drone_to_mfg × rate × 24h
+
+    通过 synergy_global_faction 获取全局阵营条件加成（如缪尔赛思的莱茵生命计数）。
+    """
+    base = _op_eff_for_room(op, "Power")
+    if base <= 0:
+        return 0.0
+
+    all_ops = list(operators.values())
+    segs = synergy_global_faction([op], "Power", "", all_ops, ctx.window_hours)
+    conditional = sum(s.a for s in segs)
+
+    eff = base + conditional
     if eff <= 0:
         return 0.0
 
@@ -755,6 +769,8 @@ def _contribution_power(
 def _contribution_reception(
     op: "Operator",
     ctx: IterationContext,
+    operators: dict[str, "Operator"] | None = None,
+    assignments: list["RoomAssignment"] | None = None,
 ) -> float:
     """Reception 干员 contribution = reception_eff × reception_to_mfg_ratio × mfg_base_rate_avg / xp_lmd_ratio × 24h"""
     eff = _op_eff_for_room(op, "Reception")
@@ -772,6 +788,8 @@ def _contribution_reception(
 def _contribution_office(
     op: "Operator",
     ctx: IterationContext,
+    operators: dict[str, "Operator"] | None = None,
+    assignments: list["RoomAssignment"] | None = None,
 ) -> float:
     """Office 干员 contribution = office_eff × office_to_mfg_ratio × mfg_base_rate_avg / xp_lmd_ratio × 24h"""
     eff = _op_eff_for_room(op, "Office")
