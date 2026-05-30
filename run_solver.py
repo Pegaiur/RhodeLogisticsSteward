@@ -9,7 +9,6 @@ r"""全 box 满练度求解器 — 槽位加工模型
 输出 output/custom_infrast/ 目录。
 """
 
-from dataclasses import replace
 from pathlib import Path
 
 from steward_core.data_loader import load_operators_v2
@@ -19,7 +18,6 @@ from steward_core.solver.config import SolverConfig
 from steward_core.solver.params import SolverParams
 from steward_core import production
 from steward_core.production import _RECORD_EXP_PER_UNIT, _GOLD_LMD_PER_UNIT
-from steward_core.models import ShiftPlan
 
 
 def _parse_cli():
@@ -52,7 +50,11 @@ def main():
     shift_hours = hours_override
     interval_hours = 8.0
     shift_count = 3
-    params = params.apply_overrides(shift_hours=shift_hours)
+    params = params.apply_overrides(
+        shift_hours=shift_hours,
+        shift_count=shift_count,
+        interval_hours=interval_hours,
+    )
 
     project_root = Path(__file__).resolve().parent
     ci_path = project_root / "character_identity.json"
@@ -76,50 +78,14 @@ def main():
     ctrl_ops = [op for op in all_operators if op.has_skill_for("Control")]
     print(f"[统计] 制造站: {len(mfg_ops)}, 贸易站: {len(trade_ops)}, 控制中枢: {len(ctrl_ops)}")
 
-    mode_desc = f"{shift_count}×{shift_hours:.0f}h+{interval_hours:.0f}h"
+    mode_desc = f"{shift_count}x{shift_hours:.0f}h+{interval_hours:.0f}h"
     print(f"\n[求解] SlotStrategy, {mode_desc}...")
 
     from steward_core.mood_flow import MoodContext
     mood_ctx = MoodContext.fresh(all_operators, params)
-
-    all_plans: list[ShiftPlan] = []
-
-    for shift_idx in range(shift_count):
-        available = [
-            op for op in all_operators
-            if mood_ctx.mood_of(op.name) >= params.mood_blue_face
-        ]
-
-        config = SolverConfig(params=params, mood_ctx=mood_ctx)
-        result = solve_mvp(available, config=config)
-
-        if result.plans:
-            plan = result.plans[0]
-
-            half_hours = int(shift_hours / 2.0)
-            offset = shift_idx * (int(shift_hours) + int(interval_hours))
-            plan = ShiftPlan(
-                name=f"Shift{shift_idx + 1}-{int(shift_hours)}h",
-                assignments=list(plan.assignments),
-                period_from=f"{(half_hours + offset):02d}:00",
-                period_to=f"{(half_hours + offset + int(shift_hours) - 1):02d}:59",
-            )
-            all_plans.append(plan)
-
-            working_names: set[str] = set()
-            for a in plan.assignments:
-                if a.room_type in ("Mfg", "Trade", "Power", "Reception", "Office"):
-                    working_names.update(a.operators)
-                if a.room_type == "Control":
-                    mood_ctx = replace(mood_ctx, control_operators=a.operators, modifiers=None)
-            mood_ctx = mood_ctx.after_shift(working_names, shift_hours)
-
-            if shift_idx < shift_count - 1:
-                mood_ctx = mood_ctx.after_recovery(interval_hours)
-
-            print(f"[Shift {shift_idx + 1}] 配员 {len(plan.assignments)} 房间")
-
-    result = type(result)(plans=all_plans, autofill_count=0, config_used=None)
+    config = SolverConfig(params=params, mood_ctx=mood_ctx)
+    result = solve_mvp(all_operators, config=config)
+    all_plans = result.plans
 
     print(f"[结果] 班次数: {len(all_plans)}\n")
 
