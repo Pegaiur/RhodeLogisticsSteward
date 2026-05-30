@@ -66,6 +66,8 @@ def solve_slot(
     best_P = 0.0
 
     for iteration in range(max_iterations):
+        if iteration > 0:
+            _reset_ctx(ctx)
         mc = mood_ctx
         lambda_init = 0.0
         for w in range(num_windows):
@@ -121,6 +123,19 @@ def solve_slot(
     config = SolverConfig(params=params)
     result = local_search_refine(result, operators, config)
     return result
+
+
+def _reset_ctx(ctx: SlotContext) -> None:
+    """清空所有窗口槽位用于迭代重新求解
+
+    保留 op_lookup/operators/params/layout/windows 结构，
+    仅清空 operator_name、hours_used 和 lambda_ops。
+    """
+    for w in range(ctx.num_windows):
+        for a in ctx.windows[w].assignments:
+            a.operator_name = ""
+    ctx.hours_used.clear()
+    ctx.lambda_ops.clear()
 
 
 def _track_hours_used(ctx: SlotContext, window_idx: int, hours: float) -> None:
