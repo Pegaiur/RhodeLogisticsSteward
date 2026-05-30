@@ -1,4 +1,5 @@
-"""排班生产报表 — 运行求解器并输出格式化报表"""
+"""排班生产报表"""
+
 import sys
 from pathlib import Path
 
@@ -13,111 +14,157 @@ from steward_core import production
 from steward_core.production import _RECORD_EXP_PER_UNIT, _GOLD_LMD_PER_UNIT
 
 
-def _bar(val, ref, w=8):
-    n = int(val / max(ref, 1) * w)
-    return "\u2588" * n + "\u2591" * (w - n)
+def _bar(v, ref, w=10):
+    n = round(v / max(ref, 1) * w)
+    return "#" * n + "-" * (w - n)
+
+
+def _fmt_names(names, width=28):
+    s = ", ".join(names)
+    return s if len(s) <= width else s[:width - 2] + ".."
+
+
+def _room_ops(plan, ftype, ridx):
+    for a in plan.assignments:
+        if a.room_type == ftype and a.room_index == ridx:
+            return a.operators
+    return []
+
+
+def _ctrl_ops(plan):
+    for a in plan.assignments:
+        if a.room_type == "Control":
+            return a.operators
+    return []
 
 
 def main():
     hours = float(sys.argv[1]) if len(sys.argv) > 1 else 12.0
-
     root = Path(__file__).parent
-    ops = load_operators_v2(root / "character_identity.json", root / "buffs_infrastructure.json")
-
+    ops = load_operators_v2(root / "character_identity.json",
+                            root / "buffs_infrastructure.json")
     params = SolverParams(shift_count=3, shift_hours=hours, interval_hours=8.0)
-    mood_ctx = MoodContext.fresh(ops, params)
-    result = solve_mvp(ops, config=SolverConfig(params=params, mood_ctx=mood_ctx))
+    mc = MoodContext.fresh(ops, params)
+    result = solve_mvp(ops, config=SolverConfig(params=params, mood_ctx=mc))
     plans = result.plans
 
-    def _ctrl(plan):
-        for a in plan.assignments:
-            if a.room_type == "Control":
-                return a.operators
-        return []
+    ctrl_sets = [_ctrl_ops(p) for p in plans]
+    mfg_rooms = [(0, "CombatRecord"), (1, "CombatRecord"),
+                 (2, "PureGold"), (3, "PureGold")]
+    trade_rooms = [(0,), (1,)]
 
-    def _room_ops(plan, ftype, ridx):
-        for a in plan.assignments:
-            if a.room_type == ftype and a.room_index == ridx:
-                return a.operators
-        return []
+    def _dp(plan):
+        return production.calculate(plan, ops, hours=hours,
+                                    external_gold_per_day=params.daily_task_lmd / _GOLD_LMD_PER_UNIT)
 
-    # ── 控制中枢轮换矩阵 ──
+    # ════════════════════════════════════════════════════
+    #  第一部分：轮班总览
+    # ════════════════════════════════════════════════════
+    print(f"\n{'=' * 64}")
+    print(f"  轮班总览  {len(plans)} x {hours:.0f}h")
+    print(f"{'=' * 64}")
+
+    # 控制中枢
+    print(f"\n  [控制中枢]")
+    print(f"  {'Window':<8}{'Operators'}")
+    print(f"  {'-' * 56}")
+    for pi, c in enumerate(ctrl_sets):
+        print(f"  {pi:<8}{', '.join(c)}")
+    ov = [len(set(ctrl_sets[i]) & set(ctrl_sets[i + 1]))
+          for i in range(len(ctrl_sets) - 1)]
+    tag = "OK 完全互斥" if all(o == 0 for o in ov) else \
+          f"!! 重叠 {', '.join(str(o) for o in ov)}"
+    print(f"  {'':8}[{tag}]")
+
+    # 制造站
+    print(f"\n  [制造站]")
+    print(f"  {'Room':<14}", end="")
+    for pi in range(len(plans)):
+        print(f"{'Window ' + str(pi):<30}", end="")
     print()
-    print("\u250c" + "\u2500" * 74 + "\u2510")
-    print("\u2502  \u63a7\u5236\u4e2d\u67a2\u8f6e\u6362\u77e9\u9635" + " " * 57 + "\u2502")
-    print("\u251c" + "\u2500" * 74 + "\u2524")
-    print("\u2502 \u7a97\u53e3 | \u4e2d\u67a2\u5e72\u5458" + " " * 55 + "\u2502")
-    print("\u251c" + "\u2500" * 74 + "\u2524")
-    all_sets = []
+    print(f"  {'-' * 14}{'-' * (30 * len(plans))}")
+    for ridx, prod in mfg_rooms:
+        label = f"  Mfg[{ridx}] {prod}"
+        print(f"{label:<14}", end="")
+        for pi in range(len(plans)):
+            names = _room_ops(plans[pi], "Mfg", ridx)
+            print(f"{_fmt_names(names, 28):<30}", end="")
+        print()
+
+    # 贸易站
+    print(f"\n  [贸易站]")
+    print(f"  {'Room':<14}", end="")
+    for pi in range(len(plans)):
+        print(f"{'Window ' + str(pi):<30}", end="")
+    print()
+    print(f"  {'-' * 14}{'-' * (30 * len(plans))}")
+    for (ridx,) in trade_rooms:
+        label = f"  Trade[{ridx}]"
+        print(f"{label:<14}", end="")
+        for pi in range(len(plans)):
+            names = _room_ops(plans[pi], "Trade", ridx)
+            print(f"{_fmt_names(names, 28):<30}", end="")
+        print()
+
+    # ════════════════════════════════════════════════════
+    #  第二部分：产能分析
+    # ════════════════════════════════════════════════════
+    print(f"\n{'=' * 64}")
+    print(f"  产能分析  {len(plans)} x {hours:.0f}h")
+    print(f"{'=' * 64}")
+
+    # 汇总
+    prod_rows = []
     for pi, plan in enumerate(plans):
-        c = _ctrl(plan)
-        all_sets.append(set(c))
-        print(f"\u2502  {pi}   | {', '.join(c):<60}\u2502")
-    print("\u2514" + "\u2500" * 74 + "\u2518")
+        dp = _dp(plan)
+        exp = dp.total_records_per_day * _RECORD_EXP_PER_UNIT
+        lmd = dp.effective_lmd_per_day
+        prod_rows.append((pi, exp, lmd))
+    me = max(r[1] for r in prod_rows)
+    ml = max(r[2] for r in prod_rows)
 
-    ov = [len(all_sets[i] & all_sets[i + 1]) for i in range(len(all_sets) - 1)]
-    tag = "\u2714 \u5b8c\u5168\u4e92\u65a5" if all(o == 0 for o in ov) else f"\u26a0 \u91cd\u53e0 " + "/".join(map(str, ov))
-    print(f"  \u8f6e\u6362: {tag}\n")
+    print(f"\n  [产能汇总]")
+    print(f"  {'Window':<8}{'经验/' + str(int(hours)) + 'h':>10}{'LMD/' + str(int(hours)) + 'h':>10}"
+          f"{'vs W0 经验':>12}{'vs W0 LMD':>12}  {'产能条'}")
+    print(f"  {'-' * 74}")
+    for pi, exp, lmd in prod_rows:
+        de = exp - prod_rows[0][1]
+        dl = lmd - prod_rows[0][2]
+        print(f"  {pi:<8}{exp:>10,.0f}{lmd:>10,.0f}"
+              f"{de:>+12,.0f}{dl:>+12,.0f}  "
+              f"E:{_bar(exp, me)} L:{_bar(lmd, ml)}")
 
-    # ── 产能表 ──
-    prod_data = []
-    for pi, plan in enumerate(plans):
-        dp = production.calculate(plan, ops, hours=hours,
-                                  external_gold_per_day=params.daily_task_lmd / _GOLD_LMD_PER_UNIT)
-        prod_data.append((pi, dp.total_records_per_day * _RECORD_EXP_PER_UNIT, dp.effective_lmd_per_day))
-
-    me, ml = max(r[1] for r in prod_data), max(r[2] for r in prod_data)
-
-    print("\u250c" + "\u2500" * 74 + "\u2510")
-    print("\u2502  \u4ea7\u80fd\u6c47\u603b" + " " * 65 + "\u2502")
-    print("\u251c" + "\u2500" * 74 + "\u2524")
-    print(f"\u2502 \u7a97\u53e3 | \u7ecf\u9a8c/{hours:.0f}h       | LMD/{hours:.0f}h        | vs\u7a97\u53e30   | \u4ea7\u80fd\u6761" + " " * 17 + "\u2502")
-    print("\u251c" + "\u2500" * 74 + "\u2524")
-    for pi, exp, lmd in prod_data:
-        de = exp - prod_data[0][1]
-        dl = lmd - prod_data[0][2]
-        se = f"{de:+,.0f}"
-        sl = f"{dl:+,.0f}"
-        print(f"\u2502  {pi}   | {exp:>7,.0f}         | {lmd:>7,.0f}         | {se:>8s} {sl:>8s} | {_bar(exp, me)} {_bar(lmd, ml)} \u2502")
-    print("\u2514" + "\u2500" * 74 + "\u2518")
-
-    # ── 制造站 ──
-    print(f"\n\u250c" + "\u2500" * 74 + "\u2510")
-    print("\u2502  \u5236\u9020\u7ad9 \u623f\u95f4\u8be6\u60c5 (\u7ecf\u9a8c \u2192 \u8d64\u91d1)" + " " * 39 + "\u2502")
-    print("\u251c" + "\u2500" * 74 + "\u2524")
-    for pt, (ridx, label, unit) in enumerate([(0, "\u7ecf\u9a8c CR", "\u7ecf\u9a8c"), (1, "\u7ecf\u9a8c CR", "\u7ecf\u9a8c"),
-                                               (2, "\u8d64\u91d1 PG", "LMD"), (3, "\u8d64\u91d1 PG", "LMD")]):
-        print(f"\u2502 Mfg[{ridx}] {label}\u2502")
+    # 制造站分间
+    print(f"\n  [制造站 分间产出]")
+    for ridx, prod in mfg_rooms:
+        unit = "经验" if prod == "CombatRecord" else "LMD"
+        label = f"  Mfg[{ridx}] {prod}"
+        print(f"  {'-' * 40}")
+        print(f"{label}")
         for pi, plan in enumerate(plans):
-            n = _room_ops(plan, "Mfg", ridx)
-            dp = production.calculate(plan, ops, hours=hours,
-                                      external_gold_per_day=params.daily_task_lmd / _GOLD_LMD_PER_UNIT)
-            if pt < 2:
-                val = dp.total_records_per_day * _RECORD_EXP_PER_UNIT
-                for room in [r for r in dp.record_rooms if r.room_index == ridx]:
-                    val = room.output_per_day * _RECORD_EXP_PER_UNIT
-            else:
-                val = 0
-                for room in [r for r in dp.gold_rooms if r.room_index == ridx]:
-                    val = room.output_per_day * _GOLD_LMD_PER_UNIT
-            print(f"\u2502   \u7a97\u53e3{pi}: {', '.join(n):<40} {val:>8,.0f} {unit}\u2502")
-        print("\u251c" + "\u2500" * 74 + "\u2524")
-
-    # ── 贸易站 ──
-    print(f"\n\u250c" + "\u2500" * 74 + "\u2510")
-    print("\u2502  \u8d38\u6613\u7ad9 \u623f\u95f4\u8be6\u60c5" + " " * 57 + "\u2502")
-    print("\u251c" + "\u2500" * 74 + "\u2524")
-    for ridx in (0, 1):
-        print(f"\u2502 Trade[{ridx}]\u2502")
-        for pi, plan in enumerate(plans):
-            n = _room_ops(plan, "Trade", ridx)
-            dp = production.calculate(plan, ops, hours=hours,
-                                      external_gold_per_day=params.daily_task_lmd / _GOLD_LMD_PER_UNIT)
+            names = _room_ops(plan, "Mfg", ridx)
+            dp = _dp(plan)
             val = 0
-            for room in [r for r in dp.trade_rooms if r.room_index == ridx]:
-                val = room.output_per_day
-            print(f"\u2502   \u7a97\u53e3{pi}: {', '.join(n):<40} {val:>8,.0f} LMD\u2502")
-        print("\u251c" + "\u2500" * 74 + "\u2524")
+            rooms = dp.record_rooms if prod == "CombatRecord" else dp.gold_rooms
+            for r in rooms:
+                if r.room_index == ridx:
+                    val = r.output_per_day * (_RECORD_EXP_PER_UNIT if prod == "CombatRecord" else _GOLD_LMD_PER_UNIT)
+            print(f"    W{pi}: {_fmt_names(names, 24):<26} {val:>10,.0f} {unit}")
+
+    # 贸易站分间
+    print(f"\n  [贸易站 分间产出]")
+    for (ridx,) in trade_rooms:
+        print(f"  {'-' * 40}")
+        print(f"  Trade[{ridx}]")
+        for pi, plan in enumerate(plans):
+            names = _room_ops(plan, "Trade", ridx)
+            dp = _dp(plan)
+            val = 0
+            for r in dp.trade_rooms:
+                if r.room_index == ridx:
+                    val = r.output_per_day
+            print(f"    W{pi}: {_fmt_names(names, 24):<26} {val:>10,.0f} LMD")
+
     print()
 
 
