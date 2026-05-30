@@ -17,6 +17,7 @@ from steward_core.synergy import (
     _B_BUFF_CONSUMER_TABLE,
     compute_buff_pool,
     compute_engineering_robots,
+    control_per_operator_bonus,
     synergy_global_faction,
 )
 
@@ -608,13 +609,64 @@ def contribution(
     return base - lambda_penalty
 
 
+def _compute_per_operator_contribution(
+    op: "Operator",
+    assignments: list["RoomAssignment"],
+    operators: dict[str, "Operator"],
+) -> float:
+    """计算类型 2 per-operator 条件加成的边际贡献值（LMD 等值/天量纲）
+
+    焰尾(CR+10%/PG-10%)、薇薇安娜(骑士+7%)、涤火杰西卡(黑钢+5%)、
+    八幡海铃(叙拉古 Trade+5%)、戴菲恩(格拉斯哥 Trade+10%)。
+    边际差分模式与类型 3 同构，区别在于 per-operator 加成是逐房间的而非全局。
+    """
+    control_ops = _room_ops_by_type(assignments, "Control", operators)
+    existing_names = {o.name for o in control_ops}
+
+    if op.name in existing_names:
+        without = [o for o in control_ops if o.name != op.name]
+        with_ = control_ops
+    else:
+        without = control_ops
+        with_ = control_ops + [op]
+
+    total = 0.0
+    for a in assignments:
+        if a.room_type not in ("Mfg", "Trade"):
+            continue
+        if not a.operators:
+            continue
+        room_ops = [operators[n] for n in a.operators if n in operators]
+        if not room_ops:
+            continue
+
+        bonus_without = control_per_operator_bonus(
+            without, room_ops, a.product, a.room_type,
+        )
+        bonus_with = control_per_operator_bonus(
+            with_, room_ops, a.product, a.room_type,
+        )
+        marginal = bonus_with - bonus_without
+        if marginal == 0:
+            continue
+
+        if a.room_type == "Trade":
+            total += marginal * _TRADE_BASE_LMD_PER_HOUR * 24.0 / 100.0
+        else:
+            rate = _product_base_rate(a.product)
+            lmd = _product_lmd_per_unit(a.product)
+            total += marginal * rate * 24.0 * lmd / 100.0
+
+    return total
+
+
 def _contribution_control(
     op: "Operator",
     ctx: IterationContext,
     operators: dict[str, "Operator"],
     assignments: list["RoomAssignment"],
 ) -> float:
-    """Control 干员 contribution = 类型 2 状态写入 × D + 类型 3 全局注入
+    """Control 干员 contribution = 类型 2 状态写入 × D + 类型 2 per-op 条件 + 类型 3 全局注入
 
     D[d]=0 时用 link_value[d] 替代，使无当前消费者的维度写入者也能获得
     非零估值（基于潜在 type1f 读者的链路上界估算）。
@@ -631,7 +683,8 @@ def _contribution_control(
         else:
             state_value += delta * ctx.link_value.get(d, 0.0)
     type3_value = _compute_type3_contribution(op, assignments, operators)
-    return state_value + type3_value
+    per_op_value = _compute_per_operator_contribution(op, assignments, operators)
+    return state_value + type3_value + per_op_value
 
 
 def update_lambda_bisection(
