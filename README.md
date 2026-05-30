@@ -5,8 +5,17 @@
 ## 快速开始
 
 ```powershell
-# 默认 Baseline 策略，12 小时单班次
+# 默认 Baseline 策略，8h × 3 班次（多班次为主）
 python run_solver.py
+
+# 单班次（快捷方式）
+python run_solver.py --single
+
+# 双班次 12h（自定义班次与时長）
+python run_solver.py --shifts 2 --hours 12
+
+# 自定义班次间隔
+python run_solver.py --shifts 2 --hours 12 --interval 4
 
 # K-Beam 策略（制造站 top-K 多路径保留）
 python run_solver.py --strategy kbeam3
@@ -17,9 +26,6 @@ python run_solver.py --strategy iterative
 
 # 查看所有可用策略
 python run_solver.py --list
-
-# 自定义班次时长
-python run_solver.py --hours 24
 
 # 三件套开关全开（独占冲突检查 + 局部搜索 + 全局状态评分）
 python run_solver.py --strategy baseline --all-on

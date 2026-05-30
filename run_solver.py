@@ -1,14 +1,20 @@
-r"""MVP 全 box 满练度求解器
+r"""全 box 满练度求解器 — 多班次为主（默认 8h×3），单班次可选
 
 用法:
-    python run_solver.py                              # 默认 baseline 12h 单班
+    python run_solver.py                              # 默认 baseline 8h×3+8h 三班
+    python run_solver.py --shifts 2 --hours 12        # 双班次 2×12h
+    python run_solver.py --single                     # 单班次 8h（快捷方式）
+    python run_solver.py --shifts 1 --hours 12        # 单班次 12h
     python run_solver.py --strategy kbeam3            # K-Beam K=3
     python run_solver.py --strategy iterative         # 不动点迭代
     python run_solver.py --strategy baseline --all-on # 三开关全开
-    python run_solver.py --hours 24                   # 24h 班次
-    python run_solver.py --shifts 2 --interval 8      # 双班次 2×12h+8h
     python run_solver.py --params custom.json         # 自定义参数文件
     python run_solver.py --list                       # 列出可用策略
+
+参数说明:
+    --shifts N    班次数（默认 3）
+    --hours H     每班次时长，单位小时（默认 8）
+    --interval H  班次间隔，单位小时（默认 8），多班次时用于心情恢复
 
 数据文件 (character_identity.json + buffs_infrastructure.json) 需在项目根目录。
 输出 output/custom_infrast/ 目录。
@@ -18,7 +24,7 @@ from pathlib import Path
 
 from steward_core.data_loader import load_operators_v2
 from steward_core.output import save_json
-from steward_core.solver import solve_mvp, solve_multi_shift
+from steward_core.solver import solve_multi_shift
 from steward_core.solver.config import SolverConfig
 from steward_core.solver.strategies import STRATEGY_REGISTRY
 from steward_core import production
@@ -32,8 +38,8 @@ def _parse_cli():
 
     strategy_key = "baseline"
     params_file = None
-    hours_override = None
-    shift_count = 1
+    hours_override = 8.0
+    shift_count = 3
     interval_hours = 8.0
     all_on = False
     strategy_kwargs = {}
@@ -48,6 +54,8 @@ def _parse_cli():
             hours_override = float(args[i + 1]); i += 2
         elif args[i] == "--shifts" and i + 1 < len(args):
             shift_count = int(args[i + 1]); i += 2
+        elif args[i] == "--single":
+            shift_count = 1; i += 1
         elif args[i] == "--interval" and i + 1 < len(args):
             interval_hours = float(args[i + 1]); i += 2
         elif args[i] == "--kw" and i + 1 < len(args):
@@ -149,15 +157,14 @@ def main():
 
     shift_hours = config.params.shift_hours
     strategy_name = strategy_key
-    multi = config.params.shift_count > 1
+    shift_count = config.params.shift_count
 
-    mode_desc = f"{config.params.shift_count}×{shift_hours:.0f}h" if multi else f"{shift_hours:.0f}h"
+    mode_desc = f"{shift_count}×{shift_hours:.0f}h"
+    if shift_count > 1:
+        mode_desc += f"+{config.params.interval_hours:.0f}h"
     print(f"\n[求解] 策略={strategy_name}, {mode_desc}, 开关={'all-on' if all_on else 'baseline'}...")
 
-    if multi:
-        result = solve_multi_shift(all_operators, config=config)
-    else:
-        result = solve_mvp(all_operators, config=config)
+    result = solve_multi_shift(all_operators, config=config)
 
     print(f"[结果] 班次数: {len(result.plans)}, 补位房间数: {result.autofill_count}\n")
 
@@ -235,7 +242,8 @@ def main():
         else:
             print(f"  赤金缺口: {abs(dp.gold_surplus):.1f} 个 → 有效收入 {dp.effective_lmd_per_day:,.0f} LMD/{shift_hours:.0f}h")
 
-    shifts_tag = f"{config.params.shift_count}班次" if multi else "单班"
+    sc = config.params.shift_count
+    shifts_tag = "单班" if sc == 1 else f"{sc}班次"
     suffix = f"243_layout_{shifts_tag}_a_day_{strategy_key}_{shift_hours:.0f}h"
     output_path = project_root / "output" / "custom_infrast" / f"{suffix}.json"
     save_json(result, output_path, title=f"排班方案 {strategy_key} {shifts_tag} {shift_hours:.0f}h")
