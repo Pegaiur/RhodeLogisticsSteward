@@ -88,6 +88,7 @@ def solve_slot(
             ctx.windows[w].D = D
 
             phase_control(ctx, w, D, mood_ctx=mc)
+            ctx.lambda_k = _compute_lambda_k(ctx, w, shift_hours, mood_ctx=mc)
             phase_remaining(ctx, w, D, mood_ctx=mc)
 
             if mc is not None:
@@ -162,6 +163,7 @@ def _reset_ctx(ctx: SlotContext) -> None:
         for a in ctx.windows[w].assignments:
             a.operator_name = ""
     ctx.hours_used.clear()
+    ctx.lambda_k = 0.0
 
 
 def _track_hours_used(ctx: SlotContext, window_idx: int, hours: float) -> None:
@@ -270,6 +272,114 @@ def _facility_slots_for(op: "Operator") -> tuple[str, int]:
     slots_map = _FACILITY_SLOTS
     min_type = min(facility_types, key=lambda t: slots_map.get(t, 3))
     return min_type, min(slots_map.get(min_type, 3), 3)
+
+
+def _compute_lambda_k(
+    ctx: SlotContext,
+    window_idx: int,
+    shift_hours: float,
+    *,
+    mood_ctx: "MoodContext | None" = None,
+) -> float:
+    """计算窗口 w 的标量 λ_k
+
+    λ_k = median(Phase A/B 已分配 Mfg/Trade 槽位的每小时边际 LMD 等值)
+
+    遍历窗口 w 中已分配的 Mfg/Trade 房间，对每间房调用 evaluate_room
+    计算效率积分，按 production.py 的产出公式换算为 hourly LMD，取中位数。
+    """
+    from steward_core.evaluate import evaluate_room
+    from steward_core.synergy import (
+        compute_control_global_bonus,
+        control_per_operator_bonus,
+    )
+    from steward_core.synergy.buff_pool import compute_buff_pool
+    from steward_core.production import _get_trade_order_multiplier
+    from steward_core.constants import BASE_POWER_COUNT
+    from steward_core.models import LayoutConfig
+    from ._cold_start import cold_start_ctrl_ops, cold_start_dorm_ops
+
+    params = ctx.params
+    layout = ctx.layout if ctx.layout else LayoutConfig.layout_243()
+    suich_count = params.suich_count if params else 5
+    dorm_level = params.dorm_level if params else 5
+
+    ctrl_names = ctx.ops_of_type(window_idx, "Control")
+    ctrl_ops = [ctx.op_lookup[n] for n in ctrl_names if n in ctx.op_lookup]
+    if not ctrl_ops:
+        ctrl_ops = cold_start_ctrl_ops(ctx, window_idx)
+    global_bonus = compute_control_global_bonus(ctrl_ops)
+
+    dorm_names = ctx.ops_of_type(window_idx, "Dormitory")
+    dorm_ops = [ctx.op_lookup[n] for n in dorm_names if n in ctx.op_lookup]
+    if not dorm_ops:
+        dorm_ops = cold_start_dorm_ops(ctx, window_idx)
+
+    buff_pool = compute_buff_pool(
+        ctrl_ops,
+        suich_count=suich_count,
+        dorm_operators=[o for o in dorm_ops if o],
+        dorm_level=dorm_level,
+        layout=layout,
+    )
+
+    hourly_values: list[float] = []
+
+    for facility_type in ("Mfg", "Trade"):
+        rooms_done: set[tuple[str, int]] = set()
+        for a in ctx.windows[window_idx].assignments:
+            if a.facility_type != facility_type:
+                continue
+            key = (facility_type, a.room_index)
+            if key in rooms_done:
+                continue
+            rooms_done.add(key)
+
+            room_names = ctx.room_ops(window_idx, facility_type, a.room_index)
+            if not room_names:
+                continue
+            room_ops = [ctx.op_lookup[n] for n in room_names if n in ctx.op_lookup]
+            if not room_ops:
+                continue
+
+            product = a.product
+            ctrl_bonus = control_per_operator_bonus(
+                ctrl_ops, room_ops, product, room_type=facility_type,
+            )
+            eff_int = evaluate_room(
+                room_ops, facility_type, product,
+                BASE_POWER_COUNT, shift_hours, global_bonus, buff_pool,
+                ctrl_per_op_bonus=ctrl_bonus,
+                all_operators=ctx.operators,
+                control_operators=ctrl_ops,
+                mood_ctx=mood_ctx,
+            )
+            n = len(room_ops)
+
+            if facility_type == "Mfg":
+                productivity_int = shift_hours * (1.0 + 0.01 * n) + eff_int / 100.0
+                if product == "CombatRecord":
+                    base_rate = 1.0 / 3.0
+                    unit_lmd = 1000.0 / 1.3
+                else:
+                    base_rate = 1.0 / 1.2
+                    unit_lmd = 500.0
+                hourly_lmd = base_rate * unit_lmd * (productivity_int / shift_hours)
+            else:
+                efficiency_integrated = shift_hours * (1.0 + 0.01 * n) + eff_int / 100.0
+                lmd_per_day = _get_trade_order_multiplier(room_ops, shift_hours)[0]
+                hourly_lmd = efficiency_integrated / 24.0 * lmd_per_day / shift_hours
+
+            hourly_values.append(hourly_lmd)
+
+    if not hourly_values:
+        return 0.0
+
+    hourly_values.sort()
+    mid = len(hourly_values) // 2
+    if len(hourly_values) % 2 == 1:
+        return hourly_values[mid]
+    return (hourly_values[mid - 1] + hourly_values[mid]) / 2.0
 
 
 def _estimate_total_production(

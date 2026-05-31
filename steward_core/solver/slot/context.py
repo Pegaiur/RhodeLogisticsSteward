@@ -109,6 +109,7 @@ class SlotContext:
     windows: list[WindowState] = field(default_factory=list)
 
     lambda_ops: dict[str, float] = field(default_factory=dict)
+    lambda_k: float = 0.0
     hours_used: dict[str, float] = field(default_factory=dict)
     control_operators: list[str] = field(default_factory=list)
 
