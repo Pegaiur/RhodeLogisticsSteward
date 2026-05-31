@@ -53,12 +53,14 @@ class TestGlobalContextFromEstimated:
         assert ctx.control_operators == ctrl_ops
 
     def test_含迷迭香_标志正确(self):
-        """has_rosmontis_in_mfg → buff_pool 被正确初始化"""
+        """mfg_operators → buff_pool 被正确初始化"""
         params = SolverParams()
+        rosmontis = _mk_op("迷迭香", [_mk_mfg_skill(0.0, "manu_prod_spd_bd_n1[000]")])
+        ebenholz = _mk_op("黑键", [_mk_mfg_skill(0.0, "trade_ord_spd_bd_n1[000]")])
         ctx = GlobalContext.from_estimated(
             control_operators=[], dorm_operators=[], all_operators=[],
             assigned_names=set(), params=params,
-            has_rosmontis_in_mfg=True, has_ebnhlz_in_trade=True,
+            mfg_operators=[rosmontis], trade_operators=[ebenholz],
         )
         assert ctx.buff_pool is not None
 

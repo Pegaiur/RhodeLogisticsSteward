@@ -111,7 +111,8 @@ def phase_mfg(
         if not dorm_ops_list:
             dorm_ops_list = cold_start_dorm_ops(ctx, window_idx)
 
-        office_perception = params.office_perception_base if params else 20
+        office_names = ctx.ops_of_type(window_idx, "Office")
+        office_ops = [ctx.op_lookup[n] for n in office_names if n in ctx.op_lookup]
 
         base_buff_pool = compute_buff_pool(
             ctrl_ops,
@@ -119,26 +120,22 @@ def phase_mfg(
             dorm_operators=[o for o in dorm_ops_list if o],
             dorm_level=params.dorm_level if params else 5,
             layout=ctx.layout if ctx.layout else _LAYOUT_243,
-            perception_from_office=office_perception,
+            office_operators=office_ops,
+            office_perception_base=params.office_perception_base if params else 20,
         )
-
-        _ROS_NAME = "迷迭香"
 
         evaluated = []
         for combo_ops in combos:
-            has_rosmontis = any(op.name == _ROS_NAME for op in combo_ops)
-            if has_rosmontis:
-                combo_pool = compute_buff_pool(
-                    ctrl_ops,
-                    suich_count=params.suich_count if params else 5,
-                    dorm_operators=[o for o in dorm_ops_list if o],
-                    dorm_level=params.dorm_level if params else 5,
-                    layout=ctx.layout if ctx.layout else _LAYOUT_243,
-                    perception_from_office=office_perception,
-                    has_rosmontis_in_mfg=True,
-                )
-            else:
-                combo_pool = base_buff_pool
+            combo_pool = compute_buff_pool(
+                ctrl_ops,
+                suich_count=params.suich_count if params else 5,
+                dorm_operators=[o for o in dorm_ops_list if o],
+                dorm_level=params.dorm_level if params else 5,
+                layout=ctx.layout if ctx.layout else _LAYOUT_243,
+                mfg_operators=combo_ops,
+                office_operators=office_ops,
+                office_perception_base=params.office_perception_base if params else 20,
+            )
 
             ctrl_bonus = control_per_operator_bonus(
                 ctrl_ops, combo_ops, product, room_type="Mfg",

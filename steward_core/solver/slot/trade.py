@@ -108,7 +108,14 @@ def phase_trade(
     if not dorm_ops_list:
         dorm_ops_list = cold_start_dorm_ops(ctx, window_idx)
 
-    office_perception = params.office_perception_base if params else 20
+    _EBEN_NAME = "黑键"
+    _WUYOU_NAME = "乌有"
+
+    mfg_names = ctx.ops_of_type(window_idx, "Mfg")
+    mfg_combo_ops = [ctx.op_lookup[n] for n in mfg_names if n in ctx.op_lookup]
+
+    office_names = ctx.ops_of_type(window_idx, "Office")
+    office_ops = [ctx.op_lookup[n] for n in office_names if n in ctx.op_lookup]
 
     base_buff_pool = compute_buff_pool(
         ctrl_ops,
@@ -116,15 +123,10 @@ def phase_trade(
         dorm_operators=[o for o in dorm_ops_list if o],
         dorm_level=params.dorm_level if params else 5,
         layout=ctx.layout if ctx.layout else _LAYOUT_243,
-        perception_from_office=office_perception,
+        mfg_operators=mfg_combo_ops,
+        office_operators=office_ops,
+        office_perception_base=params.office_perception_base if params else 20,
     )
-
-    _EBEN_NAME = "黑键"
-    _WUYOU_NAME = "乌有"
-    _ROS_NAME = "迷迭香"
-
-    mfg_names = ctx.ops_of_type(window_idx, "Mfg")
-    has_rosmontis_in_mfg = _ROS_NAME in mfg_names
 
     power_modifier_names = {
         op.name for op in ctx.operators if _has_power_count_modifier(op)
@@ -147,10 +149,10 @@ def phase_trade(
                 dorm_operators=[o for o in dorm_ops_list if o],
                 dorm_level=params.dorm_level if params else 5,
                 layout=ctx.layout if ctx.layout else _LAYOUT_243,
-                perception_from_office=office_perception,
-                has_rosmontis_in_mfg=has_rosmontis_in_mfg,
-                has_ebnhlz_in_trade=has_eben,
-                has_wuyou_in_trade=has_wuyou,
+                mfg_operators=mfg_combo_ops,
+                trade_operators=combo_ops,
+                office_operators=office_ops,
+                office_perception_base=params.office_perception_base if params else 20,
             )
         else:
             combo_pool = base_buff_pool

@@ -300,17 +300,11 @@ def _estimate_total_production(
         dorm_ops = [ctx.op_lookup[n] for n in dorm_names if n in ctx.op_lookup]
 
         mfg_names = ctx.ops_of_type(w, "Mfg")
-
         trade_names = ctx.ops_of_type(w, "Trade")
-
         office_names = ctx.ops_of_type(w, "Office")
+        mfg_ops = [ctx.op_lookup[n] for n in mfg_names if n in ctx.op_lookup]
+        trade_ops = [ctx.op_lookup[n] for n in trade_names if n in ctx.op_lookup]
         office_ops = [ctx.op_lookup[n] for n in office_names if n in ctx.op_lookup]
-
-        office_perception = 0
-        for op in office_ops:
-            if any(sk.buff_id == "hire_spd_bd_n1[000]" for sk in op.skills):
-                office_perception = params.office_perception_base if params else 20
-                break
 
         pool = compute_buff_pool(
             ctrl_ops,
@@ -318,10 +312,10 @@ def _estimate_total_production(
             dorm_operators=[o for o in dorm_ops if o],
             dorm_level=dorm_level,
             layout=layout,
-            has_rosmontis_in_mfg="迷迭香" in mfg_names,
-            has_ebnhlz_in_trade="黑键" in trade_names,
-            has_wuyou_in_trade="乌有" in trade_names,
-            perception_from_office=office_perception,
+            mfg_operators=mfg_ops,
+            trade_operators=trade_ops,
+            office_operators=office_ops,
+            office_perception_base=params.office_perception_base if params else 20,
         )
 
         window_total = 0.0

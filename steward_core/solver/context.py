@@ -49,13 +49,13 @@ class GlobalContext:
         assigned_names: set[str],
         params: "SolverParams",
         *,
-        has_rosmontis_in_mfg: bool = False,
-        has_ebnhlz_in_trade: bool = False,
-        has_wuyou_in_trade: bool = False,
+        mfg_operators: list[Operator] | None = None,
+        trade_operators: list[Operator] | None = None,
+        office_operators: list[Operator] | None = None,
         ling_mood_below_12: bool = False,
         xi_mood_below_12: bool | None = None,
         mood_ctx: "MoodContext | None" = None,
-        perception_from_office: int = 0,
+        office_perception_base: int = 20,
         effective_power: int | None = None,
     ) -> "GlobalContext":
         """从估计数据构建上下文（Phase 1/3a 预评估用）
@@ -79,12 +79,12 @@ class GlobalContext:
             suich_count=params.suich_count,
             dorm_operators=dorm_operators,
             dorm_level=params.dorm_level,
-            has_rosmontis_in_mfg=has_rosmontis_in_mfg,
-            has_ebnhlz_in_trade=has_ebnhlz_in_trade,
-            has_wuyou_in_trade=has_wuyou_in_trade,
+            mfg_operators=mfg_operators,
+            trade_operators=trade_operators,
+            office_operators=office_operators,
+            office_perception_base=office_perception_base,
             ling_mood_below_12=ling_mood_below_12,
             xi_mood_below_12=xi_mood_below_12,
-            perception_from_office=perception_from_office,
             layout=LayoutConfig.layout_243(),
         )
 
@@ -137,34 +137,19 @@ class GlobalContext:
 
         control_ops = _room_ops("Control")
         dorm_ops = _room_ops("Dormitory")
+        mfg_ops = _room_ops("Mfg")
+        trade_ops = _room_ops("Trade")
+        office_ops = _room_ops("Office")
 
         global_bonus = compute_control_global_bonus(control_ops)
-
-        has_rosmontis = any(
-            a.room_type == "Mfg" and _B_ROSEMARY in a.operators
-            for a in plan.assignments
-        )
-        has_ebnhlz = any(
-            a.room_type == "Trade" and _B_EBENHOLZ in a.operators
-            for a in plan.assignments
-        )
-        has_wuyou = any(
-            a.room_type == "Trade" and "乌有" in a.operators
-            for a in plan.assignments
-        )
-
-        office_perception = 0
-        if any(
-            a.room_type == "Office" and "絮雨" in a.operators
-            for a in plan.assignments
-        ):
-            office_perception = params.office_perception_base
 
         if mood_ctx is not None:
             ling_mood_below_12 = mood_ctx.is_below("令", 12.0)
             xi_mood_below_12 = mood_ctx.is_below("夕", 12.0)
         else:
-            ling_mood_below_12 = has_rosmontis
+            ling_mood_below_12 = any(
+                op.name == _B_ROSEMARY for op in mfg_ops
+            )
             xi_mood_below_12 = None
 
         buff_pool = compute_buff_pool(
@@ -172,12 +157,12 @@ class GlobalContext:
             suich_count=params.suich_count,
             dorm_operators=dorm_ops,
             dorm_level=params.dorm_level,
-            has_rosmontis_in_mfg=has_rosmontis,
-            has_ebnhlz_in_trade=has_ebnhlz,
-            has_wuyou_in_trade=has_wuyou,
+            mfg_operators=mfg_ops,
+            trade_operators=trade_ops,
+            office_operators=office_ops,
+            office_perception_base=params.office_perception_base,
             ling_mood_below_12=ling_mood_below_12,
             xi_mood_below_12=xi_mood_below_12,
-            perception_from_office=office_perception,
             layout=LayoutConfig.layout_243(),
         )
 
