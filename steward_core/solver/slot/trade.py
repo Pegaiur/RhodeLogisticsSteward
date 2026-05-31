@@ -1,7 +1,7 @@
-"""Phase B: 贸易站穷举 + 联合分配 + 机会成本
+"""Phase B: 贸易站穷举 + 联合分配
 
 从 exhaust_trade.py 提取核心逻辑，适配 SlotContext。
-新增：whisper 机会成本修正、双房间联合最优分配（替代贪心）。
+whisper 机会成本修正已迁移至 opportunity.py，在评分循环内联调用。
 """
 
 from __future__ import annotations
@@ -25,6 +25,7 @@ from steward_core.evaluate import evaluate_room
 from steward_core.synergy._derived import TRADE_ANCHORS
 from .context import SlotContext, mood_is_viable
 from ._cold_start import cold_start_ctrl_ops, cold_start_dorm_ops
+from .opportunity import compute_opportunity_cost_lmd
 
 if TYPE_CHECKING:
     from steward_core.models import Operator
@@ -32,10 +33,9 @@ if TYPE_CHECKING:
 
 _LAYOUT_243 = LayoutConfig.layout_243()
 
-_WHISPER_BUFF_PREFIX = "trade_ord_vodfox"
 _ORDER_MECHANISM_PREFIXES = (
     "trade_ord_law", "trade_ord_long", "trade_ord_closure",
-    _WHISPER_BUFF_PREFIX, "trade_ord_limit_count",
+    "trade_ord_vodfox", "trade_ord_limit_count",
 )
 
 
@@ -47,10 +47,9 @@ def phase_trade(
     """执行贸易站穷举分配
 
     1. 构建候选池（含订单机制干员 + 联动使能者）
-    2. 生成 C(n,3) 组合并评分
-    3. whisper 组合扣除机会成本
-    4. 联合最优分配（2间 × 3人 非重叠配对）
-    5. 写入 ctx
+    2. 生成 C(n,3) 组合并评分（含机会成本 + λ 扣减）
+    3. 联合最优分配（2间 × 3人 非重叠配对）
+    4. 写入 ctx
     """
     assigned_ids = ctx.assigned_ids(window_idx)
     assigned_names = ctx.assigned_names(window_idx)
@@ -122,7 +121,6 @@ def phase_trade(
     )
 
     evaluated = []
-    whisper_combos = []
 
     for combo_ops in combos:
         combo_names = [op.name for op in combo_ops]
@@ -161,14 +159,9 @@ def phase_trade(
         ) * shift_hours
         lmd -= lambda_penalty
 
-        is_whisper = _has_whisper(combo_ops)
-        if is_whisper:
-            whisper_combos.append((lmd, combo_names, _zeroed_efficiency_sum(combo_ops)))
+        lmd -= compute_opportunity_cost_lmd(combo_ops, "Trade", "Money", shift_hours)
 
         evaluated.append((lmd, combo_names))
-
-    if whisper_combos:
-        evaluated = _apply_whisper_opportunity(evaluated, whisper_combos, pool, shift_hours)
 
     evaluated.sort(key=lambda x: -x[0])
 
@@ -185,59 +178,6 @@ def phase_trade(
         for i, name in enumerate(names):
             slot_id = f"trade_{actual_idx}_{i}"
             ctx.place(window_idx, slot_id, name)
-
-
-def _has_whisper(combo_ops: list) -> bool:
-    """检查组合中是否含低语技能干员（巫恋）"""
-    for op in combo_ops:
-        for sk in op.skills:
-            if sk.buff_id.startswith(_WHISPER_BUFF_PREFIX):
-                return True
-    return False
-
-
-def _zeroed_efficiency_sum(combo_ops: list) -> float:
-    """被归零干员的个人效率总和（Trade）"""
-    total = 0.0
-    for op in combo_ops:
-        has_whisper = any(
-            sk.buff_id.startswith(_WHISPER_BUFF_PREFIX) for sk in op.skills
-        )
-        if has_whisper:
-            continue
-        total += max(op.best_efficiency("Trade", "Money"), 0.0)
-    return total
-
-
-def _apply_whisper_opportunity(
-    evaluated: list,
-    whisper_combos: list,
-    pool: list,
-    shift_hours: float,
-) -> list:
-    """对 whisper 组合应用机会成本扣减
-
-    归零干员的替代价值正比于其个人最佳 Trade 效率。
-    公式: adjusted_cost * TRADE_BASE_LMD_PER_HOUR * shift_hours / 100
-    TRADE_BASE_LMD_PER_HOUR = 10265/24 ≈ 427.7 LMD/h（日 LMD 基准 ÷ 24）
-    """
-    _TRADE_BASE = 10265.0 / 24.0
-
-    whisper_min_cost = min(cost for _, _, cost in whisper_combos) if whisper_combos else 0.0
-
-    result = []
-    for i, (lmd, names) in enumerate(evaluated):
-        is_whisper = False
-        for _, w_names, cost in whisper_combos:
-            if w_names == names:
-                adjusted_cost = max(cost - whisper_min_cost, 0.0)
-                penalty = adjusted_cost * _TRADE_BASE * shift_hours / 100.0
-                lmd = lmd - penalty
-                is_whisper = True
-                break
-        result.append((lmd, names))
-
-    return result
 
 
 def _joint_allocate(

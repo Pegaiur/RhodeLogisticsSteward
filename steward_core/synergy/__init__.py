@@ -87,6 +87,7 @@ from steward_core.synergy.mfg_linkages import (
     _A_SKILL_COUNT_TABLE,
     _A_AUTOMATION_FALLBACK,
     _POWER_BUFF_BONUS,
+    _ZEROING_VARIANT_TABLE,
     _RAMPING_SKILL_TABLE,
     _TOKEN_PROD_TABLE,
 )

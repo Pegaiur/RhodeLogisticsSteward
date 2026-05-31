@@ -7,20 +7,12 @@ from steward_core.solver.params import SolverParams
 from steward_core.solver.slot.context import SlotContext
 from steward_core.solver.slot.trade import (
     phase_trade,
-    _has_whisper,
     _joint_allocate,
-    _apply_whisper_opportunity,
 )
 
 
 def _dummy_op(char_id: str, name: str) -> Operator:
     return Operator(char_id=char_id, name=name, skills=[])
-
-
-class TestWhisperDetection:
-    def test_no_whisper(self):
-        ops = [_dummy_op("a", "A"), _dummy_op("b", "B")]
-        assert not _has_whisper(ops)
 
 
 class TestJointAllocate:
@@ -58,14 +50,6 @@ class TestJointAllocate:
 
     def test_empty_returns_empty(self):
         assert _joint_allocate([], 2) == []
-
-
-class TestWhisperOpportunity:
-    def test_no_whisper_no_change(self):
-        evaluated = [(100.0, ["A", "B", "C"]), (90.0, ["D", "E", "F"])]
-        whisper = []
-        result = _apply_whisper_opportunity(evaluated, whisper, [], 12.0)
-        assert result == evaluated
 
 
 class TestPhaseTrade:
