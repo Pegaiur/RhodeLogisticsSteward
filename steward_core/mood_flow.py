@@ -216,6 +216,67 @@ _SELF_MP_COST: dict[str, float] = {
 P0 范围: MFG+TRADE+POWER 无条件 buff，由一次性脚本生成后人工维护。
 P1 待接入: 动态条件 buff (人间烟火联动/同僚配对) + HIRE + CONTROL + MEETING
 """
+# ─── TODO: 未建模的 mp_cost buff（按优先级） ──────────────────────
+# 以下 buff 尚未接入 _SELF_MP_COST，待后续版本实现。
+# 格式: buff_id [ROOM]: 修正量/h  干员名  技能名
+#
+# === P1: 动态条件 + HIRE + TRADING 条件配对 (22 条) ===
+# HIRE 自身 buff:
+#   "hire_spd_cost[200]": +2.0/h  地灵  准时下班
+#   "hire_spd_cost[210]": +0.5/h  斥罪  法为正典
+#   "hire_spd_cost[220]": +1.0/h  水灯心  永不停歇·α
+#   "hire_spd_cost[230]": +1.0/h  水灯心  永不停歇·β
+#   "hire_spd_cost[100]": -0.25/h  桑葚  救援队·珠算
+#   "hire_spd_cost[110]": -0.25/h  桑葚  救援队·资源清点
+#   "hire_spd_cost[111]": -0.25/h  林  特殊渠道
+#   "hire_spd_cost[101]": -0.25/h  深律  宫廷礼仪
+#   "hire_spd_cost[120]": -0.25/h  深律  威权谕使
+#   "hire_spd_cost&clue[000]": -0.1/h  雪绒  救援队·保证体力  (动态: 每招募位 -0.1)
+#   "hire_spd_cost&char[000]": -0.25/h  圣聆初雪  圣女声望
+#   "hire_spd_cost&char[001]": -0.25/h  圣聆初雪  雪境归心
+#   "hire_spd_cost[112]": -0.25/h  行箸  踏坊寻味·α
+#   "hire_spd_cost[121]": -0.25/h  行箸  踏坊寻味·β
+# TRADING 动态条件 buff:
+#   "trade_cost&bd2[000]" [ROOM]: -0.1/h  铎铃  跋山涉水  (动态: 每10烟火额外 -0.01)
+#   "trade_cost&bd2[001]" [ROOM]: -0.1/h  铎铃  万里传书  (动态: 每10烟火额外 -0.02)
+#   "trade_ord_vodfox[000]" [ROOM]: +0.25/h  巫恋  低语
+# TRADING 同僚条件配对 (_P 后缀, 需 co_worker 检测):
+#   "trade_ord_spd&cost_P[000]": +0.3/h  德克萨斯  恩怨  (条件: 拉普兰德同房)
+#   "trade_ord_limit&cost_P[020]": -0.1/h  贝洛内  未偿还的债务  (条件: 伺夜同房)
+#   "trade_ord_limit&cost_P[010]": -0.3/h  德克萨斯  默契  (条件: 能天使同房)
+#   "trade_ord_limit&cost_P[000]": -0.1/h  拉普兰德  醉翁之意·α  (条件: 德克萨斯同房)
+#   "trade_ord_limit&cost_P[001]": -0.1/h  拉普兰德  醉翁之意·β  (条件: 德克萨斯同房)
+#
+# === P2: CONTROL 自身 buff (15 条, 接入 _control_burn) ===
+#   "control_bd_spd[000]": +0.5/h  涤火杰西卡  老友相聚
+#   "control_meeting&mp_cost[000]": +0.02/h  摆渡人  英雄的骄傲·α
+#   "control_meeting&mp_cost[100]": +0.02/h  摆渡人  英雄的骄傲·β
+#   "control_meeting_bd[000]": +0.5/h  怒潮凛冬  "是，团长！"
+#   "control_clue_cost[000]" [ROOM]: +1.5/h  阿  神经质
+#   "control_clue_cost[010]" [ROOM]: +0.5/h  惊蛰  至察
+#   "control_clue_cost&faction[990]": +0.25/h  艾拉  反抗者
+#   "control_mp_cost&bd2[000]": +0.5/h  夕  "不以己悲"
+#   "control_mp_cost&bd3[000]": +0.05/h  丰川祥子  生活的重压  (动态: 热情值>=40)
+#   "control_mp_cost&bd_up[000]": +0.5/h  重岳  知我为我
+#   "control_mp_cost&bd2[010]": +0.5/h  麒麟R夜刀  耐力回复
+#   "control_mp_cost_reset[000]": 0.0/h  若叶睦  互为半身
+#   "control_mp&meet_spd[000]": +0.05/h  祐天寺若麦  成效优先
+#   "control_mp_aegir1[000]": +0.5/h  歌蕾蒂娅  潮汐守望
+#   "control_mp_bd&trade[000]": +0.01/h  若叶睦  演技的怪物  (动态: 每8热情值 +0.01)
+#
+# === P3: MEETING 自身 buff (12 条, 非生产设施) ===
+#   "meet_spd&sami[000]": +0.5/h  提丰  冰原游弋
+#   "meet_spd&sami[100]": +0.5/h  寻澜  人情练达
+#   "meet_spd&bd[000]": +0.5/h  凛视  远见
+#   "meet_spd&bd[010]": +0.5/h  凛视  未来之途
+#   "meet_spd&cost[100]": +2.0/h  见行者  逻辑推理
+#   "meet_spd&cost_condChar[000]": +2.0/h  和弦  双面间谍
+#   "meet_spd&cost_condChar[001]": +1.0/h  霍尔海雅,奥达  "职业操守"·α
+#   "meet_spd&cost_condChar[011]": +1.0/h  霍尔海雅,奥达  "职业操守"·β
+#   "meet_spd&cost_condChar[020]": +1.0/h  复奏  专业经理·α
+#   "meet_spd&cost_condChar[021]": +1.0/h  复奏  专业经理·β
+#   "meet_spd&condChar_mustget[000]": 0.0/h  霍尔海雅  文献学顾问
+#   "meet_spd&condChar_mustget[100]": 0.0/h  奥达  暗线
 
 
 def _compute_self_mp_cost(
