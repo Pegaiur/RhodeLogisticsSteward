@@ -82,9 +82,10 @@ mfg.py   评分循环 ── score -= compute_opportunity_cost_lmd(...) / scale
 ### 2.4 与现有体系的关系
 
 - **与 `evaluate_room`**：互补——evaluate_room 正确归零室友效率，opportunity.py 补充"如果不归零这些人的替代价值"
-- **与 `contribution.py` 宿舍机会成本**：同模式——宿舍 Part 3 槽位机会成本用 `baseline_rate × hours × θ/24`，归零机会成本用 `cost_pct × base_rate × unit_lmd × hours/100`
+- **与 `contribution.py` 宿舍机会成本**：概念同构，实现独立——两者都遵循机会成本的基本定价模式（牺牲率 × 价格 × 时间），但因量纲（生产效率% vs 心情恢复率）和价格来源（产品市值 vs 影子价格 λ）不同，保持独立实现
 - **与 λ 惩罚**：正交——λ 管跨窗口用量（hours_used vs pool），机会成本管单窗口内组合质量
 - **与 Phase 2**：返回 LMD 等值，与 λ_mood/swap_cost 同量纲，可直接参与留/换决策
+- **"窗口模型"的定义**：指 slot-processing-model-draft.md §3.3 的"窗口展开：选择权的分配"，即每窗口独立 Phase A→D 贪心求解 + λ bisection 跨窗口耦合。本文档的 Phase 1/2 均在此窗口模型基础上叠加，不替换其决策骨架
 
 ---
 

@@ -102,18 +102,33 @@ def compute_mood_modifiers(
     ):
         mods.wisdel_recovery = 0.1
 
-    for op in control_operators:
+    mods.dorm_bonus_all, mods.dorm_bonus_elite = _extract_dorm_ctrl_bonuses(control_operators)
+
+    return mods
+
+
+def _extract_dorm_ctrl_bonuses(
+    ctrl_ops: list,
+) -> tuple[float, float]:
+    """扫描中枢干员 skills 提取 dorm_bonus_all / dorm_bonus_elite
+
+    从 compute_mood_modifiers 和 _dorm_contribution 共用，
+    消除两处独立维护 control_dorm_rec* 扫描逻辑的信息泄露。
+    不涉及 yanhuo_bonus——两处 yanhuo 来源不同（BuffPool vs 状态快照）。
+    """
+    dorm_bonus_all = 0.0
+    dorm_bonus_elite = 0.0
+    for op in ctrl_ops:
         for s in op.skills:
             if s.buff_id.startswith("control_dorm_rec_tag"):
                 val = s.efficient.max_value()
-                if val > mods.dorm_bonus_elite:
-                    mods.dorm_bonus_elite = val
+                if val > dorm_bonus_elite:
+                    dorm_bonus_elite = val
             elif s.buff_id.startswith("control_dorm_rec"):
                 val = s.efficient.max_value()
-                if val > mods.dorm_bonus_all:
-                    mods.dorm_bonus_all = val
-
-    return mods
+                if val > dorm_bonus_all:
+                    dorm_bonus_all = val
+    return dorm_bonus_all, dorm_bonus_elite
 
 
 def compute_global_burn(

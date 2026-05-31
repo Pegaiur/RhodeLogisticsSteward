@@ -164,21 +164,23 @@ class TestEdgeCases:
 
 
 class TestConversionConsistency:
-    """验证换算常量与 contribution.py 一致"""
+    """验证换算常量与 partials.py 一致"""
 
     def test_trade_lmd_per_hour(self):
-        from steward_core.solver.slot.opportunity import _TRADE_LMD_PER_HOUR as o_val
+        from steward_core.solver.slot.partials import _TRADE_BASE_LMD_PER_HOUR
         from steward_core.solver.slot.contribution import _TRADE_BASE_LMD_PER_HOUR as c_val
-        assert abs(o_val - c_val) < 0.001
+        assert abs(_TRADE_BASE_LMD_PER_HOUR - c_val) < 0.001
 
     def test_mfg_cr_constants(self):
-        from steward_core.solver.slot.opportunity import _MFG_CR_BASE as o_base, _MFG_CR_LMD as o_lmd
+        from steward_core.solver.slot.partials import _CR_EXP_PER_UNIT
         from steward_core.solver.slot.contribution import _MFG_CR_BASE_RATE as c_base
-        assert abs(o_base - c_base) < 0.001
-        assert abs(o_lmd - 1000.0 / 1.3) < 0.001
+        from steward_core.solver.slot.opportunity import _MFG_CR_BASE
+        assert abs(_MFG_CR_BASE - c_base) < 0.001
+        assert abs(_CR_EXP_PER_UNIT - 1000.0) < 0.001
 
     def test_mfg_pg_constants(self):
-        from steward_core.solver.slot.opportunity import _MFG_PG_BASE as o_base, _MFG_PG_LMD as o_lmd
+        from steward_core.solver.slot.partials import _PG_LMD_PER_UNIT
         from steward_core.solver.slot.contribution import _MFG_PG_BASE_RATE as c_base
-        assert abs(o_base - c_base) < 0.001
-        assert abs(o_lmd - 500.0) < 0.001
+        from steward_core.solver.slot.opportunity import _MFG_PG_BASE
+        assert abs(_MFG_PG_BASE - c_base) < 0.001
+        assert abs(_PG_LMD_PER_UNIT - 500.0) < 0.001

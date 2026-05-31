@@ -460,30 +460,15 @@ def _dorm_modifiers_from_ctrl(
 ) -> tuple[float, float, float]:
     """从中枢干员 skills 提取宿舍相关的全局修正量
 
-    等效于 compute_mood_modifiers() 的 dorm 相关部分，
-    但不依赖 BuffPool 实例——yanhuo 从状态快照推导。
-
-    TODO: control_dorm_rec 前缀匹配 + '重岳' yanhuo_bonus 逻辑与
-          mood_flow.py:compute_mood_modifiers() L106-L112 重复。
-          未来新增控制中枢宿舍 buff 时需两处同步更新，建议提取共用函数。
+    dorm_bonus 扫描复用 mood_flow._extract_dorm_ctrl_bonuses。
+    yanhuo_bonus 从状态快照推导——与 mood_flow 的 BuffPool 来源不同。
     """
-    dorm_bonus_all = 0.0
-    dorm_bonus_elite = 0.0
-    yanhuo_bonus = 0.0
+    from steward_core.mood_flow import _extract_dorm_ctrl_bonuses
+    dorm_bonus_all, dorm_bonus_elite = _extract_dorm_ctrl_bonuses(ctrl_ops)
 
+    yanhuo_bonus = 0.0
     if any(op.name == "重岳" for op in ctrl_ops):
         yanhuo_bonus = 0.05 + (int(yanhuo) // 20) * 0.05
-
-    for op in ctrl_ops:
-        for s in op.skills:
-            if s.buff_id.startswith("control_dorm_rec_tag"):
-                val = s.efficient.max_value()
-                if val > dorm_bonus_elite:
-                    dorm_bonus_elite = val
-            elif s.buff_id.startswith("control_dorm_rec"):
-                val = s.efficient.max_value()
-                if val > dorm_bonus_all:
-                    dorm_bonus_all = val
 
     return dorm_bonus_all, dorm_bonus_elite, yanhuo_bonus
 

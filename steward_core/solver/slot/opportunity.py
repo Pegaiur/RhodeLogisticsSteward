@@ -22,18 +22,15 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from .partials import _CR_EXP_PER_UNIT, _PG_LMD_PER_UNIT, _TRADE_BASE_LMD_PER_HOUR
+
 if TYPE_CHECKING:
     from steward_core.models import Operator
 
 # ─── 换算常量 ─────────────────────────────────────────────────────────
-
-_TRADE_LMD_PER_HOUR = 10265.0 / 24.0
-
+# 产品单位基础产出率（单位/h），与 partials._product_base_rate() 保持一致
 _MFG_CR_BASE = 1.0 / 3.0
-_MFG_CR_LMD = 1000.0 / 1.3
-
 _MFG_PG_BASE = 1.0 / 1.2
-_MFG_PG_LMD = 500.0
 
 # ─── 归零检测 ─────────────────────────────────────────────────────────
 
@@ -149,7 +146,7 @@ def _pct_to_lmd(
 ) -> float:
     """效率百分比 → LMD 等值换算"""
     if room_type == "Trade":
-        return cost_pct * _TRADE_LMD_PER_HOUR * shift_hours / 100.0
+        return cost_pct * _TRADE_BASE_LMD_PER_HOUR * shift_hours / 100.0
     if product == "CombatRecord":
-        return cost_pct * _MFG_CR_BASE * _MFG_CR_LMD * shift_hours / 100.0
-    return cost_pct * _MFG_PG_BASE * _MFG_PG_LMD * shift_hours / 100.0
+        return cost_pct * _MFG_CR_BASE * (_CR_EXP_PER_UNIT / 1.3) * shift_hours / 100.0
+    return cost_pct * _MFG_PG_BASE * _PG_LMD_PER_UNIT * shift_hours / 100.0
