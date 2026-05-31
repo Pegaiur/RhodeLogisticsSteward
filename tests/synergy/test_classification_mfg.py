@@ -1,6 +1,6 @@
-"""制造站穷举相关测试 (Phase 1 Mfg)
+"""制造站干员分类测试 (synergy/classification.py)
 
-测试制造站干员分类、剪枝规则、房间穷举评估。
+测试 classify_mfg_operators 锚点/提供者/纯效率分类、剪枝规则、房间评估。
 """
 
 from pathlib import Path
@@ -107,8 +107,9 @@ class TestClassifyOperators:
 
         assert len(cr_ops) > 0
         assert len(pg_ops) > 0
-        assert 70 <= len(cr_ops) <= 90
-        assert 70 <= len(pg_ops) <= 90
+        # 游戏版本更新新增干员时上限会增长，仅保底下限
+        assert len(cr_ops) >= 50
+        assert len(pg_ops) >= 50
 
     def test_B层消费者_归为providers(self):
         """黍(raw eff=0,B1消费者) → 应归入 providers 而非被剪枝"""

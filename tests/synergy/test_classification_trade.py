@@ -1,6 +1,6 @@
-"""贸易站穷举相关测试 (Phase 3 Trade)
+"""贸易站干员分类测试 (synergy/classification.py)
 
-测试贸易站干员分类。
+测试 classify_trade_operators 锚点/提供者/纯效率分类逻辑。
 """
 
 from steward_core.models import EfficiencyMap, Operator, Skill

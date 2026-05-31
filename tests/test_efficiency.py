@@ -10,7 +10,10 @@ from steward_core.models import LinearSegment
 from steward_core.efficiency_fn import (
     constant_efficiency,
     ramping_efficiency,
+    stepped_efficiency,
+    integrate_segments,
     _dominates_simple,
+    _dominates,
     rank_by_dominance,
 )
 
@@ -278,3 +281,96 @@ class TestRankByDominance:
         # Assert: 两人都出现
         assert set(result) == {"A", "B"}
         assert len(result) == 2
+
+
+# ─── integrate_segments ──────────────────────────────────────────
+
+class TestIntegrateSegments:
+    """segments 列表在 [0,T] 上的积分求和"""
+
+    def test_单段全覆盖(self):
+        segs = [LinearSegment(a=30, b=0, t_start=0, dt=12)]
+        total = integrate_segments(segs, T=12.0)
+        assert pytest.approx(total) == 360.0
+
+    def test_多段求和(self):
+        segs = [
+            LinearSegment(a=30, b=0, t_start=0, dt=6),
+            LinearSegment(a=20, b=0, t_start=6, dt=6),
+        ]
+        total = integrate_segments(segs, T=12.0)
+        assert pytest.approx(total) == 300.0  # 30×6 + 20×6
+
+    def test_段超出T被裁剪(self):
+        segs = [LinearSegment(a=30, b=0, t_start=8, dt=10)]
+        total = integrate_segments(segs, T=12.0)
+        assert pytest.approx(total) == 120.0  # 30×4
+
+
+# ─── _dominates（通版支配）───────────────────────────────────────
+
+class TestFullDominance:
+    """通版支配判定：逐点比较"""
+
+    def test_常数技能_支配成立(self):
+        seg_a = [LinearSegment(a=30, b=0, t_start=0, dt=12)]
+        seg_b = [LinearSegment(a=20, b=0, t_start=0, dt=12)]
+        assert _dominates(seg_a, seg_b, T=12.0) is True
+
+    def test_爬升技能_被常数高值支配(self):
+        seg_a = [LinearSegment(a=35, b=0, t_start=0, dt=12)]
+        seg_b = ramping_efficiency(20.0, 1.0, 30.0, mood_burn=0.0, T=12.0)
+        assert _dominates(seg_a, seg_b, T=12.0) is True
+
+    def test_爬升技能_互不支配(self):
+        """A: 常数30  vs  B: k0=20 r=2 ceiling=40
+        t=0 时 A>B, t=10 时 B>A → 互不支配
+        """
+        seg_a = [LinearSegment(a=30, b=0, t_start=0, dt=12)]
+        seg_b = ramping_efficiency(20.0, 2.0, 40.0, mood_burn=0.0, T=12.0)
+        assert _dominates(seg_a, seg_b, T=12.0) is False
+        assert _dominates(seg_b, seg_a, T=12.0) is False
+
+
+# ─── stepped_efficiency ──────────────────────────────────────────
+
+class TestSteppedEfficiency:
+    """梯级衰减效率：每 step_interval 心情落差触发一级衰减"""
+
+    def test_无心情消耗_单段常数(self):
+        segs = stepped_efficiency(30.0, mood_burn=0.0, T=12.0)
+        assert len(segs) == 1
+        assert segs[0].a == 30.0
+
+    def test_轻量消耗_一级衰减(self):
+        """mood_burn=0.65, T=12 → 心情降至 24-7.8=16.2
+        steps_down = ⌊(24-16.2)/4⌋ = ⌊1.95⌋ = 1
+        eff = 30 - 1×5 = 25
+        """
+        segs = stepped_efficiency(30.0, mood_burn=0.65, T=12.0)
+        assert len(segs) >= 1
+        for seg in segs:
+            assert seg.a >= 0.0
+
+    def test_中等消耗_两级衰减(self):
+        """mood_burn=1.5, T=12 → 心情降至 24-18=6
+        steps_down = ⌊(24-6)/4⌋ = ⌊4.5⌋ = 4
+        eff = max(0, 30-4×5) = 10
+        """
+        segs = stepped_efficiency(30.0, mood_burn=1.5, T=12.0,
+                                  step_size=5.0, step_interval=4.0)
+        assert len(segs) > 1
+
+    def test_归零_心情耗尽后效率为零(self):
+        """心情归零后 eff=0"""
+        segs = stepped_efficiency(10.0, mood_burn=3.0, T=12.0,
+                                  step_size=5.0, step_interval=4.0)
+        assert segs[-1].a == 0.0
+
+    def test_自定参数_输出合理范围(self):
+        """step_size=3, step_interval=6 自定义参数"""
+        segs = stepped_efficiency(30.0, mood_burn=0.65, T=12.0,
+                                  step_size=3.0, step_interval=6.0)
+        total = integrate_segments(segs, T=12.0)
+        assert total > 0
+        assert total <= 30.0 * 12.0

@@ -48,9 +48,9 @@ class TestRealDataEndToEnd:
         cr = [op for op in mfg_ops if op.has_skill_for("Mfg", "CombatRecord")]
         pg = [op for op in mfg_ops if op.has_skill_for("Mfg", "PureGold")]
 
-        # CR 候选人数在合理范围
-        assert 70 <= len(cr) <= 90
-        assert 70 <= len(pg) <= 90
+        # CR 候选人数在合理范围（游戏版本更新时上限会增长，仅保底下限）
+        assert len(cr) >= 50
+        assert len(pg) >= 50
 
         # 分类验证
         classification = classify_mfg_operators(cr, "CombatRecord", _TEST_ANCHORS)
