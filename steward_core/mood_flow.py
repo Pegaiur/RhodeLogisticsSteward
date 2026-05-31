@@ -49,6 +49,10 @@ class MoodModifiers:
     yanhuo_recovery: float = 0.0
     """重岳孤光共照：+0.05 + 烟火÷20×0.05/h"""
 
+    wisdel_recovery: float = 0.0
+    """维什戴尔巴别塔之帜：工作设施干员 +0.1/h 恢复。
+    与重岳 yanhuo_recovery 取 max（特殊比较规则：同类型中枢全局 buff 不叠加）。"""
+
     dorm_bonus_all: float = 0.0
     """中枢→宿舍恢复加成，适用全体宿舍干员（control_dorm_rec[000]~[002]、control_dorm_rec2[000]）"""
 
@@ -91,6 +95,13 @@ def compute_mood_modifiers(
     if "重岳" in names and buff_pool is not None:
         mods.yanhuo_recovery = 0.05 + (buff_pool.yanhuo // 20) * 0.05
 
+    if any(
+        s.buff_id == "control_mp_expand_double[000]"
+        for op in control_operators
+        for s in op.skills
+    ):
+        mods.wisdel_recovery = 0.1
+
     for op in control_operators:
         for s in op.skills:
             if s.buff_id.startswith("control_dorm_rec_tag"):
@@ -123,7 +134,7 @@ def compute_global_burn(
     modifiers = compute_mood_modifiers(
         control_operators, buff_pool, control_recovery_per_op=control_recovery_per_op,
     )
-    recovery = modifiers.control_recovery + modifiers.yanhuo_recovery
+    recovery = modifiers.control_recovery + max(modifiers.yanhuo_recovery, modifiers.wisdel_recovery)
     if modifiers.mlynar_spread:
         recovery += modifiers.control_recovery + modifiers.global_work_recovery
     return max(0.0, base - recovery)
@@ -138,6 +149,7 @@ _MP_COST_ROOM_ZERO: set[str] = {
 
 _MP_COST_ROOM_REDUCE: dict[str, float] = {
     "manu_cost[000]": 0.1,
+    "trade_cost[000]": 0.1,
 }
 """持有者在场时，同房间全员心情消耗减少（buff_id → 减免量/h）。
 
@@ -145,17 +157,26 @@ _MP_COST_ROOM_REDUCE: dict[str, float] = {
 """
 
 
+_MP_COST_FACTION_ZERO: dict[str, str] = {
+    "control_facCostReset[000]": "sui",
+}
+"""持有者在场时，同房间符合阵营的干员心情消耗归零（buff_id → group_id）。
+如令 杯莫停 消除中枢内所有岁干员心情消耗。
+"""
+
+
 def _apply_mp_cost(
     burn: float,
-    op_name: str,  # 预留：未来可能用于 per-operator 免疫检测
+    op_name: str,
     co_workers: list[str],
     op_lookup: dict[str, "Operator"],
 ) -> float:
     """应用同房间干员的 mp_cost buff 修正
 
-    扫描 co_workers 中每个人的 skills，匹配 _MP_COST_ROOM_ZERO
-    和 _MP_COST_ROOM_REDUCE 表。
+    扫描 co_workers 中每个人的 skills，依次匹配 _MP_COST_ROOM_ZERO、
+    _MP_COST_FACTION_ZERO、_MP_COST_ROOM_REDUCE 表。
     """
+    op = op_lookup.get(op_name)
     for cw_name in co_workers:
         cw_op = op_lookup.get(cw_name)
         if cw_op is None:
@@ -163,6 +184,9 @@ def _apply_mp_cost(
         for sk in cw_op.skills:
             if sk.buff_id in _MP_COST_ROOM_ZERO:
                 return 0.0
+            if sk.buff_id in _MP_COST_FACTION_ZERO:
+                if op is not None and op.group_id == _MP_COST_FACTION_ZERO[sk.buff_id]:
+                    return 0.0
             if sk.buff_id in _MP_COST_ROOM_REDUCE:
                 burn = max(0.0, burn - _MP_COST_ROOM_REDUCE[sk.buff_id])
     return burn
@@ -273,7 +297,7 @@ class MoodContext:
 
         公式: base - recovery_modifiers
           base = base_burn_per_hour - control_recovery_per_op × (room_slots - 1)
-          recovery = control_recovery + yanhuo_recovery + (mlynar spread)
+          recovery = control_recovery + max(yanhuo_recovery, wisdel_recovery) + (mlynar spread)
 
         co_workers 为同房间干员名列表，用于检测房间级 mp_cost buff
         （槐琥 manu_cost_all[000] 消除全房间消耗等）。
@@ -283,7 +307,7 @@ class MoodContext:
         recovery_per_op = self.params.control_recovery_per_op if self.params else 0.05
         base = burn_per_hour - recovery_per_op * max(0, room_slots - 1)
         modifiers = self.ensure_modifiers(buff_pool)
-        recovery = modifiers.control_recovery + modifiers.yanhuo_recovery
+        recovery = modifiers.control_recovery + max(modifiers.yanhuo_recovery, modifiers.wisdel_recovery)
         if modifiers.mlynar_spread:
             recovery += modifiers.control_recovery + modifiers.global_work_recovery
         burn = max(0.0, base - recovery)
@@ -355,23 +379,28 @@ class MoodContext:
             yanhuo_bonus=yanhuo_bonus,
         )
 
-    def _control_burn(self) -> float:
+    def _control_burn(self, name: str = "") -> float:
         """计算控制中枢干员的心情消耗率净值 (mood_burn/h)
 
         公式：base - control_recovery - yanhuo_recovery。
         mlynar_spread 不纳入——玛恩纳扩散效果是将 control_recovery
         传播至其他设施，中枢干员本身已在控制中枢内天然享受减免。
 
-        5 人中枢 → base=0.80，扣除 recovery 后净消耗约 0.50-0.60/h。
+        name 不为空时，应用同中枢干员的 mp_cost buff（如令杯莫停消除岁干员消耗）。
         """
         control_count = len(self.control_operators)
-        if control_count == 0:
-            return 0.0
+        if control_count < 1:
+            control_count = 5
         burn_per_hour = self.params.base_burn_per_hour if self.params else 1.0
         recovery_per_op = self.params.control_recovery_per_op if self.params else 0.05
         base = burn_per_hour - recovery_per_op * max(0, control_count - 1)
         modifiers = self.ensure_modifiers()
-        return max(0.0, base - modifiers.control_recovery - modifiers.yanhuo_recovery)
+        burn = max(0.0, base - modifiers.control_recovery - modifiers.yanhuo_recovery)
+
+        if name and self.control_operators:
+            burn = _apply_mp_cost(burn, name, list(self.control_operators), self._op_lookup)
+
+        return burn
 
     def after_shift(
         self,
@@ -394,21 +423,19 @@ class MoodContext:
         new_moods = dict(self.operator_moods)
         new_warmup = dict(self.warmup_hours)
 
-        control_burn_rate = self._control_burn()
-
         default_ctx = RoomBurnContext(room_type="Mfg", room_slots=3, room_index=0)
 
         for name in self.operator_moods:
             if name in working_names:
                 if name in self.control_operators:
-                    new_moods[name] = max(0.0, new_moods[name] - control_burn_rate * hours)
+                    burn = self._control_burn(name)
                 else:
                     rbc = (working_slots or {}).get(name, default_ctx)
                     burn = self.work_burn(
                         name, rbc.room_type, rbc.room_slots,
                         co_workers=rbc.co_workers,
                     )
-                    new_moods[name] = max(0.0, new_moods[name] - burn * hours)
+                new_moods[name] = max(0.0, new_moods[name] - burn * hours)
                 new_warmup[name] = self.warmup_hours.get(name, 0.0) + hours
             else:
                 new_warmup.pop(name, None)
