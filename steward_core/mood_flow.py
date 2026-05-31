@@ -390,8 +390,14 @@ class MoodContext:
             recovery += modifiers.control_recovery + modifiers.global_work_recovery
         burn = max(0.0, base - recovery)
 
+        self_cost_delta = _compute_self_mp_cost(name, self._op_lookup)
+        burn = max(0.0, burn + self_cost_delta)
+
         if co_workers:
-            burn = _apply_mp_cost(burn, name, co_workers, self._op_lookup)
+            burn = _apply_mp_cost(
+                burn, name, co_workers, self._op_lookup,
+                self_cost_delta=self_cost_delta,
+            )
 
         return burn
 
@@ -480,8 +486,14 @@ class MoodContext:
         modifiers = self.ensure_modifiers()
         burn = max(0.0, base - modifiers.control_recovery - modifiers.yanhuo_recovery)
 
+        self_cost_delta = _compute_self_mp_cost(name, self._op_lookup)
+        burn = max(0.0, burn + self_cost_delta)
+
         if name and self.control_operators:
-            burn = _apply_mp_cost(burn, name, list(self.control_operators), self._op_lookup)
+            burn = _apply_mp_cost(
+                burn, name, list(self.control_operators), self._op_lookup,
+                self_cost_delta=self_cost_delta,
+            )
 
         return burn
 

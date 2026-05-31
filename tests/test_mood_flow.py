@@ -14,6 +14,7 @@ from steward_core.mood_flow import (
     RoomBurnContext,
     compute_mood_modifiers,
     _apply_mp_cost,
+    _compute_self_mp_cost,
 )
 from tests.helpers import mk_op, mk_skill
 
@@ -78,18 +79,33 @@ class TestWorkBurn:
         assert burn > 0.0
 
     def test_mp_cost_zero_buff(self):
-        """槐琥团队精神：同房干员消耗归零"""
+        """槐琥团队精神：同房干员的自身技能消耗被消除"""
         huaiku = mk_op("槐琥", [
             mk_skill("manu_cost_all[000]", "Mfg", "团队精神",
                      efficient={"all": 0.0}),
         ])
+        # 泡泡有 -0.25 的自身消耗减免
+        paopao = mk_op("泡泡", [
+            mk_skill("manu_prod_limit&cost[010]", "Mfg", efficient={"all": 0.0}),
+        ])
         mc = MoodContext(
+            operator_moods={"泡泡": 24.0, "槐琥": 24.0},
+            params=SolverParams(),
+            _op_lookup={"泡泡": paopao, "槐琥": huaiku},
+        )
+        burn_without_huaiku = mc.work_burn("泡泡", "Mfg", 3)
+        burn_with_huaiku = mc.work_burn("泡泡", "Mfg", 3, co_workers=["槐琥"])
+        # 槐琥在场时消除泡泡的自身减免，burn 应回到标准值
+        assert burn_without_huaiku < burn_with_huaiku
+        # 无自身 buff 的干员，槐琥在场不影响 burn
+        mc_plain = MoodContext(
             operator_moods={"阿米娅": 24.0, "槐琥": 24.0},
             params=SolverParams(),
             _op_lookup={"阿米娅": mk_op("阿米娅"), "槐琥": huaiku},
         )
-        burn = mc.work_burn("阿米娅", "Mfg", 3, co_workers=["槐琥"])
-        assert burn == 0.0
+        burn_plain_no_huaiku = mc_plain.work_burn("阿米娅", "Mfg", 3)
+        burn_plain_with_huaiku = mc_plain.work_burn("阿米娅", "Mfg", 3, co_workers=["槐琥"])
+        assert burn_plain_no_huaiku == burn_plain_with_huaiku
 
 
 # ─── after_shift ──────────────────────────────────────────────────
