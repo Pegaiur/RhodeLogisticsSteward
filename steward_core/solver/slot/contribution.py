@@ -109,11 +109,17 @@ def _compute_state_snapshot(
         if any(sk.buff_id == "hire_spd_bd_n1[000]" for sk in office_op.skills):
             office_perception = params.office_perception_base if params else 20
 
+    mfg_names = ctx.ops_of_type(window_idx, "Mfg")
+    trade_names = ctx.ops_of_type(window_idx, "Trade")
+
     bp = compute_buff_pool(
         ctrl_ops, suich_count=suich_count,
         dorm_operators=[o for o in dorm_ops if o],
         dorm_level=dorm_level, layout=layout,
         perception_from_office=office_perception,
+        has_rosmontis_in_mfg="迷迭香" in mfg_names,
+        has_ebnhlz_in_trade="黑键" in trade_names,
+        has_wuyou_in_trade="乌有" in trade_names,
     )
 
     eng = compute_engineering_robots(layout)
