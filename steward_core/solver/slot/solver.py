@@ -5,6 +5,7 @@
 
 from __future__ import annotations
 
+from dataclasses import replace
 from typing import TYPE_CHECKING
 
 from steward_core.models import LayoutConfig, SolveResult
@@ -113,6 +114,9 @@ def solve_slot(
                         )
                 mc = mc.after_shift(working_names, working_slots=working_slots)
                 if w < num_windows - 1:
+                    dorm_map = _build_dorm_assignments(ctx, w)
+                    if dorm_map:
+                        mc = replace(mc, dorm_assignments=dorm_map)
                     mc = mc.after_recovery(interval_hours)
 
             _track_hours_used(ctx, w, shift_hours)
@@ -121,16 +125,18 @@ def solve_slot(
         if num_windows > 1:
             max_lambda = _update_lambda_shadow(ctx, operators, params, shift_hours, mood_ctx=mood_ctx)
 
-        if best_ctx is None:
-            best_ctx = ctx.clone()
-
         sig = "||".join(ctx.signature(w) for w in range(ctx.num_windows))
         if sig in visited:
             break
         visited.add(sig)
 
         P = _estimate_total_production(ctx, mood_ctx=mood_ctx)
-        if P > best_P:
+        if num_windows > 1 and iteration == 0:
+            pass
+        elif best_ctx is None:
+            best_ctx = ctx.clone()
+            best_P = P
+        elif P > best_P:
             best_P = P
             best_ctx = ctx.clone()
         ctx.prev_P = P
@@ -150,6 +156,19 @@ def solve_slot(
     config = SolverConfig(params=params)
     result = local_search_refine(result, operators, config)
     return result
+
+
+def _build_dorm_assignments(ctx: SlotContext, window_idx: int) -> dict[str, str]:
+    """从窗口分配中提取宿舍分配映射 {干员名 → 宿舍编号}
+
+    dorm_assignments 供 MoodContext.dorm_recovery() 使用——
+    班间恢复时按同宿舍干员聚合恢复 buff。
+    """
+    dorm_map: dict[str, str] = {}
+    for a in ctx.slots_of_type(window_idx, "Dormitory"):
+        if a.operator_name:
+            dorm_map[a.operator_name] = str(a.room_index)
+    return dorm_map
 
 
 def _reset_ctx(ctx: SlotContext) -> None:
