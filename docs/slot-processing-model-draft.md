@@ -24,20 +24,22 @@
 槽位产能 = base_rate × efficiency × effective_hours × drone_multiplier
 ```
 
-### 1.2 工作时长池：根本资源
+### 1.2 工作时长：续航池与恢复
 
-每个干员拥有一个**工作时长池**（work hour pool）——该干员在排班周期内可贡献的有效工作小时数上限。
+干员可工作的总时数由两个独立资源组成：
 
 ```
-工作时长池 = mood_initial / mood_burn          ← 工作消耗耗尽前的小时数
-           + Σ(recovery_rate × rest_hours)     ← 班间恢复补充的小时数
+续航池 pool_hard  = mood_full / mood_burn     ← 硬约束：跨周期可持续性上限（约束基线 H6）
+最大可用 pool_max  = pool_hard + Σ(recovery_rate × rest_hours)  ← 含恢复的理论最大值
 ```
 
 - `mood_burn` 受类型 5a 技能修正（中枢减免、烟火联动）
 - `recovery_rate` 受类型 5b 技能修正（宿舍 buff、中枢全局宿舍加成）
 - 菲亚梅塔自律：`recovery_rate = 2.0/h`，不依赖他人
 
-干员将工作时长池中的小时数**分配**到具体槽位。分配后，该槽位的 `effective_hours = 分配的时长`。
+**关键区分**：`pool_hard` 是可持续性的硬约束（干员心情不能退化），λ 影子乘子对此约束进行经济性惩罚（§9.5）。`pool_max` 中的恢复部分是独立资源，由 Phase D 宿舍分配竞争，通过 `+ recovery × λ × hours` 独立估值——**不纳入 λ 的池容检查**，避免"假设所有干员都能获得宿舍恢复"的过度乐观。
+
+干员将工作时长分配到具体槽位。分配后，该槽位的 `effective_hours = 分配的时长`。
 
 ### 1.3 技能：槽位状态的变换函数
 
@@ -217,10 +219,10 @@ Office 效率% → 公招刷新加速 → 多余干员 → 绿票/黄票（凭�
 
 ### 3.1 初始时长池
 
-每个干员的初始工作时长由心情-消耗关系决定：
+每个干员的初始工作时长由心情-消耗关系决定，即**跨周期可持续性硬约束**（约束基线 H6）：
 
 ```
-初始工作时长 = mood_initial / mood_burn
+pool[op] = mood_full / mood_burn
 
 其中:
   mood_burn = max(0, base_burn - recovery_modifiers)
@@ -228,7 +230,9 @@ Office 效率% → 公招刷新加速 → 多余干员 → 绿票/黄票（凭�
   recovery_modifiers = control_recovery + yanhuo_recovery + mlynar_spread
 ```
 
-干员跨窗口复用，初始工作时长池为硬约束。
+**含义**：单干员在排班周期内的可持续工作小时数上限。超过此值，干员心情将退化至无法在下个周期正常启动。此为**硬约束**——多窗口求解中，λ 影子乘子将此硬约束转化为经济信号（§9.5），使 contribution 评分中自动惩罚超池行为。
+
+**注意**：宿舍恢复是独立资源（由 Phase D 宿舍分配竞争），**不纳入 pool 计算**——避免"假设所有干员都能获得宿舍恢复"的过度乐观。宿舍恢复的价值由 §9.5 的 `+ recovery_rate × λ × hours` 独立估值。
 
 ### 3.2 时长修正技能
 
@@ -663,6 +667,28 @@ D[d] = ∂P / ∂S[d]
 
 **混合策略**：在组合爆炸可接受的范围（Mfg/Trade 的 C(n,3) ≤ 1140 组合）保留穷举 + 完整联动求值；在组合爆炸不可接受的范围（Control/Power/Office/Reception/Dormitory 的全局分配）用偏导数迭代传导。
 
+#### 可持续性约束与 λ 影子乘子
+
+跨周期可持续性（约束基线 H6）是多班次排班的核心硬约束：
+
+```
+对每名干员 op:
+  Σ_w hours_used(op, w) × mood_burn ≤ mood_full
+  ⇔ Σ_w hours_used(op, w) ≤ mood_full / mood_burn = pool[op]
+```
+
+λ 是此约束的影子乘子（shadow multiplier），通过离散 bisection 将硬约束转化为经济信号：
+
+| 机制 | 说明 |
+|------|------|
+| λ 更新 | 每轮迭代后：`hours_used > pool` → λ 翻倍（收紧）；`hours_used ≤ pool` 且 λ>0 → λ 减半（释放）。λ 跨迭代保持，逐步收敛 |
+| λ 惩罚 | contribution 中 `- λ[op] × hours`——超池干员在所有设施中被压低评分，迭代中被替代 |
+| λ 奖励 | dorm contribution 中 `+ recovery_rate × hours × λ`——λ 越高，恢复越值钱，宿舍干员获得更高优先级 |
+| λ 锚定 | `λ_k = median(base_rate × efficiency × unit_value / window_hours)`——取 Phase A/B 已分配槽位的每小时边际 LMD 等值，保证 λ 与 contribution 同一量纲 |
+| 收敛 | λ 的离散 bisection 保证 O(log₂(值域/粒度)) 步收敛。λ≈0 时约束全部满足，迭代终止 |
+
+**注意**：宿舍恢复是独立资源（由 Phase D 宿舍分配竞争），不纳入 pool 计算。pool 仅由心情续航决定——避免"假设所有干员都能获得宿舍恢复"的过度乐观。
+
 #### 迭代框架
 
 ```
@@ -753,14 +779,10 @@ D[d] = ∂P / ∂S[d]
   D_{k+1}[w][d] = δP/δS[w]|_{S=S_{k+1}, A=A_{k+1}}
 
   ― λ 更新: 影子乘子（离散 bisection） ——
-  λ_op 是干员工作时长池的影子乘子，多窗口下跨窗口耦合的唯一变量。
-  因 window_hours[w] ∈ {0, 0.5, 1.0, ..., 12} 天然离散，λ 采用离散 bisection 搜索：
-    给定当前 λ，检查 Σ_w hours_used(op, w) ≤ pool[op]:
-      若满足: λ 减半（释放池容量）
-      若超额: λ 翻倍（收紧约束）
-    λ 搜索在 O(log₂(值域/粒度)) 步内收敛。
-  λ-D 振荡的防护由框架层记忆机制（V 集合 + P 单调性）提供，无需连续阻尼更新。
-  这一离散性质也与 CP-SAT 整数规划框架天然适配。
+  检查 Σ_w hours_used(op, w) ≤ pool[op]（可持续性约束，见上文）:
+    若违反: λ ← λ × 2  （若 λ=0 则设初始步长 hourly_value × 0.25）
+    若满足且 λ > 0: λ ← λ / 2
+  λ 跨迭代保持，O(log₂(值域/粒度)) 步收敛。
 
   ― 记忆与收敛检查 ―
   V_{k+1} = V_k ∪ {A_k}                                  ← 记录已访问状态
