@@ -100,7 +100,8 @@ def solve_slot(
                 working_slots = {}
                 for a in ctx.windows[w].assignments:
                     if a.operator_name and a.facility_type not in _NON_WORK_FACILITIES:
-                        working_slots[a.operator_name] = _FACILITY_SLOTS.get(a.facility_type, 3)
+                        ft = a.facility_type
+                        working_slots[a.operator_name] = (_FACILITY_SLOTS.get(ft, 3), ft)
                 mc = mc.after_shift(working_names, working_slots=working_slots)
                 if w < num_windows - 1:
                     mc = mc.after_recovery(interval_hours)
@@ -114,7 +115,7 @@ def solve_slot(
         if best_ctx is None:
             best_ctx = ctx.clone()
 
-        sig = ctx.signature()
+        sig = "||".join(ctx.signature(w) for w in range(ctx.num_windows))
         if sig in visited:
             break
         visited.add(sig)
@@ -227,12 +228,12 @@ def _pool_for(
 
     mood_burn 受中枢 buff 修正，优先使用 ctx.control_operators（上一轮中枢配置）。
     冷启动时无中枢信息，回退到 base_burn_rate3（3 人工位默认消耗率）。
-    room_slots 根据干员技能所在设施类型确定：
+    room_type 和 room_slots 根据干员技能所在设施类型确定：
       Control → 5, Mfg/Trade → 3, 其余 → 1。
     """
     mood_full = params.mood_full if params else 24.0
     burn = params.base_burn_rate3 if params else 0.90
-    slots = _facility_slots_for(op)
+    facility_type, slots = _facility_slots_for(op)
 
     if mood_ctx is not None and ctx.control_operators:
         from steward_core.mood_flow import MoodContext as MC
@@ -242,21 +243,25 @@ def _pool_for(
             params=params,
             _op_lookup=ctx.op_lookup,
         )
-        burn = burn_mc.work_burn(op.name, "Mfg", slots)
+        burn = burn_mc.work_burn(op.name, facility_type, slots)
 
     if burn <= 0.0:
         burn = 0.01
     return mood_full / burn
 
 
-def _facility_slots_for(op: "Operator") -> int:
-    """根据干员技能确定其典型工作设施的槽位数"""
+def _facility_slots_for(op: "Operator") -> tuple[str, int]:
+    """根据干员技能确定其 pool 计算用的设施类型和槽位数
+
+    取所有可能设施类型中的最小槽位数（对应最高 burn 率、最小 pool）——
+    确保 H6 跨周期可持续性约束始终保守。
+    """
     facility_types = {sk.room_type for sk in op.skills}
-    if "Control" in facility_types:
-        return 5
-    if facility_types & {"Mfg", "Trade"}:
-        return 3
-    return 1
+    if not facility_types:
+        return "Mfg", 3
+    slots_map = _FACILITY_SLOTS
+    min_type = min(facility_types, key=lambda t: slots_map.get(t, 3))
+    return min_type, min(slots_map.get(min_type, 3), 3)
 
 
 def _estimate_total_production(

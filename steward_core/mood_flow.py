@@ -314,14 +314,14 @@ class MoodContext:
         working_names: set[str],
         shift_hours_override: float | None = None,
         *,
-        working_slots: dict[str, int] | None = None,
+        working_slots: dict[str, tuple[int, str]] | None = None,
     ) -> "MoodContext":
         """应用一个班次后的心情变化（不可变，返回新实例）
 
         working_names: 本班次工作的干员名集合（含中枢干员）
         shift_hours_override: 覆盖默认班次时长（用于测试/自定义班次）
-        working_slots: 干员名 → 所在房间槽位数，用于计算正确的 burn 率。
-                       未提供时回退到 3（历史兼容，适用于 Mfg/Trade）。
+        working_slots: 干员名 → (所在房间槽位数, 设施类型)，用于计算正确的 burn 率。
+                       未提供时回退到 (3, "Mfg")（历史兼容）。
 
         工作设施干员按 work_burn 消耗，中枢干员按 _control_burn 消耗。
         """
@@ -336,8 +336,8 @@ class MoodContext:
                 if name in self.control_operators:
                     new_moods[name] = max(0.0, new_moods[name] - control_burn_rate * hours)
                 else:
-                    slots = (working_slots or {}).get(name, 3)
-                    burn = self.work_burn(name, "Mfg", slots)
+                    slots, facility_type = (working_slots or {}).get(name, (3, "Mfg"))
+                    burn = self.work_burn(name, facility_type, slots)
                     new_moods[name] = max(0.0, new_moods[name] - burn * hours)
                 new_warmup[name] = self.warmup_hours.get(name, 0.0) + hours
             else:
