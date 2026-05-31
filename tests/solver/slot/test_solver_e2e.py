@@ -105,21 +105,21 @@ class TestSolveSlotMultiWindow:
         return _make_minimal_ops(mfg_count=20, trade_count=15)
 
     def test_two_windows_no_crash(self, ops):
-        params = SolverParams(shift_count=2, shift_hours=12, interval_hours=8)
+        params = SolverParams(shift_count=2, shift_hours=12, interval_hours=0)
         result = solve_slot(ops, params)
         from steward_core.models import SolveResult
         assert isinstance(result, SolveResult)
         assert len(result.plans) == 2
 
     def test_each_window_has_assignments(self, ops):
-        params = SolverParams(shift_count=2, shift_hours=12, interval_hours=8)
+        params = SolverParams(shift_count=2, shift_hours=12, interval_hours=0)
         result = solve_slot(ops, params)
         for plan in result.plans:
             assert len(plan.assignments) >= 1
 
     def test_no_window_uses_same_op_twice(self, ops):
         """同一窗口内无重复干员"""
-        params = SolverParams(shift_count=2, shift_hours=12, interval_hours=8)
+        params = SolverParams(shift_count=2, shift_hours=12, interval_hours=0)
         result = solve_slot(ops, params)
         for plan in result.plans:
             names = []
@@ -128,6 +128,6 @@ class TestSolveSlotMultiWindow:
             assert len(names) == len(set(names)), f"重复: {names}"
 
     def test_max_iterations_limit(self, ops):
-        params = SolverParams(shift_count=2, shift_hours=12, interval_hours=8)
+        params = SolverParams(shift_count=2, shift_hours=12, interval_hours=0)
         result = solve_slot(ops, params, max_iterations=3)
         assert len(result.plans) == 2

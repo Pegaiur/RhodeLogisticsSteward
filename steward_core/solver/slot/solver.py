@@ -69,7 +69,7 @@ def solve_slot(
 
     ctx = SlotContext.from_layout(operators, layout, params, num_windows=num_windows)
 
-    interval_hours = params.interval_hours if params else 8.0
+    interval_hours = params.interval_hours if params else 0
     shift_hours = params.shift_hours if params else 12.0
 
     visited = set()
@@ -113,7 +113,7 @@ def solve_slot(
                             co_workers=room_ops,
                         )
                 mc = mc.after_shift(working_names, working_slots=working_slots)
-                if w < num_windows - 1:
+                if w < num_windows - 1 and interval_hours > 0:
                     dorm_map = _build_dorm_assignments(ctx, w)
                     if dorm_map:
                         mc = replace(mc, dorm_assignments=dorm_map)
@@ -509,8 +509,8 @@ def _ctx_to_multi_result(
         plan = ShiftPlan(
             name=f"Slot-S{w}-{int(hours)}h",
             assignments=assignments,
-            period_from=f"{w * int(hours + (params.interval_hours if params else 8)):02d}:00",
-            period_to=f"{min(w * int(hours + (params.interval_hours if params else 8)) + int(hours) - 1, 23):02d}:59",
+            period_from=f"{w * int(hours + (params.interval_hours if params else 0)):02d}:00",
+            period_to=f"{min(w * int(hours + (params.interval_hours if params else 0)) + int(hours) - 1, 23):02d}:59",
         )
         plans.append(plan)
 

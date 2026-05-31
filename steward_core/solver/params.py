@@ -59,8 +59,8 @@ class SolverParams:
     # === 多班次 ===
     shift_count: int = 1
     """班次数（1=单班次，2=双班次）"""
-    interval_hours: float = 8.0
-    """班间间隔（小时），用于恢复模拟"""
+    interval_hours: float = 0
+    """班间间隔（小时）。游戏内班次之间无间隔（结束即开始），恢复通过宿舍在位实现。默认 0。"""
     fiammetta_enabled: bool = False
     """是否启用菲亚梅塔心情交换（交换决策算法待实现）"""
 
@@ -179,7 +179,7 @@ class SolverParams:
         """参数摘要（分组展示，用于控制台输出）
         """
         lines = [
-            f"  排班: {self.shift_count}班 x {self.shift_hours:.0f}h, 间隔 {self.interval_hours:.0f}h",
+            f"  排班: {self.shift_count}班 x {self.shift_hours:.0f}h",
             f"  心情: 消耗率 {self.base_burn_rate3:.2f} (3人), "
             f"满 {self.mood_full:.0f}h, 工作阈值 {self.mood_work_threshold:.1f}h",
             f"  设施: 中枢 {self.control_max_slots}槽, "

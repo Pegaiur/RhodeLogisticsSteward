@@ -16,6 +16,11 @@
 > 游戏内 **蓝脸（mood≤12）仅为 UI 视觉标记，绝不干员效率**。红脸（mood=0）才是唯一导致效率归零的游戏机制。
 > 本计划在 64a8c65 中引入的 `效率 × (mood/12)` 线性衰减是 **建模错误**，已于 2026-05-31 从全部代码中清除；
 > `SolverParams.mood_blue_face` 参数及 `constant_efficiency` / `ramping_efficiency` 中的蓝脸分支已移除。
+> 
+> **§ interval_hours=8.0 班间间隔假设已推翻。**
+> 
+> 游戏内班次之间无间隔（结束即开始），恢复通过宿舍在位实现。`interval_hours` 默认值已改为 0，
+> `after_recovery` 调用加 `interval_hours>0` 守卫。见 inbox#L17 和 `params.py`。
 > 令/夕等干员的 per-operator 心情阈值（硬编码 12.0）不受影响——那是游戏原生机制，与通用蓝脸衰减无关。
 
 ## 实施笔记

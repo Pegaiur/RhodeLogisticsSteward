@@ -1,8 +1,8 @@
 r"""全 box 满练度求解器 — 槽位加工模型
 
 用法:
-    python run_solver.py                              # 默认 3班x8h+8h
-    python run_solver.py --hours 12                   # 3班x12h+8h
+    python run_solver.py                              # 默认 3班x8h
+    python run_solver.py --hours 12                   # 3班x12h
     python run_solver.py --params custom.json         # 自定义参数文件
 
 数据文件 (character_identity.json + buffs_infrastructure.json) 需在项目根目录。
@@ -46,12 +46,10 @@ def main():
         params = SolverParams()
 
     shift_hours = hours_override
-    interval_hours = 8.0
     shift_count = 3
     params = params.apply_overrides(
         shift_hours=shift_hours,
         shift_count=shift_count,
-        interval_hours=interval_hours,
     )
 
     project_root = Path(__file__).resolve().parent
@@ -79,7 +77,7 @@ def main():
     print(f"\n[参数]")
     print(params.summary())
 
-    mode_desc = f"{shift_count}x{shift_hours:.0f}h+{interval_hours:.0f}h"
+    mode_desc = f"{shift_count}x{shift_hours:.0f}h"
     print(f"\n[求解] SlotStrategy, {mode_desc}...")
 
     pipe = run_pipeline(all_operators, params)

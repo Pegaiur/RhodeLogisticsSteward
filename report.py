@@ -35,7 +35,7 @@ def main():
     root = Path(__file__).parent
     ops = load_operators_v2(root / "character_identity.json",
                             root / "buffs_infrastructure.json")
-    params = SolverParams(shift_count=3, shift_hours=hours, interval_hours=8.0)
+    params = SolverParams(shift_count=3, shift_hours=hours)
 
     pipe = run_pipeline(ops, params)
     plans = pipe.solve_result.plans
