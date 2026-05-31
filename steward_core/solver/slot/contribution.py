@@ -325,7 +325,7 @@ def _dorm_contribution(
     window_idx: int,
     D: dict[str, float],
 ) -> float:
-    """宿舍贡献 = type2状态写入*D + 恢复速率*lambda"""
+    """宿舍贡献 = type2状态写入*D + 恢复速率*lambda_k"""
     total = 0.0
 
     ctrl_names = ctx.ops_of_type(window_idx, "Control")
@@ -341,9 +341,9 @@ def _dorm_contribution(
             total += delta * D[d]
 
     hours = ctx.params.shift_hours if ctx.params else 12.0
-    lambda_val = ctx.lambda_ops.get(op.name, 0.0)
+    lambda_k = ctx.lambda_k
     recovery = op.best_efficiency("Dormitory", "Rest")
-    if recovery > 0 and lambda_val > 0:
-        total += recovery * hours * lambda_val / 24.0
+    if recovery > 0 and lambda_k > 0:
+        total += recovery * hours * lambda_k / 24.0
 
     return total
