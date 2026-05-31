@@ -148,7 +148,7 @@ def main():
     sum_gold = sum(dp.total_gold_produced_per_day for dp in pipe.productions) * _GOLD_LMD_PER_UNIT * scale
     sum_lmd = sum(dp.total_lmd_per_day for dp in pipe.productions) * scale
     sum_eff_lmd = sum(dp.effective_lmd_per_day for dp in pipe.productions) * scale
-    sum_gold_consumed = sum(dp.total_gold_consumed_per_day for dp in pipe.productions) * scale
+    sum_gold_consumed = sum(dp.total_gold_consumed_per_day for dp in pipe.productions) * _GOLD_LMD_PER_UNIT * scale
 
     print(f"\n{'=' * 64}")
     print(f"  总日生产（{len(plans)}x{hours:.0f}h → 24h 折算）")
