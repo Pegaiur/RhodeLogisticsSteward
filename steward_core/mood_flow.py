@@ -213,7 +213,7 @@ _SELF_MP_COST: dict[str, float] = {
 """干员自身 mp_cost buff → 心情消耗修正量（delta/h）。
 
 正值 = 消耗增加（如阿罗玛 +0.25）, 负值 = 消耗减少（如泡泡 -0.25）。
-生成: python scripts/_gen_self_mp_cost.py (P0 范围: MFG+TRADE+POWER 无条件 buff)
+P0 范围: MFG+TRADE+POWER 无条件 buff，由一次性脚本生成后人工维护。
 P1 待接入: 动态条件 buff (人间烟火联动/同僚配对) + HIRE + CONTROL + MEETING
 """
 

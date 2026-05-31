@@ -210,12 +210,27 @@ class TestApplyMpCost:
         assert burn == 0.65
 
     def test_zero_buff(self, lookup):
+        """槐琥消除仅作用自身技能分量，不归零全局 burn"""
         burn = _apply_mp_cost(0.65, "阿米娅", ["槐琥"], lookup)
-        assert burn == 0.0
+        assert burn == 0.65  # 阿米娅无自身 buff，槐琥不改变 burn
 
-    def test_zero_buff_still_zero_when_low(self, lookup):
-        burn = _apply_mp_cost(0.01, "阿米娅", ["槐琥"], lookup)
-        assert burn == 0.0
+    def test_zero_buff_with_self_cost(self, lookup):
+        """槐琥消除自身 buff 分量：泡泡 -0.25 被消除"""
+        paopao = mk_op("泡泡", [
+            mk_skill("manu_prod_limit&cost[010]", "Mfg", efficient={"all": 0.0}),
+        ])
+        lookup2 = {"槐琥": lookup["槐琥"], "泡泡": paopao}
+        burn = _apply_mp_cost(0.65, "泡泡", ["槐琥"], lookup2, self_cost_delta=-0.25)
+        assert burn == 0.90  # 0.65 - (-0.25) = 0.90, 回到标准值
+
+    def test_zero_buff_阿罗玛_penalty_removed(self, lookup):
+        """槐琥消除自身 buff 分量：阿罗玛 +0.25 被消除"""
+        aloma = mk_op("阿罗玛", [
+            mk_skill("manu_formula_spd&cost[001]", "Mfg", efficient={"all": 0.0}),
+        ])
+        lookup2 = {"槐琥": lookup["槐琥"], "阿罗玛": aloma}
+        burn = _apply_mp_cost(0.90, "阿罗玛", ["槐琥"], lookup2, self_cost_delta=0.25)
+        assert burn == 0.65  # 0.90 - 0.25 = 0.65, 回到标准值
 
     def test_unknown_buff_ignored(self, lookup):
         burn = _apply_mp_cost(0.65, "阿米娅", ["不存在"], lookup)
@@ -245,3 +260,68 @@ class TestMoodModifiersData:
         m = MoodModifiers(dorm_bonus_elite=0.45, dorm_bonus_all=0.15)
         op = Operator(char_id="low", name="低星", rarity=3)
         assert m.dorm_bonus_for(op) == 0.15
+
+
+# ─── 自身 mp_cost ─────────────────────────────────────────────────
+
+class TestSelfMpCost:
+    """干员自身技能的 mp_cost 修正"""
+
+    def test_泡泡自身减免(self):
+        paopao = mk_op("泡泡", [
+            mk_skill("manu_prod_limit&cost[010]", "Mfg", efficient={"all": 0.0}),
+        ])
+        lookup = {"泡泡": paopao}
+        delta = _compute_self_mp_cost("泡泡", lookup)
+        assert delta == -0.25
+
+    def test_阿罗玛自身增加(self):
+        aloma = mk_op("阿罗玛", [
+            mk_skill("manu_formula_spd&cost[001]", "Mfg", efficient={"all": 0.0}),
+        ])
+        lookup = {"阿罗玛": aloma}
+        delta = _compute_self_mp_cost("阿罗玛", lookup)
+        assert delta == 0.25
+
+    def test_多技能叠加(self):
+        op = mk_op("复合", [
+            mk_skill("manu_prod_limit&cost[010]", "Mfg", efficient={"all": 0.0}),
+            mk_skill("manu_prod_spd&limit&cost[000]", "Mfg", efficient={"all": 0.0}),
+        ])
+        lookup = {"复合": op}
+        delta = _compute_self_mp_cost("复合", lookup)
+        assert delta == -0.40  # -0.25 + -0.15
+
+    def test_空技能返回零(self):
+        op = mk_op("阿米娅", [])
+        lookup = {"阿米娅": op}
+        assert _compute_self_mp_cost("阿米娅", lookup) == 0.0
+
+    def test_未知干员返回零(self):
+        assert _compute_self_mp_cost("不存在", {}) == 0.0
+
+    def test_work_burn_含自身减免(self):
+        paopao = mk_op("泡泡", [
+            mk_skill("manu_prod_limit&cost[010]", "Mfg", efficient={"all": 0.0}),
+        ])
+        mc = MoodContext(
+            operator_moods={"泡泡": 24.0},
+            params=SolverParams(),
+            _op_lookup={"泡泡": paopao},
+        )
+        burn_bubble = mc.work_burn("泡泡", "Mfg", 3)
+        burn_plain = mc.work_burn("阿米娅", "Mfg", 3)
+        assert burn_bubble < burn_plain
+
+    def test_work_burn_含自身增加(self):
+        aloma = mk_op("阿罗玛", [
+            mk_skill("manu_formula_spd&cost[001]", "Mfg", efficient={"all": 0.0}),
+        ])
+        mc = MoodContext(
+            operator_moods={"阿罗玛": 24.0},
+            params=SolverParams(),
+            _op_lookup={"阿罗玛": aloma},
+        )
+        burn_aloma = mc.work_burn("阿罗玛", "Mfg", 3)
+        burn_plain = mc.work_burn("阿米娅", "Mfg", 3)
+        assert burn_aloma > burn_plain

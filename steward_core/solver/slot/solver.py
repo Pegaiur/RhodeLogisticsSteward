@@ -5,6 +5,7 @@
 
 from __future__ import annotations
 
+from dataclasses import replace
 from typing import TYPE_CHECKING
 
 from steward_core.models import LayoutConfig, SolveResult
@@ -112,6 +113,16 @@ def solve_slot(
                         )
                 mc = mc.after_shift(working_names, working_slots=working_slots)
 
+                dorm_map = _build_dorm_assignments(ctx, w)
+                if dorm_map:
+                    mc = replace(mc, dorm_assignments=dorm_map)
+                    new_moods = dict(mc.operator_moods)
+                    for name in dorm_map:
+                        rate = mc.dorm_recovery(name)
+                        if rate > 0:
+                            new_moods[name] = min(24.0, new_moods.get(name, 24.0) + rate * shift_hours)
+                    mc = replace(mc, operator_moods=new_moods)
+
             _track_hours_used(ctx, w, shift_hours)
 
         max_lambda = 0.0
@@ -149,6 +160,15 @@ def solve_slot(
     config = SolverConfig(params=params)
     result = local_search_refine(result, operators, config)
     return result
+
+
+def _build_dorm_assignments(ctx: SlotContext, window_idx: int) -> dict[str, str]:
+    """从槽位上下文提取宿舍分配映射 {干员名 → 宿舍编号}"""
+    dorm_map: dict[str, str] = {}
+    for a in ctx.windows[window_idx].assignments:
+        if a.facility_type == "Dormitory" and a.operator_name:
+            dorm_map[a.operator_name] = str(a.room_index)
+    return dorm_map
 
 
 def _reset_ctx(ctx: SlotContext) -> None:
