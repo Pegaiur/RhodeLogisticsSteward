@@ -222,7 +222,7 @@ Office 效率% → 公招刷新加速 → 多余干员 → 绿票/黄票（凭�
 每个干员的初始工作时长由心情-消耗关系决定，即**跨周期可持续性硬约束**（约束基线 H6）：
 
 ```
-pool[op] = mood_full / mood_burn
+pool_hard[op] = mood_full / mood_burn
 
 其中:
   mood_burn = max(0, base_burn - recovery_modifiers)
@@ -232,7 +232,7 @@ pool[op] = mood_full / mood_burn
 
 **含义**：单干员在排班周期内的可持续工作小时数上限。超过此值，干员心情将退化至无法在下个周期正常启动。此为**硬约束**——多窗口求解中，λ 影子乘子将此硬约束转化为经济信号（§9.5），使 contribution 评分中自动惩罚超池行为。
 
-**注意**：宿舍恢复是独立资源（由 Phase D 宿舍分配竞争），**不纳入 pool 计算**——避免"假设所有干员都能获得宿舍恢复"的过度乐观。宿舍恢复的价值由 §9.5 的 `+ recovery_rate × λ × hours` 独立估值。
+**注意**：宿舍恢复是独立资源（由 Phase D 宿舍分配竞争），**不纳入 pool_hard 计算**——避免"假设所有干员都能获得宿舍恢复"的过度乐观。宿舍恢复的价值由 §9.5 的 `+ recovery_rate × λ × hours` 独立估值。
 
 ### 3.2 时长修正技能
 
@@ -674,20 +674,20 @@ D[d] = ∂P / ∂S[d]
 ```
 对每名干员 op:
   Σ_w hours_used(op, w) × mood_burn ≤ mood_full
-  ⇔ Σ_w hours_used(op, w) ≤ mood_full / mood_burn = pool[op]
+  ⇔ Σ_w hours_used(op, w) ≤ mood_full / mood_burn = pool_hard[op]
 ```
 
 λ 是此约束的影子乘子（shadow multiplier），通过离散 bisection 将硬约束转化为经济信号：
 
 | 机制 | 说明 |
 |------|------|
-| λ 更新 | 每轮迭代后：`hours_used > pool` → λ 翻倍（收紧）；`hours_used ≤ pool` 且 λ>0 → λ 减半（释放）。λ 跨迭代保持，逐步收敛 |
+| λ 更新 | 每轮迭代后：`hours_used > pool_hard` → λ 翻倍（收紧）；`hours_used ≤ pool_hard` 且 λ>0 → λ 减半（释放）。λ 跨迭代保持，逐步收敛 |
 | λ 惩罚 | contribution 中 `- λ[op] × hours`——超池干员在所有设施中被压低评分，迭代中被替代 |
 | λ 奖励 | dorm contribution 中 `+ recovery_rate × hours × λ`——λ 越高，恢复越值钱，宿舍干员获得更高优先级 |
 | λ 锚定 | `λ_k = median(base_rate × efficiency × unit_value / window_hours)`——取 Phase A/B 已分配槽位的每小时边际 LMD 等值，保证 λ 与 contribution 同一量纲 |
 | 收敛 | λ 的离散 bisection 保证 O(log₂(值域/粒度)) 步收敛。λ≈0 时约束全部满足，迭代终止 |
 
-**注意**：宿舍恢复是独立资源（由 Phase D 宿舍分配竞争），不纳入 pool 计算。pool 仅由心情续航决定——避免"假设所有干员都能获得宿舍恢复"的过度乐观。
+**注意**：宿舍恢复是独立资源（由 Phase D 宿舍分配竞争），不纳入 pool_hard 计算。pool_hard 仅由心情续航决定——避免"假设所有干员都能获得宿舍恢复"的过度乐观。
 
 #### 迭代框架
 
@@ -779,7 +779,7 @@ D[d] = ∂P / ∂S[d]
   D_{k+1}[w][d] = δP/δS[w]|_{S=S_{k+1}, A=A_{k+1}}
 
   ― λ 更新: 影子乘子（离散 bisection） ——
-  检查 Σ_w hours_used(op, w) ≤ pool[op]（可持续性约束，见上文）:
+  检查 Σ_w hours_used(op, w) ≤ pool_hard[op]（可持续性约束，见上文）:
     若违反: λ ← λ × 2  （若 λ=0 则设初始步长 hourly_value × 0.25）
     若满足且 λ > 0: λ ← λ / 2
   λ 跨迭代保持，O(log₂(值域/粒度)) 步收敛。
