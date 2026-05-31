@@ -1,4 +1,4 @@
-"""Phase D: 剩余设施（Power/Reception/Office/Dormitory）contribution 贪心
+﻿"""Phase D: 剩余设施（Power/Reception/Office/Dormitory）contribution 贪心
 
 替代旧 fill_remaining.py + fill_dorm.py。
 每种设施通过 contribution(ctx, op_name, facility_type, D=D) 评分，

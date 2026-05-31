@@ -1,4 +1,4 @@
-"""槽位求解器统一状态载体
+﻿"""槽位求解器统一状态载体
 
 SlotContext 替代旧的 locked_support / assigned_ids / assigned_names
 等多个可变 dict 的碎片化状态传递，提供统一的读写接口。

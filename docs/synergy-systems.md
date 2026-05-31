@@ -1,4 +1,4 @@
-# 基建联动体系建模
+﻿# 基建联动体系建模
 
 > **版本**: 2026-05-28 · 基于 `buffs_infrastructure.json` (520 buff) + `character_identity.json` (415 干员) 交叉核验，已删除 Trade 贪心迭代相关过时章节
 >
@@ -8,7 +8,7 @@
 
 ## 总体架构
 
-体系函数通过 `evaluate_room()` 统一集成到求解器的各 Phase 中。求解器分四阶段执行（见 [`strategy-brief.md`](./strategy-brief.md)），体系函数在每阶段直接参与评估，而非预计算+后验证的两步模式。
+体系函数通过 `evaluate_room()` 统一集成到求解器的各 Phase 中。求解器分四阶段执行（见 [`slot-processing-model.md`](./slot-processing-model.md)），体系函数在每阶段直接参与评估，而非预计算+后验证的两步模式。
 
 **集成方式**：
 
@@ -766,6 +766,6 @@ def synergy_jie_order(
 
 ## 参考
 
-- 策略概要: [`strategy-brief.md`](./strategy-brief.md)
+- 策略概要: [`slot-processing-model.md`](./slot-processing-model.md)
 - 效率函数建模: [`efficiency-function-design.md`](./efficiency-function-design.md)
 - 约束体系基线: [`constraints-and-data-baseline.md`](./constraints-and-data-baseline.md)

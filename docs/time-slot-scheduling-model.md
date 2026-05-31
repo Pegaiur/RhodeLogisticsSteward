@@ -1,4 +1,4 @@
-# 机会成本补充覆盖方案
+﻿# 机会成本补充覆盖方案
 
 > 状态：Phase 1 已实施（2026-05-31）。Phase 2（λ_mood + swap_cost）为设计草案。
 
@@ -85,7 +85,7 @@ mfg.py   评分循环 ── score -= compute_opportunity_cost_lmd(...) / scale
 - **与 `contribution.py` 宿舍机会成本**：概念同构，实现独立——两者都遵循机会成本的基本定价模式（牺牲率 × 价格 × 时间），但因量纲（生产效率% vs 心情恢复率）和价格来源（产品市值 vs 影子价格 λ）不同，保持独立实现
 - **与 λ 惩罚**：正交——λ 管跨窗口用量（hours_used vs pool），机会成本管单窗口内组合质量
 - **与 Phase 2**：返回 LMD 等值，与 λ_mood/swap_cost 同量纲，可直接参与留/换决策
-- **"窗口模型"的定义**：指 slot-processing-model-draft.md §3.3 的"窗口展开：选择权的分配"，即每窗口独立 Phase A→D 贪心求解 + λ bisection 跨窗口耦合。本文档的 Phase 1/2 均在此窗口模型基础上叠加，不替换其决策骨架
+- **"窗口模型"的定义**：指 slot-processing-model.md §3.3 的"窗口展开：选择权的分配"，即每窗口独立 Phase A→D 贪心求解 + λ bisection 跨窗口耦合。本文档的 Phase 1/2 均在此窗口模型基础上叠加，不替换其决策骨架
 
 ---
 
@@ -179,7 +179,7 @@ penalty(k) = base_cost × (1 + escalation)^(k-1)
 
 ## 五、关联文档
 
-- [slot-processing-model-draft.md](./slot-processing-model-draft.md) — 槽位加工模型设计
-- [strategy-brief.md](./strategy-brief.md) — 排班策略概要
+- [slot-processing-model.md](./slot-processing-model.md) — 槽位加工模型设计
+- [slot-processing-model.md](./slot-processing-model.md) — 排班策略概要
 - [constraints-and-data-baseline.md](./constraints-and-data-baseline.md) — 约束体系与数据基线
 - `steward_core/solver/slot/opportunity.py` — Phase 1 实现源码

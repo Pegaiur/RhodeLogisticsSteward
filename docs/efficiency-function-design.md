@@ -2,7 +2,7 @@
 
 > **版本**: 2026-05-28 · 已实现 — 通过 `efficiency_fn.py` 的 `LinearSegment` + `constant_efficiency`/`ramping_efficiency` 构造器 + `evaluate.py` 的 `evaluate_room()` 统一积分
 >
-> **MVP 简化**：12h 单班次下心情截断不触发（`t_red ≥ 16h`），实际 `mood_burn=0.0`，e(t) 退化为全常数段。
+> **简化**：单班次 12h 内心情截断不触发（`t_red ≥ 16h`），e(t) 在单窗口内退化为全常数段。跨窗口场景下 `mood_burn` 参与工作时长池计算（见 slot-processing-model.md §3.1 / §9.5），但不在 e(t) 中引入截断。
 
 ## 1. 动机
 
@@ -119,6 +119,6 @@ A 支配 B  ⇔  e_A(t) ≥ e_B(t)  for all t ∈ [0, T]
 
 ## 参考
 
-- 策略概要: [`strategy-brief.md`](./strategy-brief.md)
+- 策略概要: [`slot-processing-model.md`](./slot-processing-model.md)
 - 联动体系建模: [`synergy-systems.md`](./synergy-systems.md)
 - 约束体系基线: [`constraints-and-data-baseline.md`](./constraints-and-data-baseline.md)

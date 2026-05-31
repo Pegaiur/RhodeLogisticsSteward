@@ -1,4 +1,4 @@
-# AGENTS.md
+﻿# AGENTS.md
 
 ## 项目概述
 
@@ -22,7 +22,7 @@
 | MAA 绑定 | `maafw` (pip) | MAA Python API，通过 ctypes 调用 MaaCore.dll |
 | 图像识别 | MAA 内置 (OpenCV + PaddleOCR + onnxruntime) | 不直接调用，由 MAA OperBox/Infrast 任务间接使用 |
 | 数据处理 | 标准库 json + pathlib | 解析 building_data.json / infrast.json |
-| 求解算法 | 制造站穷举(含联动) + 剪枝 + 贪心 | 见 `docs/strategy-brief.md` |
+| 求解算法 | 制造站穷举(含联动) + 剪枝 + 贪心 | 见 `docs/slot-processing-model.md` |
 | 输出格式 | MAA 基建排班协议 JSON | 见 [MAA 基建排班协议](https://docs.maa.plus/zh-cn/protocol/base-scheduling-schema.html) |
 
 **版本锁**：
@@ -89,7 +89,7 @@ RhodeLogisticsSteward/
 │   └── constants.py              # 布局/设施常量
 ├── docs/
 │   ├── constraints-and-data-baseline.md  # 约束体系与数据基线
-│   ├── strategy-brief.md         # 精简策略概要
+│   ├── slot-processing-model.md         # 槽位加工模型
 │   ├── efficiency-function-design.md  # 效率函数建模
 │   ├── synergy-systems.md        # 联动体系建模
 │   ├── inbox.md                  # 需求收件箱（远期待办登记）
@@ -156,7 +156,7 @@ RhodeLogisticsSteward/
 当 AI Agent 进入本项目工作区时，按以下顺序发现上下文：
 
 1. **读取 AGENTS.md**（本文件）→ 理解项目定位、技术栈、规则、包结构
-2. **读取 `docs/strategy-brief.md`** → 理解当前策略与算法骨架
+2. **读取 `docs/slot-processing-model.md`** → 理解当前策略与算法骨架
 3. **按需深入到子包**：
    - 联动体系逻辑 → `steward_core/synergy/`：先读 `__init__.py` 了解公开 API，再按需进入对应模块（A层→`mfg_linkages`/`trade_linkages`/`facility_linkages`，B层→`buff_pool`/`global_linkages`，C层→`control_linkages`/`mood`）
    - 求解/排班逻辑 → `steward_core/solver/`：先读 `__init__.py` 的 `solve_mvp()` / `solve_multi_shift()`（委托给 Strategy），再按需进入 `strategy.py`（Strategy ABC + PartialSolution）、`strategies/baseline.py`（Pipeline 流水线编排）、各 `exhaust_*/fill_*` 模块（具体阶段）、`refine.py`（局部搜索）、`global_state.py`（全局状态评分）
@@ -169,12 +169,12 @@ RhodeLogisticsSteward/
 
 | 关键词 | 目标文件 / 位置 |
 |--------|----------------|
-| 排班策略/算法 | `docs/strategy-brief.md` |
+| 排班策略/算法 | `docs/slot-processing-model.md` |
 | 约束/设施/联动 | `docs/constraints-and-data-baseline.md` |
 | 数据源/覆盖度/效率值 | `docs/constraints-and-data-baseline.md` 附录 A |
 | 效率函数/e(t) | `docs/efficiency-function-design.md` |
 | 联动/体系建模 | `docs/synergy-systems.md` |
-| 设施容量/约束/多班次 | `docs/strategy-brief.md` §设施容量/§约束/§策略 |
+| 设施容量/约束/多班次 | `docs/slot-processing-model.md` §1.1 / §1 / §3 |
 | 心情建模/多班次 | `docs/archive/mood-multi-shift-plan.md` |
 | 心情流转引擎 | `steward_core/mood_flow.py` |
 | 宿舍恢复速率 | `steward_core/dorm_recovery.py` |
@@ -191,7 +191,7 @@ RhodeLogisticsSteward/
 | Strategy 重构（已完成） | `docs/archive/strategy-refactor-plan.md`（v0.5.0 已实施） |
 | BuffPool 迭代（已完成） | `docs/archive/buffpool-iteration-plan.md`（v0.5.0 已实施） |
 | 心情建模/多班次（已完成） | `docs/archive/mood-multi-shift-plan.md`（已实施，合并至 master，未打 tag） |
-| 槽位加工模型（即将实践） | `docs/slot-processing-model-draft.md` |
+| 槽位加工模型 | `docs/slot-processing-model.md` |
 
 ## 版本管理
 
@@ -258,7 +258,7 @@ v1.0.0  → 首个正式版
 | 语言 | **中文**，技术术语可保留英文 |
 | 格式 | Markdown（.md），代码使用 ` ``` ` 块标语言 |
 | 图表 | Mermaid，使用 `mermaid-charting` 技能规范 |
-| 命名 | `lower-kebab-case.md`（如 `strategy-brief.md`） |
+| 命名 | `lower-kebab-case.md`（如 `slot-processing-model.md`） |
 | 位置 | 全部放在 `docs/` 目录下 |
 | 行宽 | 代码块无限制，正文建议 ≤120 字符 |
 | 引用 | MAA 文档链接使用 `https://docs.maa.plus/...` |

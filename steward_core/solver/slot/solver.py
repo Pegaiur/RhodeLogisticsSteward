@@ -1,6 +1,6 @@
-"""SlotSolver — 槽位加工模型求解引擎
+﻿"""SlotSolver — 槽位加工模型求解引擎
 
-直接实现 slot-processing-model-draft.md §9.5 混合状态迭代策略。
+直接实现 slot-processing-model.md §9.5 混合状态迭代策略。
 """
 
 from __future__ import annotations

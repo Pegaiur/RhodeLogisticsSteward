@@ -1,6 +1,8 @@
 # 统一槽位加工模型
 
-> **状态**：设计草案，含收敛性证明（§9.11）与实证验证计划（§9.13），待评审后实施。
+> **状态**：已实施（v0.6.0-dev）。14×12h 基线已跑通，求解器代码位于 `steward_core/solver/slot/`。
+>
+> V1 SlotIterationStrategy → V2 SlotSolver 的演进记录见 `archive/slot-iteration-notes.md`。
 
 ---
 
@@ -19,6 +21,17 @@
 **关键**：产能公式以槽位为单位。所有技能的效果最终作用于槽位。
 
 > **实现注**：当前代码以 `RoomAssignment`（room_type + operators 列表）为基本单位，尚无槽位 ID 体系。本文档的槽位模型是理论框架，为后续实现提供设计目标。
+
+| 设施     | 房间数 | 每间槽位 | 总槽位 |
+|----------|:------:|:--------:|:------:|
+| Control  | 1      | 5        | 5      |
+| Trade    | 2      | 3        | 6      |
+| Mfg      | 4      | 3        | 12     |
+| Power    | 3      | 1        | 3      |
+| Reception| 1      | 2        | 2      |
+| Office   | 1      | 1        | 1      |
+| Dormitory| 4      | 5        | 20     |
+> 核心工位 29 个。全 box 415 干员中精 2 可用 ≥ 225 名。Dormitory 20 槽位中，仅部分用于宿舍恢复 buff 提供者，其余供工作干员恢复使用。
 
 ```
 槽位产能 = base_rate × efficiency × effective_hours × drone_multiplier
@@ -581,6 +594,11 @@ effective_productivity = base × effective_hours / window_hours[w]
 ---
 
 ## 9. 决策过程推导
+
+> **实现路线**：§9.5 的混合策略（Mfg/Trade 穷举 + Control/Dorm contribution 贪心 +
+> λ bisection）已实施于 `solver/slot/solver.py`。V1 SlotIterationStrategy →
+> V2 SlotSolver 的演进记录见 `archive/slot-iteration-notes.md`。
+> Phase 1 归零机会成本（whisper/automation/zeroing）见 [opportunity.py](../steward_core/solver/slot/opportunity.py)。
 
 本节从状态向量的不动点结构推导求解策略。
 

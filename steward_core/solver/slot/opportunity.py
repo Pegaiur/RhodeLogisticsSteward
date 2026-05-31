@@ -1,4 +1,4 @@
-"""归零组合的机会成本计算
+﻿"""归零组合的机会成本计算
 
 所有归零类联动（whisper / automation / zeroing_variant）的机会成本
 均通过本模块的 compute_opportunity_cost_lmd() 计算，
