@@ -98,7 +98,7 @@ class TestGlobalContextFromPlan:
         assert "Mfg" in ctx.all_assignments
 
     def test_迷迭香在Mfg_标志正确(self):
-        """迷迭香在 Mfg → has_rosmontis 被正确检测"""
+        """迷迭香在 Mfg → mfg_operators 被正确传递至 compute_buff_pool"""
         params = SolverParams()
         rosmontis = _mk_op("迷迭香", [_mk_mfg_skill(0.0, "ros")])
         plan = ShiftPlan(
