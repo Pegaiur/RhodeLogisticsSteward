@@ -60,13 +60,12 @@ def evaluate_room(
     if layout is None:
         layout = _LAYOUT_243
 
-    # 心情截断参数
-    mood_burn = 0.0
-    qiangan_mood = None
+    # 心情截断参数 — 多班次启用时逐干员计算 burn 以支持 per-operator mp_cost buff
     warmup_map: dict[str, float] = {}
     mood_map: dict[str, float] = {}
+    co_worker_names: list[str] | None = None
     if mood_ctx is not None:
-        mood_burn = mood_ctx.room_burn(operators, room_type)
+        co_worker_names = [op.name for op in operators]  # 包含自身：mp_cost buff 作用于全房含持有者
         qiangan_mood = mood_ctx.qiangan_decay_basis(operators, room_type)
         for op in operators:
             w = mood_ctx.warmup_hours.get(op.name, 0.0)
@@ -115,16 +114,22 @@ def evaluate_room(
             continue
         t_init = warmup_map.get(op.name, 0.0)
         op_mood = mood_map.get(op.name, 24.0)
+        op_burn = 0.0
+        if mood_ctx is not None:
+            op_burn = mood_ctx.work_burn(
+                op.name, room_type, len(operators),
+                co_workers=co_worker_names,
+            )
         ramp_segs = operator_ramp_segments(
             op, room_type, product, T, t_initial=t_init,
-            mood_burn=mood_burn, mood_initial=op_mood,
+            mood_burn=op_burn, mood_initial=op_mood,
         )
         if ramp_segs is not None:
             total += integrate_segments(ramp_segs, T)
         elif op.name == "铅踝" and qiangan_mood is not None:
             qiangan_segs = stepped_efficiency(
                 base=30, step_size=5, step_interval=4,
-                mood_burn=mood_burn, T=T, mood_initial=qiangan_mood,
+                mood_burn=op_burn, T=T, mood_initial=qiangan_mood,
             )
             total += integrate_segments(qiangan_segs, T)
         else:
@@ -132,7 +137,7 @@ def evaluate_room(
             if eff > 0:
                 total += integrate_segments(
                     constant_efficiency(
-                        eff, mood_burn=mood_burn, T=T,
+                        eff, mood_burn=op_burn, T=T,
                         mood_initial=op_mood,
                     ), T,
                 )

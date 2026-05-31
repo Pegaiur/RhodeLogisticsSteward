@@ -16,6 +16,20 @@ if TYPE_CHECKING:
 
 
 @dataclass
+class RoomBurnContext:
+    """房间心情消耗上下文 — 从槽位模型传递至心情引擎的数据载体
+
+    每个工作干员一份，包含其所在房间的槽位信息和同房间干员名单，
+    供 work_burn() 检测房间级 mp_cost buff（如槐琥 manu_cost_all[000]）。
+    """
+
+    room_type: str
+    room_slots: int
+    room_index: int
+    co_workers: list[str] = field(default_factory=list)
+
+
+@dataclass
 class MoodModifiers:
     """全局心情修正器 — 一次计算，供所有工作/宿舍干员使用
 
@@ -113,6 +127,45 @@ def compute_global_burn(
     if modifiers.mlynar_spread:
         recovery += modifiers.control_recovery + modifiers.global_work_recovery
     return max(0.0, base - recovery)
+
+
+# ─── 房间级 mp_cost buff 修正表 ──────────────────────────────────
+
+_MP_COST_ROOM_ZERO: set[str] = {
+    "manu_cost_all[000]",
+}
+"""持有者在场时，同房间全员心情消耗归零（如槐琥 团队精神）"""
+
+_MP_COST_ROOM_REDUCE: dict[str, float] = {
+    "manu_cost[000]": 0.1,
+}
+"""持有者在场时，同房间全员心情消耗减少（buff_id → 减免量/h）。
+
+同房间多个持有者叠加生效（如两人各持 manu_cost[000] 则全房 -0.2/h）。
+"""
+
+
+def _apply_mp_cost(
+    burn: float,
+    op_name: str,  # 预留：未来可能用于 per-operator 免疫检测
+    co_workers: list[str],
+    op_lookup: dict[str, "Operator"],
+) -> float:
+    """应用同房间干员的 mp_cost buff 修正
+
+    扫描 co_workers 中每个人的 skills，匹配 _MP_COST_ROOM_ZERO
+    和 _MP_COST_ROOM_REDUCE 表。
+    """
+    for cw_name in co_workers:
+        cw_op = op_lookup.get(cw_name)
+        if cw_op is None:
+            continue
+        for sk in cw_op.skills:
+            if sk.buff_id in _MP_COST_ROOM_ZERO:
+                return 0.0
+            if sk.buff_id in _MP_COST_ROOM_REDUCE:
+                burn = max(0.0, burn - _MP_COST_ROOM_REDUCE[sk.buff_id])
+    return burn
 
 
 @dataclass
@@ -213,12 +266,18 @@ class MoodContext:
         room_type: str,
         room_slots: int = 3,
         buff_pool: "BuffPool | None" = None,
+        *,
+        co_workers: list[str] | None = None,
     ) -> float:
         """计算单干员工作消耗率净值 (mood_burn)
 
         公式: base - recovery_modifiers
           base = base_burn_per_hour - control_recovery_per_op × (room_slots - 1)
           recovery = control_recovery + yanhuo_recovery + (mlynar spread)
+
+        co_workers 为同房间干员名列表，用于检测房间级 mp_cost buff
+        （槐琥 manu_cost_all[000] 消除全房间消耗等）。
+        为 None 时跳过检测（_pool_for 保守计算场景）。
         """
         burn_per_hour = self.params.base_burn_per_hour if self.params else 1.0
         recovery_per_op = self.params.control_recovery_per_op if self.params else 0.05
@@ -227,7 +286,12 @@ class MoodContext:
         recovery = modifiers.control_recovery + modifiers.yanhuo_recovery
         if modifiers.mlynar_spread:
             recovery += modifiers.control_recovery + modifiers.global_work_recovery
-        return max(0.0, base - recovery)
+        burn = max(0.0, base - recovery)
+
+        if co_workers:
+            burn = _apply_mp_cost(burn, name, co_workers, self._op_lookup)
+
+        return burn
 
     def room_burn(
         self,
@@ -314,14 +378,15 @@ class MoodContext:
         working_names: set[str],
         shift_hours_override: float | None = None,
         *,
-        working_slots: dict[str, tuple[int, str]] | None = None,
+        working_slots: dict[str, "RoomBurnContext"] | None = None,
     ) -> "MoodContext":
         """应用一个班次后的心情变化（不可变，返回新实例）
 
         working_names: 本班次工作的干员名集合（含中枢干员）
         shift_hours_override: 覆盖默认班次时长（用于测试/自定义班次）
-        working_slots: 干员名 → (所在房间槽位数, 设施类型)，用于计算正确的 burn 率。
-                       未提供时回退到 (3, "Mfg")（历史兼容）。
+        working_slots: 干员名 → RoomBurnContext，用于计算正确的 burn 率
+                       （含同房间干员名单，供 mp_cost buff 检测）。
+                       未提供时回退到 3 工位 Mfg（历史兼容）。
 
         工作设施干员按 work_burn 消耗，中枢干员按 _control_burn 消耗。
         """
@@ -331,13 +396,18 @@ class MoodContext:
 
         control_burn_rate = self._control_burn()
 
+        default_ctx = RoomBurnContext(room_type="Mfg", room_slots=3, room_index=0)
+
         for name in self.operator_moods:
             if name in working_names:
                 if name in self.control_operators:
                     new_moods[name] = max(0.0, new_moods[name] - control_burn_rate * hours)
                 else:
-                    slots, facility_type = (working_slots or {}).get(name, (3, "Mfg"))
-                    burn = self.work_burn(name, facility_type, slots)
+                    rbc = (working_slots or {}).get(name, default_ctx)
+                    burn = self.work_burn(
+                        name, rbc.room_type, rbc.room_slots,
+                        co_workers=rbc.co_workers,
+                    )
                     new_moods[name] = max(0.0, new_moods[name] - burn * hours)
                 new_warmup[name] = self.warmup_hours.get(name, 0.0) + hours
             else:

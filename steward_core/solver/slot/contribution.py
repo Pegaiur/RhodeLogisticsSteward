@@ -85,8 +85,9 @@ def _compute_state_snapshot(
     window_idx: int,
     ctrl_names: list[str],
     extra_dorm_names: list[str] | None = None,
+    office_op_name: str | None = None,
 ) -> dict[str, float]:
-    """计算给定中枢/宿舍组合下的状态向量快照"""
+    """计算给定中枢/宿舍/办公室组合下的状态向量快照"""
     from steward_core.synergy.buff_pool import compute_buff_pool
     from steward_core.synergy import compute_engineering_robots
 
@@ -102,10 +103,17 @@ def _compute_state_snapshot(
 
     ctrl_ops = [ctx.op_lookup[n] for n in ctrl_names if n in ctx.op_lookup]
 
+    office_perception = 0
+    if office_op_name and office_op_name in ctx.op_lookup:
+        office_op = ctx.op_lookup[office_op_name]
+        if any(sk.buff_id == "hire_spd_bd_n1[000]" for sk in office_op.skills):
+            office_perception = params.office_perception_base if params else 20
+
     bp = compute_buff_pool(
         ctrl_ops, suich_count=suich_count,
         dorm_operators=[o for o in dorm_ops if o],
         dorm_level=dorm_level, layout=layout,
+        perception_from_office=office_perception,
     )
 
     eng = compute_engineering_robots(layout)
@@ -282,10 +290,20 @@ def _office_contribution(
     window_idx: int,
     D: dict[str, float],
 ) -> float:
-    """办公室贡献 = type2状态写入*D + 办公室效率->等效Mfg
-    Office 干员不通过 BuffPool 写入全局状态，仅计算直接效率贡献。
-    """
+    """办公室贡献 = type2状态写入*D + 办公室效率->等效Mfg"""
     total = 0.0
+
+    ctrl_names = ctx.ops_of_type(window_idx, "Control")
+
+    with_sv = _compute_state_snapshot(
+        ctx, window_idx, ctrl_names, office_op_name=op.name,
+    )
+    without_sv = _compute_state_snapshot(ctx, window_idx, ctrl_names)
+
+    for d in STATE_DIMS:
+        delta = with_sv[d] - without_sv[d]
+        if delta != 0.0 and D.get(d, 0.0) > 0:
+            total += delta * D[d]
 
     eff = max(op.best_efficiency("Office", "HR"), 0.0)
     hours = ctx.params.shift_hours if ctx.params else 12.0

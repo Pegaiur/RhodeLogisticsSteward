@@ -101,7 +101,15 @@ def solve_slot(
                 for a in ctx.windows[w].assignments:
                     if a.operator_name and a.facility_type not in _NON_WORK_FACILITIES:
                         ft = a.facility_type
-                        working_slots[a.operator_name] = (_FACILITY_SLOTS.get(ft, 3), ft)
+                        ri = a.room_index
+                        room_ops = ctx.room_ops(w, ft, ri)
+                        from steward_core.mood_flow import RoomBurnContext
+                        working_slots[a.operator_name] = RoomBurnContext(
+                            room_type=ft,
+                            room_slots=_FACILITY_SLOTS.get(ft, 3),
+                            room_index=ri,
+                            co_workers=room_ops,
+                        )
                 mc = mc.after_shift(working_names, working_slots=working_slots)
                 if w < num_windows - 1:
                     mc = mc.after_recovery(interval_hours)
