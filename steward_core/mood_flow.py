@@ -602,7 +602,7 @@ class MoodContext:
             warmup_hours=new_warmup,
         )
 
-    def qiangan_decay_basis(
+    def qianhuai_decay_basis(
         self,
         operators: list["Operator"],
         room_type: str,

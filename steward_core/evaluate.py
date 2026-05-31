@@ -64,9 +64,10 @@ def evaluate_room(
     warmup_map: dict[str, float] = {}
     mood_map: dict[str, float] = {}
     co_worker_names: list[str] | None = None
+    qianhuai_mood = None
     if mood_ctx is not None:
         co_worker_names = [op.name for op in operators]  # 包含自身：mp_cost buff 作用于全房含持有者
-        qiangan_mood = mood_ctx.qiangan_decay_basis(operators, room_type)
+        qianhuai_mood = mood_ctx.qianhuai_decay_basis(operators, room_type)
         for op in operators:
             w = mood_ctx.warmup_hours.get(op.name, 0.0)
             if w > 0:
@@ -126,12 +127,12 @@ def evaluate_room(
         )
         if ramp_segs is not None:
             total += integrate_segments(ramp_segs, T)
-        elif op.name == "铅踝" and qiangan_mood is not None:
-            qiangan_segs = stepped_efficiency(
+        elif op.name == "铅踝" and qianhuai_mood is not None:
+            qianhuai_segs = stepped_efficiency(
                 base=30, step_size=5, step_interval=4,
-                mood_burn=op_burn, T=T, mood_initial=qiangan_mood,
+                mood_burn=op_burn, T=T, mood_initial=qianhuai_mood,
             )
-            total += integrate_segments(qiangan_segs, T)
+            total += integrate_segments(qianhuai_segs, T)
         else:
             eff = op.best_efficiency(room_type, product)
             if eff > 0:
