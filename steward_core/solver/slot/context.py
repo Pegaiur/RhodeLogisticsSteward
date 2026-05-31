@@ -110,6 +110,7 @@ class SlotContext:
 
     lambda_ops: dict[str, float] = field(default_factory=dict)
     hours_used: dict[str, float] = field(default_factory=dict)
+    control_operators: list[str] = field(default_factory=list)
 
     prev_P: float = 0.0
     visited: set[str] = field(default_factory=set)

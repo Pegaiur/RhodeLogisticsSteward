@@ -168,6 +168,11 @@ def phase_trade(
         )
         lmd = efficiency_integrated / 24.0 * lmd_per_day
 
+        lambda_penalty = sum(
+            ctx.lambda_ops.get(name, 0.0) for name in combo_names
+        ) * shift_hours
+        lmd -= lambda_penalty
+
         is_whisper = _has_whisper(combo_ops)
         if is_whisper:
             whisper_combos.append((lmd, combo_names, _zeroed_efficiency_sum(combo_ops)))

@@ -26,15 +26,14 @@ def phase_control(
     D: dict[str, float] | None = None,
     mood_ctx: "MoodContext | None" = None,
 ) -> None:
-    """执行 D-aware 中枢填充（含跨窗口互斥）
+    """执行 D-aware 中枢填充
 
-    1. 收集所有有中枢技能的未分配干员（排除当前窗口已分配 + 其他窗口中
-       枢已选的干员）
+    1. 收集所有有中枢技能的未分配干员（排除当前窗口已分配）
     2. 若 D 为 None，从当前分配计算偏导数（Phase A/B 后已有赋值）
     3. 顺序贪心：每轮选 contribution 最高的干员，写入 ctx，下一轮重算
 
     中枢容量从 ctx.params.control_max_slots 读取（默认 5）。
-    跨窗口互斥确保每个干员最多在一个窗口担任中枢，强制轮换。
+    跨窗口可持续性由 λ 影子乘子经济惩罚 + mood_is_viable 心情阈值共同保障。
     """
     params = ctx.params
     max_slots = params.control_max_slots if params else 5
@@ -50,13 +49,6 @@ def phase_control(
         D = compute_partial_derivatives(ctx, window_idx)
 
     assigned_ids = ctx.assigned_ids(window_idx)
-
-    for w in range(ctx.num_windows):
-        if w == window_idx:
-            continue
-        for name in ctx.ops_of_type(w, "Control"):
-            if name in ctx.op_lookup:
-                assigned_ids.add(ctx.op_lookup[name].char_id)
 
     for _ in range(max_slots - slots_filled):
         best_op_name = None

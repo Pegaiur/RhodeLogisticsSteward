@@ -30,6 +30,21 @@ if TYPE_CHECKING:
 
 _LAYOUT_243 = LayoutConfig.layout_243()
 
+_MFG_CR_BASE_RATE = 1.0 / 3.0
+_MFG_PG_BASE_RATE = 1.0 / 1.2
+_CR_LMD_PER_UNIT = 1000.0 / 1.3
+_PG_LMD_PER_UNIT = 500.0
+
+_LAMBDA_EFF_SCALE = {
+    "CombatRecord": _MFG_CR_BASE_RATE * _CR_LMD_PER_UNIT / 100.0,
+    "PureGold": _MFG_PG_BASE_RATE * _PG_LMD_PER_UNIT / 100.0,
+}
+"""λ 惩罚从 LMD 到效率积分域的换算系数
+
+1 单位效率积分（%×h）对应 base_rate × unit_value / 100 LMD。
+λ×hours（LMD）除以本系数即得效率积分域等值惩罚。
+"""
+
 
 def phase_mfg(
     ctx: "SlotContext",
@@ -137,6 +152,10 @@ def phase_mfg(
                 mood_ctx=mood_ctx,
             )
             combo_names = [op.name for op in combo_ops]
+            lambda_penalty = sum(
+                ctx.lambda_ops.get(name, 0.0) for name in combo_names
+            ) * shift_hours / _LAMBDA_EFF_SCALE.get(product, 2.5)
+            score -= lambda_penalty
             evaluated.append((score, combo_names))
 
         evaluated.sort(key=lambda x: -x[0])

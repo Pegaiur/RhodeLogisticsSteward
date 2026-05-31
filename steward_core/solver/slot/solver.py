@@ -29,6 +29,16 @@ _MAX_ITERATIONS = 10
 _NON_WORK_FACILITIES = frozenset({"Dormitory", "Training", "Workshop"})
 """不消耗心情的设施类型集合"""
 
+_FACILITY_SLOTS: dict[str, int] = {
+    "Control": 5,
+    "Mfg": 3,
+    "Trade": 3,
+    "Power": 1,
+    "Reception": 1,
+    "Office": 1,
+}
+"""每种设施类型的标准槽位数"""
+
 
 def solve_slot(
     operators: list["Operator"],
@@ -64,18 +74,13 @@ def solve_slot(
     visited = set()
     best_ctx = None
     best_P = 0.0
+    prev_max_lambda = -1.0
 
     for iteration in range(max_iterations):
         if iteration > 0:
             _reset_ctx(ctx)
         mc = mood_ctx
-        lambda_init = 0.0
         for w in range(num_windows):
-            if num_windows > 1:
-                lambda_w = _update_lambda_shadow(ctx, operators, params, shift_hours)
-                if lambda_w > lambda_init:
-                    lambda_init = lambda_w
-
             phase_mfg(ctx, w, mood_ctx=mc)
             phase_trade(ctx, w, mood_ctx=mc)
 
@@ -87,15 +92,24 @@ def solve_slot(
 
             if mc is not None:
                 mc.control_operators = ctx.ops_of_type(w, "Control")
+                ctx.control_operators = list(mc.control_operators)
                 working_names = {
                     a.operator_name for a in ctx.windows[w].assignments
                     if a.operator_name and a.facility_type not in _NON_WORK_FACILITIES
                 }
-                mc = mc.after_shift(working_names)
+                working_slots = {}
+                for a in ctx.windows[w].assignments:
+                    if a.operator_name and a.facility_type not in _NON_WORK_FACILITIES:
+                        working_slots[a.operator_name] = _FACILITY_SLOTS.get(a.facility_type, 3)
+                mc = mc.after_shift(working_names, working_slots=working_slots)
                 if w < num_windows - 1:
                     mc = mc.after_recovery(interval_hours)
 
             _track_hours_used(ctx, w, shift_hours)
+
+        max_lambda = 0.0
+        if num_windows > 1:
+            max_lambda = _update_lambda_shadow(ctx, operators, params, shift_hours, mood_ctx=mood_ctx)
 
         if best_ctx is None:
             best_ctx = ctx.clone()
@@ -111,8 +125,10 @@ def solve_slot(
             best_ctx = ctx.clone()
         ctx.prev_P = P
 
-        if num_windows > 1 and lambda_init < 0.001 and iteration > 0:
-            break
+        if num_windows > 1 and max_lambda < 0.001 and iteration > 0:
+            if prev_max_lambda >= 0 and abs(max_lambda - prev_max_lambda) < 0.001:
+                break
+        prev_max_lambda = max_lambda
 
     if best_ctx is None:
         best_ctx = ctx
@@ -129,14 +145,14 @@ def solve_slot(
 def _reset_ctx(ctx: SlotContext) -> None:
     """清空所有窗口槽位用于迭代重新求解
 
-    保留 op_lookup/operators/params/layout/windows 结构，
-    仅清空 operator_name、hours_used 和 lambda_ops。
+    保留 lambda_ops（跨迭代持久化，离散 bisection 需要历史累积）、
+    control_operators（供 _update_lambda_shadow 计算逐干员 pool）。
+    仅清空 operator_name、hours_used。
     """
     for w in range(ctx.num_windows):
         for a in ctx.windows[w].assignments:
             a.operator_name = ""
     ctx.hours_used.clear()
-    ctx.lambda_ops.clear()
 
 
 def _track_hours_used(ctx: SlotContext, window_idx: int, hours: float) -> None:
@@ -154,38 +170,43 @@ def _update_lambda_shadow(
     operators: list,
     params: "SolverParams",
     shift_hours: float,
+    mood_ctx: "MoodContext | None" = None,
 ) -> float:
-    """更新影子乘子 λ_op
+    """更新影子乘子 lambda_op（离散 bisection）
 
-    返回最大 λ 值（用于判断收敛——全 0 时终止迭代）。
+    对每名干员：
+      pool[op] = mood_full / mood_burn(op)  ← 跨周期可持续性硬约束上限（H6）
+      若 hours_used > pool:  lambda <- lambda * 2（收紧）
+      若 hours_used <= pool: lambda <- lambda / 2（释放）
+
+    lambda 跨迭代保持（_reset_ctx 不清零），逐步收敛至约束恰满足的水平。
+    恢复不纳入 pool——宿舍恢复是独立资源，由 lambda 奖励传导（dorm contribution）。
+    返回最大 lambda 值（用于收敛判断）。
     """
     mood_full = params.mood_full if params else 24.0
-    base_burn = params.base_burn_rate3 if params else 0.90
-    interval = params.interval_hours if params else 8.0
-    damping = params.lambda_damping if params else 0.5
-
-    avg_recovery = _estimate_avg_recovery(operators, params)
-    pool_base = mood_full / base_burn + (ctx.num_windows - 1) * interval * avg_recovery
-
-    free_shifts = ctx.num_windows - 1 - 0.5
-    free_hours = max(0.0, free_shifts) * shift_hours
 
     hourly_value = _MFG_CR_BASE_RATE * _CR_LMD_PER_UNIT
-    free_ratio = max(0.15, free_hours / pool_base)
+    lambda_cap = hourly_value * 10.0
 
     max_lambda = 0.0
 
     for op in operators:
+        pool = _pool_for(op, params, ctx, mood_ctx)
         used = ctx.hours_used.get(op.name, 0.0)
-        if used <= free_ratio * pool_base:
-            ctx.lambda_ops[op.name] = 0.0
-            continue
+        old_lambda = ctx.lambda_ops.get(op.name, 0.0)
 
-        overflow_ratio = max(0.0, used - free_ratio * pool_base) / pool_base
-        lambda_val = max(0.0, overflow_ratio * hourly_value * damping)
-        if lambda_val > max_lambda:
-            max_lambda = lambda_val
-        ctx.lambda_ops[op.name] = lambda_val
+        if used > pool:
+            if old_lambda <= 0.0:
+                new_lambda = hourly_value * 0.25
+            else:
+                new_lambda = old_lambda * 2.0
+            new_lambda = min(new_lambda, lambda_cap)
+        else:
+            new_lambda = old_lambda / 2.0
+
+        ctx.lambda_ops[op.name] = new_lambda
+        if new_lambda > max_lambda:
+            max_lambda = new_lambda
 
     return max_lambda
 
@@ -194,31 +215,48 @@ _MFG_CR_BASE_RATE = 1.0 / 3.0
 _CR_LMD_PER_UNIT = 1000.0 / 1.3
 
 
-def _estimate_avg_recovery(
-    operators: list,
+def _pool_for(
+    op: "Operator",
     params: "SolverParams",
+    ctx: SlotContext,
+    mood_ctx: "MoodContext | None",
 ) -> float:
-    """估算平均宿舍恢复速率（/h）"""
-    from steward_core.mood_flow import MoodContext
+    """逐干员跨周期可持续工作时长上限
 
+    pool[op] = mood_full / mood_burn(op)
+
+    mood_burn 受中枢 buff 修正，优先使用 ctx.control_operators（上一轮中枢配置）。
+    冷启动时无中枢信息，回退到 base_burn_rate3（3 人工位默认消耗率）。
+    room_slots 根据干员技能所在设施类型确定：
+      Control → 5, Mfg/Trade → 3, 其余 → 1。
+    """
     mood_full = params.mood_full if params else 24.0
-    sample_size = min(20, len(operators))
-    recovery_samples = []
+    burn = params.base_burn_rate3 if params else 0.90
+    slots = _facility_slots_for(op)
 
-    mock_mc = MoodContext(
-        operator_moods={op.name: mood_full for op in operators},
-        _op_lookup={op.name: op for op in operators},
-    )
+    if mood_ctx is not None and ctx.control_operators:
+        from steward_core.mood_flow import MoodContext as MC
+        burn_mc = MC(
+            operator_moods={op.name: mood_full},
+            control_operators=list(ctx.control_operators),
+            params=params,
+            _op_lookup=ctx.op_lookup,
+        )
+        burn = burn_mc.work_burn(op.name, "Mfg", slots)
 
-    for op in operators[:sample_size]:
-        try:
-            r = mock_mc.dorm_recovery(op.name, dorm_mates=[op])
-            if r > 0:
-                recovery_samples.append(r)
-        except Exception:
-            pass
+    if burn <= 0.0:
+        burn = 0.01
+    return mood_full / burn
 
-    return sum(recovery_samples) / max(len(recovery_samples), 1) if recovery_samples else 1.5
+
+def _facility_slots_for(op: "Operator") -> int:
+    """根据干员技能确定其典型工作设施的槽位数"""
+    facility_types = {sk.room_type for sk in op.skills}
+    if "Control" in facility_types:
+        return 5
+    if facility_types & {"Mfg", "Trade"}:
+        return 3
+    return 1
 
 
 def _estimate_total_production(
