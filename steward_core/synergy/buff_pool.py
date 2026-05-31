@@ -64,26 +64,24 @@ def compute_buff_pool(
 ) -> BuffPool:
     """计算全局 buff 点数池
 
-    所有生产源的干员通过 Operator 列表 + buff_id 扫描检测，
-    不再使用 bool 代理参数。中枢干员暂保留名字硬编码（TODO: 统一到 buff_id）。
+    所有生产源通过 Operator 列表 + buff_id 扫描检测。
     """
     if dorm_operators is None:
         dorm_operators = []
 
-    names = {op.name for op in control_operators}
     yanhuo = 0
     perception = 0
     monster_cuisine = 0
 
     # ── 段① 中枢源 ──────────────────────────────────────────────
 
-    if "令" in names:
+    if any(_op_has_buff(op, "control_costToBD[000]") for op in control_operators):
         if ling_mood_below_12:
             perception += 10
         else:
             yanhuo += 15
 
-    if "重岳" in names:
+    if any(_op_has_buff(op, "control_mp_cost&bd_up[000]") for op in control_operators):
         yanhuo += min(suich_count, 5) * 5
 
     _has_xi_perception = any(
