@@ -56,6 +56,8 @@ def compute_buff_pool(
     trade_operators: list[Operator] | None = None,
     office_operators: list[Operator] | None = None,
     office_perception_base: int = 20,
+    office_yanhuo_base: int = 20,
+    office_silent_base: int = 30,
     ling_mood_below_12: bool = False,
     xi_mood_below_12: bool | None = None,
     layout: LayoutConfig | None = None,
@@ -84,7 +86,16 @@ def compute_buff_pool(
     if "重岳" in names:
         yanhuo += min(suich_count, 5) * 5
 
-    if "夕" in names:
+    _has_xi_perception = any(
+        _op_has_buff(op, "control_mp_cost&bd2[000]") for op in control_operators
+    )
+    _has_xi_yanhuo = any(
+        _op_has_buff(op, "control_mp_cost&bd1[000]") for op in control_operators
+    )
+    if _has_xi_yanhuo:
+        if xi_mood_below_12 is not None and xi_mood_below_12:
+            yanhuo += 15
+    if _has_xi_perception:
         if xi_mood_below_12 is not None:
             if not xi_mood_below_12:
                 perception += 10
@@ -112,6 +123,13 @@ def compute_buff_pool(
     for op in (office_operators or []):
         if _op_has_buff(op, "hire_spd_bd_n1[000]"):
             perception += office_perception_base
+        if _op_has_buff(op, "hire_spd_bd_n1_n1[200]"):
+            yanhuo += office_yanhuo_base
+
+    silent_from_office = 0
+    for op in (office_operators or []):
+        if _op_has_buff(op, "hire_spd_bd_n1_n1[300]"):
+            silent_from_office = office_silent_base
 
     if _dorm_has_buff(dorm_operators, "dorm_rec_bd_dungeon[000]"):
         monster_cuisine += dorm_level
@@ -120,7 +138,7 @@ def compute_buff_pool(
 
     # ── 段③ 无声共鸣级联（依赖段①② 完成的 perception 值）──
 
-    silent_resonance = 0
+    silent_resonance = silent_from_office
     if any(_op_has_buff(op, "trade_ord_spd_bd_n1[000]") for op in (trade_operators or [])):
         silent_resonance += perception
     if dorm_operators:

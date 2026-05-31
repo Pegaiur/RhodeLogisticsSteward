@@ -30,6 +30,25 @@ def _make_office_op() -> Operator:
     return _mk_op("絮雨", [_mk_skill("hire_spd_bd_n1[000]", "HIRE", "追忆")])
 
 
+def _mk_xi() -> Operator:
+    return _mk_op("夕", [
+        _mk_skill("control_mp_cost&bd1[000]", "Control", "不以物喜"),
+        _mk_skill("control_mp_cost&bd2[000]", "Control", "不以己悲"),
+    ])
+
+
+def _mk_sangshen() -> Operator:
+    return _mk_op("桑葚", [
+        _mk_skill("hire_spd_bd_n1_n1[200]", "HIRE", "灾后普查"),
+    ])
+
+
+def _mk_shenlv() -> Operator:
+    return _mk_op("深律", [
+        _mk_skill("hire_spd_bd_n1_n1[300]", "HIRE", "心声图绘"),
+    ])
+
+
 # ─── B2 工程机器人 / B3 思维链环 / B4 魔物料理 / B5 无声共鸣 ──
 
 class TestBLayer:
@@ -83,7 +102,7 @@ class TestBLayer:
         """compute_buff_pool 现在包含 thought_chains + silent_resonance"""
         from steward_core.synergy import compute_buff_pool
 
-        control = [_mk_op("令"), _mk_op("重岳"), _mk_op("夕")]
+        control = [_mk_op("令"), _mk_op("重岳"), _mk_xi()]
         pool = compute_buff_pool(control, suich_count=5)
 
         assert pool.yanhuo == 40
@@ -95,7 +114,7 @@ class TestBLayer:
         """C2: 3人工位 burn = 0.75 - 中枢减免(5×0.05) - 重岳孤光共照(0.05)"""
         from steward_core.synergy import compute_global_burn, compute_buff_pool
 
-        control = [_mk_op("令"), _mk_op("重岳"), _mk_op("夕"), _mk_op("凯尔希"), _mk_op("焰尾")]
+        control = [_mk_op("令"), _mk_op("重岳"), _mk_xi(), _mk_op("凯尔希"), _mk_op("焰尾")]
         buff_pool = compute_buff_pool(control, suich_count=5)
         burn = compute_global_burn(control, buff_pool, worker_count=3)
 
@@ -112,7 +131,7 @@ class TestBuffPool:
         """令+重岳+夕+凯尔希+焰尾 → 烟火=15(令)+25(重岳5岁)=40"""
         from steward_core.synergy import compute_buff_pool
 
-        control = [_mk_op("令"), _mk_op("重岳"), _mk_op("夕"), _mk_op("凯尔希"), _mk_op("焰尾")]
+        control = [_mk_op("令"), _mk_op("重岳"), _mk_xi(), _mk_op("凯尔希"), _mk_op("焰尾")]
         pool = compute_buff_pool(control, suich_count=5)
 
         assert pool.yanhuo == 40
@@ -189,7 +208,7 @@ class TestDormPerception:
         """迷迭香在制造站，4名宿舍干员 → +4 感知信息"""
         from steward_core.synergy import compute_buff_pool
 
-        control = [_mk_op("令"), _mk_op("夕")]
+        control = [_mk_op("令"), _mk_xi()]
         dorm = [_mk_op("填位A"), _mk_op("填位B"), _mk_op("填位C"), _mk_op("填位D")]
 
         pool = compute_buff_pool(control, dorm_operators=dorm,
@@ -202,7 +221,7 @@ class TestDormPerception:
         """黑键在贸易站，4名宿舍干员 → +4 感知信息"""
         from steward_core.synergy import compute_buff_pool
 
-        control = [_mk_op("令"), _mk_op("夕")]
+        control = [_mk_op("令"), _mk_xi()]
         dorm = [_mk_op("A"), _mk_op("B"), _mk_op("C"), _mk_op("D")]
 
         pool = compute_buff_pool(control, dorm_operators=dorm,
@@ -215,7 +234,7 @@ class TestDormPerception:
         """迷迭香在Mfg + 黑键在Trade → 各贡献宿舍数量感知"""
         from steward_core.synergy import compute_buff_pool
 
-        control = [_mk_op("令"), _mk_op("夕")]
+        control = [_mk_op("令"), _mk_xi()]
         dorm = [_mk_op("A"), _mk_op("B"), _mk_op("C"), _mk_op("D")]
 
         pool = compute_buff_pool(control, dorm_operators=dorm,
@@ -233,7 +252,7 @@ class TestDormPerception:
         alice.skills.append(_mk_skill("dorm_rec_bd_n1_n2[000]", "Dormitory", "睡前故事"))
         alice.skills.append(_mk_skill("dorm_rec_bd_n1[000]", "Dormitory", "梦境呓语"))
 
-        control = [_mk_op("夕")]  # 仅夕提供10感知
+        control = [_mk_xi()]  # 仅夕提供10感知
         dorm = [alice]
 
         pool = compute_buff_pool(control, dorm_operators=dorm, dorm_level=3)
@@ -249,7 +268,7 @@ class TestDormPerception:
         cherni.skills.append(_mk_skill("dorm_rec_bd_n1_n3[000]", "Dormitory", "慢板行歌"))
         cherni.skills.append(_mk_skill("dorm_rec_bd_n1[100]", "Dormitory", "琴键漫步"))
 
-        control = [_mk_op("夕")]
+        control = [_mk_xi()]
         dorm = [cherni]
 
         pool = compute_buff_pool(control, dorm_operators=dorm, dorm_level=3)
@@ -260,7 +279,7 @@ class TestDormPerception:
         """空宿舍 → 仅中枢生成感知"""
         from steward_core.synergy import compute_buff_pool
 
-        control = [_mk_op("令"), _mk_op("夕")]
+        control = [_mk_op("令"), _mk_xi()]
         pool = compute_buff_pool(control, dorm_operators=[])
 
         assert pool.perception == 10  # 仅夕
@@ -279,7 +298,7 @@ class TestMonsterCuisine:
         sensi = _mk_op("森西")
         sensi.skills.append(_mk_skill("dorm_rec_bd_dungeon[000]", "Dormitory", "森西大食堂"))
 
-        control = [_mk_op("令"), _mk_op("夕")]
+        control = [_mk_op("令"), _mk_xi()]
         dorm = [sensi]
 
         pool = compute_buff_pool(control, dorm_operators=dorm, dorm_level=3)
@@ -290,7 +309,7 @@ class TestMonsterCuisine:
         """无森西在宿舍 → monster_cuisine = 0"""
         from steward_core.synergy import compute_buff_pool
 
-        control = [_mk_op("令"), _mk_op("夕")]
+        control = [_mk_op("令"), _mk_xi()]
         dorm = [_mk_op("填位")]
 
         pool = compute_buff_pool(control, dorm_operators=dorm)
@@ -307,7 +326,7 @@ class TestFullBuffPool:
         """令+夕中枢，迷迭香Mfg+黑键Trade，爱丽丝+车尔尼+塑心+森西宿舍"""
         from steward_core.synergy import compute_buff_pool
 
-        control = [_mk_op("令"), _mk_op("夕")]
+        control = [_mk_op("令"), _mk_xi()]
 
         alice = _mk_op("爱丽丝")
         alice.skills.append(_mk_skill("dorm_rec_bd_n1_n2[000]", "Dormitory", "睡前故事"))
@@ -338,7 +357,7 @@ class TestFullBuffPool:
         """令<12 + 宿舍 Lv5 + 满 20 人 → 感知=54（含4宿舍干员不含塑心）"""
         from steward_core.synergy import compute_buff_pool
 
-        control = [_mk_op("令"), _mk_op("夕")]
+        control = [_mk_op("令"), _mk_xi()]
 
         alice = _mk_op("爱丽丝")
         alice.skills.append(_mk_skill("dorm_rec_bd_n1_n2[000]", "Dormitory", "睡前故事"))
@@ -373,17 +392,27 @@ class TestFullBuffPool:
         """令 mood<12 → +10 感知，不产生烟火"""
         from steward_core.synergy import compute_buff_pool
 
-        control = [_mk_op("令"), _mk_op("夕")]
+        control = [_mk_op("令"), _mk_xi()]
         pool = compute_buff_pool(control, ling_mood_below_12=True)
 
         assert pool.yanhuo == 0
         assert pool.perception == 20  # 令(10) + 夕(10)
 
+    def test_夕心情低于12_产生烟火(self):
+        """夕 mood<12 → 不以物喜 → 烟火+15"""
+        from steward_core.synergy import compute_buff_pool
+
+        control = [_mk_op("令"), _mk_xi()]
+        pool = compute_buff_pool(control, xi_mood_below_12=True)
+
+        assert pool.yanhuo == 30  # 令默认(15) + 夕不以物喜(15)
+        assert pool.perception == 0  # 夕不产生感知(mood<12)，令也默认烟火
+
     def test_令心情高于12_默认产生烟火(self):
         """默认 ling_mood_below_12=False → 令产生烟火"""
         from steward_core.synergy import compute_buff_pool
 
-        control = [_mk_op("令"), _mk_op("夕")]
+        control = [_mk_op("令"), _mk_xi()]
         pool = compute_buff_pool(control)
 
         assert pool.yanhuo == 15
@@ -445,7 +474,7 @@ class TestB1OfficeTradeGeneration:
         """perception_from_office=20 → 感知信息额外 +20（2招募位×10记忆碎片）"""
         from steward_core.synergy import compute_buff_pool
 
-        control = [_mk_op("令"), _mk_op("夕")]
+        control = [_mk_op("令"), _mk_xi()]
         pool = compute_buff_pool(control, office_operators=[_make_office_op()], office_perception_base=20)
 
         assert pool.perception == 30  # 夕(10) + 絮雨Office(20)
@@ -455,7 +484,7 @@ class TestB1OfficeTradeGeneration:
         """perception_from_office=20 + 迷迭香超感(5 dorm) → 叠加"""
         from steward_core.synergy import compute_buff_pool
 
-        control = [_mk_op("令"), _mk_op("夕")]
+        control = [_mk_op("令"), _mk_xi()]
         dorm = [_mk_op(f"填位{i}") for i in range(5)]
 
         pool = compute_buff_pool(
@@ -496,10 +525,38 @@ class TestB1OfficeTradeGeneration:
         """perception_from_office=0 → 无额外感知（边界）"""
         from steward_core.synergy import compute_buff_pool
 
-        control = [_mk_op("令"), _mk_op("夕")]
+        control = [_mk_op("令"), _mk_xi()]
         pool = compute_buff_pool(control, office_operators=[_make_office_op()], office_perception_base=0)
 
         assert pool.perception == 10  # 仅夕(10)
+
+    def test_桑葚_office_烟火(self):
+        """桑葚在 Office，office_yanhuo_base=20 → 烟火+20"""
+        from steward_core.synergy import compute_buff_pool
+
+        control = [_mk_op("令"), _mk_op("重岳")]
+        office_op = _mk_sangshen()
+        pool = compute_buff_pool(
+            control, suich_count=5,
+            office_operators=[office_op], office_yanhuo_base=20,
+        )
+
+        assert pool.yanhuo == 15 + 25 + 20  # 令(15) + 重岳(25) + 桑葚(20)
+
+    def test_深律_office_无声共鸣(self):
+        """深律在 Office，office_silent_base=30 → 无声共鸣+30"""
+        from steward_core.synergy import compute_buff_pool
+
+        control = [_mk_op("令"), _mk_xi()]
+        office_op = _mk_shenlv()
+        pool = compute_buff_pool(
+            control, office_operators=[office_op], office_silent_base=30,
+            trade_operators=[_mk_op("黑键", [_mk_skill("trade_ord_spd_bd_n1[000]", "TRADING", "乐感")])],
+        )
+
+        # 夕(10 perception) + 黑键乐感(0, 无宿舍干员) = 10 感知信息 → 10 无声共鸣
+        # 深律 office_silent_base=30 → +30 无声共鸣
+        assert pool.silent_resonance == 40  # 夕感知(10) + 深律(30)
 
 
 # ─── B5 无声共鸣生成 ─────────────────────────────────────────────
@@ -511,7 +568,7 @@ class TestB5SilentResonance:
         """塑心在宿舍，20名干员 → silent_resonance +20"""
         from steward_core.synergy import compute_buff_pool
 
-        control = [_mk_op("令"), _mk_op("夕")]
+        control = [_mk_op("令"), _mk_xi()]
         suxin = _mk_op("塑心")
         dorm = [suxin] + [_mk_op(f"填位{i}") for i in range(19)]
 
@@ -530,7 +587,7 @@ class TestB5SilentResonance:
         """黑键不在 Trade → 无感知→共鸣转化，仅塑心宿舍生成"""
         from steward_core.synergy import compute_buff_pool
 
-        control = [_mk_op("令"), _mk_op("夕")]
+        control = [_mk_op("令"), _mk_xi()]
         suxin = _mk_op("塑心")
         dorm = [suxin] + [_mk_op(f"填位{i}") for i in range(4)]
 
@@ -556,7 +613,7 @@ class TestB5SilentResonance:
         """令<12(10)+夕(10)+迷迭香超感(5)+黑键乐感(5)+塑心宿舍(5)=35 silent_resonance"""
         from steward_core.synergy import compute_buff_pool
 
-        control = [_mk_op("令"), _mk_op("夕")]
+        control = [_mk_op("令"), _mk_xi()]
         suxin = _mk_op("塑心")
         dorm = [suxin] + [_mk_op(f"填位{i}") for i in range(4)]
 
