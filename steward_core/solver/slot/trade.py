@@ -121,6 +121,10 @@ def phase_trade(
 
     _EBEN_NAME = "黑键"
     _WUYOU_NAME = "乌有"
+    _ROS_NAME = "迷迭香"
+
+    mfg_names = ctx.ops_of_type(window_idx, "Mfg")
+    has_rosmontis_in_mfg = _ROS_NAME in mfg_names
 
     power_modifier_names = {
         op.name for op in ctx.operators if _has_power_count_modifier(op)
@@ -144,6 +148,7 @@ def phase_trade(
                 dorm_level=params.dorm_level if params else 5,
                 layout=ctx.layout if ctx.layout else _LAYOUT_243,
                 perception_from_office=office_perception,
+                has_rosmontis_in_mfg=has_rosmontis_in_mfg,
                 has_ebnhlz_in_trade=has_eben,
                 has_wuyou_in_trade=has_wuyou,
             )
