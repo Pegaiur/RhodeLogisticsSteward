@@ -34,6 +34,36 @@ _DRONE_TO_MFG_RATIO = 0.5
 _MFG_CR_BASE_RATE = 1.0 / 3.0
 _MFG_PG_BASE_RATE = 1.0 / 1.2
 
+_RECEPTION_NON_DISPERSION = 5.0
+
+_RECEPTION_RARITY_BONUS: dict[int, float] = {
+    0: 0.0,
+    1: 0.0,
+    2: 0.0,
+    3: 2.0,
+    4: 4.0,
+    5: 5.0,
+}
+
+_RECEPTION_ELITE_BONUS: dict[int, float] = {
+    0: 0.0,
+    1: 8.0,
+    2: 16.0,
+}
+
+_RECEPTION_LEVEL_BONUS: dict[int, float] = {
+    1: 7.0,
+    2: 9.0,
+    3: 11.0,
+}
+
+_RECEPTION_DORM_AMBIANCE_THRESHOLDS: list[tuple[int, float]] = [
+    (4000, 15.0),
+    (3000, 10.0),
+    (2000, 5.0),
+    (0, 0.0),
+]
+
 
 def contribution(
     ctx: "SlotContext",
@@ -271,18 +301,51 @@ def _power_contribution(
     return total
 
 
+def _reception_implicit_bonus(
+    op: "Operator",
+    reception_level: int,
+    dorm_ambiance: int,
+) -> float:
+    """会客室隐式线索搜集速度加成（与技能无关的基础加成）
+
+    来源: PRTS Wiki 会客室机制表，含 5 项:
+      - 非涣散加成: 固定 +5%
+      - 干员稀有度: 1-3★=0%, 4★=2%, 5★=4%, 6★=5%
+      - 干员精英阶段: E0=0%, E1=8%, E2=16%
+      - 会客室等级: Lv1=7%, Lv2=9%, Lv3=11%
+      - 宿舍氛围累计: 阈值分段 0/2000/3000/4000 → 0/5/10/15%
+    """
+    total = _RECEPTION_NON_DISPERSION
+    total += _RECEPTION_RARITY_BONUS.get(op.rarity, 0.0)
+    total += _RECEPTION_ELITE_BONUS.get(op.elite_phase, 0.0)
+    total += _RECEPTION_LEVEL_BONUS.get(reception_level, 11.0)
+
+    for threshold, bonus in _RECEPTION_DORM_AMBIANCE_THRESHOLDS:
+        if dorm_ambiance >= threshold:
+            total += bonus
+            break
+
+    return total
+
+
 def _reception_contribution(
     ctx: "SlotContext",
     op: "Operator",
     window_idx: int,
     D: dict[str, float],
 ) -> float:
-    """会客室贡献 = type2状态写入*D + 会客效率->等效Mfg
-    Reception 干员不通过 BuffPool 写入全局状态，仅计算直接效率贡献。
+    """会客室贡献 = 隐式加成 + 技能效率 → 等效Mfg
+    Reception 干员不通过 BuffPool 写入全局状态。
+    隐式加成包括: 非涣散/稀有度/精英阶段/会客室等级/宿舍氛围。
     """
     total = 0.0
 
-    eff = max(op.best_efficiency("Reception", "General"), 0.0)
+    reception_level = ctx.params.reception_level if ctx.params else 3
+    dorm_ambiance = ctx.params.dorm_ambiance if ctx.params else 5000
+    implicit = _reception_implicit_bonus(op, reception_level, dorm_ambiance)
+    skill_eff = max(op.best_efficiency("Reception", "General"), 0.0)
+    eff = implicit + skill_eff
+
     hours = ctx.params.shift_hours if ctx.params else 12.0
     base_lmd = _mfg_base_rate_lmd_avg()
     total += eff * _RECEPTION_TO_MFG_RATIO / 100.0 * base_lmd * hours

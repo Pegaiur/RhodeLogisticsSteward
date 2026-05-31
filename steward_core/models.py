@@ -100,6 +100,7 @@ class Operator:
     char_id: str
     name: str
     rarity: int = 0
+    elite_phase: int = 2
     skills: list[Skill] = field(default_factory=list)
     group_id: Optional[str] = None
     nation_id: Optional[str] = None

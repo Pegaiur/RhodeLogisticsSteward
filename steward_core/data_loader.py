@@ -101,10 +101,18 @@ def load_operators_v2(
         group_id = char_data.get("groupId") or None
         team_id = char_data.get("teamId") or None
 
+        if rarity <= 1:
+            elite_phase = 0
+        elif rarity == 2:
+            elite_phase = 1
+        else:
+            elite_phase = 2
+
         op = Operator(
             char_id=char_id,
             name=name,
             rarity=rarity,
+            elite_phase=elite_phase,
             group_id=group_id,
             nation_id=nation_id,
             team_id=team_id,

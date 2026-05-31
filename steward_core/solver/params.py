@@ -36,6 +36,10 @@ class SolverParams:
     """宿舍默认等级"""
     dorm_levels_sum: int = 20
     """宿舍总等级（4间 × Lv5）"""
+    reception_level: int = 3
+    """会客室等级（1-3），影响隐式线索搜集加成"""
+    dorm_ambiance: int = 5000
+    """宿舍氛围累计值，影响隐式线索搜集加成。默认 5000 对应 >4000 档位（+15%）"""
 
     # === 心情/消耗 ===
     base_burn_per_hour: float = 1.0
@@ -164,6 +168,8 @@ class SolverParams:
             errors.append("dorm_max_operators 应 >= dorm_room_size")
         if self.daily_task_lmd < 0:
             errors.append("daily_task_lmd 必须 >= 0")
+        if self.reception_level not in (1, 2, 3):
+            errors.append("reception_level 必须在 {1, 2, 3} 中")
         return errors
 
     def summary(self) -> str:
