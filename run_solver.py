@@ -1,9 +1,9 @@
 r"""全 box 满练度求解器 — 槽位加工模型
 
 用法:
-    python run_solver.py                              # 默认 3班x8h
-    python run_solver.py --hours 12                   # 3班x12h
-    python run_solver.py --params custom.json         # 自定义参数文件
+    python run_solver.py                              # 默认 14班x12h (7天)
+    python run_solver.py --hours 8 --shifts 3         # 3班x8h
+    python run_solver.py --params custom.json          # 自定义参数文件
 
 数据文件 (character_identity.json + buffs_infrastructure.json) 需在项目根目录。
 输出 output/custom_infrast/ 目录。
@@ -22,7 +22,8 @@ def _parse_cli():
     args = list(__import__("sys").argv[1:])
 
     params_file = None
-    hours_override = 8.0
+    hours_override = 12.0
+    shifts_override = 14
 
     i = 0
     while i < len(args):
@@ -30,14 +31,16 @@ def _parse_cli():
             params_file = args[i + 1]; i += 2
         elif args[i] == "--hours" and i + 1 < len(args):
             hours_override = float(args[i + 1]); i += 2
+        elif args[i] == "--shifts" and i + 1 < len(args):
+            shifts_override = int(args[i + 1]); i += 2
         else:
             print(f"[警告] 未知参数: {args[i]}"); i += 1
 
-    return params_file, hours_override
+    return params_file, hours_override, shifts_override
 
 
 def main():
-    params_file, hours_override = _parse_cli()
+    params_file, hours_override, shifts_override = _parse_cli()
 
     if params_file:
         params = SolverParams.from_json(params_file)
@@ -46,7 +49,7 @@ def main():
         params = SolverParams()
 
     shift_hours = hours_override
-    shift_count = 3
+    shift_count = shifts_override
     params = params.apply_overrides(
         shift_hours=shift_hours,
         shift_count=shift_count,
@@ -76,6 +79,7 @@ def main():
 
     print(f"\n[参数]")
     print(params.summary())
+    print(f"  周期: {shift_count}x{shift_hours:.0f}h = {shift_count * shift_hours:.0f}h ({shift_count * shift_hours / 24:.1f}天)")
 
     mode_desc = f"{shift_count}x{shift_hours:.0f}h"
     print(f"\n[求解] SlotStrategy, {mode_desc}...")
