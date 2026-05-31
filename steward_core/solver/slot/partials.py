@@ -21,10 +21,17 @@ _TRADE_BASE_LMD_PER_HOUR = 10265.0 / 24.0
 _BUFF_CONSUMER_DIMENSION: dict[str, str] = {}
 """干员名 → 消费的状态维度名"""
 
+_DIMENSION_CONVERSION: dict[str, float] = {}
+"""干员名 → 派生维度到基础维度的转换系数
+
+wushu_crystal = yanhuo // 5 → 每 yanhuo 的边际价值为每 crystal 的 1/5。
+"""
+
 for _name, _entry in _B_BUFF_CONSUMER_TABLE.items():
     pk = _entry.pool_key
     if pk == "wushu_crystal":
         _BUFF_CONSUMER_DIMENSION[_name] = "yanhuo"
+        _DIMENSION_CONVERSION[_name] = 1.0 / 5.0
     elif pk == "thought_chains":
         _BUFF_CONSUMER_DIMENSION[_name] = "perception"
     else:
@@ -102,7 +109,8 @@ def compute_partial_derivatives(
                     continue
 
                 rate = entry.bonus_per / entry.per_unit
-                marginal = base_rate * hours * rate / 100.0 * unit_lmd * drone_multiplier
+                conv = _DIMENSION_CONVERSION.get(name, 1.0)
+                marginal = base_rate * hours * rate * conv / 100.0 * unit_lmd * drone_multiplier
                 D[dim] += marginal
 
     return D

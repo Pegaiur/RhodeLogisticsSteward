@@ -24,7 +24,7 @@ def cold_start_ctrl_ops(ctx: "SlotContext", window_idx: int) -> list["Operator"]
     """冷启动预估：按 contribution 取前 max_slots 个中枢干员"""
     params = ctx.params
     max_slots = params.control_max_slots if params else 5
-    D_cold: dict[str, float] = {d: 1.0 for d in STATE_DIMS if d != "silent_resonance"}
+    D_cold: dict[str, float] = {d: 1.0 for d in STATE_DIMS}
     candidates = []
     for op in ctx.operators:
         if not op.has_skill_for("Control"):
@@ -39,7 +39,7 @@ def cold_start_dorm_ops(ctx: "SlotContext", window_idx: int) -> list["Operator"]
     """冷启动预估：按 contribution 取前 dorm_max 个宿舍干员"""
     params = ctx.params
     dorm_max = params.dorm_max_operators if params else 20
-    D_cold: dict[str, float] = {d: 1.0 for d in STATE_DIMS if d != "silent_resonance"}
+    D_cold: dict[str, float] = {d: 1.0 for d in STATE_DIMS}
     candidates = []
     for op in ctx.operators:
         if not op.has_skill_for("Dormitory", "Rest"):
