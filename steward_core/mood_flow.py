@@ -168,47 +168,47 @@ _MP_COST_FACTION_ZERO: dict[str, str] = {
 
 _SELF_MP_COST: dict[str, float] = {
     # === MANUFACTURE (26) ===
-    "manu_prod_limit&cost[000]": -0.25,
-    "manu_prod_limit&cost[0000]": -0.25,
-    "manu_prod_limit&cost[001]": -0.25,
-    "manu_prod_limit&cost[002]": -0.25,
-    "manu_prod_limit&cost[003]": -0.25,
-    "manu_prod_limit&cost[010]": -0.25,
-    "manu_prod_limit&cost[011]": -0.25,
-    "manu_prod_limit&cost[012]": -0.25,
-    "manu_prod_limit&cost[020]": -0.25,
-    "manu_prod_limit&cost[1020]": -0.25,
-    "manu_formula_cost[000]": -0.25,
-    "manu_prod_spd&limit&cost[000]": -0.15,
-    "manu_prod_spd&limit&cost[001]": -0.25,
-    "manu_prod_spd&limit&cost[010]": 0.25,
-    "manu_prod_spd&limit&cost[011]": 0.25,
-    "manu_prod_spd&limit&cost[020]": -0.25,
-    "manu_prod_spd&limit&cost[100]": 0.25,
-    "manu_prod_spd&limit&cost[101]": 0.25,
-    "manu_prod_spd&limit&cost[110]": 0.25,
-    "manu_prod_limit&cost[021]": -0.25,
-    "manu_formula_spd&limit&cost[000]": -0.25,
-    "manu_formula_spd&limit&cost[010]": -0.25,
-    "manu_formula_spd&limit&cost[100]": 0.25,
-    "manu_formula_spd&cost[000]": 0.25,
-    "manu_formula_spd&cost[001]": 0.25,
-    "manu_formula_spd&cost_bd[000]": -0.15,
+    "manu_prod_limit&cost[000]": -0.25,       # 清道夫 仓库上限+8
+    "manu_prod_limit&cost[0000]": -0.25,      # 红云 仓库上限+8
+    "manu_prod_limit&cost[001]": -0.25,       # 豆苗 仓库上限+8
+    "manu_prod_limit&cost[002]": -0.25,       # 刻俄柏 仓库上限+8
+    "manu_prod_limit&cost[003]": -0.25,       # 帕拉斯 仓库上限+8
+    "manu_prod_limit&cost[010]": -0.25,       # 泡泡 仓库上限+10
+    "manu_prod_limit&cost[011]": -0.25,       # 娜仁图亚 仓库上限+10
+    "manu_prod_limit&cost[012]": -0.25,       # Miss.Christine 仓库上限+10
+    "manu_prod_limit&cost[020]": -0.25,       # 石棉 仓库上限+16
+    "manu_prod_limit&cost[1020]": -0.25,      # 钼铅 仓库上限+16
+    "manu_formula_cost[000]": -0.25,          # 卡达 作战记录-0.25
+    "manu_prod_spd&limit&cost[000]": -0.15,   # 火神 生产力-5%+上限+16
+    "manu_prod_spd&limit&cost[001]": -0.25,   # 火神 生产力-5%+上限+19
+    "manu_prod_spd&limit&cost[010]": 0.25,    # 泡普卡 生产力+25%
+    "manu_prod_spd&limit&cost[011]": 0.25,    # 石棉 生产力+25%
+    "manu_prod_spd&limit&cost[020]": -0.25,   # 贝娜 生产力-20%+上限+17
+    "manu_prod_spd&limit&cost[100]": 0.25,    # 裁度 生产力+20%
+    "manu_prod_spd&limit&cost[101]": 0.25,    # 雪猎 生产力+20%
+    "manu_prod_spd&limit&cost[110]": 0.25,    # 雪猎 生产力+30%
+    "manu_prod_limit&cost[021]": -0.25,       # 洋灰 仓库上限+10
+    "manu_formula_spd&limit&cost[000]": -0.25,  # 酒神 作战记录+20%
+    "manu_formula_spd&limit&cost[010]": -0.25,  # 酒神 作战记录+35%
+    "manu_formula_spd&limit&cost[100]": 0.25,   # 裂响 作战记录+35%
+    "manu_formula_spd&cost[000]": 0.25,         # 杏仁 贵金属+25%
+    "manu_formula_spd&cost[001]": 0.25,         # 阿罗玛 贵金属+25%
+    "manu_formula_spd&cost_bd[000]": -0.15,     # 杏仁 黑钢每员+2%-0.15
     # === POWER (2) ===
-    "power_rec_spd&cost[000]": -0.52,
-    "power_rec_spd&cost[010]": -0.3,
+    "power_rec_spd&cost[000]": -0.52,        # THRM-EX 无人机恢复
+    "power_rec_spd&cost[010]": -0.3,         # 空构 无人机恢复
     # === TRADING (11) ===
-    "trade_ord_spd&cost[000]": -0.25,
-    "trade_ord_limit&cost[000]": -0.25,
-    "trade_ord_wt&cost[000]": -0.25,
-    "trade_ord_wt&cost[010]": -0.25,
-    "trade_ord_wt&cost[001]": -0.25,
-    "trade_ord_wt&cost[011]": -0.25,
-    "trade_ord_wt&cost[002]": -0.25,
-    "trade_ord_wt&cost[012]": -0.25,
-    "trade_ord_wt&cost[003]": -0.25,
-    "trade_ord_long[000]": -0.25,
-    "trade_ord_long[010]": -0.25,
+    "trade_ord_spd&cost[000]": -0.25,        # 古米/空爆/月见夜 订单+30%
+    "trade_ord_limit&cost[000]": -0.25,      # 桃金娘/史都华德/暗索 订单上限+5
+    "trade_ord_wt&cost[000]": -0.25,         # 柏喙/巫恋/贝娜/明椒 小幅高品质
+    "trade_ord_wt&cost[010]": -0.25,         # 柏喙/明椒 高品质
+    "trade_ord_wt&cost[001]": -0.25,         # 卡夫卡 小幅高品质
+    "trade_ord_wt&cost[011]": -0.25,         # 卡夫卡 高品质
+    "trade_ord_wt&cost[002]": -0.25,         # 折光 小幅高品质
+    "trade_ord_wt&cost[012]": -0.25,         # 折光 高品质
+    "trade_ord_wt&cost[003]": -0.25,         # 渡桥 小幅高品质
+    "trade_ord_long[000]": -0.25,            # 龙舌兰 赤金>3→龙门币+250
+    "trade_ord_long[010]": -0.25,            # 龙舌兰 赤金>3→龙门币+500
 }
 """干员自身 mp_cost buff → 心情消耗修正量（delta/h）。
 
