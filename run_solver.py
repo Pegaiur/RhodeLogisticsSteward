@@ -1,8 +1,8 @@
 r"""全 box 满练度求解器 — 槽位加工模型
 
 用法:
-    python run_solver.py                              # 默认 3班×8h+8h
-    python run_solver.py --hours 12                   # 3班×12h+8h
+    python run_solver.py                              # 默认 3班x8h+8h
+    python run_solver.py --hours 12                   # 3班x12h+8h
     python run_solver.py --params custom.json         # 自定义参数文件
 
 数据文件 (character_identity.json + buffs_infrastructure.json) 需在项目根目录。
@@ -13,10 +13,8 @@ from pathlib import Path
 
 from steward_core.data_loader import load_operators_v2
 from steward_core.output import save_json
-from steward_core.solver import solve_mvp
-from steward_core.solver.config import SolverConfig
 from steward_core.solver.params import SolverParams
-from steward_core import production
+from steward_core.pipeline import run as run_pipeline
 from steward_core.production import _RECORD_EXP_PER_UNIT, _GOLD_LMD_PER_UNIT
 
 
@@ -78,14 +76,14 @@ def main():
     ctrl_ops = [op for op in all_operators if op.has_skill_for("Control")]
     print(f"[统计] 制造站: {len(mfg_ops)}, 贸易站: {len(trade_ops)}, 控制中枢: {len(ctrl_ops)}")
 
+    print(f"\n[参数]")
+    print(params.summary())
+
     mode_desc = f"{shift_count}x{shift_hours:.0f}h+{interval_hours:.0f}h"
     print(f"\n[求解] SlotStrategy, {mode_desc}...")
 
-    from steward_core.mood_flow import MoodContext
-    mood_ctx = MoodContext.fresh(all_operators, params)
-    config = SolverConfig(params=params, mood_ctx=mood_ctx)
-    result = solve_mvp(all_operators, config=config)
-    all_plans = result.plans
+    pipe = run_pipeline(all_operators, params)
+    all_plans = pipe.solve_result.plans
 
     print(f"[结果] 班次数: {len(all_plans)}\n")
 
@@ -99,10 +97,7 @@ def main():
     for pi, plan in enumerate(all_plans):
         print(f"\n[产出·班次{pi + 1}] {shift_hours:.0f}h 生产结果...\n")
 
-        dp = production.calculate(
-            plan, all_operators, hours=shift_hours,
-            external_gold_per_day=params.daily_task_lmd / _GOLD_LMD_PER_UNIT,
-        )
+        dp = pipe.productions[pi]
 
         print("── 作战记录（经验）──")
         for room in dp.record_rooms:
@@ -146,7 +141,7 @@ def main():
 
     suffix = f"243_layout_slot_{shift_hours:.0f}h_x{shift_count}"
     output_path = project_root / "output" / "custom_infrast" / f"{suffix}.json"
-    save_json(result, output_path, title=f"排班方案 slot {shift_count}×{shift_hours:.0f}h")
+    save_json(pipe.solve_result, output_path, title=f"排班方案 slot {shift_count}x{shift_hours:.0f}h")
 
 
 if __name__ == "__main__":

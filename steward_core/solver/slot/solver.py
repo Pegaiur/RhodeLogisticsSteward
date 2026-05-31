@@ -10,7 +10,7 @@ from typing import TYPE_CHECKING
 from steward_core.models import LayoutConfig, SolveResult
 from steward_core.solver.config import SolverConfig
 from steward_core.solver.refine import local_search_refine
-from steward_core.solver.slot.context import SlotContext
+from steward_core.solver.slot.context import SlotContext, RotationState
 from steward_core.solver.slot.mfg import phase_mfg
 from steward_core.solver.slot.trade import phase_trade
 from steward_core.solver.slot.control import phase_control
@@ -71,16 +71,16 @@ def solve_slot(
         mc = mood_ctx
         lambda_init = 0.0
         for w in range(num_windows):
+            if num_windows > 1:
+                lambda_w = _update_lambda_shadow(ctx, operators, params, shift_hours)
+                if lambda_w > lambda_init:
+                    lambda_init = lambda_w
+
             phase_mfg(ctx, w, mood_ctx=mc)
             phase_trade(ctx, w, mood_ctx=mc)
 
             D = compute_partial_derivatives(ctx, w)
             ctx.windows[w].D = D
-
-            if mc is not None and num_windows > 1:
-                lambda_w = _update_lambda_shadow(ctx, operators, params)
-                if lambda_w > lambda_init:
-                    lambda_init = lambda_w
 
             phase_control(ctx, w, D, mood_ctx=mc)
             phase_remaining(ctx, w, D, mood_ctx=mc)
@@ -153,18 +153,16 @@ def _update_lambda_shadow(
     ctx: SlotContext,
     operators: list,
     params: "SolverParams",
+    shift_hours: float,
 ) -> float:
-    """更新影子乘子 λ_op：工作时长池稀缺性传导
+    """更新影子乘子 λ_op 并构建 RotationState
 
-    对每个干员:
-      pool = mood_full/base_burn + (num_windows-1)*interval*avg_recovery
-      used = ctx.hours_used[op]
-      overflow_ratio = max(0, used - 0.35*pool) / pool
+    构建 RotationState（含预计算 shift_counts 字典 + 自由时长/池容 + 惩罚权重），
+    同时保留 lambda_ops 用于旧收敛检测，但评分统一走 RotationState 比例惩罚路径。
 
-    λ_op = overflow_ratio * base_hourly_value * lambda_damping
-    其中 base_hourly_value 为 Mfg CR 槽位的每小时 LMD 等值。
-    lambda_damping 在 SolverParams 中可调（默认 0.5），用于控制 λ 敏感度。
-    0.35 阈值使 2 班次×12h 的中枢干员（24h > 0.35×50.7≈17.7h）触发惩罚。
+    阈值公式：free_shifts = num_windows - 1 - 0.5
+    即允许干员免费工作 (num_windows-1) 个整班次，
+    第 num_windows 个班次进入惩罚区。
 
     返回最大 λ 值（用于判断收敛——全 0 时终止迭代）。
     """
@@ -172,20 +170,44 @@ def _update_lambda_shadow(
     base_burn = params.base_burn_rate if params else 0.90
     interval = params.interval_hours if params else 8.0
     damping = params.lambda_damping if params else 0.5
+    penalty_weight = params.rotation_penalty_weight if params else 0.85
 
     avg_recovery = _estimate_avg_recovery(operators, params)
     pool_base = mood_full / base_burn + (ctx.num_windows - 1) * interval * avg_recovery
+
+    free_shifts = ctx.num_windows - 1 - 0.5
+    free_hours = max(0.0, free_shifts) * shift_hours
+
+    shift_counts: dict[tuple[str, str], int] = {}
+    for w in range(ctx.num_windows):
+        seen: set[tuple[str, str]] = set()
+        for a in ctx.windows[w].assignments:
+            if not a.operator_name or a.facility_type in _NON_WORK_FACILITIES:
+                continue
+            key = (a.operator_name, a.facility_type)
+            if key not in seen:
+                seen.add(key)
+                shift_counts[key] = shift_counts.get(key, 0) + 1
+
+    ctx.rotation_state = RotationState(
+        free_hours=free_hours,
+        pool_base=pool_base,
+        penalty_weight=penalty_weight,
+        shift_counts=shift_counts,
+    )
+
     hourly_value = _MFG_CR_BASE_RATE * _CR_LMD_PER_UNIT
+    free_ratio = max(0.15, free_hours / pool_base)
 
     max_lambda = 0.0
 
     for op in operators:
         used = ctx.hours_used.get(op.name, 0.0)
-        if used <= 0.35 * pool_base:
+        if used <= free_ratio * pool_base:
             ctx.lambda_ops[op.name] = 0.0
             continue
 
-        overflow_ratio = max(0.0, used - 0.35 * pool_base) / pool_base
+        overflow_ratio = max(0.0, used - free_ratio * pool_base) / pool_base
         lambda_val = max(0.0, overflow_ratio * hourly_value * damping)
         if lambda_val > max_lambda:
             max_lambda = lambda_val

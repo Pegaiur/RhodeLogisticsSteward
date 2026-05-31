@@ -24,8 +24,6 @@ class SolverParams:
     """单班次时长（小时），默认 12h"""
 
     # === 设施布局（243 默认值） ===
-    base_power_count: int = 3
-    """物理发电站数"""
     control_max_slots: int = 5
     """中枢最大工位"""
     dorm_room_count: int = 4
@@ -34,38 +32,26 @@ class SolverParams:
     """每间宿舍工位数"""
     dorm_max_operators: int = 20
     """宿舍最大干员总数"""
-    dorm_estimated_count: int = 20
-    """宿舍估计人数（Phase 3a Trade 评估时宿舍尚未填充，用此估计值）"""
-    facility_level: int = 3
-    """设施默认等级（Lv3）"""
     dorm_level: int = 5
     """宿舍默认等级"""
     dorm_levels_sum: int = 20
     """宿舍总等级（4间 × Lv5）"""
 
     # === 心情/消耗 ===
-    base_burn_per_hour: float = 1.0
-    """基础心情消耗率（/h）"""
     base_burn_rate: float = 0.90
     """3人工位基础消耗率（中枢净恢复前，公式 1.0-0.05×(slots-1)）"""
-    control_recovery_per_op: float = 0.05
-    """中枢每名干员提供的心情恢复（/h）"""
     mood_full: float = 24.0
     """满心情值（h）"""
     mood_work_threshold: float = 1.0
     """可参与工作的最低心情值（低于此值不可用）。默认 1.0 确保至少留 1 小时缓冲"""
     mood_blue_face: float = 12.0
     """蓝脸阈值（效率下降的边界，不影响 e(t) 但标记状态）"""
-    mood_red_face: float = 0.0
-    """红脸阈值（效率归零）"""
 
     # === 多班次 ===
     shift_count: int = 1
     """班次数（1=单班次，2=双班次）"""
     interval_hours: float = 8.0
     """班间间隔（小时），用于恢复模拟"""
-    fiammetta_enabled: bool = False
-    """是否启用菲亚梅塔心情交换"""
 
     # === Buff 池 ===
     suich_count: int = 5
@@ -80,14 +66,6 @@ class SolverParams:
     # === 算法调优 ===
     combo_upper_bound_threshold: float = 0.95
     """穷举上界预判阈值（规则 3：总效率 ≥ best_known × threshold）"""
-    control_global_sort_bias: float = 1000.0
-    """中枢全局加成者排序偏置（C1 效率为 0，需大偏置强制排前）"""
-    global_state_alpha: float = 0.3
-    """全局状态评分权重（0=忽略全局状态, 1=完全平衡）"""
-
-    # === 制造站穷举预筛选 ===
-    rough_score_keep_top: int = 0
-    """粗评分预筛选保留的组合数（0 或负数表示禁用预筛选，全量评估）"""
 
     # === 局部搜索 ===
     local_search_max_rounds: int = 3
@@ -98,10 +76,12 @@ class SolverParams:
     """槽位迭代最大轮次"""
     slot_cold_start: bool = False
     """槽位迭代是否使用冷启动（S₀_max 初始化）"""
-    combo_consumer_credit_alpha: float = 0.0
-    """组合消费信用权重（0=关闭, 1=全量），Phase A/B 叠加 Σ(consumption[d]×D[d]) 到穷举评分"""
     lambda_damping: float = 0.5
     """λ 影子乘子阻尼因子，降低 λ 对 contribution 的敏感度。0=无惩罚, 1=全额惩罚"""
+    rotation_penalty_weight: float = 0.85
+    """轮换惩罚权重：溢出占比 × 此值 = 组合评分扣减比例。0=关闭轮换惩罚, 1=全额溢出惩罚"""
+    rotation_max_shifts: int = 0
+    """单干员在同一设施类型的最多班次数。0=不限制（纯经济惩罚），N=硬上限（如设为2则3班场景每设施最多2班）"""
 
     @classmethod
     def baseline(cls) -> "SolverParams":
@@ -168,14 +148,47 @@ class SolverParams:
             errors.append("control_max_slots 必须 >= 1")
         if self.combo_upper_bound_threshold < 0 or self.combo_upper_bound_threshold > 1:
             errors.append("combo_upper_bound_threshold 必须在 [0, 1] 区间")
-        if self.global_state_alpha < 0 or self.global_state_alpha > 1:
-            errors.append("global_state_alpha 必须在 [0, 1] 区间")
         if self.local_search_max_rounds < 1:
             errors.append("local_search_max_rounds 必须 >= 1")
         if self.slot_max_rounds < 1:
             errors.append("slot_max_rounds 必须 >= 1")
+        if self.rotation_penalty_weight < 0:
+            errors.append("rotation_penalty_weight 必须 >= 0")
+        if self.rotation_max_shifts < 0:
+            errors.append("rotation_max_shifts 必须 >= 0")
         if self.dorm_max_operators < self.dorm_room_size:
             errors.append("dorm_max_operators 应 >= dorm_room_size")
         if self.daily_task_lmd < 0:
             errors.append("daily_task_lmd 必须 >= 0")
         return errors
+
+    def summary(self) -> str:
+        """参数摘要（分组展示，用于控制台输出）
+        """
+        lines = [
+            f"  排班: {self.shift_count}班 x {self.shift_hours:.0f}h, 间隔 {self.interval_hours:.0f}h",
+            f"  心情: 消耗率 {self.base_burn_rate:.2f} (3人), "
+            f"满 {self.mood_full:.0f}h, 蓝脸 {self.mood_blue_face:.0f}h, 工作阈值 {self.mood_work_threshold:.1f}h",
+            f"  设施: 中枢 {self.control_max_slots}槽, "
+            f"宿舍 {self.dorm_room_count}x{self.dorm_room_size}=Lv{self.dorm_levels_sum}",
+            f"  外部: 日常任务 {self.daily_task_lmd:,.0f} LMD/天",
+        ]
+
+        solver_parts = [f"槽位迭代 <= {self.slot_max_rounds}轮"]
+        if self.slot_cold_start:
+            solver_parts.append("冷启动=是")
+        solver_parts.append(f"局部搜索 <= {self.local_search_max_rounds}轮")
+        solver_parts.append(f"剪枝阈值 {self.combo_upper_bound_threshold:.2f}")
+        lines.append(f"  求解: {', '.join(solver_parts)}")
+
+        contrib_parts = []
+        if self.lambda_damping != 1.0:
+            contrib_parts.append(f"lambda 阻尼 {self.lambda_damping:.2f}")
+        if self.rotation_penalty_weight != 1.0:
+            contrib_parts.append(f"轮换惩罚 {self.rotation_penalty_weight:.2f}")
+        if self.rotation_max_shifts > 0:
+            contrib_parts.append(f"轮换上限 {self.rotation_max_shifts}")
+        if contrib_parts:
+            lines.append(f"  贡献体系: {', '.join(contrib_parts)}")
+
+        return "\n".join(lines)

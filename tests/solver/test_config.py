@@ -14,7 +14,6 @@ class TestSolverConfigDefaults:
 
         assert config.exclusive_support_check is False
         assert config.local_search_enabled is False
-        assert config.global_state_scoring is False
 
     def test_baseline预设_等价于默认构造(self):
         """baseline() 返回全部关闭的配置"""
@@ -25,7 +24,6 @@ class TestSolverConfigDefaults:
 
         assert baseline.exclusive_support_check == default.exclusive_support_check
         assert baseline.local_search_enabled == default.local_search_enabled
-        assert baseline.global_state_scoring == default.global_state_scoring
 
     def test_all_on预设_全部功能启用(self):
         """all_on() 启用所有可选功能"""
@@ -35,7 +33,6 @@ class TestSolverConfigDefaults:
 
         assert config.exclusive_support_check is True
         assert config.local_search_enabled is True
-        assert config.global_state_scoring is True
 
     def test_自定义构造_混合开关(self):
         """可以单独开启任意功能"""
@@ -44,12 +41,10 @@ class TestSolverConfigDefaults:
         config = SolverConfig(
             exclusive_support_check=True,
             local_search_enabled=False,
-            global_state_scoring=True,
         )
 
         assert config.exclusive_support_check is True
         assert config.local_search_enabled is False
-        assert config.global_state_scoring is True
 
 
 class TestSolverConfigDiff:
@@ -76,16 +71,15 @@ class TestSolverConfigDiff:
         assert len(diffs) == 1
         assert "exclusive_support_check" in diffs[0]
 
-    def test_diff_全部不同_列出三个布尔开关差异(self):
-        """all_on vs baseline 应列出 3 个 boolean 开关字段差异"""
+    def test_diff_全部不同_列出两个布尔开关差异(self):
+        """all_on vs baseline 应列出 2 个 boolean 开关字段差异"""
         from steward_core.solver.config import SolverConfig
 
         a = SolverConfig.baseline()
         b = SolverConfig.all_on()
 
         diffs = a.diff(b)
-        # 3 个布尔开关字段：exclusive_support_check, local_search_enabled, global_state_scoring
-        bool_diff_fields = {"exclusive_support_check", "local_search_enabled", "global_state_scoring"}
+        bool_diff_fields = {"exclusive_support_check", "local_search_enabled"}
         actual = {d.split(":")[0] for d in diffs}
         assert bool_diff_fields.issubset(actual)
 

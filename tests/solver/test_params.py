@@ -91,11 +91,6 @@ class TestSolverParamsValidation:
         errors = SolverParams(combo_upper_bound_threshold=1.5).validate()
         assert any("combo_upper_bound_threshold" in e for e in errors)
 
-    def test_alpha超出范围_报错(self):
-        """global_state_alpha > 1 → 校验失败"""
-        errors = SolverParams(global_state_alpha=1.5).validate()
-        assert any("global_state_alpha" in e for e in errors)
-
     def test_搜索轮次为零_报错(self):
         """local_search_max_rounds < 1 → 校验失败"""
         errors = SolverParams(local_search_max_rounds=0).validate()

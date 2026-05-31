@@ -3,11 +3,11 @@
 中枢/发电/会客/办公室/宿舍的干员选择统一通过边际贡献评分，
 替代旧的 locked_support 累积 + best_efficiency 排序模式。
 
-公式（草案 §9.5）:
-  contribution = type2 状态写入 * D[d]
-               + type3 全局注入 * 受影响槽位数
-               + type2 per-operator 条件加成
-               - lambda * window_hours
+公式:
+  contribution = (type2 状态写入 * D[d]
+                  + type3 全局注入 * 受影响槽位数
+                  + type2 per-operator 条件加成)
+                 * (1.0 - rotation_penalty_ratio)
 """
 
 from __future__ import annotations
@@ -55,7 +55,7 @@ def contribution(
         D = {d: 0.0 for d in STATE_DIMS}
 
     hours = ctx.params.shift_hours if ctx.params else 12.0
-    lambda_penalty = ctx.lambda_ops.get(op_name, 0.0) * hours
+    penalty_ratio = ctx.rotation_penalty_ratio_for_name(op_name, hours)
 
     if facility_type == "Control":
         base = _control_contribution(ctx, op, window_idx, D)
@@ -70,7 +70,7 @@ def contribution(
     else:
         return float("-inf")
 
-    return base - lambda_penalty
+    return base * (1.0 - penalty_ratio)
 
 
 def _mfg_base_rate_lmd_avg() -> float:

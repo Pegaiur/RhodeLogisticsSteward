@@ -34,9 +34,6 @@ class SolverConfig:
     # Step 2: 局部搜索后处理
     local_search_enabled: bool = False
 
-    # Step 3: 全局状态评分注入
-    global_state_scoring: bool = False
-
     # 心情上下文（多班次框架层注入，单班次为 None）
     mood_ctx: "MoodContext | None" = None
     """多班次心情上下文，通过 Config 传递到 Phase 层，避免修改 Strategy 签名"""
@@ -55,7 +52,6 @@ class SolverConfig:
         return cls(
             exclusive_support_check=True,
             local_search_enabled=True,
-            global_state_scoring=True,
         )
 
     @classmethod

@@ -20,6 +20,65 @@ STATE_DIMS = ("yanhuo", "perception", "engineering_robots", "monster_cuisine", "
 
 
 @dataclass
+class RotationState:
+    """轮换状态 — 统一轮换惩罚计算
+
+    替代分散的 _rotation_free_hours / _rotation_pool_base / _ROTATION_WEIGHT。
+    预计算 shift_count 字典供 O(1) 查询，消除 lambda_ops 的绝对值减法体系。
+    所有设施类型的评分（Trade/Mfg/Control/Dorm）走同一条比例惩罚路径。
+    """
+
+    free_hours: float
+    pool_base: float
+    penalty_weight: float
+    shift_counts: dict[tuple[str, str], int] = field(default_factory=dict)
+
+    def shift_count(self, name: str, facility_type: str) -> int:
+        """干员在指定设施类型中的已工作班次数（O(1)）"""
+        return self.shift_counts.get((name, facility_type), 0)
+
+    def penalty_ratio_for_name(
+        self,
+        name: str,
+        shift_hours: float,
+        hours_used: dict[str, float],
+    ) -> float:
+        """单干员轮换惩罚比例（0.0~1.0）
+
+        用于 contribution() 统一评分——替代旧的 lambda_ops 减法。
+        """
+        if self.pool_base <= 0 or self.free_hours <= 0:
+            return 0.0
+        used = hours_used.get(name, 0.0)
+        would_be = used + shift_hours
+        excess = max(0.0, would_be - self.free_hours)
+        overflow = excess / self.pool_base
+        return overflow * self.penalty_weight
+
+    def penalty_ratio_for_combo(
+        self,
+        names: list[str],
+        shift_hours: float,
+        hours_used: dict[str, float],
+    ) -> float:
+        """组合轮换惩罚比例（取所有干员的最大值）
+
+        一个组合中只要有一个干员严重过劳，整个组合就该被惩罚。
+        """
+        if self.pool_base <= 0 or self.free_hours <= 0:
+            return 0.0
+        max_overflow = 0.0
+        for name in names:
+            used = hours_used.get(name, 0.0)
+            would_be = used + shift_hours
+            excess = max(0.0, would_be - self.free_hours)
+            overflow = excess / self.pool_base
+            if overflow > max_overflow:
+                max_overflow = overflow
+        return max_overflow * self.penalty_weight
+
+
+@dataclass
 class StateVector:
     """全局状态向量
 
@@ -110,6 +169,8 @@ class SlotContext:
 
     lambda_ops: dict[str, float] = field(default_factory=dict)
     hours_used: dict[str, float] = field(default_factory=dict)
+
+    rotation_state: RotationState | None = None
 
     prev_P: float = 0.0
     visited: set[str] = field(default_factory=set)
@@ -234,6 +295,28 @@ class SlotContext:
         """深拷贝上下文（迭代中生成新候选方案用）"""
         import copy
         return copy.deepcopy(self)
+
+    def rotation_penalty_ratio_for_combo(
+        self,
+        combo_names: list[str],
+        shift_hours: float,
+    ) -> float:
+        """组合轮换惩罚比例（委托给 RotationState）"""
+        rs = self.rotation_state
+        if rs is None:
+            return 0.0
+        return rs.penalty_ratio_for_combo(combo_names, shift_hours, self.hours_used)
+
+    def rotation_penalty_ratio_for_name(
+        self,
+        name: str,
+        shift_hours: float,
+    ) -> float:
+        """单干员轮换惩罚比例（供 contribution.py 使用）"""
+        rs = self.rotation_state
+        if rs is None:
+            return 0.0
+        return rs.penalty_ratio_for_name(name, shift_hours, self.hours_used)
 
 
 _FACILITY_PREFIX = {

@@ -7,10 +7,7 @@ sys.path.insert(0, str(Path(__file__).parent))
 
 from steward_core.data_loader import load_operators_v2
 from steward_core.solver.params import SolverParams
-from steward_core.solver.config import SolverConfig
-from steward_core.solver import solve_mvp
-from steward_core.mood_flow import MoodContext
-from steward_core import production
+from steward_core.pipeline import run as run_pipeline
 from steward_core.production import _RECORD_EXP_PER_UNIT, _GOLD_LMD_PER_UNIT
 
 
@@ -34,23 +31,22 @@ def _ctrl_ops(plan):
 
 
 def main():
-    hours = float(sys.argv[1]) if len(sys.argv) > 1 else 12.0
+    hours = float(sys.argv[1]) if len(sys.argv) > 1 else 8.0
     root = Path(__file__).parent
     ops = load_operators_v2(root / "character_identity.json",
                             root / "buffs_infrastructure.json")
     params = SolverParams(shift_count=3, shift_hours=hours, interval_hours=8.0)
-    mc = MoodContext.fresh(ops, params)
-    result = solve_mvp(ops, config=SolverConfig(params=params, mood_ctx=mc))
-    plans = result.plans
+
+    pipe = run_pipeline(ops, params)
+    plans = pipe.solve_result.plans
+
+    print(f"\n[参数]")
+    print(params.summary())
 
     ctrl_sets = [_ctrl_ops(p) for p in plans]
     mfg_rooms = [(0, "CombatRecord"), (1, "CombatRecord"),
                  (2, "PureGold"), (3, "PureGold")]
     trade_rooms = [(0,), (1,)]
-
-    def _dp(plan):
-        return production.calculate(plan, ops, hours=hours,
-                                    external_gold_per_day=params.daily_task_lmd / _GOLD_LMD_PER_UNIT)
 
     # ════════════════════════════════════════════════════
     #  第一部分：轮班总览
@@ -97,7 +93,7 @@ def main():
     # 汇总
     prod_rows = []
     for pi, plan in enumerate(plans):
-        dp = _dp(plan)
+        dp = pipe.productions[pi]
         exp = dp.total_records_per_day * _RECORD_EXP_PER_UNIT
         lmd = dp.effective_lmd_per_day
         prod_rows.append((pi, exp, lmd))
@@ -122,7 +118,7 @@ def main():
         print(f"  Mfg[{ridx}] {prod}")
         for pi, plan in enumerate(plans):
             names = _room_ops(plan, "Mfg", ridx)
-            dp = _dp(plan)
+            dp = pipe.productions[pi]
             val = 0
             rooms = dp.record_rooms if prod == "CombatRecord" else dp.gold_rooms
             for r in rooms:
@@ -135,12 +131,43 @@ def main():
     for (ridx,) in trade_rooms:
         print(f"  Trade[{ridx}]")
         for pi, plan in enumerate(plans):
-            dp = _dp(plan)
+            dp = pipe.productions[pi]
             val = 0
             for r in dp.trade_rooms:
                 if r.room_index == ridx:
                     val = r.output_per_day
             print(f"    W{pi}  {val:>10,.0f} LMD")
+
+    # ════════════════════════════════════════════════════
+    #  第三部分：总日生产（24h 折算）
+    # ════════════════════════════════════════════════════
+    total_hours = len(plans) * hours
+    scale = 24.0 / total_hours if total_hours > 0 else 0.0
+
+    sum_exp = sum(dp.total_records_per_day for dp in pipe.productions) * _RECORD_EXP_PER_UNIT * scale
+    sum_gold = sum(dp.total_gold_produced_per_day for dp in pipe.productions) * _GOLD_LMD_PER_UNIT * scale
+    sum_lmd = sum(dp.total_lmd_per_day for dp in pipe.productions) * scale
+    sum_eff_lmd = sum(dp.effective_lmd_per_day for dp in pipe.productions) * scale
+    sum_gold_consumed = sum(dp.total_gold_consumed_per_day for dp in pipe.productions) * scale
+
+    print(f"\n{'=' * 64}")
+    print(f"  总日生产（{len(plans)}x{hours:.0f}h → 24h 折算）")
+    print(f"{'=' * 64}")
+    print(f"\n  作战记录经验: {sum_exp:>12,.0f} /天")
+    print(f"  赤金制造等值: {sum_gold:>12,.0f} LMD /天")
+    lmd_label = f"  龙门币收入:   {sum_eff_lmd:>12,.0f} /天"
+    if sum_lmd != sum_eff_lmd:
+        lmd_label += f"  (理论 {sum_lmd:,.0f}，赤金不足缩减)"
+    print(lmd_label)
+    print(f"  赤金消耗等值: {sum_gold_consumed:>12,.0f} LMD /天")
+
+    surplus_gold = sum(dp.total_gold_produced_per_day for dp in pipe.productions) * scale \
+        - sum_gold_consumed / _GOLD_LMD_PER_UNIT
+    surplus_lmd = surplus_gold * _GOLD_LMD_PER_UNIT
+    if surplus_gold >= 0:
+        print(f"  赤金盈余:     {surplus_lmd:>12,.0f} LMD等值 /天  ({surplus_gold:+.1f} 个)")
+    else:
+        print(f"  赤金缺口:     {abs(surplus_lmd):>12,.0f} LMD等值 /天  ({surplus_gold:+.1f} 个)")
 
     print()
 
