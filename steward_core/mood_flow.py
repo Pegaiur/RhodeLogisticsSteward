@@ -52,6 +52,8 @@ class MoodModifiers:
 def compute_mood_modifiers(
     control_operators: list["Operator"],
     buff_pool: "BuffPool | None",
+    *,
+    control_recovery_per_op: float = 0.05,
 ) -> MoodModifiers:
     """从控制中枢配置计算全局心情修正器
 
@@ -62,7 +64,7 @@ def compute_mood_modifiers(
     mods = MoodModifiers()
     names = {op.name for op in control_operators}
 
-    mods.control_recovery = len(control_operators) * 0.05
+    mods.control_recovery = len(control_operators) * control_recovery_per_op
 
     if any(
         s.buff_id == "control_mp_lonely[000]"
@@ -93,16 +95,20 @@ def compute_global_burn(
     control_operators: list["Operator"],
     buff_pool: "BuffPool",
     worker_count: int = 3,
+    *,
+    base_burn_per_hour: float = 1.0,
+    control_recovery_per_op: float = 0.05,
 ) -> float:
     """计算工作干员的心情消耗率净值 (mood_burn)
 
     迁移自 synergy/mood.py，保留原接口以兼容存量调用方。
     最终将被 MoodContext.work_burn() 替代。
-    base = 1.0 - 0.05 × (worker_count - 1)，3 工位 → 0.90。
     """
-    base = 1.0 - 0.05 * max(0, worker_count - 1)
+    base = base_burn_per_hour - control_recovery_per_op * max(0, worker_count - 1)
 
-    modifiers = compute_mood_modifiers(control_operators, buff_pool)
+    modifiers = compute_mood_modifiers(
+        control_operators, buff_pool, control_recovery_per_op=control_recovery_per_op,
+    )
     recovery = modifiers.control_recovery + modifiers.yanhuo_recovery
     if modifiers.mlynar_spread:
         recovery += modifiers.control_recovery + modifiers.global_work_recovery
@@ -195,7 +201,10 @@ class MoodContext:
         if self.modifiers is not None:
             return self.modifiers
         ops = self._resolve_control_operators()
-        object.__setattr__(self, "modifiers", compute_mood_modifiers(ops, buff_pool))
+        recovery_per_op = self.params.control_recovery_per_op if self.params else 0.05
+        object.__setattr__(self, "modifiers", compute_mood_modifiers(
+            ops, buff_pool, control_recovery_per_op=recovery_per_op,
+        ))
         return self.modifiers
 
     def work_burn(
@@ -208,10 +217,12 @@ class MoodContext:
         """计算单干员工作消耗率净值 (mood_burn)
 
         公式: base - recovery_modifiers
-          base = 1.0 - 0.05 × (room_slots - 1)，3 工位 → 0.90
+          base = base_burn_per_hour - control_recovery_per_op × (room_slots - 1)
           recovery = control_recovery + yanhuo_recovery + (mlynar spread)
         """
-        base = 1.0 - 0.05 * max(0, room_slots - 1)
+        burn_per_hour = self.params.base_burn_per_hour if self.params else 1.0
+        recovery_per_op = self.params.control_recovery_per_op if self.params else 0.05
+        base = burn_per_hour - recovery_per_op * max(0, room_slots - 1)
         modifiers = self.ensure_modifiers(buff_pool)
         recovery = modifiers.control_recovery + modifiers.yanhuo_recovery
         if modifiers.mlynar_spread:
@@ -292,7 +303,9 @@ class MoodContext:
         control_count = len(self.control_operators)
         if control_count == 0:
             return 0.0
-        base = 1.0 - 0.05 * max(0, control_count - 1)
+        burn_per_hour = self.params.base_burn_per_hour if self.params else 1.0
+        recovery_per_op = self.params.control_recovery_per_op if self.params else 0.05
+        base = burn_per_hour - recovery_per_op * max(0, control_count - 1)
         modifiers = self.ensure_modifiers()
         return max(0.0, base - modifiers.control_recovery - modifiers.yanhuo_recovery)
 

@@ -14,8 +14,6 @@ from steward_core.models import Operator, ShiftPlan
 
 # 心情上限
 _MOOD_MAX = 24.0
-# 默认基础消耗/时
-_BASE_BURN_PER_HOUR = 1.0
 # 蓝脸阈值 (效率开始下降)
 _BLUE_FACE_THRESHOLD = 12.0
 # 红脸阈值 (效率为 0)
@@ -90,7 +88,14 @@ def _is_work_facility(room_type: str) -> bool:
     return room_type in ("Mfg", "Trade", "Power", "Reception", "Office")
 
 
-def calculate(plan: ShiftPlan, operators: list[Operator], shift_hours: float = 24.0) -> MoodReport:
+def calculate(
+    plan: ShiftPlan,
+    operators: list[Operator],
+    shift_hours: float = 24.0,
+    *,
+    base_burn_per_hour: float = 1.0,
+    control_recovery_per_op: float = 0.05,
+) -> MoodReport:
     """计算单班次心情消耗
 
     Args:
@@ -109,7 +114,7 @@ def calculate(plan: ShiftPlan, operators: list[Operator], shift_hours: float = 2
             control_ops.extend(assignment.operators)
 
     # 基础: 每个控制中枢干员 +0.05/时
-    control_bonus += len(control_ops) * 0.05
+    control_bonus += len(control_ops) * control_recovery_per_op
 
     # 额外: 排除 bskill_ctrl_cost (基础值) 后，其他 Control 技能中 0<val<1 的值为额外加成
     for name in control_ops:
@@ -142,7 +147,7 @@ def calculate(plan: ShiftPlan, operators: list[Operator], shift_hours: float = 2
             continue
 
         # 基础消耗: 1.0 - 0.05 × (人数-1)，1人无减免
-        base_burn = _BASE_BURN_PER_HOUR - 0.05 * max(0, op_count - 1)
+        base_burn = base_burn_per_hour - control_recovery_per_op * max(0, op_count - 1)
 
         # 净消耗 = 基础消耗 - 控制中枢减免 (最低为 0)
         net_burn = max(0.0, base_burn - control_bonus)
