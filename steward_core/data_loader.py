@@ -30,6 +30,16 @@ FACILITY_TYPES = {v for v in ROOM_TYPE_MAP.values()}
 
 _CAPACITY_RE = re.compile(r"仓库容量上限\+(\d+)")
 
+_DORM_EFF_RE = re.compile(r"<@cc\.vup>\+(\d+\.?\d*)</>")
+"""从 DORMITORY buff 描述文本中提取心情恢复效率值（/h）
+
+MAA 的 infrast.json 不包含宿舍非生产技能，buffs_infrastructure.json 中 efficiency 恒为 0。
+常量恢复 buff 的效率值嵌入在描述文本的 <@cc.vup>+X.X</> 标记中，
+本正则匹配该标记并提取数值。
+仅适用于纯常量 buff（dorm_rec_all / dorm_rec_single / dorm_rec_oneself），
+混合型和条件型 buff 需在后续单独处理。
+"""
+
 
 def _load_json(path: Path) -> dict:
     with open(path, "r", encoding="utf-8") as f:
@@ -74,6 +84,19 @@ def _build_efficiency_map(efficiency: float, product: Optional[str]) -> Efficien
         return EfficiencyMap(raw={"OriginStone": efficiency})
     else:
         return EfficiencyMap(raw={"all": efficiency})
+
+
+def _parse_dorm_efficiency(description: str) -> float:
+    """从 DORMITORY buff 描述中提取常量恢复效率值
+
+    匹配 <@cc.vup>+X.X</> 模式，提取 X.X 作为恢复值 (/h)。
+    仅适用于纯常量 buff，不处理多值/条件型。
+    无匹配时返回 0.0。
+    """
+    m = _DORM_EFF_RE.search(description)
+    if m:
+        return float(m.group(1))
+    return 0.0
 
 
 def load_operators_v2(
@@ -134,6 +157,56 @@ def load_operators_v2(
             description = buff.get("description", "")
             buff_name = buff.get("buffName", buff_id)
             phase = sk_data.get("phase", 0)
+
+            # ─── DORMITORY buff 效率值从描述文本提取 ──────────────────
+            # MAA infrast.json 不包含宿舍非生产技能，buffs_infrastructure.json
+            # 中 efficiency 恒为 0。纯常量恢复 buff 的效率值从描述标记
+            # <@cc.vup>+X.X</> 中提取。覆盖 dorm_rec_all / dorm_rec_single /
+            # dorm_rec_oneself 三类白名单前缀。
+            #
+            # TODO: 以下 DORM buff 尚未从描述提取效率，待后续实现:
+            #
+            # === 双值混合型 (17 条, 含自身+他人双值) ===
+            #   dorm_rec_all&oneself[000/001/010/011/012/021/022/042]
+            #   dorm_rec_single&oneself[000~040]
+            #   dorm_rec_oneself2[000/001]
+            #
+            # === 条件型: 依赖基地全局状态 (8 条) ===
+            #   dorm_rec_all&profession[000]  奶羊  每名行医+0.06
+            #   dorm_rec_all&tag[000]         森西  莱欧斯小队额外加成
+            #   dorm_rec_all&group[000]       余   每名岁+0.06
+            #   dorm_rec_all&bd[000]          塑心  每5共鸣+0.01
+            #   dorm_rec_all&unfull[000/001]  波卜  基础+不满人数加成
+            #   dorm_rec_all&tired[000/100]   刺玫/撷英  低心情条件加成
+            #
+            # === 条件型: 依赖设施数量 (7 条) ===
+            #   dorm_rec_all&lv[000/100]      响石  等级加成
+            #   dorm_hireToRecAll[000/001/021] 斥罪/隐德来希  招募位加成
+            #   dorm_powToRecAll[000/010]     流明  发电站加成
+            #
+            # === 条件型: 指名目标加成 (6 条) ===
+            #   dorm_rec_single_P[000/001/002] 黑/特米米/深靛  指名目标加成
+            #   dorm_rec_single_power[000/001/100] 寒檀/新约能天使  阵营目标加成
+            #
+            # === 分布式 / 特殊机制 (3 条) ===
+            #   dorm_rec_all&single[000]  冰酿  总+0.8 分配型
+            #   dorm_exchangeAp[000]      菲亚梅塔  心情互换
+            #   dorm_rec_toone[000]       摩根  特定干员加成
+            #
+            # === 状态生产型 (5 条, 不经过 dorm_recovery, 通过 contribution Part 1) ===
+            #   dorm_bd_num[000]              塑心  每室友+1 无声共鸣
+            #   dorm_rec_bd_dungeon[000]      森西  每级+1 魔物料理
+            #   dorm_rec_bd_n1[000/100]       爱丽丝/车尔尼  梦境/小节→感知信息
+            #   dorm_rec_bd_n1_n2[000]        爱丽丝  梦境产生+恢复0.1
+            #   dorm_rec_bd_n1_n3[000]        车尔尼  小节产生+单体恢复0.65
+            if (
+                room_type == "Dormitory"
+                and efficiency == 0.0
+                and buff_id.startswith(
+                    ("dorm_rec_all[", "dorm_rec_single[", "dorm_rec_oneself[")
+                )
+            ):
+                efficiency = _parse_dorm_efficiency(description)
 
             product = _determine_product(description)
             efficient = _build_efficiency_map(efficiency, product)
