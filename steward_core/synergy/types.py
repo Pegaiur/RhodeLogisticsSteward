@@ -20,6 +20,20 @@ class BuffConsumerEntry(NamedTuple):
     bonus_per: float
 
 
+class BuffProducerEffect(NamedTuple):
+    """B·buff池生产者条目 — 与 BuffConsumerEntry 对等"""
+    buff_id: str
+    facility: str                       # "Control"|"Mfg"|"Trade"|"Dormitory"|"Office"
+    dimension: str                      # "yanhuo"|"perception"|"monster_cuisine"|"silent_resonance"
+    amount_source: str                  # "fixed"|"dorm_count"|"dorm_level"|"suich_scaled"|"office_base"
+    amount: int = 0                     # fixed amount (source="fixed") or base (source="office_base")
+    amount_scale: float = 1.0           # multiplier for scaled sources
+    amount_cap: int = 0                 # cap for scaled sources (0=no cap)
+    condition: str | None = None        # "mood_gt_12"|"mood_le_12"|"xi_mood_ge_12"|"xi_mood_lt_12"|None
+    exclusive_group: str | None = None  # mutual exclusion group (令)
+    cascade: bool = False               # True if this is a cascade entry (second pass)
+
+
 class FactionEntry(NamedTuple):
     """A·同房阵营计数条目"""
     field: str
@@ -90,7 +104,7 @@ class TableMeta(NamedTuple):
 
 from .mfg_linkages import _A_PAIR_TABLE, _A_ROOM_FACTION_TABLE, _A_ROOM_FACTION_EXTRA, _A_SKILL_COUNT_TABLE, _A_AUTOMATION_FALLBACK, _ZEROING_VARIANT_TABLE, _TOKEN_PROD_TABLE, _RAMPING_SKILL_TABLE  # noqa: E402
 from .facility_linkages import _A_FACILITY_LINK_TABLE  # noqa: E402
-from .buff_pool import _B_BUFF_CONSUMER_TABLE  # noqa: E402
+from .buff_pool import _B_BUFF_CONSUMER_TABLE, _OPERATOR_BUFF_PRODUCERS  # noqa: E402
 from .global_linkages import _B_CROSS_ROOM_PAIR_TABLE, _B_GLOBAL_FACTION_TABLE  # noqa: E402
 from .control_linkages import _C_CONTROL_GLOBAL_TABLE  # noqa: E402
 
@@ -105,6 +119,7 @@ TABLES: dict[str, TableMeta] = {
     "A·爬升型技能":      TableMeta(_RAMPING_SKILL_TABLE,      ["synergy_ramping"],             "新增 manu_prod_spd_addition[*] 爬升型技能"),
     "A·设施数量联动":    TableMeta(_A_FACILITY_LINK_TABLE,    ["synergy_facility_count"],     "新增设施数量联动 buff"),
     "B·buff消费者":      TableMeta(_B_BUFF_CONSUMER_TABLE,    ["synergy_buff_pool_consumer"], "新增 buff 池消费者"),
+    "B·buff生产者":      TableMeta(_OPERATOR_BUFF_PRODUCERS,   ["compute_buff_pool"],          "新增 buff 池生产者"),
     "B·跨房间配对":      TableMeta(_B_CROSS_ROOM_PAIR_TABLE,  ["synergy_cross_room_pair"],    "新增跨设施干员条件配对 buff"),
     "B·全局阵营计数":    TableMeta(_B_GLOBAL_FACTION_TABLE,   ["synergy_global_faction"],     "新增全局阵营计数型 buff"),
     "C·中枢全局效率":    TableMeta(_C_CONTROL_GLOBAL_TABLE,   ["compute_control_global_bonus"], "新增中枢全局 buff"),

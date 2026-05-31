@@ -25,6 +25,7 @@ C层（中枢全局）:
 from steward_core.synergy.types import (
     FacilityLinkEntry,
     BuffConsumerEntry,
+    BuffProducerEffect,
     FactionEntry,
     ExtraFactionEntry,
     GlobalFactionEntry,

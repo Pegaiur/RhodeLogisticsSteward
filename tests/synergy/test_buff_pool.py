@@ -61,6 +61,12 @@ def _mk_chongyue() -> Operator:
     ])
 
 
+def _mk_suxin() -> Operator:
+    return _mk_op("塑心", [
+        _mk_skill("dorm_bd_num[000]", "Dormitory", "无声共鸣"),
+    ])
+
+
 # ─── B2 工程机器人 / B3 思维链环 / B4 魔物料理 / B5 无声共鸣 ──
 
 class TestBLayer:
@@ -348,7 +354,7 @@ class TestFullBuffPool:
         cherni.skills.append(_mk_skill("dorm_rec_bd_n1_n3[000]", "Dormitory", "慢板行歌"))
         cherni.skills.append(_mk_skill("dorm_rec_bd_n1[100]", "Dormitory", "琴键漫步"))
 
-        suxin = _mk_op("塑心")
+        suxin = _mk_suxin()
 
         sensi = _mk_op("森西")
         sensi.skills.append(_mk_skill("dorm_rec_bd_dungeon[000]", "Dormitory", "森西大食堂"))
@@ -382,7 +388,7 @@ class TestFullBuffPool:
         sensi = _mk_op("森西")
         sensi.skills.append(_mk_skill("dorm_rec_bd_dungeon[000]", "Dormitory", "森西大食堂"))
 
-        suxin = _mk_op("塑心")
+        suxin = _mk_suxin()
 
         # 满 20 人宿舍：4 名指定 + 16 名填充
         dorm = [alice, cherni, suxin, sensi] + [_mk_op(f"填位{i}") for i in range(16)]
@@ -581,7 +587,7 @@ class TestB5SilentResonance:
         from steward_core.synergy import compute_buff_pool
 
         control = [_mk_ling(), _mk_xi()]
-        suxin = _mk_op("塑心")
+        suxin = _mk_suxin()
         dorm = [suxin] + [_mk_op(f"填位{i}") for i in range(19)]
 
         pool = compute_buff_pool(
@@ -600,7 +606,7 @@ class TestB5SilentResonance:
         from steward_core.synergy import compute_buff_pool
 
         control = [_mk_ling(), _mk_xi()]
-        suxin = _mk_op("塑心")
+        suxin = _mk_suxin()
         dorm = [suxin] + [_mk_op(f"填位{i}") for i in range(4)]
 
         pool = compute_buff_pool(
@@ -626,7 +632,7 @@ class TestB5SilentResonance:
         from steward_core.synergy import compute_buff_pool
 
         control = [_mk_ling(), _mk_xi()]
-        suxin = _mk_op("塑心")
+        suxin = _mk_suxin()
         dorm = [suxin] + [_mk_op(f"填位{i}") for i in range(4)]
 
         pool = compute_buff_pool(
