@@ -5,7 +5,6 @@
 
 from __future__ import annotations
 
-from dataclasses import replace
 from typing import TYPE_CHECKING
 
 from steward_core.models import LayoutConfig, SolveResult
@@ -53,7 +52,7 @@ def solve_slot(
     1. 初始化 SlotContext（num_windows = params.shift_count）
     2. 自动创建 MoodContext（若未传入且多窗口）
     3. 迭代：Phase A/B/C/D + D[d]反馈 + 记忆收敛
-    4. 多窗口心情流转：after_shift 消耗 → after_recovery 恢复
+    4. 多窗口心情流转：after_shift 消耗
     5. λ 影子乘子更新：工作时长池稀缺性传导
     6. 后处理：局部搜索
     7. 输出多 ShiftPlan SolveResult
@@ -69,7 +68,6 @@ def solve_slot(
 
     ctx = SlotContext.from_layout(operators, layout, params, num_windows=num_windows)
 
-    interval_hours = params.interval_hours if params else 0
     shift_hours = params.shift_hours if params else 12.0
 
     visited = set()
@@ -113,11 +111,6 @@ def solve_slot(
                             co_workers=room_ops,
                         )
                 mc = mc.after_shift(working_names, working_slots=working_slots)
-                if w < num_windows - 1 and interval_hours > 0:
-                    dorm_map = _build_dorm_assignments(ctx, w)
-                    if dorm_map:
-                        mc = replace(mc, dorm_assignments=dorm_map)
-                    mc = mc.after_recovery(interval_hours)
 
             _track_hours_used(ctx, w, shift_hours)
 
@@ -156,19 +149,6 @@ def solve_slot(
     config = SolverConfig(params=params)
     result = local_search_refine(result, operators, config)
     return result
-
-
-def _build_dorm_assignments(ctx: SlotContext, window_idx: int) -> dict[str, str]:
-    """从窗口分配中提取宿舍分配映射 {干员名 → 宿舍编号}
-
-    dorm_assignments 供 MoodContext.dorm_recovery() 使用——
-    班间恢复时按同宿舍干员聚合恢复 buff。
-    """
-    dorm_map: dict[str, str] = {}
-    for a in ctx.slots_of_type(window_idx, "Dormitory"):
-        if a.operator_name:
-            dorm_map[a.operator_name] = str(a.room_index)
-    return dorm_map
 
 
 def _reset_ctx(ctx: SlotContext) -> None:
@@ -509,8 +489,8 @@ def _ctx_to_multi_result(
         plan = ShiftPlan(
             name=f"Slot-S{w}-{int(hours)}h",
             assignments=assignments,
-            period_from=f"{w * int(hours + (params.interval_hours if params else 0)):02d}:00",
-            period_to=f"{min(w * int(hours + (params.interval_hours if params else 0)) + int(hours) - 1, 23):02d}:59",
+            period_from=f"{w * int(hours):02d}:00",
+            period_to=f"{min((w + 1) * int(hours) - 1, 23):02d}:59",
         )
         plans.append(plan)
 

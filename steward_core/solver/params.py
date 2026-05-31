@@ -59,8 +59,6 @@ class SolverParams:
     # === 多班次 ===
     shift_count: int = 1
     """班次数（1=单班次，2=双班次）"""
-    interval_hours: float = 0
-    """班间间隔（小时）。游戏内班次之间无间隔（结束即开始），恢复通过宿舍在位实现。默认 0。"""
     fiammetta_enabled: bool = False
     """是否启用菲亚梅塔心情交换（交换决策算法待实现）"""
 
