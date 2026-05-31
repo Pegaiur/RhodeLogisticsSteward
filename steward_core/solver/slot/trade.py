@@ -108,25 +108,11 @@ def phase_trade(
     if not dorm_ops_list:
         dorm_ops_list = cold_start_dorm_ops(ctx, window_idx)
 
-    _EBEN_NAME = "黑键"
-    _WUYOU_NAME = "乌有"
-
     mfg_names = ctx.ops_of_type(window_idx, "Mfg")
     mfg_combo_ops = [ctx.op_lookup[n] for n in mfg_names if n in ctx.op_lookup]
 
     office_names = ctx.ops_of_type(window_idx, "Office")
     office_ops = [ctx.op_lookup[n] for n in office_names if n in ctx.op_lookup]
-
-    base_buff_pool = compute_buff_pool(
-        ctrl_ops,
-        suich_count=params.suich_count if params else 5,
-        dorm_operators=[o for o in dorm_ops_list if o],
-        dorm_level=params.dorm_level if params else 5,
-        layout=ctx.layout if ctx.layout else _LAYOUT_243,
-        mfg_operators=mfg_combo_ops,
-        office_operators=office_ops,
-        office_perception_base=params.office_perception_base if params else 20,
-    )
 
     power_modifier_names = {
         op.name for op in ctx.operators if _has_power_count_modifier(op)
@@ -140,22 +126,17 @@ def phase_trade(
 
     for combo_ops in combos:
         combo_names = [op.name for op in combo_ops]
-        has_eben = any(op.name == _EBEN_NAME for op in combo_ops)
-        has_wuyou = any(op.name == _WUYOU_NAME for op in combo_ops)
-        if has_eben or has_wuyou:
-            combo_pool = compute_buff_pool(
-                ctrl_ops,
-                suich_count=params.suich_count if params else 5,
-                dorm_operators=[o for o in dorm_ops_list if o],
-                dorm_level=params.dorm_level if params else 5,
-                layout=ctx.layout if ctx.layout else _LAYOUT_243,
-                mfg_operators=mfg_combo_ops,
-                trade_operators=combo_ops,
-                office_operators=office_ops,
-                office_perception_base=params.office_perception_base if params else 20,
-            )
-        else:
-            combo_pool = base_buff_pool
+        combo_pool = compute_buff_pool(
+            ctrl_ops,
+            suich_count=params.suich_count if params else 5,
+            dorm_operators=[o for o in dorm_ops_list if o],
+            dorm_level=params.dorm_level if params else 5,
+            layout=ctx.layout if ctx.layout else _LAYOUT_243,
+            mfg_operators=mfg_combo_ops,
+            trade_operators=combo_ops,
+            office_operators=office_ops,
+            office_perception_base=params.office_perception_base if params else 20,
+        )
 
         ctrl_bonus = control_per_operator_bonus(
             ctrl_ops, combo_ops, "Money", room_type="Trade",
