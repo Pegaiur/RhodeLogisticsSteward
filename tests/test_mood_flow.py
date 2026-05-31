@@ -92,7 +92,7 @@ class TestWorkBurn:
         assert burn == 0.0
 
 
-# ─── after_shift / after_recovery ─────────────────────────────────
+# ─── after_shift ──────────────────────────────────────────────────
 
 class TestAfterShift:
     """MoodContext.after_shift() 不可变操作"""
@@ -132,30 +132,6 @@ class TestAfterShift:
     def test_custom_shift_hours(self, mc):
         mc2 = mc.after_shift({"阿米娅"}, shift_hours_override=6.0)
         assert mc2.warmup_hours.get("阿米娅", 0.0) == 6.0
-
-
-class TestAfterRecovery:
-    """MoodContext.after_recovery() 不可变操作"""
-
-    @pytest.fixture
-    def mc(self):
-        return MoodContext(
-            operator_moods={"阿米娅": 12.0, "凯尔希": 24.0},
-            params=SolverParams(),
-        )
-
-    def test_capped_at_24(self, mc):
-        mc2 = mc.after_recovery(100.0)
-        assert mc2.mood_of("凯尔希") == 24.0
-
-    def test_warmup_reset(self):
-        mc = MoodContext(
-            operator_moods={"阿米娅": 12.0},
-            warmup_hours={"阿米娅": 8.0},
-            params=SolverParams(),
-        )
-        mc2 = mc.after_recovery(8.0)
-        assert mc2.warmup_hours == {}
 
 
 # ─── RoomBurnContext ──────────────────────────────────────────────

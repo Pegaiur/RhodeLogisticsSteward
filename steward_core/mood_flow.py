@@ -164,17 +164,93 @@ _MP_COST_FACTION_ZERO: dict[str, str] = {
 如令 杯莫停 消除中枢内所有岁干员心情消耗。
 """
 
+# ─── 自身 mp_cost buff 映射表 ──────────────────────────────────
+
+_SELF_MP_COST: dict[str, float] = {
+    # === MANUFACTURE (26) ===
+    "manu_prod_limit&cost[000]": -0.25,
+    "manu_prod_limit&cost[0000]": -0.25,
+    "manu_prod_limit&cost[001]": -0.25,
+    "manu_prod_limit&cost[002]": -0.25,
+    "manu_prod_limit&cost[003]": -0.25,
+    "manu_prod_limit&cost[010]": -0.25,
+    "manu_prod_limit&cost[011]": -0.25,
+    "manu_prod_limit&cost[012]": -0.25,
+    "manu_prod_limit&cost[020]": -0.25,
+    "manu_prod_limit&cost[1020]": -0.25,
+    "manu_formula_cost[000]": -0.25,
+    "manu_prod_spd&limit&cost[000]": -0.15,
+    "manu_prod_spd&limit&cost[001]": -0.25,
+    "manu_prod_spd&limit&cost[010]": 0.25,
+    "manu_prod_spd&limit&cost[011]": 0.25,
+    "manu_prod_spd&limit&cost[020]": -0.25,
+    "manu_prod_spd&limit&cost[100]": 0.25,
+    "manu_prod_spd&limit&cost[101]": 0.25,
+    "manu_prod_spd&limit&cost[110]": 0.25,
+    "manu_prod_limit&cost[021]": -0.25,
+    "manu_formula_spd&limit&cost[000]": -0.25,
+    "manu_formula_spd&limit&cost[010]": -0.25,
+    "manu_formula_spd&limit&cost[100]": 0.25,
+    "manu_formula_spd&cost[000]": 0.25,
+    "manu_formula_spd&cost[001]": 0.25,
+    "manu_formula_spd&cost_bd[000]": -0.15,
+    # === POWER (2) ===
+    "power_rec_spd&cost[000]": -0.52,
+    "power_rec_spd&cost[010]": -0.3,
+    # === TRADING (11) ===
+    "trade_ord_spd&cost[000]": -0.25,
+    "trade_ord_limit&cost[000]": -0.25,
+    "trade_ord_wt&cost[000]": -0.25,
+    "trade_ord_wt&cost[010]": -0.25,
+    "trade_ord_wt&cost[001]": -0.25,
+    "trade_ord_wt&cost[011]": -0.25,
+    "trade_ord_wt&cost[002]": -0.25,
+    "trade_ord_wt&cost[012]": -0.25,
+    "trade_ord_wt&cost[003]": -0.25,
+    "trade_ord_long[000]": -0.25,
+    "trade_ord_long[010]": -0.25,
+}
+"""干员自身 mp_cost buff → 心情消耗修正量（delta/h）。
+
+正值 = 消耗增加（如阿罗玛 +0.25）, 负值 = 消耗减少（如泡泡 -0.25）。
+生成: python scripts/_gen_self_mp_cost.py (P0 范围: MFG+TRADE+POWER 无条件 buff)
+P1 待接入: 动态条件 buff (人间烟火联动/同僚配对) + HIRE + CONTROL + MEETING
+"""
+
+
+def _compute_self_mp_cost(
+    op_name: str,
+    op_lookup: dict[str, "Operator"],
+) -> float:
+    """计算干员自身技能的 mp_cost 总和修正量
+
+    扫描干员所有 skill，累加 _SELF_MP_COST 表中的修正值。
+    多条技能叠加生效（如精英化前后的不同 buff）。
+    """
+    op = op_lookup.get(op_name)
+    if op is None:
+        return 0.0
+    total = 0.0
+    for sk in op.skills:
+        total += _SELF_MP_COST.get(sk.buff_id, 0.0)
+    return total
+
 
 def _apply_mp_cost(
     burn: float,
     op_name: str,
     co_workers: list[str],
     op_lookup: dict[str, "Operator"],
+    *,
+    self_cost_delta: float = 0.0,
 ) -> float:
     """应用同房间干员的 mp_cost buff 修正
 
     扫描 co_workers 中每个人的 skills，依次匹配 _MP_COST_ROOM_ZERO、
     _MP_COST_FACTION_ZERO、_MP_COST_ROOM_REDUCE 表。
+
+    self_cost_delta 是干员自身技能的 mp_cost 修正量，用于消除 buff（槐琥/令）
+    精确还原——消除仅作用于自身技能效果，不影响全局减免和房间级减免。
     """
     op = op_lookup.get(op_name)
     for cw_name in co_workers:
@@ -183,10 +259,12 @@ def _apply_mp_cost(
             continue
         for sk in cw_op.skills:
             if sk.buff_id in _MP_COST_ROOM_ZERO:
-                return 0.0
+                burn = max(0.0, burn - self_cost_delta)
+                continue
             if sk.buff_id in _MP_COST_FACTION_ZERO:
                 if op is not None and op.group_id == _MP_COST_FACTION_ZERO[sk.buff_id]:
-                    return 0.0
+                    burn = max(0.0, burn - self_cost_delta)
+                    continue
             if sk.buff_id in _MP_COST_ROOM_REDUCE:
                 burn = max(0.0, burn - _MP_COST_ROOM_REDUCE[sk.buff_id])
     return burn
@@ -197,7 +275,7 @@ class MoodContext:
     """统一的心情状态上下文，替代所有分散的硬编码 bool
 
     所有需要心情感知的函数从本结构读取，不再接受散列的心情 bool 参数。
-    不可变操作：after_shift()/after_recovery() 返回新实例，适合 K-Beam 分叉。
+    不可变操作：after_shift() 返回新实例，适合 K-Beam 分叉。
     """
 
     operator_moods: dict[str, float] = field(default_factory=dict)
@@ -450,23 +528,6 @@ class MoodContext:
             operator_moods=new_moods,
             warmup_hours=new_warmup,
         )
-
-    def after_recovery(self, hours: float) -> "MoodContext":
-        """应用恢复间隔后的心情变化（不可变，返回新实例）
-
-        hours: 恢复时长
-        所有非工作干员按 dorm_recovery() 速率恢复，上限 24.0。
-        暖机状态（warmup_hours）在宿舍恢复后归零——干员离开工位后爬升进度重置。
-        菲亚梅塔交换是唯一保留暖机的途径（尚未实现，待后续建模）。
-        """
-        new_moods = dict(self.operator_moods)
-
-        for name in self.operator_moods:
-            recovery_rate = self.dorm_recovery(name)
-            if recovery_rate > 0:
-                new_moods[name] = min(24.0, new_moods[name] + recovery_rate * hours)
-
-        return replace(self, operator_moods=new_moods, warmup_hours={})
 
     def qiangan_decay_basis(
         self,
