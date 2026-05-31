@@ -308,7 +308,7 @@ flowchart TD
 | 深海系叠加: 歌蕾蒂娅 +0.05~+0.5 | 同上 + `buffs_infrastructure.json` 中相关 CONTROL buff | buff 描述文本中的条件逻辑 |
 | 岁家体系: "人间烟火→孤光共照" | 同上 | buff 描述文本中的联动链条 |
 | 宿舍: 塑心 +0.55~+1.0, 车尔尼 +0.25, 杜林系 +0.1~+0.2 | `buffs_infrastructure.json` → `roomType=DORMITORY` 相关 buff | buff 描述文本中的具体数值 |
-| 心情上限=24, 蓝脸<12, 红脸=0 | PRTS Wiki 基建机制 | 社区共识 |
+| 心情上限=24, 红脸=0 | PRTS Wiki 基建机制 | 社区共识。蓝脸（mood≤12）仅为 UI 视觉标记，**不影响效率** |
 | 基础心情消耗 ~0.75/时（3人工位） | PRTS Wiki | 社区验证值 |
 
 ### A.7 制造站/贸易站/会客室技能分类（§3）

@@ -48,8 +48,6 @@ class SolverParams:
     """满心情值（h）"""
     mood_work_threshold: float = 1.0
     """可参与工作的最低心情值（低于此值不可用）。默认 1.0 确保至少留 1 小时缓冲"""
-    mood_blue_face: float = 12.0
-    """蓝脸阈值（效率下降的边界，不影响 e(t) 但标记状态）"""
 
     # === 多班次 ===
     shift_count: int = 1
@@ -174,7 +172,7 @@ class SolverParams:
         lines = [
             f"  排班: {self.shift_count}班 x {self.shift_hours:.0f}h, 间隔 {self.interval_hours:.0f}h",
             f"  心情: 消耗率 {self.base_burn_rate3:.2f} (3人), "
-            f"满 {self.mood_full:.0f}h, 蓝脸 {self.mood_blue_face:.0f}h, 工作阈值 {self.mood_work_threshold:.1f}h",
+            f"满 {self.mood_full:.0f}h, 工作阈值 {self.mood_work_threshold:.1f}h",
             f"  设施: 中枢 {self.control_max_slots}槽, "
             f"宿舍 {self.dorm_room_count}x{self.dorm_room_size}=Lv{self.dorm_levels_sum}",
             f"  外部: 日常任务 {self.daily_task_lmd:,.0f} LMD/天",

@@ -62,13 +62,11 @@ def evaluate_room(
 
     # 心情截断参数
     mood_burn = 0.0
-    mood_blue_face = 0.0
     qiangan_mood = None
     warmup_map: dict[str, float] = {}
     mood_map: dict[str, float] = {}
     if mood_ctx is not None:
         mood_burn = mood_ctx.room_burn(operators, room_type)
-        mood_blue_face = mood_ctx.params.mood_blue_face if mood_ctx.params else 12.0
         qiangan_mood = mood_ctx.qiangan_decay_basis(operators, room_type)
         for op in operators:
             w = mood_ctx.warmup_hours.get(op.name, 0.0)
@@ -119,7 +117,7 @@ def evaluate_room(
         op_mood = mood_map.get(op.name, 24.0)
         ramp_segs = operator_ramp_segments(
             op, room_type, product, T, t_initial=t_init,
-            mood_burn=mood_burn, mood_initial=op_mood, mood_blue_face=mood_blue_face,
+            mood_burn=mood_burn, mood_initial=op_mood,
         )
         if ramp_segs is not None:
             total += integrate_segments(ramp_segs, T)
@@ -135,7 +133,7 @@ def evaluate_room(
                 total += integrate_segments(
                     constant_efficiency(
                         eff, mood_burn=mood_burn, T=T,
-                        mood_initial=op_mood, mood_blue_face=mood_blue_face,
+                        mood_initial=op_mood,
                     ), T,
                 )
     total += integrate_segments(synergy_capacity_to_eff(non_zero_ops, room_type, product, T), T)

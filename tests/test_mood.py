@@ -220,60 +220,31 @@ class TestWorkBurn:
         assert room.remaining_after_shift == pytest.approx(8.4)
 
 
-# ─── 蓝脸/红脸判定 ─────────────────────────────────────────────
+# ─── 红脸判定 ─────────────────────────────────────────────
 
-class TestFaceThresholds:
-    """验证蓝脸 ≤12、红脸 ≤0 的判定"""
-
-    def test_蓝脸阈值12(self):
-        """剩余心情 = 12 应为蓝脸"""
-        # Arrange: 制造 net_burn=0.5, 24h → 剩余=12
-        ctrl_ops = []
-        for i in range(5):
-            ctrl_ops.append(_mk_op(f"C{i+1}", [
-                _mk_skill("Control", {"all": 0.05}, buff_id="ctrl_cost"),
-                _mk_skill("Control", {"all": 0.08}, buff_id=f"extra_{i}"),
-            ]))
-        workers = [_mk_op(f"W{i+1}") for i in range(3)]
-        plan = ShiftPlan(
-            name="测试",
-            assignments=[
-                RoomAssignment(room_type="Control", room_index=0, operators=[op.name for op in ctrl_ops]),
-                RoomAssignment(room_type="Mfg", room_index=0, product="PureGold", operators=[w.name for w in workers]),
-            ],
-        )
-
-        # Act
-        report = calculate(plan, ctrl_ops + workers, shift_hours=24.0)
-
-        # Assert: 减免=0.25+5×0.08=0.65, base=0.9, net=0.25, 剩余=24-6=18
-        pass
+class TestRedFaceThreshold:
+    """验证红脸 ≤0 的判定"""
 
     def test_红脸阈值零(self):
         """净消耗导致心情归零应为红脸"""
-        # Arrange: 12h 班次, net_burn=1.0, 剩余=24-12=12 → 12h
-        # 改用长班次迫使红脸: net_burn=0.9, 30h → 剩余 = 24 - 0.9×30 = -4.0
-        ctrl_op = _mk_ctrl_cost("C1")  # 仅 0.05 减免
+        ctrl_op = _mk_ctrl_cost("C1")
         worker = _mk_op("W1", [])
         plan = ShiftPlan(
             name="测试",
             assignments=[
                 RoomAssignment(room_type="Control", room_index=0, operators=[ctrl_op.name]),
-                RoomAssignment(room_type="Power", room_index=0, operators=[worker.name]),  # 1人房, base=1.0
+                RoomAssignment(room_type="Power", room_index=0, operators=[worker.name]),
             ],
         )
 
-        # Act: net=0.95, 26h → 24-0.95×26 = -0.7
         report = calculate(plan, [ctrl_op, worker], shift_hours=26.0)
 
-        # Assert
         room = report.rooms[0]
         assert room.is_red_face
         assert report.red_face_count == 1
 
-    def test_正常心情_非蓝非红(self):
-        """剩余心情 ≥ 13 为正常"""
-        # Arrange: 小减免, 短班次
+    def test_正常心情_非红脸(self):
+        """剩余心情 > 0 为正常"""
         ctrl_ops = [_mk_ctrl_cost(f"C{i+1}") for i in range(5)]
         worker = _mk_op("W", [_mk_skill("Mfg", {"all": 0})])
         plan = ShiftPlan(
@@ -284,12 +255,9 @@ class TestFaceThresholds:
             ],
         )
 
-        # Act: 12h
         report = calculate(plan, ctrl_ops + [worker], shift_hours=12.0)
 
-        # Assert: net=0.65, 剩余=24-7.8=16.2 → 正常
         room = report.rooms[0]
-        assert not room.is_blue_face
         assert not room.is_red_face
 
 

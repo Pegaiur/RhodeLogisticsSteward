@@ -29,7 +29,6 @@ def constant_efficiency(
     mood_burn: float = 0.0,
     T: float = 12.0,
     mood_initial: float = 24.0,
-    mood_blue_face: float = 0.0,
 ) -> list[LinearSegment]:
     """常数效率技能 → 分段表示
 
@@ -37,52 +36,19 @@ def constant_efficiency(
     mood_burn: 净心情消耗率（/h），0 表示不截断
     T: 排班时长（h）
     mood_initial: 干员初始心情值，默认 24
-    mood_blue_face: 蓝脸阈值，0 表示不建模蓝脸衰减
 
-    mood >= mood_blue_face: 满效率
-    0 < mood < mood_blue_face: 效率线性衰减 (× mood/mood_blue_face)
-    mood <= 0: 效率归零
+    mood > 0: 满效率
+    mood <= 0: 效率归零（红脸截断）
     """
     if mood_burn <= 0:
         return [LinearSegment(a=value, b=0.0, t_start=0.0, dt=T)]
 
     t_red = mood_initial / mood_burn
     if t_red >= T:
-        if mood_blue_face <= 0 or mood_initial < mood_blue_face:
-            if mood_blue_face <= 0:
-                return [LinearSegment(a=value, b=0.0, t_start=0.0, dt=T)]
-            t_red = T
-        else:
-            t_blue_start = (mood_initial - mood_blue_face) / mood_burn
-            if t_blue_start >= T:
-                return [LinearSegment(a=value, b=0.0, t_start=0.0, dt=T)]
-            t_red = T
+        return [LinearSegment(a=value, b=0.0, t_start=0.0, dt=T)]
 
-    segments: list[LinearSegment] = []
-
-    if mood_blue_face > 0 and mood_initial < mood_blue_face:
-        # 起始已在蓝脸区 — 全程线性衰减直至归零
-        a_blue = value * mood_initial / mood_blue_face
-        b_blue = -value * mood_burn / mood_blue_face
-        dt_blue = min(T, t_red)
-        segments.append(LinearSegment(a=a_blue, b=b_blue, t_start=0.0, dt=dt_blue))
-    elif mood_blue_face > 0:
-        # 满效率 → 蓝脸衰减
-        t_blue_start = (mood_initial - mood_blue_face) / mood_burn
-        if t_blue_start > 0:
-            segments.append(LinearSegment(a=value, b=0.0, t_start=0.0, dt=min(T, t_blue_start)))
-        if t_blue_start < T and t_blue_start < t_red:
-            a_blue = value
-            b_blue = -value * mood_burn / mood_blue_face
-            dt_blue = min(T, t_red) - t_blue_start
-            if dt_blue > 0:
-                segments.append(LinearSegment(a=a_blue, b=b_blue, t_start=t_blue_start, dt=dt_blue))
-    elif t_red < T:
-        # 仅红脸截断（无蓝脸建模）
-        segments.append(LinearSegment(a=value, b=0.0, t_start=0.0, dt=t_red))
-
-    if 0 < t_red < T:
-        segments.append(LinearSegment(a=0.0, b=0.0, t_start=t_red, dt=T - t_red))
+    segments = [LinearSegment(a=value, b=0.0, t_start=0.0, dt=t_red)]
+    segments.append(LinearSegment(a=0.0, b=0.0, t_start=t_red, dt=T - t_red))
     return segments
 
 
@@ -91,7 +57,6 @@ def ramping_efficiency(
     mood_burn: float = 0.0, T: float = 12.0,
     t_initial: float = 0.0,
     mood_initial: float = 24.0,
-    mood_blue_face: float = 0.0,
 ) -> list[LinearSegment]:
     """时变效率技能 → 分段表示（7 条 buff）
 
@@ -101,7 +66,7 @@ def ramping_efficiency(
     mood_burn: 净心情消耗率
     T: 排班时长
     t_initial: 已连续工作小时数（暖机偏移，默认 0 = 从零爬升）
-    mood_initial: 干员初始心情值，默认 24（当前 mood_burn 恒为 0 不触发截断）
+    mood_initial: 干员初始心情值，默认 24
     """
     segments: list[LinearSegment] = []
     t_start = 0.0
@@ -124,10 +89,9 @@ def ramping_efficiency(
 
     t_red = mood_initial / mood_burn
     if t_red >= T:
-        t_red = T
+        return segments
 
     final: list[LinearSegment] = []
-    # 红脸截断
     for seg in segments:
         seg_end = seg.t_start + seg.dt
         if seg_end <= t_red:
@@ -138,39 +102,7 @@ def ramping_efficiency(
             clipped = LinearSegment(a=seg.a, b=seg.b, t_start=seg.t_start, dt=t_red - seg.t_start)
             final.append(clipped)
 
-    # 蓝脸衰减 — 对 [t_blue_start, t_red] 区间内段施加线性心情衰减
-    if mood_blue_face > 0 and mood_initial <= mood_blue_face:
-        t_blue_start = 0.0
-    elif mood_blue_face > 0:
-        t_blue_start = (mood_initial - mood_blue_face) / mood_burn
-    else:
-        t_blue_start = T  # 无蓝脸
-
-    if t_blue_start < min(T, t_red):
-        degraded: list[LinearSegment] = []
-        for seg in final:
-            seg_end = seg.t_start + seg.dt
-            if seg_end <= t_blue_start:
-                degraded.append(seg)
-            elif seg.t_start >= t_blue_start:
-                start_val = seg.a + seg.b * (seg.t_start - seg.t_start)  # = seg.a
-                start_mood = mood_initial - mood_burn * seg.t_start
-                mood_ratio = max(0.0, start_mood / mood_blue_face)
-                a_blue = start_val * mood_ratio
-                b_blue = seg.b * mood_ratio - start_val * mood_burn / mood_blue_face
-                degraded.append(LinearSegment(a=a_blue, b=b_blue, t_start=seg.t_start, dt=seg.dt))
-            else:
-                pre_dt = t_blue_start - seg.t_start
-                degraded.append(LinearSegment(a=seg.a, b=seg.b, t_start=seg.t_start, dt=pre_dt))
-                start_val = seg.a + seg.b * pre_dt
-                a_blue = start_val
-                b_blue = seg.b - start_val * mood_burn / mood_blue_face
-                post_dt = seg_end - t_blue_start
-                degraded.append(LinearSegment(a=a_blue, b=b_blue, t_start=t_blue_start, dt=post_dt))
-        final = degraded
-
-    if T > t_red:
-        final.append(LinearSegment(a=0.0, b=0.0, t_start=t_red, dt=T - t_red))
+    final.append(LinearSegment(a=0.0, b=0.0, t_start=t_red, dt=T - t_red))
     return final
 
 

@@ -14,8 +14,6 @@ from steward_core.models import Operator, ShiftPlan
 
 # 心情上限
 _MOOD_MAX = 24.0
-# 蓝脸阈值 (效率开始下降)
-_BLUE_FACE_THRESHOLD = 12.0
 # 红脸阈值 (效率为 0)
 _RED_FACE_THRESHOLD = 0.0
 
@@ -29,14 +27,11 @@ class RoomMood:
     base_burn: float = 0.0
     net_burn: float = 0.0
     remaining_after_shift: float = 24.0
-    is_blue_face: bool = False
     is_red_face: bool = False
 
     def status(self) -> str:
         if self.is_red_face:
             return "🔴 红脸"
-        if self.is_blue_face:
-            return "🟡 蓝脸"
         return "🟢 正常"
 
 
@@ -49,7 +44,6 @@ class MoodReport:
     control_bonus: float = 0.0
     rooms: list[RoomMood] = field(default_factory=list)
 
-    blue_face_count: int = 0
     red_face_count: int = 0
 
     def all_pass(self) -> bool:
@@ -70,7 +64,7 @@ class MoodReport:
                 f"剩余={room.remaining_after_shift:.1f} ({room.status()})"
             )
         lines.append(
-            f"结果: 蓝脸{self.blue_face_count}间 / 红脸{self.red_face_count}间"
+            f"结果: 红脸{self.red_face_count}间"
         )
         if self.all_pass():
             lines.append("✅ 全部通过，无需轮换")
@@ -162,13 +156,10 @@ def calculate(
             net_burn=net_burn,
             remaining_after_shift=remaining,
             is_red_face=remaining <= _RED_FACE_THRESHOLD,
-            is_blue_face=remaining <= _BLUE_FACE_THRESHOLD and remaining > _RED_FACE_THRESHOLD,
         )
 
         report.rooms.append(room_mood)
         if room_mood.is_red_face:
             report.red_face_count += 1
-        elif room_mood.is_blue_face:
-            report.blue_face_count += 1
 
     return report

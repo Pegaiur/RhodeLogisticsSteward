@@ -4,10 +4,19 @@
 > **归档日期**: 2026-05-30
 > 
 > Steps 1-7 全部实施完毕（29 commits），含 MoodContext、MoodModifiers、宿舍恢复评估、反硬编码、
-> mood_burn 截断 + 蓝脸衰减、fill_dorm_with_scheduling、solve_multi_shift() 编排器、菲亚梅塔输出激活。
+> mood_burn 截断 + ~~蓝脸衰减~~（**⚠️ 已于 2026-05-31 撤销，见下文**）、fill_dorm_with_scheduling、solve_multi_shift() 编排器、菲亚梅塔输出激活。
 > 
 > **已知未完成**：跨班次轮换调度（中枢干员重复分配）、菲亚梅塔交换决策、测试套件。
 > 后续由 `slot-processing-model-draft.md` 槽位加工模型替代。
+
+> ## ⚠️ 重要更正（2026-05-31）
+> 
+> **§ 蓝脸效率衰减（64a8c65）已推翻。**
+> 
+> 游戏内 **蓝脸（mood≤12）仅为 UI 视觉标记，绝不干员效率**。红脸（mood=0）才是唯一导致效率归零的游戏机制。
+> 本计划在 64a8c65 中引入的 `效率 × (mood/12)` 线性衰减是 **建模错误**，已于 2026-05-31 从全部代码中清除；
+> `SolverParams.mood_blue_face` 参数及 `constant_efficiency` / `ramping_efficiency` 中的蓝脸分支已移除。
+> 令/夕等干员的 per-operator 心情阈值（硬编码 12.0）不受影响——那是游戏原生机制，与通用蓝脸衰减无关。
 
 ## 实施笔记
 
@@ -100,9 +109,15 @@
 - `solver/global_state.py`：纯 bundle_availability 计数，与心情无关
 - `steward_core/models.py`：SteppedSegment 不需要，铅踝梯级衰减通过 `stepped_efficiency()` 已就绪
 
-### 2026-05-29 · blue face 效率衰减（64a8c65）
+### 2026-05-29 · ~~blue face 效率衰减（64a8c65）~~ ⚠️ 已推翻
+
+> **此节描述的内容已于 2026-05-31 全部撤销。** 蓝脸衰减是建模错误——游戏内蓝脸仅为 UI 视觉标记，不影响效率。
+> 仅红脸（mood=0）导致效率归零。
 
 根因：`constant_efficiency` 有两处缺陷导致双班次产出相同：
+
+（以下为历史记录，不再生效）
+
 1. `t_red = 24.0 / mood_burn` 写死满心情 → 多班次下 mood_initial=13.2 时 t_red 被高估为 26.67h（实际 14.67h）
 2. 缺少蓝脸衰减建模 → mood<12 时效率不下降
 

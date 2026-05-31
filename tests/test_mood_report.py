@@ -31,10 +31,9 @@ class TestReportInterface:
                     room_type="Mfg", room_index=0,
                     operators=["B", "C", "D"],
                     base_burn=0.9, net_burn=0.65, remaining_after_shift=8.4,
-                    is_blue_face=True, is_red_face=False,
+                    is_red_face=False,
                 ),
             ],
-            blue_face_count=1,
             red_face_count=0,
         )
         s = report.summary()
@@ -46,7 +45,6 @@ class TestReportInterface:
         report = MoodReport(
             shift_hours=24,
             shift_name="测试",
-            blue_face_count=0,
             red_face_count=1,
         )
         s = report.summary()
@@ -55,5 +53,4 @@ class TestReportInterface:
     def test_RoomMood_status(self):
         """RoomMood.status() 在不同心情下返回正确字符串"""
         assert "正常" in RoomMood(room_type="Mfg", room_index=0, remaining_after_shift=20).status()
-        assert "蓝脸" in RoomMood(room_type="Mfg", room_index=0, remaining_after_shift=10, is_blue_face=True).status()
         assert "红脸" in RoomMood(room_type="Mfg", room_index=0, remaining_after_shift=-1, is_red_face=True).status()

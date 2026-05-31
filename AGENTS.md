@@ -222,7 +222,7 @@ master ────────────────────────�
 | 求解器三件套优化 | 0.4.0 | 支撑包+局部搜索+全局状态 |
 | Strategy 策略层重构 | 0.5.0 | Baseline/KBeam/Iterative 三条策略 + Phase 重命名 + BuffPool 迭代 + CLI 策略选择 |
 | JSON 输出协议对齐 | 0.5.1 | 输出符合 MAA 基建排班协议 v5.x、README、文档归档合并 |
-| 心情建模与多班次基础 | — (dev) | MoodContext + MoodModifiers + dorm_recovery + mood_burn/蓝脸衰减 + solve_multi_shift() 编排器。已合并至 master，因轮换调度不完整未打 tag |
+| 心情建模与多班次基础 | — (dev) | MoodContext + MoodModifiers + dorm_recovery + mood_burn/~~蓝脸衰减~~（已于 2026-05-31 撤销——非游戏机制，建模错误） + solve_multi_shift() 编排器。已合并至 master，因轮换调度不完整未打 tag |
 | 首个正式版 | 1.0.0 | 全验证通过 |
 | MAA 发版需适配 | PATCH +1 | 0.5.1 |
 
