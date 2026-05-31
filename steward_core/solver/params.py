@@ -41,6 +41,9 @@ class SolverParams:
     dorm_ambiance: int = 5000
     """宿舍氛围累计值，影响隐式线索搜集加成。默认 5000 对应 >4000 档位（+15%）"""
 
+    dorm_ambiance_per_room: int = 5000
+    """每间宿舍氛围值，用于宿舍基础恢复公式: 0.0004 × ambiance"""
+
     # === 心情/消耗 ===
     base_burn_per_hour: float = 1.0
     """基础心情消耗率（/h），单人"""

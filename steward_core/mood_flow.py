@@ -371,12 +371,17 @@ class MoodContext:
         if self.modifiers and self.modifiers.yanhuo_recovery > 0.0:
             yanhuo_bonus = max(0.0, self.modifiers.yanhuo_recovery - 0.05)
 
+        dorm_level = self.params.dorm_level if self.params else 5
+        amb_per_room = self.params.dorm_ambiance_per_room if self.params else 5000
+
         return evaluate_dorm_recovery(
             dorm_ops=dorm_mates,
             target_op=op,
             dorm_bonus_all=modifiers.dorm_bonus_all,
             dorm_bonus_elite=modifiers.dorm_bonus_elite,
             yanhuo_bonus=yanhuo_bonus,
+            dorm_level=dorm_level,
+            dorm_ambiance_per_room=amb_per_room,
         )
 
     def _control_burn(self, name: str = "") -> float:

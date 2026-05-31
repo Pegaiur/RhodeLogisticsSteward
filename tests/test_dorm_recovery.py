@@ -55,21 +55,20 @@ class TestRule1FiammettaSelf:
 class TestRule2SelfRecovery:
     def test_自身技能生效(self):
         target = _dorm_op("推王", skills=[_dorm_skill("dorm_rec_oneself[000]", 0.55)])
-        assert evaluate_dorm_recovery([target], target) == 0.55
+        assert evaluate_dorm_recovery([target], target) == 4.55
 
     def test_多个自身技能取最大(self):
         target = _dorm_op("推王", skills=[
             _dorm_skill("dorm_rec_oneself[000]", 0.55),
             _dorm_skill("dorm_rec_oneself_e2[001]", 0.65),
         ])
-        assert evaluate_dorm_recovery([target], target) == 0.65
+        assert evaluate_dorm_recovery([target], target) == 4.65
 
     def test_含与号的自身技能也识别(self):
-        """dorm_rec_xxx&oneself_xxx 格式也被识别"""
         target = _dorm_op("推王", skills=[
             _dorm_skill("dorm_rec_a&oneself_b[000]", 0.45),
         ])
-        assert evaluate_dorm_recovery([target], target) == 0.45
+        assert evaluate_dorm_recovery([target], target) == 4.45
 
 
 # ─── Rule 3: 单体恢复 (peer → target) ────────────────────────────
@@ -79,19 +78,19 @@ class TestRule3SingleRecovery:
         target = _dorm_op("阿米娅")
         peer = _dorm_op("杜林", skills=[_dorm_skill("dorm_rec_single[000]", 0.2)])
         rate = evaluate_dorm_recovery([target, peer], target)
-        assert rate == 0.2
+        assert rate == 4.2
 
     def test_多个室友单体取最大(self):
         target = _dorm_op("阿米娅")
         p1 = _dorm_op("杜林", skills=[_dorm_skill("dorm_rec_single[000]", 0.2)])
         p2 = _dorm_op("12F", skills=[_dorm_skill("dorm_rec_single[001]", 0.3)])
         rate = evaluate_dorm_recovery([target, p1, p2], target)
-        assert rate == 0.3
+        assert rate == 4.3
 
     def test_单体技能不对自身生效(self):
         op = _dorm_op("杜林", skills=[_dorm_skill("dorm_rec_single[000]", 0.2)])
         rate = evaluate_dorm_recovery([op], op)
-        assert rate == 0.0
+        assert rate == 4.0
 
 
 # ─── Rule 4: 全体恢复 (peer sum) ─────────────────────────────────
@@ -101,19 +100,19 @@ class TestRule4AllRecovery:
         target = _dorm_op("阿米娅")
         peer = _dorm_op("杜林", skills=[_dorm_skill("dorm_rec_all[000]", 0.1)])
         rate = evaluate_dorm_recovery([target, peer], target)
-        assert rate == 0.1
+        assert rate == 4.1
 
     def test_多个全体技能累加(self):
         target = _dorm_op("阿米娅")
         p1 = _dorm_op("杜林", skills=[_dorm_skill("dorm_rec_all[000]", 0.1)])
         p2 = _dorm_op("12F", skills=[_dorm_skill("dorm_rec_all[001]", 0.1)])
         rate = evaluate_dorm_recovery([target, p1, p2], target)
-        assert rate == 0.2
+        assert rate == pytest.approx(4.2)
 
     def test_全体技能不对自身生效(self):
         op = _dorm_op("杜林", skills=[_dorm_skill("dorm_rec_all[000]", 0.1)])
         rate = evaluate_dorm_recovery([op], op)
-        assert rate == 0.0
+        assert rate == 4.0
 
 
 # ─── Rule 5: 中枢全局宿舍加成 ────────────────────────────────────
@@ -122,21 +121,21 @@ class TestRule5ControlBonus:
     def test_全员加成生效(self):
         target = _dorm_op("阿米娅")
         rate = evaluate_dorm_recovery([target], target, dorm_bonus_all=0.15)
-        assert rate == 0.15
+        assert rate == 4.15
 
     def test_精英加成对五星生效(self):
         target = _dorm_op("阿米娅", rarity=5)
         rate = evaluate_dorm_recovery(
             [target], target, dorm_bonus_all=0.15, dorm_bonus_elite=0.45,
         )
-        assert rate == 0.60
+        assert rate == pytest.approx(4.60)
 
     def test_精英加成不对四星生效(self):
         target = _dorm_op("阿米娅", rarity=4)
         rate = evaluate_dorm_recovery(
             [target], target, dorm_bonus_all=0.15, dorm_bonus_elite=0.45,
         )
-        assert rate == 0.15
+        assert rate == 4.15
 
 
 # ─── Rule 6: 人间烟火 ────────────────────────────────────────────
@@ -145,7 +144,7 @@ class TestRule6Yanhuo:
     def test_人间烟火加成生效(self):
         target = _dorm_op("阿米娅")
         rate = evaluate_dorm_recovery([target], target, yanhuo_bonus=0.15)
-        assert rate == 0.15
+        assert rate == 4.15
 
 
 # ─── 组合规则 ────────────────────────────────────────────────────
@@ -158,11 +157,39 @@ class TestCombinedRules:
             [target, peer], target,
             dorm_bonus_all=0.15, yanhuo_bonus=0.05,
         )
-        assert pytest.approx(rate) == 0.85
+        assert pytest.approx(rate) == 4.85
 
     def test_空宿舍返回零(self):
         target = _dorm_op("阿米娅")
         rate = evaluate_dorm_recovery([], target)
+        assert rate == 0.0
+
+
+# ─── Rule 0: 宿舍基础恢复 ────────────────────────────────────────
+
+class TestRule0BaseRecovery:
+    def test_默认等级5氛围5000为基础恢复4(self):
+        target = _dorm_op("阿米娅")
+        rate = evaluate_dorm_recovery([target], target)
+        assert rate == 4.0
+
+    def test_等级1氛围0为基础恢复1点6(self):
+        target = _dorm_op("阿米娅")
+        rate = evaluate_dorm_recovery(
+            [target], target, dorm_level=1, dorm_ambiance_per_room=0,
+        )
+        assert rate == 1.6
+
+    def test_等级3氛围3000为基础恢复3点0(self):
+        target = _dorm_op("阿米娅")
+        rate = evaluate_dorm_recovery(
+            [target], target, dorm_level=3, dorm_ambiance_per_room=3000,
+        )
+        assert pytest.approx(rate) == 3.0
+
+    def test_空宿舍无基础恢复(self):
+        target = _dorm_op("阿米娅")
+        rate = evaluate_dorm_recovery([], target, dorm_level=5)
         assert rate == 0.0
 
 
