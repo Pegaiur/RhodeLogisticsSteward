@@ -81,15 +81,6 @@ def phase_mfg(
             if enabler.char_id not in existing and enabler.char_id not in assigned_ids:
                 pool.append(enabler)
 
-        if ctx.num_windows > 1:
-            max_shifts = params.rotation_max_shifts if (params and params.rotation_max_shifts) else 0
-            if max_shifts > 0:
-                rs = ctx.rotation_state
-                if rs is not None:
-                    pool = [op for op in pool if rs.shift_count(op.name, "Mfg") < max_shifts]
-                if not pool:
-                    continue
-
         combos = [list(c) for c in itertools.combinations(pool, min(3, len(pool)))]
         if not combos:
             continue
@@ -146,8 +137,7 @@ def phase_mfg(
                 mood_ctx=mood_ctx,
             )
             combo_names = [op.name for op in combo_ops]
-            penalty_ratio = ctx.rotation_penalty_ratio_for_combo(combo_names, shift_hours)
-            evaluated.append((score * (1.0 - penalty_ratio), combo_names))
+            evaluated.append((score, combo_names))
 
         evaluated.sort(key=lambda x: -x[0])
 

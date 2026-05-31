@@ -38,7 +38,11 @@ class SolverParams:
     """宿舍总等级（4间 × Lv5）"""
 
     # === 心情/消耗 ===
-    base_burn_rate: float = 0.90
+    base_burn_per_hour: float = 1.0
+    """基础心情消耗率（/h），单人"""
+    control_recovery_per_op: float = 0.05
+    """中枢每名干员提供的心情恢复（/h）"""
+    base_burn_rate3: float = base_burn_per_hour - 0.05 * (3 - 1)
     """3人工位基础消耗率（中枢净恢复前，公式 1.0-0.05×(slots-1)）"""
     mood_full: float = 24.0
     """满心情值（h）"""
@@ -52,6 +56,8 @@ class SolverParams:
     """班次数（1=单班次，2=双班次）"""
     interval_hours: float = 8.0
     """班间间隔（小时），用于恢复模拟"""
+    fiammetta_enabled: bool = False
+    """是否启用菲亚梅塔心情交换（交换决策算法待实现）"""
 
     # === Buff 池 ===
     suich_count: int = 5
@@ -78,10 +84,10 @@ class SolverParams:
     """槽位迭代是否使用冷启动（S₀_max 初始化）"""
     lambda_damping: float = 0.5
     """λ 影子乘子阻尼因子，降低 λ 对 contribution 的敏感度。0=无惩罚, 1=全额惩罚"""
-    rotation_penalty_weight: float = 0.85
-    """轮换惩罚权重：溢出占比 × 此值 = 组合评分扣减比例。0=关闭轮换惩罚, 1=全额溢出惩罚"""
+    rotation_penalty_weight: float = 0.0
+    """轮换惩罚权重（已废弃——由 MoodContext 心情约束替代）。0=关闭, >0=遗留兼容"""
     rotation_max_shifts: int = 0
-    """单干员在同一设施类型的最多班次数。0=不限制（纯经济惩罚），N=硬上限（如设为2则3班场景每设施最多2班）"""
+    """单干员在同一设施类型的最多班次数（已废弃——由 MoodContext 心情约束替代）。0=不限制"""
 
     @classmethod
     def baseline(cls) -> "SolverParams":
@@ -167,7 +173,7 @@ class SolverParams:
         """
         lines = [
             f"  排班: {self.shift_count}班 x {self.shift_hours:.0f}h, 间隔 {self.interval_hours:.0f}h",
-            f"  心情: 消耗率 {self.base_burn_rate:.2f} (3人), "
+            f"  心情: 消耗率 {self.base_burn_rate3:.2f} (3人), "
             f"满 {self.mood_full:.0f}h, 蓝脸 {self.mood_blue_face:.0f}h, 工作阈值 {self.mood_work_threshold:.1f}h",
             f"  设施: 中枢 {self.control_max_slots}槽, "
             f"宿舍 {self.dorm_room_count}x{self.dorm_room_size}=Lv{self.dorm_levels_sum}",
@@ -184,10 +190,10 @@ class SolverParams:
         contrib_parts = []
         if self.lambda_damping != 1.0:
             contrib_parts.append(f"lambda 阻尼 {self.lambda_damping:.2f}")
-        if self.rotation_penalty_weight != 1.0:
-            contrib_parts.append(f"轮换惩罚 {self.rotation_penalty_weight:.2f}")
+        if self.rotation_penalty_weight > 0:
+            contrib_parts.append(f"轮换惩罚(已废弃) {self.rotation_penalty_weight:.2f}")
         if self.rotation_max_shifts > 0:
-            contrib_parts.append(f"轮换上限 {self.rotation_max_shifts}")
+            contrib_parts.append(f"轮换上限(已废弃) {self.rotation_max_shifts}")
         if contrib_parts:
             lines.append(f"  贡献体系: {', '.join(contrib_parts)}")
 

@@ -91,15 +91,6 @@ def phase_trade(
     if not pool:
         return
 
-    if ctx.num_windows > 1:
-        max_shifts = params.rotation_max_shifts if (params and params.rotation_max_shifts) else 0
-        if max_shifts > 0:
-            rs = ctx.rotation_state
-            if rs is not None:
-                pool = [op for op in pool if rs.shift_count(op.name, "Trade") < max_shifts]
-            if not pool:
-                return
-
     combos = [list(c) for c in itertools.combinations(pool, min(3, len(pool)))]
     if not combos:
         return
@@ -181,8 +172,7 @@ def phase_trade(
         if is_whisper:
             whisper_combos.append((lmd, combo_names, _zeroed_efficiency_sum(combo_ops)))
 
-        penalty_ratio = ctx.rotation_penalty_ratio_for_combo(combo_names, shift_hours)
-        evaluated.append((lmd * (1.0 - penalty_ratio), combo_names))
+        evaluated.append((lmd, combo_names))
 
     if whisper_combos:
         evaluated = _apply_whisper_opportunity(evaluated, whisper_combos, pool, shift_hours)

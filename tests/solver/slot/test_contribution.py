@@ -4,7 +4,7 @@ import pytest
 
 from steward_core.models import LayoutConfig, Operator
 from steward_core.solver.params import SolverParams
-from steward_core.solver.slot.context import SlotContext, RotationState
+from steward_core.solver.slot.context import SlotContext
 from steward_core.solver.slot.contribution import contribution
 
 
@@ -53,13 +53,3 @@ class TestContribution:
     def test_dormitory_returns_finite(self, ctx):
         result = contribution(ctx, "阿米娅", "Dormitory")
         assert result != float("-inf")
-
-    def test_rotation_penalty_applied_to_contribution(self, ctx):
-        ctx.rotation_state = RotationState(
-            free_hours=12.0, pool_base=50.0, penalty_weight=0.85,
-        )
-        ctx.hours_used["阿米娅"] = 20.0
-        ratio = ctx.rotation_penalty_ratio_for_name("阿米娅", 12.0)
-        assert ratio > 0.0
-        ctx.hours_used["阿米娅"] = 0.0
-        assert ctx.rotation_penalty_ratio_for_name("阿米娅", 12.0) == 0.0

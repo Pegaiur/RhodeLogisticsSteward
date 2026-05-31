@@ -4,10 +4,9 @@
 替代旧的 locked_support 累积 + best_efficiency 排序模式。
 
 公式:
-  contribution = (type2 状态写入 * D[d]
-                  + type3 全局注入 * 受影响槽位数
-                  + type2 per-operator 条件加成)
-                 * (1.0 - rotation_penalty_ratio)
+  contribution = type2 状态写入 * D[d]
+               + type3 全局注入 * 受影响槽位数
+               + type2 per-operator 条件加成
 """
 
 from __future__ import annotations
@@ -55,7 +54,6 @@ def contribution(
         D = {d: 0.0 for d in STATE_DIMS}
 
     hours = ctx.params.shift_hours if ctx.params else 12.0
-    penalty_ratio = ctx.rotation_penalty_ratio_for_name(op_name, hours)
 
     if facility_type == "Control":
         base = _control_contribution(ctx, op, window_idx, D)
@@ -70,7 +68,7 @@ def contribution(
     else:
         return float("-inf")
 
-    return base * (1.0 - penalty_ratio)
+    return base
 
 
 def _mfg_base_rate_lmd_avg() -> float:
