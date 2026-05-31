@@ -1,4 +1,4 @@
-﻿# 机会成本补充覆盖方案
+# 机会成本补充覆盖方案
 
 > 状态：Phase 1 已实施（2026-05-31）。Phase 2（λ_mood + swap_cost）为设计草案。
 
@@ -180,6 +180,5 @@ penalty(k) = base_cost × (1 + escalation)^(k-1)
 ## 五、关联文档
 
 - [slot-processing-model.md](./slot-processing-model.md) — 槽位加工模型设计
-- [slot-processing-model.md](./slot-processing-model.md) — 排班策略概要
 - [constraints-and-data-baseline.md](./constraints-and-data-baseline.md) — 约束体系与数据基线
 - `steward_core/solver/slot/opportunity.py` — Phase 1 实现源码

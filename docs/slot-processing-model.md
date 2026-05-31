@@ -1,8 +1,8 @@
-# 统一槽位加工模型
+﻿# 统一槽位加工模型
 
 > **状态**：已实施（v0.6.0-dev）。14×12h 基线已跑通，求解器代码位于 `steward_core/solver/slot/`。
 >
-> V1 SlotIterationStrategy → V2 SlotSolver 的演进记录见 `archive/slot-iteration-notes.md`。
+> V1 SlotIterationStrategy → V2 SlotSolver 的演进记录见 `archive/slot-iteration-record.md`。
 
 ---
 
@@ -279,7 +279,7 @@ pool_hard[op] = mood_full / mood_burn
 
 > **"窗口模型"是本文档定义的求解框架**。基于该框架的 Phase A→D 贪心 + λ bisection
 > 跨期约束构成当前求解器（`solver/slot/solver.py`）的实现骨架。
-> [机会成本补充覆盖方案](./time-slot-scheduling-model.md) 在此骨架之上叠加正交维度
+> [机会成本补充覆盖方案](./opportunity-cost-supplement.md) 在此骨架之上叠加正交维度
 > （组合级归零机会成本、跨窗口 λ_mood + swap_cost），不替换骨架本身。
 
 ### 3.4 宿舍恢复：时长池的补充
@@ -597,7 +597,7 @@ effective_productivity = base × effective_hours / window_hours[w]
 
 > **实现路线**：§9.5 的混合策略（Mfg/Trade 穷举 + Control/Dorm contribution 贪心 +
 > λ bisection）已实施于 `solver/slot/solver.py`。V1 SlotIterationStrategy →
-> V2 SlotSolver 的演进记录见 `archive/slot-iteration-notes.md`。
+> V2 SlotSolver 的演进记录见 `archive/slot-iteration-record.md`。
 > Phase 1 归零机会成本（whisper/automation/zeroing）见 [opportunity.py](../steward_core/solver/slot/opportunity.py)。
 
 本节从状态向量的不动点结构推导求解策略。

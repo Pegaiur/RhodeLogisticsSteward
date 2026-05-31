@@ -1,4 +1,4 @@
-# 里程碑索引
+﻿# 里程碑索引
 
 > 记录项目各阶段的完成时间、版本号与核心变更。
 
@@ -22,5 +22,4 @@
 | [strategy-refactor-plan.md](./strategy-refactor-plan.md) | v0.5.0 | Strategy 策略层重构计划 + 实施笔记（合并），全部实施后归档 |
 | [buffpool-iteration-plan.md](./buffpool-iteration-plan.md) | v0.5.0 | BuffPool 不动点迭代 + Phase 命名计划，全部实施后归档 |
 | [mood-multi-shift-plan.md](./mood-multi-shift-plan.md) | dev | 心情建模与多班次实施计划（Steps 1-7 全部实施），合并至 master 后归档 |
-| [slot-iteration-plan.md](./slot-iteration-plan.md) | v0.6.0-dev | V1 SlotIterationStrategy 实施计划，被 SlotSolver 替代后归档 |
-| [slot-iteration-notes.md](./slot-iteration-notes.md) | v0.6.0-dev | V1 实施笔记（4期验收/修复/遗留）+ V1→V2 架构路线变更决策记录，SlotSolver 完工后归档 |
+| [slot-iteration-record.md](./slot-iteration-record.md) | v0.6.0-dev | V1 SlotIterationStrategy 实施计划 + 实施笔记合并，被 SlotSolver 替代后归档 |
