@@ -1,4 +1,4 @@
-"""统一贡献评分 — contribution(op, facility_type, ctx, window_idx) -> LMD等值/天
+"""统一贡献评分 — contribution(op, facility_type, ctx, window_idx) -> LMD等值/窗口
 
 中枢/发电/会客/办公室/宿舍的干员选择统一通过边际贡献评分，
 替代旧的 locked_support 累积 + best_efficiency 排序模式。
@@ -7,6 +7,7 @@
   contribution = type2 状态写入 * D[d]
                + type3 全局注入 * 受影响槽位数
                + type2 per-operator 条件加成
+               - λ[op] × hours
 """
 
 from __future__ import annotations
@@ -44,7 +45,7 @@ def contribution(
     """统一贡献评分入口
 
     Returns:
-        该干员在指定设施中的边际贡献（LMD 等值/天量纲）
+        该干员在指定设施中的边际贡献（LMD 等值/窗口量纲）
     """
     op = ctx.op_lookup.get(op_name)
     if op is None:
@@ -68,7 +69,7 @@ def contribution(
     else:
         return float("-inf")
 
-    return base
+    return base - ctx.lambda_ops.get(op_name, 0.0) * hours
 
 
 def _mfg_base_rate_lmd_avg() -> float:
@@ -148,7 +149,7 @@ def _type3_contribution(
     op: "Operator",
     window_idx: int,
 ) -> float:
-    """类型 3 全局注入的边际贡献（LMD 等值/天量纲）"""
+    """类型 3 全局注入的边际贡献（LMD 等值/窗口量纲）"""
     existing_names = ctx.ops_of_type(window_idx, "Control")
 
     def _bonus(ctrl_names):
@@ -161,18 +162,19 @@ def _type3_contribution(
     mfg_bonus = with_bonus.mfg_bonus - without_bonus.mfg_bonus
     trade_bonus = with_bonus.trade_bonus - without_bonus.trade_bonus
 
+    hours = ctx.params.shift_hours if ctx.params else 12.0
     total = 0.0
 
     if mfg_bonus != 0:
         mfg_filled = len([a for a in ctx.slots_of_type(window_idx, "Mfg") if not a.is_empty])
         affected = max(mfg_filled, 1)
         base_lmd = _mfg_base_rate_lmd_avg()
-        total += mfg_bonus * affected * base_lmd * 24.0 / 100.0
+        total += mfg_bonus * affected * base_lmd * hours / 100.0
 
     if trade_bonus != 0:
         trade_filled = len([a for a in ctx.slots_of_type(window_idx, "Trade") if not a.is_empty])
         affected = max(trade_filled, 1)
-        total += trade_bonus * affected * _TRADE_BASE_LMD_PER_HOUR * 24.0 / 100.0
+        total += trade_bonus * affected * _TRADE_BASE_LMD_PER_HOUR * hours / 100.0
 
     return total
 
@@ -182,7 +184,7 @@ def _per_operator_contribution(
     op: "Operator",
     window_idx: int,
 ) -> float:
-    """类型 2 per-operator 条件加成的边际贡献（LMD 等值/天量纲）"""
+    """类型 2 per-operator 条件加成的边际贡献（LMD 等值/窗口量纲）"""
     existing_names = ctx.ops_of_type(window_idx, "Control")
 
     if op.name in existing_names:
@@ -192,6 +194,7 @@ def _per_operator_contribution(
         without = existing_names
         with_ctrl = existing_names + [op.name]
 
+    hours = ctx.params.shift_hours if ctx.params else 12.0
     total = 0.0
     for facility_type in ("Mfg", "Trade"):
         max_rooms = 4 if facility_type == "Mfg" else 2
@@ -224,11 +227,11 @@ def _per_operator_contribution(
                 continue
 
             if facility_type == "Trade":
-                total += marginal * _TRADE_BASE_LMD_PER_HOUR * 24.0 / 100.0
+                total += marginal * _TRADE_BASE_LMD_PER_HOUR * hours / 100.0
             else:
                 rate = _product_base_rate(product)
                 lmd = _product_lmd_per_unit(product)
-                total += marginal * rate * 24.0 * lmd / 100.0
+                total += marginal * rate * hours * lmd / 100.0
 
     return total
 
@@ -247,8 +250,9 @@ def _power_contribution(
     eff = op.best_efficiency("Power", "")
     if eff <= 0:
         eff = 0.0
+    hours = ctx.params.shift_hours if ctx.params else 12.0
     base_lmd = _mfg_base_rate_lmd_avg()
-    total += eff * _DRONE_TO_MFG_RATIO / 100.0 * base_lmd * 24.0
+    total += eff * _DRONE_TO_MFG_RATIO / 100.0 * base_lmd * hours
 
     return total
 
@@ -265,8 +269,9 @@ def _reception_contribution(
     total = 0.0
 
     eff = max(op.best_efficiency("Reception", "General"), 0.0)
+    hours = ctx.params.shift_hours if ctx.params else 12.0
     base_lmd = _mfg_base_rate_lmd_avg()
-    total += eff * _RECEPTION_TO_MFG_RATIO / 100.0 * base_lmd * 24.0
+    total += eff * _RECEPTION_TO_MFG_RATIO / 100.0 * base_lmd * hours
 
     return total
 
@@ -283,8 +288,9 @@ def _office_contribution(
     total = 0.0
 
     eff = max(op.best_efficiency("Office", "HR"), 0.0)
+    hours = ctx.params.shift_hours if ctx.params else 12.0
     base_lmd = _mfg_base_rate_lmd_avg()
-    total += eff * _OFFICE_TO_MFG_RATIO / 100.0 * base_lmd * 24.0
+    total += eff * _OFFICE_TO_MFG_RATIO / 100.0 * base_lmd * hours
 
     return total
 
