@@ -25,6 +25,11 @@ def _mk_skill(buff_id: str, room_type: str, buff_name: str = "测试技能",
     )
 
 
+def _make_office_op() -> Operator:
+    """创建持有絮雨追忆技能的 Office 干员"""
+    return _mk_op("絮雨", [_mk_skill("hire_spd_bd_n1[000]", "HIRE", "追忆")])
+
+
 # ─── B2 工程机器人 / B3 思维链环 / B4 魔物料理 / B5 无声共鸣 ──
 
 class TestBLayer:
@@ -188,7 +193,7 @@ class TestDormPerception:
         dorm = [_mk_op("填位A"), _mk_op("填位B"), _mk_op("填位C"), _mk_op("填位D")]
 
         pool = compute_buff_pool(control, dorm_operators=dorm,
-                                 has_rosmontis_in_mfg=True)
+                                 mfg_operators=[_mk_op("迷迭香", [_mk_skill("manu_prod_spd_bd_n1[000]", "Mfg", "超感")])])
 
         assert pool.perception == 10 + 4  # 夕(10) + 迷迭香超感(4)
         assert pool.thought_chains == 14
@@ -201,7 +206,7 @@ class TestDormPerception:
         dorm = [_mk_op("A"), _mk_op("B"), _mk_op("C"), _mk_op("D")]
 
         pool = compute_buff_pool(control, dorm_operators=dorm,
-                                 has_ebnhlz_in_trade=True)
+                                 trade_operators=[_mk_op("黑键", [_mk_skill("trade_ord_spd_bd_n1[000]", "TRADING", "乐感")])])
 
         assert pool.perception == 10 + 4  # 夕(10) + 黑键乐感(4)
         assert pool.thought_chains == 14
@@ -214,8 +219,8 @@ class TestDormPerception:
         dorm = [_mk_op("A"), _mk_op("B"), _mk_op("C"), _mk_op("D")]
 
         pool = compute_buff_pool(control, dorm_operators=dorm,
-                                 has_rosmontis_in_mfg=True,
-                                 has_ebnhlz_in_trade=True)
+                                 mfg_operators=[_mk_op("迷迭香", [_mk_skill("manu_prod_spd_bd_n1[000]", "Mfg", "超感")])],
+                                 trade_operators=[_mk_op("黑键", [_mk_skill("trade_ord_spd_bd_n1[000]", "TRADING", "乐感")])])
 
         assert pool.perception == 10 + 4 + 4  # 夕(10) + 迷迭香(4) + 黑键(4)
         assert pool.thought_chains == 18
@@ -321,7 +326,7 @@ class TestFullBuffPool:
 
         pool = compute_buff_pool(
             control, dorm_operators=dorm, dorm_level=3,
-            has_rosmontis_in_mfg=True, has_ebnhlz_in_trade=True,
+            mfg_operators=[_mk_op("迷迭香", [_mk_skill("manu_prod_spd_bd_n1[000]", "Mfg", "超感")])], trade_operators=[_mk_op("黑键", [_mk_skill("trade_ord_spd_bd_n1[000]", "TRADING", "乐感")])],
         )
 
         # 夕(10) + 迷迭香超感(4) + 黑键乐感(4) + 爱丽丝梦境(3) + 车尔尼小节(3) = 24
@@ -353,7 +358,7 @@ class TestFullBuffPool:
 
         pool = compute_buff_pool(
             control, dorm_operators=dorm, dorm_level=5,
-            has_rosmontis_in_mfg=True, has_ebnhlz_in_trade=True,
+            mfg_operators=[_mk_op("迷迭香", [_mk_skill("manu_prod_spd_bd_n1[000]", "Mfg", "超感")])], trade_operators=[_mk_op("黑键", [_mk_skill("trade_ord_spd_bd_n1[000]", "TRADING", "乐感")])],
             ling_mood_below_12=True,
         )
 
@@ -441,7 +446,7 @@ class TestB1OfficeTradeGeneration:
         from steward_core.synergy import compute_buff_pool
 
         control = [_mk_op("令"), _mk_op("夕")]
-        pool = compute_buff_pool(control, perception_from_office=20)
+        pool = compute_buff_pool(control, office_operators=[_make_office_op()], office_perception_base=20)
 
         assert pool.perception == 30  # 夕(10) + 絮雨Office(20)
         assert pool.thought_chains == 30
@@ -455,7 +460,7 @@ class TestB1OfficeTradeGeneration:
 
         pool = compute_buff_pool(
             control, dorm_operators=dorm,
-            has_rosmontis_in_mfg=True, perception_from_office=20,
+            mfg_operators=[_mk_op("迷迭香", [_mk_skill("manu_prod_spd_bd_n1[000]", "Mfg", "超感")])], office_operators=[_make_office_op()], office_perception_base=20,
         )
 
         assert pool.perception == 10 + 5 + 20  # 夕(10) + 迷迭香超感(5) + 絮雨(20)
@@ -470,7 +475,7 @@ class TestB1OfficeTradeGeneration:
 
         pool = compute_buff_pool(
             control, suich_count=5, dorm_operators=dorm,
-            has_wuyou_in_trade=True,
+            trade_operators=[_mk_op("乌有", [_mk_skill("trade_ord_spd_bd_n2[000]", "TRADING", "愿者上钩")])],
         )
 
         assert pool.yanhuo == 15 + 25 + 20  # 令(15) + 重岳5岁(25) + 乌有(20)
@@ -492,7 +497,7 @@ class TestB1OfficeTradeGeneration:
         from steward_core.synergy import compute_buff_pool
 
         control = [_mk_op("令"), _mk_op("夕")]
-        pool = compute_buff_pool(control, perception_from_office=0)
+        pool = compute_buff_pool(control, office_operators=[_make_office_op()], office_perception_base=0)
 
         assert pool.perception == 10  # 仅夕(10)
 
@@ -512,7 +517,7 @@ class TestB5SilentResonance:
 
         pool = compute_buff_pool(
             control, dorm_operators=dorm, dorm_level=5,
-            has_ebnhlz_in_trade=True, ling_mood_below_12=True,
+            trade_operators=[_mk_op("黑键", [_mk_skill("trade_ord_spd_bd_n1[000]", "TRADING", "乐感")])], ling_mood_below_12=True,
         )
 
         # 令<12(10) + 夕(10) + 黑键乐感20人(20) = 40 perception → 40 silent_resonance
@@ -557,7 +562,7 @@ class TestB5SilentResonance:
 
         pool = compute_buff_pool(
             control, dorm_operators=dorm, dorm_level=5,
-            has_rosmontis_in_mfg=True, has_ebnhlz_in_trade=True,
+            mfg_operators=[_mk_op("迷迭香", [_mk_skill("manu_prod_spd_bd_n1[000]", "Mfg", "超感")])], trade_operators=[_mk_op("黑键", [_mk_skill("trade_ord_spd_bd_n1[000]", "TRADING", "乐感")])],
             ling_mood_below_12=True,
         )
 

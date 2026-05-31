@@ -52,45 +52,18 @@ def compute_buff_pool(
     suich_count: int = 5,
     dorm_operators: list[Operator] | None = None,
     dorm_level: int = 5,
-    has_rosmontis_in_mfg: bool = False,
-    has_ebnhlz_in_trade: bool = False,
+    mfg_operators: list[Operator] | None = None,
+    trade_operators: list[Operator] | None = None,
+    office_operators: list[Operator] | None = None,
+    office_perception_base: int = 20,
     ling_mood_below_12: bool = False,
     xi_mood_below_12: bool | None = None,
     layout: LayoutConfig | None = None,
-    perception_from_office: int = 0,
-    has_wuyou_in_trade: bool = False,
 ) -> BuffPool:
-    """计算全局 buff 点数池（Phase 1 预计算）
+    """计算全局 buff 点数池
 
-    中枢源：
-    - 令(mood>12): +15 烟火；令(mood≤12): +10 感知信息
-    - 重岳: 每个外部岁干员 +5 烟火（默认 5 名）
-    - 夕(mood>=12): +10 感知信息（xi_mood_below_12=None 时无条件+10，向后兼容）
-
-    宿舍源（B1 感知信息）：
-    - 迷迭香超感（在制造站）: 宿舍每有1名干员→感知+1
-    - 黑键乐感（在贸易站）: 宿舍每有1名干员→感知+1
-    - 爱丽丝梦境呓语: 宿舍每级→1梦境→1感知
-    - 车尔尼琴键漫步: 宿舍每级→1小节→1感知
-
-    贸易源（B1 烟火）：
-    - 乌有（在贸易站）: 宿舍每有1名干员→烟火+1
-
-    办公室源（B1 感知/烟火）：
-    - 絮雨巡游+追忆: 每额外招募位+10记忆碎片→感知（243布局 Lv3=+20）
-    - 桑葚: 每招募位+10烟火（当迷迭香在Mfg时絮雨占用唯一Office工位，桑葚排除）
-
-    宿舍源（B4 魔物料理）：
-    - 森西大食堂: 宿舍每级→1魔物料理
-
-    宿舍源（B5 无声共鸣）：
-    - 塑心: 宿舍每有1名干员→无声共鸣+1
-    - 黑键（在贸易站）: 感知信息→无声共鸣 1:1
-
-    烟火→巫术结晶: yanhuo // 5（截云消费链路）
-    感知信息→思维链环: 1:1（迷迭香超感）
-
-    注：宿舍最高等级为 Lv5，默认以此计算。
+    所有生产源的干员通过 Operator 列表 + buff_id 扫描检测，
+    不再使用 bool 代理参数。中枢干员暂保留名字硬编码（TODO: 统一到 buff_id）。
     """
     if dorm_operators is None:
         dorm_operators = []
@@ -99,6 +72,8 @@ def compute_buff_pool(
     yanhuo = 0
     perception = 0
     monster_cuisine = 0
+
+    # ── 段① 中枢源 ──────────────────────────────────────────────
 
     if "令" in names:
         if ling_mood_below_12:
@@ -116,11 +91,17 @@ def compute_buff_pool(
         else:
             perception += 10
 
-    if has_rosmontis_in_mfg and dorm_operators:
-        perception += len(dorm_operators)
+    # ── 段② 宿舍/代理源（Mfg/Trade/Office → 感知 + 烟火）──
 
-    if has_ebnhlz_in_trade and dorm_operators:
-        perception += len(dorm_operators)
+    for op in (mfg_operators or []):
+        if _op_has_buff(op, "manu_prod_spd_bd_n1[000]"):
+            perception += len(dorm_operators)
+
+    for op in (trade_operators or []):
+        if _op_has_buff(op, "trade_ord_spd_bd_n1[000]"):
+            perception += len(dorm_operators)
+        if _op_has_buff(op, "trade_ord_spd_bd_n2[000]"):
+            yanhuo += len(dorm_operators)
 
     if _dorm_has_buff(dorm_operators, "dorm_rec_bd_n1_n2[000]"):
         perception += dorm_level
@@ -128,18 +109,19 @@ def compute_buff_pool(
     if _dorm_has_buff(dorm_operators, "dorm_rec_bd_n1_n3[000]"):
         perception += dorm_level
 
-    if has_wuyou_in_trade and dorm_operators:
-        yanhuo += len(dorm_operators)
-
-    perception += perception_from_office
+    for op in (office_operators or []):
+        if _op_has_buff(op, "hire_spd_bd_n1[000]"):
+            perception += office_perception_base
 
     if _dorm_has_buff(dorm_operators, "dorm_rec_bd_dungeon[000]"):
         monster_cuisine += dorm_level
 
     eng_robots = compute_engineering_robots(layout) if layout is not None else 0
 
+    # ── 段③ 无声共鸣级联（依赖段①② 完成的 perception 值）──
+
     silent_resonance = 0
-    if has_ebnhlz_in_trade:
+    if any(_op_has_buff(op, "trade_ord_spd_bd_n1[000]") for op in (trade_operators or [])):
         silent_resonance += perception
     if dorm_operators:
         suxin_names = {op.name for op in dorm_operators}
@@ -163,6 +145,11 @@ def _dorm_has_buff(dorm_operators: list[Operator], buff_id: str) -> bool:
             if sk.buff_id == buff_id:
                 return True
     return False
+
+
+def _op_has_buff(op: Operator, buff_id: str) -> bool:
+    """检查单个干员是否持有指定 buff_id"""
+    return any(sk.buff_id == buff_id for sk in op.skills)
 
 
 def compute_engineering_robots(layout: LayoutConfig) -> int:
