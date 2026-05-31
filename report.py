@@ -16,13 +16,6 @@ def _bar(v, ref, w=10):
     return "#" * n + "-" * (w - n)
 
 
-def _room_ops(plan, ftype, ridx):
-    for a in plan.assignments:
-        if a.room_type == ftype and a.room_index == ridx:
-            return a.operators
-    return []
-
-
 def _plan_names(plan):
     names = set()
     for a in plan.assignments:
@@ -106,7 +99,7 @@ def main():
                         swaps += 1
                     prev_ops = cur
                     break
-        rate = swaps / (shifts - 1) * 100
+        rate = swaps / max(shifts - 1, 1) * 100
         bar_n = round(swaps / 2)
         bar = "#" * bar_n + "-" * (6 - bar_n) if bar_n <= 6 else "#" * 6
         print(f"  {ft}[{ri}]: {swaps}/{shifts - 1} 换班 ({rate:.0f}%)  [{bar}]")
@@ -116,8 +109,8 @@ def main():
         ni = _plan_names(plans[wi])
         nj = _plan_names(plans[wi - 1])
         overlaps.append(len(ni & nj))
-    avg_o = sum(overlaps) / len(overlaps)
-    print(f"\n  相邻重叠: {avg_o:.1f}/49 (范围 {min(overlaps)}-{max(overlaps)})")
+    avg_o = sum(overlaps) / max(len(overlaps), 1)
+    print(f"\n  相邻重叠: {avg_o:.1f}/49 (范围 {min(overlaps) if overlaps else 49}-{max(overlaps) if overlaps else 49})")
     print(f"  平均换人: {49 - avg_o:.1f}/班")
 
     # ═══ 四、产能分析 ────────────────────────────
