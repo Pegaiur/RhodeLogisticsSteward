@@ -13,14 +13,42 @@ def _dummy_op(char_id: str, name: str) -> Operator:
 
 
 def _dorm_op(name: str, char_id: str, recovery: float) -> Operator:
-    """构造宿舍恢复型干员（含 Dormitory/Rest 技能）"""
+    """构造宿舍恢复型干员"""
     return Operator(
         char_id=char_id, name=name,
         skills=[Skill(
             buff_id=f"dorm_rec_{char_id}",
             buff_name="宿舍恢复技能",
             skill_icon="test",
-            room_type="Dormitory",
+            room_type="DORMITORY",
+            efficient=EfficiencyMap(raw={"all": recovery}),
+        )],
+    )
+
+
+def _dorm_all_op(name: str, char_id: str, recovery: float) -> Operator:
+    """构造全体恢复型宿舍干员（D 类：buff_id 以 dorm_rec_all 开头）"""
+    return Operator(
+        char_id=char_id, name=name,
+        skills=[Skill(
+            buff_id=f"dorm_rec_all[{char_id}]",
+            buff_name="全体恢复",
+            skill_icon="test",
+            room_type="DORMITORY",
+            efficient=EfficiencyMap(raw={"all": recovery}),
+        )],
+    )
+
+
+def _dorm_single_op(name: str, char_id: str, recovery: float) -> Operator:
+    """构造单体恢复型宿舍干员（C 类：buff_id 以 dorm_rec_single 开头）"""
+    return Operator(
+        char_id=char_id, name=name,
+        skills=[Skill(
+            buff_id=f"dorm_rec_single[{char_id}]",
+            buff_name="单体恢复",
+            skill_icon="test",
+            room_type="DORMITORY",
             efficient=EfficiencyMap(raw={"all": recovery}),
         )],
     )
@@ -70,66 +98,94 @@ class TestContribution:
 
 
 class TestDormContributionWithLambdaK:
-    """宿舍贡献使用标量 λ_k 的行为测试"""
+    """宿舍贡献——房间感知边际评估
+
+    新模型：宿管价值 = 状态向量增量 + 对室友的恢复增量 - 槽位机会成本。
+    空房间无室友时 Part2=0；有室友时 Part2 反映 recovery delta × roommate_λ；
+    同房间第2个C类增量=0（Rule3取max）。
+    测试验证公式结构正确性，不做绝对值断言（取决于 λ 参数比例）。
+    """
 
     @pytest.fixture
     def dorm_recovery_op(self):
-        """恢复型宿舍干员（如菲亚梅塔，+2.0/h 恢复速率）"""
-        return _dorm_op("菲亚梅塔", "char_fia", 200.0)
+        """全体恢复型宿舍干员（D 类：dorm_rec_all，+0.25/h）"""
+        return _dorm_all_op("杜林", "char_durin", 0.25)
 
     @pytest.fixture
-    def ctx_with_lambda_k(self, dorm_recovery_op):
-        """带 λ_k=500 的上下文，per-op λ_ops 全为 0"""
+    def dorm_single_op(self):
+        """单体恢复型宿舍干员（C 类：dorm_rec_single，+0.55/h）"""
+        return _dorm_single_op("闪灵", "char_single", 0.55)
+
+    @pytest.fixture
+    def work_op(self):
+        """普通工作干员（制造站）"""
+        return Operator(
+            char_id="char_work", name="酒神",
+            skills=[Skill(
+                buff_id="manu_prod_spd[000]",
+                buff_name="制造",
+                skill_icon="test",
+                room_type="Manufacture",
+                efficient=EfficiencyMap(raw={"Battle Record": 0.25}),
+            )],
+        )
+
+    def test_empty_room_no_recovery_delta(self, dorm_recovery_op):
+        """空房间无室友 → recovery 贡献=0（Part2不触发）"""
         ctx = SlotContext.from_layout(
             [dorm_recovery_op],
             LayoutConfig.layout_243(),
             SolverParams(),
         )
-        ctx.lambda_k = 500.0
-        return ctx
+        ctx.lambda_k = 0.0  # 消除机会成本干扰
+        result = contribution(ctx, "杜林", "Dormitory")
+        # 无状态写入、无室友、无机会成本 → 0
+        assert result == 0.0, f"空房间应=0，实际={result}"
 
-    def test_dorm_recovery_uses_lambda_k_not_per_op(self, ctx_with_lambda_k):
-        """λ_k > 0 且 per-op λ_ops=0 时，宿舍贡献应为正
-
-        旧代码行为：per-op λ=0 → dorm reward 不触发 → contribution 仅含
-        type2 状态写入。修复后应使用标量 λ_k，reward 始终锚定。
-        """
-        result = contribution(ctx_with_lambda_k, "菲亚梅塔", "Dormitory")
-        assert result > 0.0, (
-            f"λ_k={ctx_with_lambda_k.lambda_k} 时宿舍贡献应为正，实际={result}"
+    def test_roommate_recovery_delta_positive(self, dorm_recovery_op, work_op):
+        """有室友时 D 类宿管产生正恢复增量"""
+        ctx = SlotContext.from_layout(
+            [dorm_recovery_op, work_op],
+            LayoutConfig.layout_243(),
+            SolverParams(),
+        )
+        ctx.lambda_ops["酒神"] = 100.0
+        ctx.lambda_k = 0.0  # 消除机会成本
+        ctx.place(0, "dorm_0_0", "酒神")
+        result = contribution(ctx, "杜林", "Dormitory", room_index=0)
+        # Part2 = 0.25 × 100 × 12/24 = 12.5，Part3=0 → 12.5
+        expected = 0.25 * 100.0 * 12.0 / 24.0
+        assert abs(result - expected) < 0.01, (
+            f"期待={expected}，实际={result}"
         )
 
-    def test_dorm_recovery_zero_when_lambda_k_zero(self, dorm_recovery_op):
-        """λ_k=0 时宿舍贡献仅含 type2 状态写入（无恢复奖励）"""
+    def test_single_type_redundant_delta_zero(self, dorm_single_op, work_op):
+        """同房间第2个C类增量=0（Rule3取max）"""
+        second_c = _dorm_single_op("芙蓉", "char_single2", 0.30)
+        ctx = SlotContext.from_layout(
+            [dorm_single_op, second_c, work_op],
+            LayoutConfig.layout_243(),
+            SolverParams(),
+        )
+        ctx.lambda_ops["酒神"] = 100.0
+        ctx.lambda_k = 0.0
+        ctx.place(0, "dorm_0_0", "闪灵")
+        ctx.place(0, "dorm_0_1", "酒神")
+        result = contribution(ctx, "芙蓉", "Dormitory", room_index=0)
+        # 闪灵(0.55) > 芙蓉(0.30) → Rule3取max → Δrec=0
+        # λ_k=0 → 机会成本=0 → 结果=0
+        assert result == 0.0, (
+            f"第2个C类增量应为0，实际={result}"
+        )
+
+    def test_no_lambda_no_recovery_contribution(self, dorm_recovery_op):
+        """λ 全部为 0 时恢复部分不产生贡献"""
         ctx = SlotContext.from_layout(
             [dorm_recovery_op],
             LayoutConfig.layout_243(),
             SolverParams(),
         )
         ctx.lambda_k = 0.0
-        result = contribution(ctx, "菲亚梅塔", "Dormitory")
-        # 无 type2 状态写入技能、无恢复奖励 → 贡献为 0
-        assert result == 0.0, f"λ_k=0 时恢复奖励应为 0，实际={result}"
-
-    def test_dorm_recovery_positive_when_lambda_k_set(self, dorm_recovery_op):
-        """设置 λ_k 后宿舍恢复型干员获得正贡献"""
-        ctx = SlotContext.from_layout(
-            [dorm_recovery_op],
-            LayoutConfig.layout_243(),
-            SolverParams(),
-        )
-        ctx.lambda_k = 300.0
-        result = contribution(ctx, "菲亚梅塔", "Dormitory")
-        assert result > 0.0, "λ_k > 0 时恢复型干员应有正贡献"
-
-    def test_lambda_k_independent_of_per_op_lambda_ops(self, dorm_recovery_op):
-        """λ_k 锚定贡献不受 per-op λ_ops 干扰"""
-        ctx = SlotContext.from_layout(
-            [dorm_recovery_op],
-            LayoutConfig.layout_243(),
-            SolverParams(),
-        )
-        ctx.lambda_k = 500.0
-        ctx.lambda_ops["菲亚梅塔"] = 0.0  # per-op 为 0
-        result = contribution(ctx, "菲亚梅塔", "Dormitory")
-        assert result > 0.0, "贡献应来自 λ_k 而非 per-op λ_ops"
+        ctx.lambda_ops["杜林"] = 0.0
+        result = contribution(ctx, "杜林", "Dormitory")
+        assert result == 0.0, f"λ=0 时贡献应为 0，实际={result}"

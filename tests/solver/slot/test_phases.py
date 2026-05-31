@@ -5,7 +5,7 @@
 
 import pytest
 
-from steward_core.models import LayoutConfig
+from steward_core.models import EfficiencyMap, LayoutConfig, Operator, Skill
 from steward_core.solver.params import SolverParams
 from steward_core.solver.slot.context import SlotContext
 from steward_core.solver.slot.control import phase_control
@@ -147,16 +147,47 @@ class TestPhaseRemaining:
         assert len(office) >= 1
 
     def test_dorm_op_placed(self):
-        ops = [
-            mk_op("宿舍A", [mk_simple_skill("Dormitory", 10.0, "dm_a")]),
-            dummy_op("char_b", "B"),
-        ]
+        """Part 2 恢复增量驱动：预置高价值室友 + D 类宿管产生正贡献
+
+        注意：evaluate_dorm_recovery 内部硬编码 room_type=="DORMITORY"，
+        而 has_skill_for 使用传参 "Dormitory"。故需要两个 skill 分别适配两套检查。
+        """
+        dorm_op = Operator(
+            char_id="char_durin", name="杜林",
+            skills=[
+                # 使 has_skill_for("Dormitory") 通过（contribution 函数内部不检查 has_skill_for，
+                # 但 phase_remaining 的候选过滤循环使用 has_skill_for）
+                Skill(
+                    buff_id="placeholder",
+                    buff_name="占位",
+                    skill_icon="test",
+                    room_type="Dormitory",
+                    efficient=EfficiencyMap(raw={"all": 0.0}),
+                ),
+                # 使 evaluate_dorm_recovery 识别 dorm_rec_all 产生恢复增量
+                Skill(
+                    buff_id="dorm_rec_all[char_durin]",
+                    buff_name="全体恢复",
+                    skill_icon="test",
+                    room_type="DORMITORY",
+                    efficient=EfficiencyMap(raw={"all": 0.25}),
+                ),
+            ],
+        )
+        mfg_op = mk_op("酒神", [mk_simple_skill("Mfg", 30.0, "mfg_test")])
+        ops = [dorm_op, mfg_op]
         ctx = SlotContext.from_layout(
             ops, LayoutConfig.layout_243(), SolverParams(),
         )
-        phase_remaining(ctx)
+        # 预置酒神为室友，使杜林的 dorm_rec_all 产生正恢复增量
+        ctx.place(0, "dorm_0_0", "酒神")
+        ctx.lambda_ops["酒神"] = 100.0
+        ctx.lambda_k = 0.0  # Part 3 归零，消除机会成本干扰
+        from steward_core.solver.slot.partials import compute_partial_derivatives
+        D = compute_partial_derivatives(ctx, 0)
+        phase_remaining(ctx, D=D)
         dorm = ctx.ops_of_type(0, "Dormitory")
-        assert len(dorm) >= 1
+        assert "杜林" in dorm
 
 
 class TestProductFor:

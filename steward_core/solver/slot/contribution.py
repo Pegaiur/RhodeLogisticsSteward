@@ -71,6 +71,7 @@ def contribution(
     facility_type: str,
     window_idx: int = 0,
     D: dict[str, float] | None = None,
+    room_index: int = 0,
 ) -> float:
     """统一贡献评分入口
 
@@ -95,7 +96,7 @@ def contribution(
     elif facility_type == "Office":
         base = _office_contribution(ctx, op, window_idx, D)
     elif facility_type == "Dormitory":
-        base = _dorm_contribution(ctx, op, window_idx, D)
+        base = _dorm_contribution(ctx, op, window_idx, D, room_index)
     else:
         return float("-inf")
 
@@ -387,26 +388,166 @@ def _dorm_contribution(
     op: "Operator",
     window_idx: int,
     D: dict[str, float],
+    room_index: int,
 ) -> float:
-    """宿舍贡献 = type2状态写入*D + 恢复速率*lambda_k"""
+    """宿舍贡献 = type2状态写入*D + 室友恢复增量 - 槽位机会成本
+
+    按房间计算边际贡献，自然覆盖 C 类冗余（同房间第2个C类增量=0）、
+    D 类累加、槽位稀缺性定价。无需硬编码守卫。
+    """
     total = 0.0
+    hours = ctx.params.shift_hours if ctx.params else 12.0
 
+    # 部分1: 状态向量增量
     ctrl_names = ctx.ops_of_type(window_idx, "Control")
-
     with_sv = _compute_state_snapshot(
         ctx, window_idx, ctrl_names, extra_dorm_names=[op.name],
     )
     without_sv = _compute_state_snapshot(ctx, window_idx, ctrl_names)
-
     for d in STATE_DIMS:
         delta = with_sv[d] - without_sv[d]
         if delta != 0.0 and D.get(d, 0.0) > 0:
             total += delta * D[d]
 
-    hours = ctx.params.shift_hours if ctx.params else 12.0
-    lambda_k = ctx.lambda_k
-    recovery = op.best_efficiency("Dormitory", "Rest")
-    if recovery > 0 and lambda_k > 0:
-        total += recovery * hours * lambda_k / 24.0
+    # 提取中枢修正参数（只算一次，Part 2 和 Part 3 共用）
+    ctrl_ops = [ctx.op_lookup[n] for n in ctrl_names if n in ctx.op_lookup]
+    dorm_bonus_all, dorm_bonus_elite, yanhuo_bonus = _dorm_modifiers_from_ctrl(
+        ctrl_ops, with_sv.get("yanhuo", 0.0),
+    )
+    dorm_level = ctx.params.dorm_level if ctx.params else 5
+    amb = ctx.params.dorm_ambiance_per_room if ctx.params else 5000
+
+    # 部分2: 室友恢复增量
+    room_ops_names = ctx.room_ops(window_idx, "Dormitory", room_index)
+    existing_names = [n for n in room_ops_names if n]
+    if existing_names:
+        existing_ops = [ctx.op_lookup[n] for n in existing_names if n in ctx.op_lookup]
+        for roommate_name in existing_names:
+            roommate = ctx.op_lookup.get(roommate_name)
+            if roommate is None:
+                continue
+            before = _evaluate_dorm_recovery_for(
+                existing_ops, roommate, dorm_bonus_all, dorm_bonus_elite,
+                yanhuo_bonus, dorm_level, amb,
+            )
+            after = _evaluate_dorm_recovery_for(
+                existing_ops + [op], roommate, dorm_bonus_all, dorm_bonus_elite,
+                yanhuo_bonus, dorm_level, amb,
+            )
+            delta_rec = after - before
+            rmbda = ctx.lambda_ops.get(roommate_name, 0.0)
+            if delta_rec > 0 and rmbda > 0:
+                total += delta_rec * rmbda * hours / 24.0
+
+    # 部分3: 槽位机会成本
+    unassigned_theta = _avg_unassigned_worker_lambda(ctx, window_idx)
+    if unassigned_theta > 0:
+        existing_ops_for_baseline = [
+            ctx.op_lookup[n] for n in existing_names if n in ctx.op_lookup
+        ]
+        baseline_rate = _baseline_dorm_recovery(
+            existing_ops_for_baseline, dorm_bonus_all, dorm_bonus_elite,
+            yanhuo_bonus, dorm_level, amb,
+        )
+        total -= baseline_rate * hours * unassigned_theta / 24.0
 
     return total
+
+
+def _dorm_modifiers_from_ctrl(
+    ctrl_ops: list,
+    yanhuo: float,
+) -> tuple[float, float, float]:
+    """从中枢干员 skills 提取宿舍相关的全局修正量
+
+    等效于 compute_mood_modifiers() 的 dorm 相关部分，
+    但不依赖 BuffPool 实例——yanhuo 从状态快照推导。
+
+    TODO: control_dorm_rec 前缀匹配 + '重岳' yanhuo_bonus 逻辑与
+          mood_flow.py:compute_mood_modifiers() L106-L112 重复。
+          未来新增控制中枢宿舍 buff 时需两处同步更新，建议提取共用函数。
+    """
+    dorm_bonus_all = 0.0
+    dorm_bonus_elite = 0.0
+    yanhuo_bonus = 0.0
+
+    if any(op.name == "重岳" for op in ctrl_ops):
+        yanhuo_bonus = 0.05 + (int(yanhuo) // 20) * 0.05
+
+    for op in ctrl_ops:
+        for s in op.skills:
+            if s.buff_id.startswith("control_dorm_rec_tag"):
+                val = s.efficient.max_value()
+                if val > dorm_bonus_elite:
+                    dorm_bonus_elite = val
+            elif s.buff_id.startswith("control_dorm_rec"):
+                val = s.efficient.max_value()
+                if val > dorm_bonus_all:
+                    dorm_bonus_all = val
+
+    return dorm_bonus_all, dorm_bonus_elite, yanhuo_bonus
+
+
+def _evaluate_dorm_recovery_for(
+    dorm_ops: list,
+    target_op,
+    dorm_bonus_all: float,
+    dorm_bonus_elite: float,
+    yanhuo_bonus: float,
+    dorm_level: int,
+    dorm_ambiance: int,
+) -> float:
+    """包装 evaluate_dorm_recovery() 供宿舍贡献计算使用"""
+    from steward_core.dorm_recovery import evaluate_dorm_recovery
+    return evaluate_dorm_recovery(
+        dorm_ops=dorm_ops,
+        target_op=target_op,
+        dorm_bonus_all=dorm_bonus_all,
+        dorm_bonus_elite=dorm_bonus_elite,
+        yanhuo_bonus=yanhuo_bonus,
+        dorm_level=dorm_level,
+        dorm_ambiance_per_room=dorm_ambiance,
+    )
+
+
+def _baseline_dorm_recovery(
+    dorm_ops: list,
+    dorm_bonus_all: float,
+    dorm_bonus_elite: float,
+    yanhuo_bonus: float,
+    dorm_level: int,
+    dorm_ambiance: int,
+) -> float:
+    """用虚拟干员评估基准恢复速率，供槽位机会成本定价
+
+    将 baseline 纳入 dorm_ops 以确保 evaluate_dorm_recovery Rule 0
+    基础恢复（1.5+0.1*level+0.0004*ambiance）始终参与计算。
+    不纳入时若 dorm_ops 为空，空列表导致 if dorm_ops: 为 False，
+    Rule 0 被跳过，机会成本低估约 4.0/h（Lv5 宿舍 5000 氛围）。
+    """
+    from steward_core.models import Operator
+    baseline = Operator(char_id="", name="_baseline_")
+    return _evaluate_dorm_recovery_for(
+        dorm_ops + [baseline], baseline, dorm_bonus_all, dorm_bonus_elite,
+        yanhuo_bonus, dorm_level, dorm_ambiance,
+    )
+
+
+def _avg_unassigned_worker_lambda(
+    ctx: "SlotContext",
+    window_idx: int,
+    top_k: int = 3,
+) -> float:
+    """取未分配生产干员的 top-k lambda 平均值"""
+    assigned_ids = ctx.assigned_ids(window_idx)
+    lambdas = []
+    for op in ctx.operators:
+        if op.char_id in assigned_ids:
+            continue
+        if not (op.has_skill_for("Mfg") or op.has_skill_for("Trade")):
+            continue
+        lambdas.append(ctx.lambda_ops.get(op.name, ctx.lambda_k))
+    if not lambdas:
+        return ctx.lambda_k
+    top = sorted(lambdas, reverse=True)[:top_k]
+    return sum(top) / len(top)

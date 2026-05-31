@@ -55,6 +55,11 @@ def phase_remaining(
             best_op_name = None
             best_score = float("-inf")
 
+            if facility_type == "Dormitory":
+                target_room = _find_room_with_space(ctx, window_idx, facility_type, room_count)
+            else:
+                target_room = 0
+
             for op in ctx.operators:
                 if op.char_id in assigned_ids:
                     continue
@@ -63,12 +68,18 @@ def phase_remaining(
                 if facility_type != "Dormitory" and not mood_is_viable(op.name, mood_ctx, mood_threshold):
                     continue
 
-                score = contribution(ctx, op.name, facility_type, window_idx, D)
+                score = contribution(ctx, op.name, facility_type, window_idx, D,
+                                     room_index=target_room)
                 if score > best_score:
                     best_score = score
                     best_op_name = op.name
 
             if best_op_name is None:
+                break
+
+            # 宿舍槽位的边际贡献严格为负时停止填充
+            # 模型语义：当所有未选宿管的边际贡献 < 0，该槽位不值得占
+            if facility_type == "Dormitory" and best_score < 0.0:
                 break
 
             existing = ctx.ops_of_type(window_idx, facility_type)
