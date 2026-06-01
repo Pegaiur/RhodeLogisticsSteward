@@ -95,6 +95,11 @@ from steward_core.synergy.mfg_linkages import (
 from steward_core.synergy.trade_linkages import (
     synergy_jie_order,
     synergy_trade_gold_lines,
+    synergy_texas_lappland,
+    synergy_swires_order_limit,
+    synergy_degenbrecher_order_limit,
+    OrderLimitContext,
+    compute_trade_order_limit,
 )
 
 from steward_core.synergy.facility_linkages import (

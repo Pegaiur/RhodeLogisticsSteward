@@ -1,31 +1,65 @@
 """A层·贸易站联动体系
 
-含：订单压缩（孑）、鸿雪宣发（销路宣发+际崖居民）。
+含：订单压缩（孑）、鸿雪宣发（销路宣发+际崖居民）、
+恩怨（德克萨斯+拉普兰德配对）、招商引资（琳琅诗怀雅）、
+冠军风采（锏）、订单上限上下文（OrderLimitContext）。
 
-未建模技能（2026-06-01 扫描统计，详见 docs/inbox.md）：
+已建模技能（2026-06-01）：
+- 孑 trade_ord_limit_count/diff: 订单压缩+效率放大
+- 鸿雪 trade_ord_limit&trade&lv: 销路宣发（含际崖居民）
+- 德克萨斯 trade_ord_spd&cost_P: 恩怨 +65%（配对拉普兰德）
+- 琳琅诗怀雅 trade_ord_spd_variable: 招商引资（每订单上限 4%）
+- 锏 trade_ord_spd_variable3: 冠军风采（每5订单上限 25%，上限 100%）
+- 桃金娘/史都华德/暗索 trade_ord_limit&cost: 谈判（订单上限+5）
+- 拉普兰德 trade_ord_limit&cost_P: 醉翁之意（订单上限+2/+4，配对德克萨斯）
+- 瑰盐 trade_ord_limit&trade&lv: 多面逢源（订单上限+等级）
 
-=== 效率有但特殊加成未建模 ===
-- 赫德雷 trade_ord_par&per: per-operator 缩放 (+25~30% / 每名特定阵营)
-- 琳琅诗怀雅 trade_ord_spd_variable: 每订单上限 +4% 效率
-- 锏 trade_ord_spd_variable3: 同上，可变系数
-- 瑰盐 trade_ord_limit&trade&lv: 订单上限 + 设施等级联动 + 30% eff
-
-=== 0 效率仅特殊效果 ===
-- 铎铃 trade_cost&bd2: 烟火联动心情减免
-- 火哨 trade_cost: 心情消耗减免 + share
-- 史都华德/暗索/桃金娘 trade_ord_limit&cost: 订单上限+心情配对
-- 拉普兰德 trade_ord_limit&cost_P: 订单上限+德克萨斯配对
-- 德克萨斯 trade_ord_limit&cost_P + trade_ord_spd&cost_P: 配对+心情
-- 佩佩 trade_ord_limit&trade&lv + trade_ord_pepe: 订单上限+等级
-- 雪雉 trade_ord_spd_variable2: 可变效率(0基础)
-
-=== 候选池质量问题（非建模缺口） ===
-- 塑心: 无 TRADING buff，仅 Dormitory 技能 → has_skill_for 误判
-- 芳汀: 无 TRADING buff → has_skill_for 误判
+未建模技能：
+- 赫德雷 trade_ord_par&per: per-operator 缩放（需跨房间扫描）
+- 铎铃 trade_cost&bd2: 烟火联动心情减免（mood 系统）
+- 火哨 trade_cost: 心情消耗减免（mood 系统）
+- 佩佩 trade_ord_pepe: 独占订单（改变订单模型根基）
+- 雪雉 trade_ord_spd_variable2: 高效率放大器（需后计算）
 """
 
+from dataclasses import dataclass, field
+
 from steward_core.models import LinearSegment, Operator, LayoutConfig
-from .helpers import _ORDER_ANCHOR_PREFIXES, _DURIN_NAMES
+from .helpers import _DURIN_NAMES  # TODO: 际崖居民 durin_names 参数链待 evaluate_room 接入
+
+
+@dataclass
+class OrderLimitContext:
+    """贸易站订单上限上下文，后续关联爆仓计算
+
+    base 为游戏基础订单上限（10），contributions 为各技能贡献的实增量。
+    total 属性返回 base + sum(contributions)。
+    """
+    base: int = 10
+    contributions: dict[str, int] = field(default_factory=dict)
+
+    @property
+    def total(self) -> int:
+        return self.base + sum(self.contributions.values())
+
+    def add(self, source: str, delta: int) -> None:
+        if delta != 0:
+            self.contributions[source] = self.contributions.get(source, 0) + delta
+
+
+_ORDER_LIMIT_TABLE: dict[str, tuple[str, int]] = {
+    "trade_ord_limit&cost[000]":    ("谈判", 5),
+    "trade_ord_limit&cost_P[000]":  ("醉翁之意·α", 2),
+    "trade_ord_limit&cost_P[001]":  ("醉翁之意·β", 4),
+    "trade_ord_limit&trade&lv[000]": ("多面逢源", 1),
+    "trade_ord_limit&trade&lv[001]": ("钱不我待", 1),
+}
+"""订单上限贡献表
+
+buff_id → (来源名称, 基础贡献值)
+- 醉翁之意·α/β 需德克萨斯配对（compute 函数中检查条件）
+- 多面逢源/钱不我待 值 × 贸易站等级（compute 函数中处理乘法）
+"""
 
 
 def synergy_jie_order(
@@ -33,6 +67,7 @@ def synergy_jie_order(
     room_type: str,
     control_operators: list[Operator],
     T: float,
+    order_ctx: OrderLimitContext | None = None,
 ) -> list[LinearSegment]:
     """孑市井之道/摊贩经济：订单上限压缩+每订单效率放大
 
@@ -62,30 +97,27 @@ def synergy_jie_order(
     if not has_limit_count:
         return []
 
-    _OBSERVE_BLACKLIST = ("trade_ord_law", "trade_ord_long", "trade_ord_closure")
-    other_eff = 0.0
-    for op in operators:
-        if op.name == "孑":
-            continue
-        if any(s.buff_id.startswith(_OBSERVE_BLACKLIST) for s in op.skills if s.room_type == "Trade"):
-            continue
-        eff = op.best_efficiency(room_type, "Money")
-        if eff > 0:
-            other_eff += eff
-
-    order_limit = max(1, 10 - int(other_eff) // 10)
-
-    if "贝洛内" in names and "伺夜" in names:
-        order_limit += 2
-
-    if control_operators:
-        ctrl_names = {op.name for op in control_operators}
-        if "灵知" in ctrl_names:
-            karlan_count = sum(
-                1 for op in operators
-                if op.group_id == "karlan"
-            )
-            order_limit += karlan_count * 6
+    if order_ctx is not None:
+        order_limit = order_ctx.total
+    else:
+        _OBSERVE_BLACKLIST = ("trade_ord_law", "trade_ord_long", "trade_ord_closure")
+        other_eff = 0.0
+        for op in operators:
+            if op.name == "孑":
+                continue
+            if any(s.buff_id.startswith(_OBSERVE_BLACKLIST) for s in op.skills if s.room_type == "Trade"):
+                continue
+            eff = op.best_efficiency(room_type, "Money")
+            if eff > 0:
+                other_eff += eff
+        order_limit = max(1, 10 - int(other_eff) // 10)
+        if "贝洛内" in names and "伺夜" in names:
+            order_limit += 2
+        if control_operators:
+            ctrl_names = {op.name for op in control_operators}
+            if "灵知" in ctrl_names:
+                karlan_count = sum(1 for op in operators if op.group_id == "karlan")
+                order_limit += karlan_count * 6
 
     ceiling = order_limit * 4.0
 
@@ -128,3 +160,128 @@ def synergy_trade_gold_lines(
 
     bonus = gold_lines * 5.0
     return [LinearSegment(a=bonus, b=0.0, t_start=0.0, dt=T)] if bonus > 0 else []
+
+
+def compute_trade_order_limit(
+    operators: list[Operator],
+    layout: LayoutConfig,
+    control_operators: list[Operator],
+) -> OrderLimitContext:
+    """计算贸易站房间的订单上限，供后续爆仓计算及各 synergy 消费
+
+    订单上限 = 基础10 + 表驱动贡献 + 孑压缩 + 贝洛内+伺夜 + 灵知中枢。
+    孑压缩使用 raw best_efficiency（非 synergy 叠加后效率）近似，
+    与 synergy_jie_order 回退路径口径一致。
+    """
+    ctx = OrderLimitContext()
+    names = {op.name for op in operators}
+
+    if "孑" in names:
+        has_limit = any(
+            sk.buff_id == "trade_ord_limit_count[000]"
+            for op in operators if op.name == "孑"
+            for sk in op.skills
+        )
+        if has_limit:
+            _OBSERVE_BLACKLIST = ("trade_ord_law", "trade_ord_long", "trade_ord_closure")
+            other_eff = 0.0
+            for op in operators:
+                if op.name == "孑":
+                    continue
+                if any(
+                    s.buff_id.startswith(_OBSERVE_BLACKLIST)
+                    for s in op.skills if s.room_type == "Trade"
+                ):
+                    continue
+                eff = op.best_efficiency("Trade", "Money")
+                if eff > 0:
+                    other_eff += eff
+            compressed = max(1, 10 - int(other_eff) // 10)
+            ctx.add("孑·订单压缩", compressed - 10)
+
+    for op in operators:
+        for sk in op.skills:
+            if sk.room_type != "Trade":
+                continue
+            entry = _ORDER_LIMIT_TABLE.get(sk.buff_id)
+            if entry is None:
+                continue
+            source, value = entry
+            if source.startswith("醉翁之意") and "德克萨斯" not in names:
+                continue
+            if source in ("多面逢源", "钱不我待"):
+                trade_level = max(
+                    (r.level for r in layout.rooms if r.room_type == "Trade"),
+                    default=3,
+                )
+                ctx.add(source, value * trade_level)
+                continue
+            ctx.add(source, value)
+
+    if "贝洛内" in names and "伺夜" in names:
+        ctx.add("贝洛内+伺夜", 2)
+
+    if control_operators:
+        ctrl_names = {op.name for op in control_operators}
+        if "灵知" in ctrl_names:
+            count = sum(1 for op in operators if op.group_id == "karlan")
+            if count > 0:
+                ctx.add("灵知·喀兰贸易", count * 6)
+
+    return ctx
+
+
+def synergy_texas_lappland(
+    operators: list[Operator],
+    room_type: str,
+    T: float,
+) -> list[LinearSegment]:
+    """恩怨：德克萨斯与拉普兰德同房 Trade → +65% 效率
+
+    德克萨斯持有 trade_ord_spd&cost_P[000]（恩怨），
+    心情消耗 +0.3/h 由 mood 系统单独处理。
+    """
+    if room_type != "Trade":
+        return []
+    names = {op.name for op in operators}
+    if "德克萨斯" not in names or "拉普兰德" not in names:
+        return []
+    return [LinearSegment(a=65.0, b=0.0, t_start=0.0, dt=T)]
+
+
+def synergy_swires_order_limit(
+    operators: list[Operator],
+    room_type: str,
+    order_ctx: OrderLimitContext | None,
+    T: float,
+) -> list[LinearSegment]:
+    """招商引资：琳琅诗怀雅 每订单上限 +4% 效率
+
+    消费 OrderLimitContext.total，无效率上限。
+    """
+    if room_type != "Trade" or order_ctx is None:
+        return []
+    names = {op.name for op in operators}
+    if "琳琅诗怀雅" not in names:
+        return []
+    bonus = order_ctx.total * 4.0
+    return [LinearSegment(a=bonus, b=0.0, t_start=0.0, dt=T)] if bonus > 0 else []
+
+
+def synergy_degenbrecher_order_limit(
+    operators: list[Operator],
+    room_type: str,
+    order_ctx: OrderLimitContext | None,
+    T: float,
+) -> list[LinearSegment]:
+    """冠军风采：锏 每5订单上限 +25% 效率，最高 100%
+
+    消费 OrderLimitContext.total，floor(total/5) × 25，上限 100%。
+    """
+    if room_type != "Trade" or order_ctx is None:
+        return []
+    names = {op.name for op in operators}
+    if "锏" not in names:
+        return []
+    bonus = min(int(order_ctx.total / 5) * 25, 100)
+    return [LinearSegment(a=float(bonus), b=0.0, t_start=0.0, dt=T)] if bonus > 0 else []

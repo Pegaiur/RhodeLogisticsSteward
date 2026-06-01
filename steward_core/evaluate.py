@@ -21,6 +21,10 @@ from steward_core.synergy import (
     synergy_whisper,
     synergy_global_faction,
     synergy_jie_order,
+    synergy_texas_lappland,
+    synergy_swires_order_limit,
+    synergy_degenbrecher_order_limit,
+    compute_trade_order_limit,
     GlobalBonus,
 )
 
@@ -104,6 +108,13 @@ def evaluate_room(
     # 技能类型别名（海沫等），基于完整房间组成判定
     alias = synergy_skill_alias(operators)
 
+    # ── 贸易站订单上限上下文 ──
+    order_ctx = None
+    if room_type == "Trade" and layout is not None:
+        order_ctx = compute_trade_order_limit(
+            operators, layout, control_operators or [],
+        )
+
     # 第三步：效率加成型联动（仅非归零干员的个人效率参与计算）
     total += integrate_segments(synergy_faction_room(non_zero_ops, room_type, product, T), T)
     total += integrate_segments(synergy_skill_count(non_zero_ops, room_type, alias, T), T)
@@ -115,6 +126,16 @@ def evaluate_room(
     total += integrate_segments(synergy_facility_count(
         operators, room_type, product, layout, T=T,
     ), T)
+
+    # Trade 站专属联动
+    total += integrate_segments(synergy_texas_lappland(operators, room_type, T), T)
+    if order_ctx is not None:
+        total += integrate_segments(
+            synergy_swires_order_limit(operators, room_type, order_ctx, T), T,
+        )
+        total += integrate_segments(
+            synergy_degenbrecher_order_limit(operators, room_type, order_ctx, T), T,
+        )
 
     # 第四步：归零加成自身的效率段
     total += integrate_segments(auto_segs, T)
@@ -167,7 +188,7 @@ def evaluate_room(
     # A7 孑订单压缩机制
     if control_operators is not None and room_type == "Trade":
         total += integrate_segments(
-            synergy_jie_order(non_zero_ops, room_type, control_operators, T), T,
+            synergy_jie_order(non_zero_ops, room_type, control_operators, T, order_ctx=order_ctx), T,
         )
 
     # B7 跨房间配对
