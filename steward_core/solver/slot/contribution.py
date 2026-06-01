@@ -1,4 +1,4 @@
-﻿"""统一贡献评分 — contribution(op, facility_type, ctx, window_idx) -> LMD等值/窗口
+"""统一贡献评分 — contribution(op, facility_type, ctx, window_idx) -> LMD等值/窗口
 
 中枢/发电/会客/办公室/宿舍的干员选择统一通过边际贡献评分，
 替代旧的 locked_support 累积 + best_efficiency 排序模式。
@@ -96,7 +96,7 @@ def contribution(
     elif facility_type == "Office":
         base = _office_contribution(ctx, op, window_idx, D)
     elif facility_type == "Dormitory":
-        base = _dorm_contribution(ctx, op, window_idx, D, room_index)
+        return _dorm_contribution(ctx, op, window_idx, D, room_index)
     else:
         return float("-inf")
 
@@ -417,11 +417,22 @@ def _dorm_contribution(
     dorm_level = ctx.params.dorm_level if ctx.params else 5
     amb = ctx.params.dorm_ambiance_per_room if ctx.params else 5000
 
-    # 部分2: 室友恢复增量
     room_ops_names = ctx.room_ops(window_idx, "Dormitory", room_index)
     existing_names = [n for n in room_ops_names if n]
+    existing_ops = [ctx.op_lookup[n] for n in existing_names if n in ctx.op_lookup]
+
+    # 部分1.5: 被恢复者自身恢复价值
+    op_lambda = ctx.lambda_ops.get(op.name, 0.0)
+    if op_lambda > 0:
+        all_dorm_ops = existing_ops + [op]
+        recovery_rate = _evaluate_dorm_recovery_for(
+            all_dorm_ops, op, dorm_bonus_all, dorm_bonus_elite,
+            yanhuo_bonus, dorm_level, amb,
+        )
+        total += op_lambda * recovery_rate * hours
+
+    # 部分2: 室友恢复增量
     if existing_names:
-        existing_ops = [ctx.op_lookup[n] for n in existing_names if n in ctx.op_lookup]
         for roommate_name in existing_names:
             roommate = ctx.op_lookup.get(roommate_name)
             if roommate is None:
@@ -437,19 +448,16 @@ def _dorm_contribution(
             delta_rec = after - before
             rmbda = ctx.lambda_ops.get(roommate_name, 0.0)
             if delta_rec > 0 and rmbda > 0:
-                total += delta_rec * rmbda * hours / 24.0
+                total += delta_rec * rmbda * hours
 
     # 部分3: 槽位机会成本
     unassigned_theta = _avg_unassigned_worker_lambda(ctx, window_idx)
     if unassigned_theta > 0:
-        existing_ops_for_baseline = [
-            ctx.op_lookup[n] for n in existing_names if n in ctx.op_lookup
-        ]
         baseline_rate = _baseline_dorm_recovery(
-            existing_ops_for_baseline, dorm_bonus_all, dorm_bonus_elite,
+            existing_ops, dorm_bonus_all, dorm_bonus_elite,
             yanhuo_bonus, dorm_level, amb,
         )
-        total -= baseline_rate * hours * unassigned_theta / 24.0
+        total -= baseline_rate * hours * unassigned_theta
 
     return total
 

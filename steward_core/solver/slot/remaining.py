@@ -1,4 +1,4 @@
-﻿"""Phase D: 剩余设施（Power/Reception/Office/Dormitory）contribution 贪心
+"""Phase D: 剩余设施（Power/Reception/Office/Dormitory）contribution 贪心
 
 替代旧 fill_remaining.py + fill_dorm.py。
 每种设施通过 contribution(ctx, op_name, facility_type, D=D) 评分，
@@ -63,7 +63,11 @@ def phase_remaining(
             for op in ctx.operators:
                 if op.char_id in assigned_ids:
                     continue
-                if not op.has_skill_for(facility_type, _product_for(facility_type)):
+                if facility_type == "Dormitory":
+                    if not (op.has_skill_for(facility_type, "Rest")
+                            or ctx.lambda_ops.get(op.name, 0.0) > 0):
+                        continue
+                elif not op.has_skill_for(facility_type, _product_for(facility_type)):
                     continue
                 if facility_type != "Dormitory" and not mood_is_viable(op.name, mood_ctx, mood_threshold):
                     continue
