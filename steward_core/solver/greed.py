@@ -5,8 +5,15 @@ import itertools
 from steward_core.efficiency_fn import constant_efficiency, rank_by_dominance
 from steward_core.models import LayoutConfig, Operator, RoomAssignment
 from steward_core.synergy import synergy_facility_count
+from steward_core.synergy.trade_linkages import _TRADE_PAIR_TABLE
 
 _LAYOUT_243 = LayoutConfig.layout_243()
+
+_SELF_SAT_CONDITIONS: frozenset[str] = frozenset({
+    "trade_ord_spd_par[000]",  # 摩根：格拉斯哥帮计数含自身
+    "trade_ord_spd_par[001]",  # 新约能天使：拉特兰计数含自身
+})
+"""自满足条件：buff_id 前缀匹配且 holder 自身即满足计数条件"""
 
 
 def _upper_bound_ok(total_eff: float, best_known: float, threshold: float = 0.95) -> bool:
@@ -124,21 +131,16 @@ def _room_conditions_satisfiable(
     for sk in op.skills:
         bid = sk.buff_id
 
-        if bid.startswith("trade_ord_spd_par[000]"):
-            # 摩根：格拉斯哥帮计数加成。摩根本人即格帮成员，条件总是满足
+        if any(bid.startswith(prefix) for prefix in _SELF_SAT_CONDITIONS):
             return True
 
-        if bid.startswith("trade_ord_spd&cost_P[000]"):
-            # 德克萨斯：需要拉普兰德同房
-            existing = sum(1 for n in taken_names if n == "拉普兰德")
+        pair_entry = _TRADE_PAIR_TABLE.get(bid)
+        if pair_entry is not None:
+            existing = sum(1 for n in taken_names if n == pair_entry.target)
             if existing > 0:
                 return True
-            available = sum(1 for c in remaining if c.name == "拉普兰德")
+            available = sum(1 for c in remaining if c.name == pair_entry.target)
             return available >= 1 and remaining_slots >= 1
-
-        if bid.startswith("trade_ord_spd_par[001]"):
-            # 新约能天使：拉特兰计数加成。新约能天使本人 nation_id=laterano，条件总是满足
-            return True
 
     return True  # 无条件限制
 
@@ -156,16 +158,12 @@ def _operator_conditions_met(
     for sk in op.skills:
         bid = sk.buff_id
 
-        if bid.startswith("trade_ord_spd_par[000]"):
-            # 摩根：格帮计数含自身，条件总是满足
+        if any(bid.startswith(prefix) for prefix in _SELF_SAT_CONDITIONS):
             return True
 
-        if bid.startswith("trade_ord_spd&cost_P[000]"):
-            return "拉普兰德" in taken_names
-
-        if bid.startswith("trade_ord_spd_par[001]"):
-            # 新约能天使：拉特兰计数含自身，条件总是满足
-            return True
+        pair_entry = _TRADE_PAIR_TABLE.get(bid)
+        if pair_entry is not None:
+            return pair_entry.target in taken_names
 
     return True
 

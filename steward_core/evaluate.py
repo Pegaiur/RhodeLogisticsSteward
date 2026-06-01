@@ -21,7 +21,7 @@ from steward_core.synergy import (
     synergy_whisper,
     synergy_global_faction,
     synergy_jie_order,
-    synergy_texas_lappland,
+    synergy_trade_pair,
     synergy_swires_order_limit,
     synergy_degenbrecher_order_limit,
     compute_trade_order_limit,
@@ -128,7 +128,7 @@ def evaluate_room(
     ), T)
 
     # Trade 站专属联动
-    total += integrate_segments(synergy_texas_lappland(operators, room_type, T), T)
+    total += integrate_segments(synergy_trade_pair(operators, room_type, T), T)
     if order_ctx is not None:
         total += integrate_segments(
             synergy_swires_order_limit(operators, room_type, order_ctx, T), T,

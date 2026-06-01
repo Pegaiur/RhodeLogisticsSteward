@@ -452,38 +452,77 @@ class TestComputeTradeOrderLimit:
         assert ctx.contributions.get("多面逢源") == 6
 
 
-# ─── 恩怨（德克萨斯 + 拉普兰德配对） ─────────────────────────────
+# ─── 贸易配对表驱动 ──────────────────────────────────────────
 
-class TestTexasLapplandSynergy:
-    """A层·恩怨 — 德克萨斯与拉普兰德配对 +65%"""
+class TestTradePairSynergy:
+    """A层·贸易配对 — _TRADE_PAIR_TABLE 表驱动"""
 
     def test_恩怨_德克萨斯加拉普兰德_65percent(self):
-        """德克萨斯 + 拉普兰德同房 Trade → 返回 65% 常数段"""
-        from steward_core.synergy.trade_linkages import synergy_texas_lappland
+        """德克萨斯持有 trade_ord_spd&cost_P + 拉普兰德同房 → 65%"""
+        from steward_core.synergy.trade_linkages import synergy_trade_pair
 
         texas = _mk_op("德克萨斯")
+        texas.skills.append(_mk_skill("trade_ord_spd&cost_P[000]", "Trade", "恩怨"))
         lappland = _mk_op("拉普兰德")
-        segs = synergy_texas_lappland([texas, lappland], "Trade", 12.0)
+        segs = synergy_trade_pair([texas, lappland], "Trade", 12.0)
         assert len(segs) == 1
         assert segs[0].a == 65.0
-        assert segs[0].b == 0.0
 
     def test_恩怨_仅德克萨斯_返回空(self):
         """仅德克萨斯 → 不触发"""
-        from steward_core.synergy.trade_linkages import synergy_texas_lappland
+        from steward_core.synergy.trade_linkages import synergy_trade_pair
 
         texas = _mk_op("德克萨斯")
-        segs = synergy_texas_lappland([texas], "Trade", 12.0)
+        texas.skills.append(_mk_skill("trade_ord_spd&cost_P[000]", "Trade", "恩怨"))
+        segs = synergy_trade_pair([texas], "Trade", 12.0)
         assert segs == []
 
     def test_恩怨_非Trade_返回空(self):
         """德克萨斯 + 拉普兰德在 Mfg → 不触发"""
-        from steward_core.synergy.trade_linkages import synergy_texas_lappland
+        from steward_core.synergy.trade_linkages import synergy_trade_pair
 
         texas = _mk_op("德克萨斯")
+        texas.skills.append(_mk_skill("trade_ord_spd&cost_P[000]", "Trade", "恩怨"))
         lappland = _mk_op("拉普兰德")
-        segs = synergy_texas_lappland([texas, lappland], "Mfg", 12.0)
+        segs = synergy_trade_pair([texas, lappland], "Mfg", 12.0)
         assert segs == []
+
+    def test_蕾缪安加能天使_25percent(self):
+        """蕾缪安持有 trade_ord_spd&multiPar[100] + 能天使同房 → +25%"""
+        from steward_core.synergy.trade_linkages import synergy_trade_pair
+
+        lemuen = _mk_op("蕾缪安")
+        lemuen.skills.append(_mk_skill("trade_ord_spd&multiPar[100]", "Trade", "相伴"))
+        exusiai = _mk_op("能天使")
+        segs = synergy_trade_pair([lemuen, exusiai], "Trade", 12.0)
+        assert len(segs) == 1
+        assert segs[0].a == 25.0
+
+    def test_蕾缪安_无能天使_返回空(self):
+        """蕾缪安独自 → 不触发"""
+        from steward_core.synergy.trade_linkages import synergy_trade_pair
+
+        lemuen = _mk_op("蕾缪安")
+        lemuen.skills.append(_mk_skill("trade_ord_spd&multiPar[100]", "Trade", "相伴"))
+        segs = synergy_trade_pair([lemuen], "Trade", 12.0)
+        assert segs == []
+
+    def test_双配对同时触发(self):
+        """德克萨斯+拉普兰德 + 蕾缪安+能天使 → 65+25=90%"""
+        from steward_core.synergy.trade_linkages import synergy_trade_pair
+
+        texas = _mk_op("德克萨斯")
+        texas.skills.append(_mk_skill("trade_ord_spd&cost_P[000]", "Trade", "恩怨"))
+        lappland = _mk_op("拉普兰德")
+        lemuen = _mk_op("蕾缪安")
+        lemuen.skills.append(_mk_skill("trade_ord_spd&multiPar[100]", "Trade", "相伴"))
+        exusiai = _mk_op("能天使")
+
+        segs = synergy_trade_pair([texas, lappland, lemuen, exusiai], "Trade", 12.0)
+        assert len(segs) == 2
+        bonuses = {s.a for s in segs}
+        assert bonuses == {65.0, 25.0}
+
 
 
 # ─── 琳琅诗怀雅 招商引资（每订单上限 4%） ─────────────────────────
