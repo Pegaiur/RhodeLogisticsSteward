@@ -47,7 +47,10 @@ def _load_json(path: Path) -> dict:
 
 
 def _determine_product(description: str) -> Optional[str]:
-    """根据 buff description 文本判定产物类型
+    """根据 buff description 文本判定 MANUFACTURE 产物类型
+
+    仅适用于 roomType=MANUFACTURE 设施。
+    TRADING 等其他设施通过 roomType 直接映射，不经过此函数。
 
     返回 'CombatRecord', 'PureGold', 'OriginStone', 或 None (通用技能)。
     注意：源石类配方（F_DIAMOND）与贵金属/作战记录互斥，必须单独排除，
@@ -208,8 +211,13 @@ def load_operators_v2(
             ):
                 efficiency = _parse_dorm_efficiency(description)
 
-            product = _determine_product(description)
-            efficient = _build_efficiency_map(efficiency, product)
+            if room_type == "Trade":
+                efficient = EfficiencyMap(raw={"Money": efficiency})
+            elif room_type == "Mfg":
+                product = _determine_product(description)
+                efficient = _build_efficiency_map(efficiency, product)
+            else:
+                efficient = EfficiencyMap(raw={"all": efficiency})
 
             capacity = 0
             m = _CAPACITY_RE.search(description)
