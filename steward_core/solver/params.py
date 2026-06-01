@@ -87,6 +87,8 @@ class SolverParams:
     """槽位迭代是否使用冷启动（S₀_max 初始化）"""
     lambda_damping: float = 0.5
     """λ 影子乘子阻尼因子（已废弃——离散 bisection 替代连续比例，此参数不再生效）。0=无惩罚, 1=全额惩罚"""
+    lambda_jump_ratio: float = 0.25
+    """λ 首次越池跳升比例：new_λ = hourly_LMD_value × jump_ratio。默认 0.25"""
     rotation_penalty_weight: float = 0.0
     """轮换惩罚权重（已废弃——由 MoodContext 心情约束替代）。0=关闭, >0=遗留兼容"""
     rotation_max_shifts: int = 0

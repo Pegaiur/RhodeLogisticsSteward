@@ -17,6 +17,7 @@ from steward_core.solver.slot.trade import phase_trade
 from steward_core.solver.slot.control import phase_control
 from steward_core.solver.slot.remaining import phase_remaining
 from steward_core.solver.slot.partials import compute_partial_derivatives
+from steward_core.mood_flow import _compute_self_mp_cost
 
 if TYPE_CHECKING:
     from steward_core.models import Operator
@@ -89,8 +90,6 @@ def solve_slot(
 
             phase_control(ctx, w, D, mood_ctx=mc)
             ctx.lambda_k = _compute_lambda_k(ctx, w, shift_hours, mood_ctx=mc)
-            if not ctx.lambda_ops and ctx.lambda_k > 0:
-                _seed_lambda_ops(ctx, operators)
             phase_remaining(ctx, w, D, mood_ctx=mc)
 
             if mc is not None:
@@ -229,7 +228,8 @@ def _update_lambda_shadow(
 
         if used > pool:
             if old_lambda <= 0.0:
-                new_lambda = hourly_value * 0.25
+                jump = params.lambda_jump_ratio if params else 0.25
+                new_lambda = hourly_value * jump
             else:
                 new_lambda = old_lambda * 2.0
             new_lambda = min(new_lambda, lambda_cap)
@@ -247,17 +247,6 @@ _MFG_CR_BASE_RATE = 1.0 / 3.0
 _CR_LMD_PER_UNIT = 1000.0 / 1.3
 
 
-def _seed_lambda_ops(ctx: "SlotContext", operators: list) -> None:
-    """λ 种子化：为所有生产干员设置统一的初始 λ = lambda_k
-
-    迭代 0 时 lambda_ops 为空，候选池 λ>0 检查、Part 1.5 自恢复项均失效。
-    lambda_k 已在 phase_mfg/trade 之后计算，为全局效率中位数。
-    种子化后迭代 0 即可正常工作，后续迭代由 _update_lambda_shadow 更新为个体值。
-    """
-    for op in operators:
-        if op.has_skill_for("Mfg") or op.has_skill_for("Trade"):
-            ctx.lambda_ops[op.name] = ctx.lambda_k
-
 
 def _pool_for(
     op: "Operator",
@@ -267,26 +256,20 @@ def _pool_for(
 ) -> float:
     """逐干员跨周期可持续工作时长上限
 
-    pool[op] = mood_full / mood_burn(op)
+    pool[op] = mood_full / base_burn(op)
 
-    mood_burn 受中枢 buff 修正，优先使用 ctx.control_operators（上一轮中枢配置）。
-    冷启动时无中枢信息，回退到 base_burn_rate3（3 人工位默认消耗率）。
-    room_type 和 room_slots 根据干员技能所在设施类型确定：
-      Control → 5, Mfg/Trade → 3, 其余 → 1。
+    base_burn 仅含房间工位数修正 + 干员自身 mp_cost buff，
+    不含控制中枢 mood modifier（中枢阵容跨窗口变化，不应污染 pool）。
+    固定 5 人中枢假设已包含在 base_burn_rate3 的 (3-1) 工位修正中，
+    其余算力由 λ bisection 承担。
     """
     mood_full = params.mood_full if params else 24.0
-    burn = params.base_burn_rate3 if params else 0.90
-    facility_type, slots = _facility_slots_for(op)
+    base_burn_per_hour = params.base_burn_per_hour if params else 1.0
+    recovery_per_op = params.control_recovery_per_op if params else 0.05
+    _, slots = _facility_slots_for(op)
 
-    if mood_ctx is not None and ctx.control_operators:
-        from steward_core.mood_flow import MoodContext as MC
-        burn_mc = MC(
-            operator_moods={op.name: mood_full},
-            control_operators=list(ctx.control_operators),
-            params=params,
-            _op_lookup=ctx.op_lookup,
-        )
-        burn = burn_mc.work_burn(op.name, facility_type, slots)
+    burn = base_burn_per_hour - recovery_per_op * max(0, slots - 1)
+    burn = max(0.0, burn + _compute_self_mp_cost(op.name, ctx.op_lookup))
 
     if burn <= 0.0:
         burn = 0.01
