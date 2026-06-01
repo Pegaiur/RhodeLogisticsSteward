@@ -81,6 +81,7 @@ def solve_slot(
         if iteration > 0:
             _reset_ctx(ctx)
         mc = mood_ctx
+        mood_start_snapshot = dict(mc.operator_moods) if mc and num_windows > 1 else {}
         for w in range(num_windows):
             phase_mfg(ctx, w, mood_ctx=mc)
             phase_trade(ctx, w, mood_ctx=mc)
@@ -128,7 +129,11 @@ def solve_slot(
 
         max_lambda = 0.0
         if num_windows > 1:
-            max_lambda = _update_lambda_shadow(ctx, operators, params, shift_hours, mood_ctx=mood_ctx)
+            max_lambda = _update_lambda_shadow(
+                ctx, operators, params,
+                mood_start=mood_start_snapshot,
+                mood_ctx=mc,
+            )
 
         sig = "||".join(ctx.signature(w) for w in range(ctx.num_windows))
         if sig in visited:
@@ -175,8 +180,8 @@ def _build_dorm_assignments(ctx: SlotContext, window_idx: int) -> dict[str, str]
 def _reset_ctx(ctx: SlotContext) -> None:
     """清空所有窗口槽位用于迭代重新求解
 
-    保留 lambda_ops（跨迭代持久化，离散 bisection 需要历史累积）、
-    control_operators（供 _update_lambda_shadow 计算逐干员 pool）。
+    保留 lambda_ops（跨迭代持久化，delta 模型需要历史累积）、
+    control_operators（供 contribution.py 计算贡献度）。
     仅清空 operator_name、hours_used。
     """
     for w in range(ctx.num_windows):
@@ -200,21 +205,23 @@ def _update_lambda_shadow(
     ctx: SlotContext,
     operators: list,
     params: "SolverParams",
-    shift_hours: float,
+    mood_start: dict[str, float] | None = None,
     mood_ctx: "MoodContext | None" = None,
 ) -> float:
-    """更新影子乘子 lambda_op（离散 bisection）
+    """更新影子乘子 lambda_op（mood-delta 比例缩放）
 
-    对每名干员：
-      pool[op] = mood_full / mood_burn(op)  ← 跨周期可持续性硬约束上限（H6）
-      若 hours_used > pool:  lambda <- lambda * 2（收紧）
-      若 hours_used <= pool: lambda <- lambda / 2（释放）
+    主模型（mood_start + mood_ctx 均非空）：
+      delta = mood_end - mood_start（迭代前后净心情变化）
+      delta < 0 → 心情净消耗 → new_λ = old_λ × (1 + damping × |delta|/mood_full)
+      delta > 0 → 心情净恢复 → new_λ = old_λ ÷ (1 + damping × |delta|/mood_full)
+      delta ≈ 0 → 稳态不动
 
-    lambda 跨迭代保持（_reset_ctx 不清零），逐步收敛至约束恰满足的水平。
-    恢复不纳入 pool——宿舍恢复是独立资源，由 lambda 奖励传导（dorm contribution）。
+    λ 跨迭代保持（_reset_ctx 不清零），逐步收敛至心情可持续的水平。
+    宿舍恢复通过 mood_end 自动传导——恢复充分则 delta >= 0 → λ 释放。
     返回最大 lambda 值（用于收敛判断）。
     """
     mood_full = params.mood_full if params else 24.0
+    damping = params.backpressure_damping if params else 0.5
 
     hourly_value = _MFG_CR_BASE_RATE * _CR_LMD_PER_UNIT
     lambda_cap = hourly_value * 10.0
@@ -222,20 +229,42 @@ def _update_lambda_shadow(
     max_lambda = 0.0
 
     for op in operators:
-        pool = _pool_for(op, params, ctx, mood_ctx)
-        used = ctx.hours_used.get(op.name, 0.0)
         old_lambda = ctx.lambda_ops.get(op.name, 0.0)
 
-        if used > pool:
-            if old_lambda <= 0.0:
-                jump = params.lambda_jump_ratio if params else 0.25
-                new_lambda = hourly_value * jump
-            else:
-                new_lambda = old_lambda * 2.0
-            new_lambda = min(new_lambda, lambda_cap)
-        else:
-            new_lambda = old_lambda / 2.0
+        if mood_start is not None and mood_ctx is not None:
+            start = mood_start.get(op.name, mood_full)
+            end = mood_ctx.mood_of(op.name)
+            delta = end - start
 
+            if delta < -0.01:
+                depletion = -delta
+                ratio = depletion / mood_full
+                multiplier = 1.0 + damping * ratio
+                if old_lambda <= 0.0:
+                    jump = params.lambda_jump_ratio if params else 0.25
+                    new_lambda = hourly_value * jump * multiplier
+                else:
+                    new_lambda = old_lambda * multiplier
+            elif delta > 0.01:
+                recovery = delta
+                ratio = recovery / mood_full
+                divisor = 1.0 + damping * ratio
+                new_lambda = old_lambda / divisor
+            else:
+                new_lambda = old_lambda
+        else:
+            pool = _pool_for(op, params, ctx, mood_ctx)
+            used = ctx.hours_used.get(op.name, 0.0)
+            if used > pool:
+                if old_lambda <= 0.0:
+                    jump = params.lambda_jump_ratio if params else 0.25
+                    new_lambda = hourly_value * jump
+                else:
+                    new_lambda = old_lambda * 2.0
+            else:
+                new_lambda = old_lambda / 2.0
+
+        new_lambda = min(new_lambda, lambda_cap)
         ctx.lambda_ops[op.name] = new_lambda
         if new_lambda > max_lambda:
             max_lambda = new_lambda
@@ -245,7 +274,6 @@ def _update_lambda_shadow(
 
 _MFG_CR_BASE_RATE = 1.0 / 3.0
 _CR_LMD_PER_UNIT = 1000.0 / 1.3
-
 
 
 def _pool_for(
