@@ -31,11 +31,12 @@ class TestGoldLineSynergy:
     """鸿雪双技能: synergy_trade_gold_lines — 销路宣发+际崖居民"""
 
     def test_销路宣发_2赤金线_加10percent(self):
-        """鸿雪在 Trade，无杜林族 → 基础 2 赤金线 × 5% = 10%"""
+        """鸿雪持有 trade_ord_spd&gold[100] → 2 赤金线 × 5% = 10%"""
         from steward_core.synergy import synergy_trade_gold_lines
         from steward_core.models import LayoutConfig, RoomConfig
 
         hongxue = _mk_op("鸿雪")
+        hongxue.skills.append(_mk_skill("trade_ord_spd&gold[100]", "Trade", "销路宣发"))
         layout = LayoutConfig(rooms=[
             RoomConfig("Mfg", 0, 3, "PureGold"),
             RoomConfig("Mfg", 1, 3, "PureGold"),
@@ -45,8 +46,8 @@ class TestGoldLineSynergy:
         assert len(segs) == 1
         assert segs[0].a == 10.0
 
-    def test_销路宣发_无鸿雪_返回空(self):
-        """房间无鸿雪 → 空"""
+    def test_销路宣发_无鸿雪buff_返回空(self):
+        """房间无人持有 trade_ord_spd&gold[100] → 空"""
         from steward_core.synergy import synergy_trade_gold_lines
         from steward_core.models import LayoutConfig
 
@@ -60,6 +61,7 @@ class TestGoldLineSynergy:
         from steward_core.models import LayoutConfig
 
         hongxue = _mk_op("鸿雪")
+        hongxue.skills.append(_mk_skill("trade_ord_spd&gold[100]", "Trade", "销路宣发"))
         segs = synergy_trade_gold_lines([hongxue], "Mfg", "PureGold", LayoutConfig(rooms=[]), 12.0)
         assert segs == []
 
@@ -69,6 +71,7 @@ class TestGoldLineSynergy:
         from steward_core.models import LayoutConfig, RoomConfig
 
         hongxue = _mk_op("鸿雪")
+        hongxue.skills.append(_mk_skill("trade_ord_spd&gold[100]", "Trade", "销路宣发"))
         layout = LayoutConfig(rooms=[
             RoomConfig("Mfg", 0, 3, "PureGold"),
             RoomConfig("Mfg", 1, 3, "PureGold"),
@@ -85,6 +88,7 @@ class TestGoldLineSynergy:
         from steward_core.models import LayoutConfig, RoomConfig
 
         hongxue = _mk_op("鸿雪")
+        hongxue.skills.append(_mk_skill("trade_ord_spd&gold[100]", "Trade", "销路宣发"))
         layout = LayoutConfig(rooms=[
             RoomConfig("Mfg", 0, 3, "PureGold"),
             RoomConfig("Mfg", 1, 3, "PureGold"),
@@ -537,6 +541,7 @@ class TestSwiresOrderLimit:
         )
 
         swires = _mk_op("琳琅诗怀雅")
+        swires.skills.append(_mk_skill("trade_ord_spd_variable[000]", "Trade", "招商引资"))
         ctx = OrderLimitContext()
         segs = synergy_swires_order_limit([swires], "Trade", ctx, 12.0)
         assert len(segs) == 1
@@ -549,13 +554,14 @@ class TestSwiresOrderLimit:
         )
 
         swires = _mk_op("琳琅诗怀雅")
+        swires.skills.append(_mk_skill("trade_ord_spd_variable[000]", "Trade", "招商引资"))
         ctx = OrderLimitContext()
         ctx.add("孑·订单压缩", -5)
         segs = synergy_swires_order_limit([swires], "Trade", ctx, 12.0)
         assert segs[0].a == 20.0
 
-    def test_招商引资_无琳琅诗怀雅_返回空(self):
-        """无琳琅诗怀雅 → 空"""
+    def test_招商引资_无buff_返回空(self):
+        """无人持有 trade_ord_spd_variable[000] → 空"""
         from steward_core.synergy.trade_linkages import (
             synergy_swires_order_limit, OrderLimitContext,
         )
@@ -578,6 +584,7 @@ class TestDegenbrecherOrderLimit:
         )
 
         degen = _mk_op("锏")
+        degen.skills.append(_mk_skill("trade_ord_spd_variable3[000]", "Trade", "冠军风采"))
         ctx = OrderLimitContext()
         segs = synergy_degenbrecher_order_limit([degen], "Trade", ctx, 12.0)
         assert len(segs) == 1
@@ -590,6 +597,7 @@ class TestDegenbrecherOrderLimit:
         )
 
         degen = _mk_op("锏")
+        degen.skills.append(_mk_skill("trade_ord_spd_variable3[000]", "Trade", "冠军风采"))
         ctx = OrderLimitContext()
         ctx.add("谈判", 5)
         ctx.add("贝洛内+伺夜", 2)
@@ -606,13 +614,14 @@ class TestDegenbrecherOrderLimit:
         )
 
         degen = _mk_op("锏")
+        degen.skills.append(_mk_skill("trade_ord_spd_variable3[000]", "Trade", "冠军风采"))
         ctx = OrderLimitContext()
         ctx.add("孑·订单压缩", -6)  # total=4
         segs = synergy_degenbrecher_order_limit([degen], "Trade", ctx, 12.0)
         assert segs == []
 
-    def test_冠军风采_无锏_返回空(self):
-        """无锏 → 空"""
+    def test_冠军风采_无buff_返回空(self):
+        """无人持有 trade_ord_spd_variable3[000] → 空"""
         from steward_core.synergy.trade_linkages import (
             synergy_degenbrecher_order_limit, OrderLimitContext,
         )

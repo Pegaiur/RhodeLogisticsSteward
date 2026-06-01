@@ -123,7 +123,7 @@ from .facility_linkages import _A_FACILITY_LINK_TABLE  # noqa: E402
 from .buff_pool import _B_BUFF_CONSUMER_TABLE, _OPERATOR_BUFF_PRODUCERS  # noqa: E402
 from .global_linkages import _B_CROSS_ROOM_PAIR_TABLE, _B_GLOBAL_FACTION_TABLE  # noqa: E402
 from .control_linkages import _C_CONTROL_GLOBAL_TABLE  # noqa: E402
-from .trade_linkages import _ORDER_LIMIT_TABLE, _TRADE_PAIR_TABLE, _JIE_MECH_TABLE  # noqa: E402
+from .trade_linkages import _ORDER_LIMIT_TABLE, _TRADE_PAIR_TABLE, _JIE_MECH_TABLE, _TRADE_TRIGGER_TABLE  # noqa: E402
 
 TABLES: dict[str, TableMeta] = {
     "A·干员配对":        TableMeta(_A_PAIR_TABLE,             ["synergy_pair"],              "新增配对型联动 buff"),
@@ -138,6 +138,7 @@ TABLES: dict[str, TableMeta] = {
     "A·订单上限贡献":    TableMeta(_ORDER_LIMIT_TABLE,        ["compute_trade_order_limit"],  "新增贸易站订单上限贡献 buff"),
     "A·贸易配对":        TableMeta(_TRADE_PAIR_TABLE,         ["synergy_trade_pair"],         "新增贸易站配对 buff"),
     "A·孑技能机制":      TableMeta(_JIE_MECH_TABLE,           ["synergy_jie_order", "compute_trade_order_limit"], "新增孑技能机制标识"),
+    "A·贸易触发":        TableMeta(_TRADE_TRIGGER_TABLE,      ["_collect_mechs"],             "新增贸易站单buff触发标识"),
     "B·buff消费者":      TableMeta(_B_BUFF_CONSUMER_TABLE,    ["synergy_buff_pool_consumer"], "新增 buff 池消费者"),
     "B·buff生产者":      TableMeta(_OPERATOR_BUFF_PRODUCERS,   ["compute_buff_pool"],          "新增 buff 池生产者"),
     "B·跨房间配对":      TableMeta(_B_CROSS_ROOM_PAIR_TABLE,  ["synergy_cross_room_pair"],    "新增跨设施干员条件配对 buff"),

@@ -84,7 +84,40 @@ _TRADE_PAIR_TABLE: dict[str, TradePairEntry] = {
 
 buff_id → TradePairEntry
 holder 持有此 buff，target 在同房 Trade 时触发 bonus% 效率加成。
+holder 字段在检测时由 buff_id 驱动（非 name 匹配），仅保留用于文档可读性。
 """
+
+_TRADE_TRIGGER_TABLE: dict[str, str] = {
+    "trade_ord_spd&gold[100]": "gold_lines",
+    "trade_ord_spd_variable[000]": "swires_limit",
+    "trade_ord_spd_variable3[000]": "degenbrecher_limit",
+}
+"""单 buff 触发标识表
+
+buff_id → 机制标签
+- gold_lines: 鸿雪 销路宣发
+- swires_limit: 琳琅诗怀雅 招商引资
+- degenbrecher_limit: 锏 冠军风采
+"""
+
+
+def _collect_mechs(
+    operators: list[Operator],
+    table: dict[str, str],
+) -> set[str]:
+    """扫描 operators 的 Trade skills，返回命中的机制标识集合
+
+    仅扫描 room_type=="Trade" 的技能，匹配 table 中的 buff_id key。
+    """
+    mechs: set[str] = set()
+    for op in operators:
+        for sk in op.skills:
+            if sk.room_type != "Trade":
+                continue
+            mech = table.get(sk.buff_id)
+            if mech:
+                mechs.add(mech)
+    return mechs
 
 
 def synergy_jie_order(
@@ -104,29 +137,16 @@ def synergy_jie_order(
     if room_type != "Trade":
         return []
 
-    names = {op.name for op in operators}
-    if "孑" not in names:
-        return []
-
-    jie_mechs: set[str] = set()
-    for op in operators:
-        if op.name != "孑":
-            continue
-        for sk in op.skills:
-            mech = _JIE_MECH_TABLE.get(sk.buff_id)
-            if mech:
-                jie_mechs.add(mech)
-
+    jie_mechs = _collect_mechs(operators, _JIE_MECH_TABLE)
     if "compression" not in jie_mechs:
         return []
 
     if order_ctx is not None:
         order_limit = order_ctx.total
     else:
+        names = {op.name for op in operators}
         other_eff = 0.0
         for op in operators:
-            if op.name == "孑":
-                continue
             if any(s.buff_id.startswith(_OBSERVE_BLACKLIST) for s in op.skills if s.room_type == "Trade"):
                 continue
             eff = op.best_efficiency(room_type, "Money")
@@ -170,8 +190,7 @@ def synergy_trade_gold_lines(
     if room_type != "Trade":
         return []
 
-    names = {op.name for op in operators}
-    if "鸿雪" not in names:
+    if "gold_lines" not in _collect_mechs(operators, _TRADE_TRIGGER_TABLE):
         return []
 
     gold_lines = sum(1 for r in layout.rooms if r.room_type == "Mfg" and r.product == "PureGold")
@@ -198,27 +217,20 @@ def compute_trade_order_limit(
     ctx = OrderLimitContext()
     names = {op.name for op in operators}
 
-    if "孑" in names:
-        jie_has_compression = any(
-            _JIE_MECH_TABLE.get(sk.buff_id) == "compression"
-            for op in operators if op.name == "孑"
-            for sk in op.skills
-        )
-        if jie_has_compression:
-            other_eff = 0.0
-            for op in operators:
-                if op.name == "孑":
-                    continue
-                if any(
-                    s.buff_id.startswith(_OBSERVE_BLACKLIST)
-                    for s in op.skills if s.room_type == "Trade"
-                ):
-                    continue
-                eff = op.best_efficiency("Trade", "Money")
-                if eff > 0:
-                    other_eff += eff
-            compressed = max(1, 10 - int(other_eff) // 10)
-            ctx.add("孑·订单压缩", compressed - 10)
+    jie_mechs = _collect_mechs(operators, _JIE_MECH_TABLE)
+    if "compression" in jie_mechs:
+        other_eff = 0.0
+        for op in operators:
+            if any(
+                s.buff_id.startswith(_OBSERVE_BLACKLIST)
+                for s in op.skills if s.room_type == "Trade"
+            ):
+                continue
+            eff = op.best_efficiency("Trade", "Money")
+            if eff > 0:
+                other_eff += eff
+        compressed = max(1, 10 - int(other_eff) // 10)
+        ctx.add("孑·订单压缩", compressed - 10)
 
     trade_level = max(
         (r.level for r in layout.rooms if r.room_type == "Trade"),
@@ -259,8 +271,8 @@ def synergy_trade_pair(
 ) -> list[LinearSegment]:
     """贸易配对表驱动联动
 
-    遍历 _TRADE_PAIR_TABLE，检测 holder 与 target 是否同房，
-    且 holder 持有对应 buff_id 技能时，返回加成效率段。
+    遍历 _TRADE_PAIR_TABLE，holder 侧通过 buff_id 检测，
+    target 侧通过 name 集合检测。
     """
     if room_type != "Trade":
         return []
@@ -268,14 +280,10 @@ def synergy_trade_pair(
     segments: list[LinearSegment] = []
 
     for buff_id, entry in _TRADE_PAIR_TABLE.items():
-        if entry.holder not in names or entry.target not in names:
+        if entry.target not in names:
             continue
-        for op in operators:
-            if op.name != entry.holder:
-                continue
-            if any(sk.buff_id == buff_id for sk in op.skills):
-                segments.append(LinearSegment(a=entry.bonus, b=0.0, t_start=0.0, dt=T))
-                break
+        if any(sk.buff_id == buff_id for op in operators for sk in op.skills if sk.room_type == "Trade"):
+            segments.append(LinearSegment(a=entry.bonus, b=0.0, t_start=0.0, dt=T))
 
     return segments
 
@@ -292,8 +300,7 @@ def synergy_swires_order_limit(
     """
     if room_type != "Trade" or order_ctx is None:
         return []
-    names = {op.name for op in operators}
-    if "琳琅诗怀雅" not in names:
+    if "swires_limit" not in _collect_mechs(operators, _TRADE_TRIGGER_TABLE):
         return []
     bonus = order_ctx.total * 4.0
     return [LinearSegment(a=bonus, b=0.0, t_start=0.0, dt=T)] if bonus > 0 else []
@@ -311,8 +318,7 @@ def synergy_degenbrecher_order_limit(
     """
     if room_type != "Trade" or order_ctx is None:
         return []
-    names = {op.name for op in operators}
-    if "锏" not in names:
+    if "degenbrecher_limit" not in _collect_mechs(operators, _TRADE_TRIGGER_TABLE):
         return []
     bonus = min(int(order_ctx.total / 5) * 25, 100)
     return [LinearSegment(a=float(bonus), b=0.0, t_start=0.0, dt=T)] if bonus > 0 else []
