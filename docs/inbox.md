@@ -8,7 +8,10 @@
 <!-- 格式: - [ ] 简短标题 — 描述 — 提出日期 — 可能路由 -->
 <!-- 完成后标记 [x]，发版时清理已完成条目  -->
 
-- [ ] **数据加载器 product 映射 roomType 驱动化** — 当前 `_determine_product()` 用描述文本猜产品，TRADING buff 含"赤金"被误映射为 PureGold→has_skill_for 失败→10个贸易站干员被过滤。修复方向：Trade→直接 Money、Mfg→保留文本判定（区分 CR/PG/源石）、其他设施→all。同问题也影响 MANUFACTURE 文本误判，需一并审计。 — 2026-06-01 — `data_loader.py`
+[x] **数据加载器 product 映射 roomType 驱动化** — 已修复 (7d8a5ff): Trade→直接 Money、Mfg→保留文本判定、其他→all。候选池 63→74 (+11人)，全部 7 名裁缝干员入池。 — 2026-06-01 → 2026-06-01 完成
+- [ ] **制造站侧数据加载 product 映射审计** — Trade 侧已修，Mfg 侧 MANUFACTURE buff 描述含"贵金属/赤金"是否也存在同类误映射？需审计 _determine_product 在所有 roomType 下的正确性。 — 2026-06-01 — `data_loader.py`
+- [ ] **贸易站未建模技能补全** — 91 个 TRADING buff 中约 20% 仅有基础效率建模，特殊加成未覆盖。详见 `synergy/trade_linkages.py` 模块 docstring。主要缺口：赫德雷 per-operator 缩放、琳琅诗怀雅/锏 可变效率、拉普兰德/德克萨斯 订单上限+配对、贝洛内 limit+cost_P 配对。 — 2026-06-01 — `trade_linkages.py` + `evaluate.py`
+- [ ] **贸易站候选池 0 贡献干员过滤** — 塑心/芳汀 无任何 TRADING buff 却通过 has_skill_for 进入候选池。铎铃/火哨/史都华德/暗索/桃金娘/佩佩/雪雉 eff=0 且无 trade_ord_* 机制。候选池中约 11 人贡献为 0。应在 phase_trade 或 candidate_pool 构建阶段过滤。 — 2026-06-01 — `trade.py` + `classification.py`
 - [ ] 维什戴尔 订单上限联动 — 赫德雷贸易站+1~2订单上限，非孑房间无模型意义 — 2026-05-28 — 不路由
 - [ ] **基建布局可配置化** — `LayoutConfig.layout_243()` 硬编码了所有房间、工位数和等级（`RoomConfig.level`），如需适配 252/153 等布局需改 Python 代码。应支持外部 JSON 配置驱动：房间列表、每间房的类型/工位/等级/产物均由配置文件定义，求解器从 `SolverParams` 或独立 JSON 读取 — 2026-05-28 — `models.py` + `params.py`
 - [ ] **B7 跨房间配对被评估遗漏** — `synergy_cross_room_pair` 在 `evaluate_room` 中存在但 `all_assignments` 从未由组合评估阶段传入（Phase 1 `_evaluate_with_support` 和 Phase 3a `_evaluate_trade_combo` 均不传），导致烈夏↔古米(Mfg↔Trade)和深巡↔乌尔比安(Trade↔任意)的组合评分不含 B7 加成。深巡可接线修复（Trade 评估时 Mfg 已求解），烈夏需算法升级（Mfg 评估时 Trade 未求解，待 k-beam 或迭代 refine 落地后覆盖）。既有经验表明烈夏的组合非当前最优，但深巡可用，待 k-beam 算法实现后一并验证 — 2026-05-28 — `refine.py` / k-beam / 迭代坐标下降

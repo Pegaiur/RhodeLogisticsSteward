@@ -1,6 +1,27 @@
 """A层·贸易站联动体系
 
 含：订单压缩（孑）、鸿雪宣发（销路宣发+际崖居民）。
+
+未建模技能（2026-06-01 扫描统计，详见 docs/inbox.md）：
+
+=== 效率有但特殊加成未建模 ===
+- 赫德雷 trade_ord_par&per: per-operator 缩放 (+25~30% / 每名特定阵营)
+- 琳琅诗怀雅 trade_ord_spd_variable: 每订单上限 +4% 效率
+- 锏 trade_ord_spd_variable3: 同上，可变系数
+- 瑰盐 trade_ord_limit&trade&lv: 订单上限 + 设施等级联动 + 30% eff
+
+=== 0 效率仅特殊效果 ===
+- 铎铃 trade_cost&bd2: 烟火联动心情减免
+- 火哨 trade_cost: 心情消耗减免 + share
+- 史都华德/暗索/桃金娘 trade_ord_limit&cost: 订单上限+心情配对
+- 拉普兰德 trade_ord_limit&cost_P: 订单上限+德克萨斯配对
+- 德克萨斯 trade_ord_limit&cost_P + trade_ord_spd&cost_P: 配对+心情
+- 佩佩 trade_ord_limit&trade&lv + trade_ord_pepe: 订单上限+等级
+- 雪雉 trade_ord_spd_variable2: 可变效率(0基础)
+
+=== 候选池质量问题（非建模缺口） ===
+- 塑心: 无 TRADING buff，仅 Dormitory 技能 → has_skill_for 误判
+- 芳汀: 无 TRADING buff → has_skill_for 误判
 """
 
 from steward_core.models import LinearSegment, Operator, LayoutConfig
