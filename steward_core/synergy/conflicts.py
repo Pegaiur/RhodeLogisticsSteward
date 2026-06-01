@@ -1,11 +1,7 @@
-"""效率机制冲突解析
+"""效率机制冲突解析 + 订单层竞争声明
 
-订单机制在场时禁用特定效率联动函数。
-与 Phase B 的机会成本表互补：本模块处理布尔"是否调用"，机会成本表处理数值"扣多少"。
-
-仅使用 _ORDER_ANCHOR_PREFIXES（不含 vodfox）——冲突检测只需识别禁用方
-（如 Closure）而非被禁用方（如 whisper）。trade.py 的 _ORDER_MECHANISM_PREFIXES
-额外包含 vodfox 是为了识别候选池成员，与本模块用途不同。
+订单机制在场时禁用特定效率联动函数（Layer 1: 布尔禁用）。
+同时声明订单机制间的覆盖/稀释/增益关系（Layer 2 + Layer 3: 数值竞争）。
 """
 
 from __future__ import annotations
@@ -26,12 +22,14 @@ _EFF_MECH_DISABLERS: dict[str, set[str]] = {
 }
 
 # ─── 订单层竞争关系（Phase B） ───────────────────────────────────────
-# 语义与 _EFF_MECH_DISABLERS 正交：
-#   _EFF_MECH_DISABLERS → 布尔"是否禁用效率联动"
-#   _ORDER_LAYER_COMPETITION → 数值"订单机制间竞争/增益"
+# 三层模型中的 Layer 2：声明订单机制间的覆盖/稀释/增益关系。
+#
+# 消费关系：
+#   cover 条目 → has_order_override() 判断是否存在覆盖型机制在场
+#   dilute/boost 条目 → _decompose_trade_order() 分解时引用
+#   具体数值计算 → production.py _compute_trade_distribution() 中 P4 分布
 #
 # 类型：cover（完全覆盖）| dilute（概率稀释）| boost（概率增益）
-# 消费者：production.py _compute_order_layer_competition()
 
 _ORDER_LAYER_COMPETITION: dict[tuple[str, str], dict] = {
     ("trade_ord_closure", "trade_ord_law"):        {"type": "cover",  "desc": "可露希尔特别订单覆盖但书违约"},
@@ -77,3 +75,39 @@ def resolve_efficiency_conflicts(
         if active_order_prefixes & disablers:
             disabled.add(eff_mech)
     return frozenset(disabled)
+
+
+def has_order_override(
+    operators: "list[Operator]",
+) -> bool:
+    """是否存在覆盖型订单机制（Closure 特别订单等）
+
+    遍历 _ORDER_LAYER_COMPETITION 中 type="cover" 的条目，
+    若房间内存在覆盖方 → 被覆盖方机制不生效。
+
+    production.py 和 evaluate.py 应统一通过此函数检测覆盖型机制，
+    而非各自硬编码 startswith("trade_ord_closure")。
+
+    Args:
+        operators: 干员列表
+
+    Returns:
+        True 若存在覆盖型订单机制
+    """
+    # 收集所有覆盖方前缀（type="cover" 的 source）
+    override_prefixes: set[str] = set()
+    for (source, _victim), meta in _ORDER_LAYER_COMPETITION.items():
+        if meta["type"] == "cover":
+            override_prefixes.add(source)
+
+    if not override_prefixes:
+        return False
+
+    for op in operators:
+        for sk in op.skills:
+            if sk.room_type != "Trade":
+                continue
+            for prefix in override_prefixes:
+                if sk.buff_id.startswith(prefix):
+                    return True
+    return False

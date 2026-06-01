@@ -58,6 +58,25 @@ class TestClosureDisablesWhisper:
         assert disabled == frozenset()
 
 
+class TestHasOrderOverride:
+    def test_closure_在场时_返回_true(self):
+        from steward_core.synergy.conflicts import has_order_override
+
+        closure = _mk_op("可露希尔", [_trade_skill("trade_ord_closure[000]")])
+        assert has_order_override([closure]) is True
+
+    def test_无_closure_时_返回_false(self):
+        from steward_core.synergy.conflicts import has_order_override
+
+        law = _mk_op("但书", [_trade_skill("trade_ord_law[000]")])
+        assert has_order_override([law]) is False
+
+    def test_空列表_返回_false(self):
+        from steward_core.synergy.conflicts import has_order_override
+
+        assert has_order_override([]) is False
+
+
 class TestEdgeCases:
     def test_空操作员列表(self):
         from steward_core.synergy.conflicts import resolve_efficiency_conflicts

@@ -141,4 +141,5 @@ from steward_core.synergy._derived import (
 
 from steward_core.synergy.conflicts import (
     resolve_efficiency_conflicts,
+    has_order_override,
 )

@@ -149,6 +149,9 @@ def _weighted_avg_order_time(p2: float, p3: float, p4: float) -> float:
 
 # ─── 订单分布核心计算（Phase B 重构） ──────────────────────────────
 
+_ORDER_BASE_P4 = 0.20  # 无裁缝时 4-gold 订单的基准概率
+
+
 def _compute_trade_distribution(
     p4: float,
     has_law: bool,
@@ -205,7 +208,10 @@ def _decompose_trade_order(
 ) -> dict:
     """将订单产出分解为 solo 贡献 + 机会成本项
 
-    solo = 以基线 P4=0.20 运行分布得到的各机制产出
+    验证/调试工具：确认 solo + opportunity 重构与封闭公式数值一致。
+    当前仅被测试调用，未接入排班热路径。
+
+    solo = 以基线 P4 运行分布得到的各机制产出
     机会成本 = (实际 P4 下的产出) - (基线 P4 下的产出)
 
     裁缝通过改变 P4 产生两类效应：
@@ -216,10 +222,9 @@ def _decompose_trade_order(
         {"solo": {"base": lmd, "law": lmd, "long": lmd, "tailor_p4": float},
          "opportunity": {"tailor_to_law": lmd, "tailor_to_long": lmd}}
     """
-    base_p4 = 0.20
     # 基线分布
     base_lmd, _, _ = _compute_trade_distribution(
-        base_p4, False, False, 0, 0,
+        _ORDER_BASE_P4, False, False, 0, 0,
     )
     # 实际分布
     actual_lmd = _get_trade_order_multiplier(ops, hours)[0]
@@ -228,28 +233,28 @@ def _decompose_trade_order(
     solo_law = 0.0
     if any(s.buff_id.startswith("trade_ord_law") for op in ops for s in op.skills):
         law_lmd, _, _ = _compute_trade_distribution(
-            base_p4, True, False, 0, 0,
+            _ORDER_BASE_P4, True, False, 0, 0,
         )
         solo_law = law_lmd - base_lmd
 
     solo_long = 0.0
     if has_tequila:
         long_lmd, _, _ = _compute_trade_distribution(
-            base_p4, False, True, tequila_bonus, 0,
+            _ORDER_BASE_P4, False, True, tequila_bonus, 0,
         )
         solo_long = long_lmd - base_lmd
 
     # 机会成本：Tailor P4 偏移的边际效应
     opp_law = 0.0
     opp_long = 0.0
-    if tailor_level > 0 and p4_effective != base_p4:
+    if tailor_level > 0 and p4_effective != _ORDER_BASE_P4:
         # 但书在 P4 偏移下的损失
         if solo_law > 0:
             law_at_p4, _, _ = _compute_trade_distribution(
                 p4_effective, True, has_tequila, tequila_bonus if has_tequila else 0, tailor_level,
             )
             law_at_base, _, _ = _compute_trade_distribution(
-                base_p4, True, has_tequila, tequila_bonus if has_tequila else 0, tailor_level,
+                _ORDER_BASE_P4, True, has_tequila, tequila_bonus if has_tequila else 0, tailor_level,
             )
             opp_law = law_at_base - law_at_p4
             if opp_law < 0:
@@ -261,7 +266,7 @@ def _decompose_trade_order(
                 p4_effective, False, True, tequila_bonus, tailor_level,
             )
             long_at_base, _, _ = _compute_trade_distribution(
-                base_p4, False, True, tequila_bonus, 0,
+                _ORDER_BASE_P4, False, True, tequila_bonus, 0,
             )
             opp_long = long_at_p4 - long_at_base
             if opp_long < 0:
@@ -297,7 +302,9 @@ def _get_trade_order_multiplier(ops: list[Operator], hours: float = 24.0) -> tup
         (lmd_per_day, gold_per_day, equiv_gold_per_day):
         100%效率 24h 的 LMD 日产、赤金消耗、等效赤金产出（赤金/天）
     """
-    if any(s.buff_id.startswith("trade_ord_closure") for op in ops for s in op.skills):
+    from steward_core.synergy.conflicts import has_order_override
+
+    if has_order_override(ops):
         orders = 24.0 / 2.4
         equiv_gold = orders * (1200.0 - 1000.0) / 500.0
         return (12000.0, orders * 2.0, equiv_gold)
