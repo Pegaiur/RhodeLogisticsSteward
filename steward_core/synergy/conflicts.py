@@ -25,6 +25,22 @@ _EFF_MECH_DISABLERS: dict[str, set[str]] = {
     "whisper": {"trade_ord_closure"},
 }
 
+# ─── 订单层竞争关系（Phase B） ───────────────────────────────────────
+# 语义与 _EFF_MECH_DISABLERS 正交：
+#   _EFF_MECH_DISABLERS → 布尔"是否禁用效率联动"
+#   _ORDER_LAYER_COMPETITION → 数值"订单机制间竞争/增益"
+#
+# 类型：cover（完全覆盖）| dilute（概率稀释）| boost（概率增益）
+# 消费者：production.py _compute_order_layer_competition()
+
+_ORDER_LAYER_COMPETITION: dict[tuple[str, str], dict] = {
+    ("trade_ord_closure", "trade_ord_law"):        {"type": "cover",  "desc": "可露希尔特别订单覆盖但书违约"},
+    ("trade_ord_closure", "trade_ord_long"):       {"type": "cover",  "desc": "可露希尔覆盖龙舌兰投资"},
+    ("trade_ord_closure", "trade_ord_wt"):         {"type": "cover",  "desc": "可露希尔覆盖裁缝品质"},
+    ("trade_ord_wt", "trade_ord_law"):             {"type": "dilute", "desc": "裁缝P4↑降低但书2/3金订单池份额"},
+    ("trade_ord_wt", "trade_ord_long"):            {"type": "boost",  "desc": "裁缝P4↑扩大龙舌兰4金投资触发率"},
+}
+
 
 def resolve_efficiency_conflicts(
     operators: "list[Operator]",

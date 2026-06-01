@@ -147,6 +147,140 @@ def _weighted_avg_order_time(p2: float, p3: float, p4: float) -> float:
     return _ORDER_TIME_2G * p2 + _ORDER_TIME_3G * p3 + _ORDER_TIME_4G * p4
 
 
+# ─── 订单分布核心计算（Phase B 重构） ──────────────────────────────
+
+def _compute_trade_distribution(
+    p4: float,
+    has_law: bool,
+    has_tequila: bool,
+    tequila_bonus: int,
+    tailor_level: int,
+) -> tuple[float, float, float]:
+    """P4 概率分布下的加权订单期望
+
+    所有分支的 P2/P3/P4 分布 + 加权平均订单耗时 → (lmd_per_day, gold_per_day, equiv_gold)。
+
+    此函数替代原有的 if-elif 分支森林，
+    各机制贡献由 p4 和机制标志统一驱动。
+    """
+    p2 = (1.0 - p4) * 3.0 / 8.0
+    p3 = (1.0 - p4) * 5.0 / 8.0
+
+    if has_law and has_tequila:
+        lmd_per_order = 2000.0 * p2 + 2500.0 * p3 + (2000.0 + tequila_bonus) * p4
+        gold_per_order = 4.0 * p2 + 5.0 * p3 + 4.0 * p4
+    elif has_tequila:
+        lmd_per_order = 1000.0 * p2 + 1500.0 * p3 + (2000.0 + tequila_bonus) * p4
+        gold_per_order = 2.0 * p2 + 3.0 * p3 + 4.0 * p4
+    elif has_law:
+        if tailor_level > 0:
+            lmd_per_order = 2000.0 * p2 + 2500.0 * p3 + 2000.0 * p4
+            gold_per_order = 4.0 * p2 + 5.0 * p3 + 4.0 * p4
+        else:
+            lmd_per_order = 2250.0
+            gold_per_order = 4.9
+    elif tailor_level > 0:
+        lmd_per_order = 1000.0 * p2 + 1500.0 * p3 + 2000.0 * p4
+        gold_per_order = 2.0 * p2 + 3.0 * p3 + 4.0 * p4
+    else:
+        return (_TRADE_BASE_LMD_PER_DAY, _TRADE_BASE_GOLD_PER_DAY, 0.0)
+
+    if has_law and tailor_level == 0 and not has_tequila:
+        avg_order_hours = _TRADE_AVG_TIME_HOURS
+    else:
+        avg_order_hours = _weighted_avg_order_time(p2, p3, p4)
+
+    orders = 24.0 / avg_order_hours
+    equiv_gold = orders * p4 * tequila_bonus / 500.0 if has_tequila else 0.0
+    return (orders * lmd_per_order, orders * gold_per_order, equiv_gold)
+
+
+def _decompose_trade_order(
+    ops: list[Operator],
+    hours: float,
+    has_tequila: bool,
+    tequila_bonus: int,
+    tailor_level: int,
+    p4_effective: float,
+) -> dict:
+    """将订单产出分解为 solo 贡献 + 机会成本项
+
+    solo = 以基线 P4=0.20 运行分布得到的各机制产出
+    机会成本 = (实际 P4 下的产出) - (基线 P4 下的产出)
+
+    裁缝通过改变 P4 产生两类效应：
+      dilute: P4↑ → (1-P4)↓ → 但书操作空间缩小
+      boost:  P4↑ → 龙舌兰触发率上升
+
+    Returns:
+        {"solo": {"base": lmd, "law": lmd, "long": lmd, "tailor_p4": float},
+         "opportunity": {"tailor_to_law": lmd, "tailor_to_long": lmd}}
+    """
+    base_p4 = 0.20
+    # 基线分布
+    base_lmd, _, _ = _compute_trade_distribution(
+        base_p4, False, False, 0, 0,
+    )
+    # 实际分布
+    actual_lmd = _get_trade_order_multiplier(ops, hours)[0]
+
+    # 分解：solo 贡献（各机制在基线 P4 下独立运行）
+    solo_law = 0.0
+    if any(s.buff_id.startswith("trade_ord_law") for op in ops for s in op.skills):
+        law_lmd, _, _ = _compute_trade_distribution(
+            base_p4, True, False, 0, 0,
+        )
+        solo_law = law_lmd - base_lmd
+
+    solo_long = 0.0
+    if has_tequila:
+        long_lmd, _, _ = _compute_trade_distribution(
+            base_p4, False, True, tequila_bonus, 0,
+        )
+        solo_long = long_lmd - base_lmd
+
+    # 机会成本：Tailor P4 偏移的边际效应
+    opp_law = 0.0
+    opp_long = 0.0
+    if tailor_level > 0 and p4_effective != base_p4:
+        # 但书在 P4 偏移下的损失
+        if solo_law > 0:
+            law_at_p4, _, _ = _compute_trade_distribution(
+                p4_effective, True, has_tequila, tequila_bonus if has_tequila else 0, tailor_level,
+            )
+            law_at_base, _, _ = _compute_trade_distribution(
+                base_p4, True, has_tequila, tequila_bonus if has_tequila else 0, tailor_level,
+            )
+            opp_law = law_at_base - law_at_p4
+            if opp_law < 0:
+                opp_law = 0.0
+
+        # 龙舌兰在 P4 偏移下的增益
+        if has_tequila:
+            long_at_p4, _, _ = _compute_trade_distribution(
+                p4_effective, False, True, tequila_bonus, tailor_level,
+            )
+            long_at_base, _, _ = _compute_trade_distribution(
+                base_p4, False, True, tequila_bonus, 0,
+            )
+            opp_long = long_at_p4 - long_at_base
+            if opp_long < 0:
+                opp_long = 0.0
+
+    return {
+        "solo": {
+            "base": base_lmd,
+            "law": solo_law,
+            "long": solo_long,
+            "tailor_p4": p4_effective,
+        },
+        "opportunity": {
+            "tailor_to_law": opp_law,
+            "tailor_to_long": opp_long,
+        },
+    }
+
+
 def _get_trade_order_multiplier(ops: list[Operator], hours: float = 24.0) -> tuple[float, float, float]:
     """贸易站订单机制倍数查询
 
@@ -163,14 +297,11 @@ def _get_trade_order_multiplier(ops: list[Operator], hours: float = 24.0) -> tup
         (lmd_per_day, gold_per_day, equiv_gold_per_day):
         100%效率 24h 的 LMD 日产、赤金消耗、等效赤金产出（赤金/天）
     """
-    # P0: 可露希尔特别订单 — 最高优先级，独占全部订单
-    # 固定 2赤金/1200LMD, 2.4h/单, 10单/天, 等效产金=4赤金/天
     if any(s.buff_id.startswith("trade_ord_closure") for op in ops for s in op.skills):
         orders = 24.0 / 2.4
         equiv_gold = orders * (1200.0 - 1000.0) / 500.0
         return (12000.0, orders * 2.0, equiv_gold)
 
-    # P1: 但书/龙舌兰/裁缝 — 可露希尔不在场时检测
     has_law = any(s.buff_id.startswith("trade_ord_law") for op in ops for s in op.skills)
     has_tequila_beta = any(s.buff_id == "trade_ord_long[010]" for op in ops for s in op.skills)
     has_tequila_alpha = any(s.buff_id == "trade_ord_long[000]" for op in ops for s in op.skills)
@@ -178,61 +309,9 @@ def _get_trade_order_multiplier(ops: list[Operator], hours: float = 24.0) -> tup
     tailor_level = _extract_tailor_level(ops)
     tequila_bonus = 500 if has_tequila_beta else 250 if has_tequila_alpha else 0
 
-    # 裁缝时变等效P4（仅在有效时计算）
     p4 = _effective_tailor_p4(hours, tailor_level) if has_tequila or tailor_level > 0 else 0.20
 
-    # 等效产金通用公式: tequila_bonus × p4 × orders_per_day / 500
-    def _equiv_gold(orders_per_day: float) -> float:
-        return orders_per_day * p4 * tequila_bonus / 500.0
-
-    if has_law and has_tequila:
-        # 但书+龙舌兰：2,3→但书(+2gold), 4→龙舌兰(+bonus LMD)
-        # 但书部分以金换金净值为0，仅龙舌兰投资产生等效产金
-        p2 = (1 - p4) * 3 / 8
-        p3 = (1 - p4) * 5 / 8
-        lmd_per_order = 2000 * p2 + 2500 * p3 + (2000 + tequila_bonus) * p4
-        gold_per_order = 4 * p2 + 5 * p3 + 4 * p4
-        avg_order_hours = _weighted_avg_order_time(p2, p3, p4)
-        orders = 24.0 / avg_order_hours
-        return (orders * lmd_per_order, orders * gold_per_order, _equiv_gold(orders))
-
-    if has_tequila:
-        # 龙舌兰（可能+裁缝）：仅4-gold订单触发投资
-        p2 = (1 - p4) * 3 / 8
-        p3 = (1 - p4) * 5 / 8
-        lmd_per_order = 1000 * p2 + 1500 * p3 + (2000 + tequila_bonus) * p4
-        gold_per_order = 2 * p2 + 3 * p3 + 4 * p4
-        avg_order_hours = _weighted_avg_order_time(p2, p3, p4)
-        orders = 24.0 / avg_order_hours
-        return (orders * lmd_per_order, orders * gold_per_order, _equiv_gold(orders))
-
-    if has_law:
-        # 但书：2,3-gold → 违约+2, LMD加倍，以金换金净值为0
-        if tailor_level > 0:
-            p2 = (1 - p4) * 3 / 8
-            p3 = (1 - p4) * 5 / 8
-            lmd_per_order = 2000 * p2 + 2500 * p3 + 2000 * p4
-            gold_per_order = 4 * p2 + 5 * p3 + 4 * p4
-        else:
-            lmd_per_order = 2250.0
-            gold_per_order = 4.9
-        avg_order_hours = _weighted_avg_order_time(p2, p3, p4) if tailor_level > 0 else _TRADE_AVG_TIME_HOURS
-        return (24.0 / avg_order_hours * lmd_per_order,
-                24.0 / avg_order_hours * gold_per_order,
-                0.0)
-
-    if tailor_level > 0:
-        # 裁缝单独（无投资）：提升4-gold概率，无等效产金
-        p2 = (1 - p4) * 3 / 8
-        p3 = (1 - p4) * 5 / 8
-        lmd_per_order = 1000 * p2 + 1500 * p3 + 2000 * p4
-        gold_per_order = 2 * p2 + 3 * p3 + 4 * p4
-        avg_order_hours = _weighted_avg_order_time(p2, p3, p4)
-        return (24.0 / avg_order_hours * lmd_per_order,
-                24.0 / avg_order_hours * gold_per_order,
-                0.0)
-
-    return (_TRADE_BASE_LMD_PER_DAY, _TRADE_BASE_GOLD_PER_DAY, 0.0)
+    return _compute_trade_distribution(p4, has_law, has_tequila, tequila_bonus, tailor_level)
 
 
 @dataclass
