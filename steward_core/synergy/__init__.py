@@ -138,3 +138,7 @@ from steward_core.synergy._derived import (
     MFG_ANCHORS,
     TRADE_ANCHORS,
 )
+
+from steward_core.synergy.conflicts import (
+    resolve_efficiency_conflicts,
+)

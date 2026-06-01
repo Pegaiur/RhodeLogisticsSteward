@@ -76,10 +76,21 @@ def evaluate_room(
 
     # 第一步：计算所有归零来源（自动化/低语/归零变体），确定 zero_set
     # 必须在其他联动函数之前执行，避免被归零干员的效率加成泄漏到 total
-    auto_segs, zero_set = synergy_automation(operators, room_type, power_count, T)
+    # 冲突解析：订单机制在场时禁用对应效率联动（如 Closure 覆盖 whisper）
+    from steward_core.synergy.conflicts import resolve_efficiency_conflicts
 
-    whisper_segs, whisper_zero = synergy_whisper(operators, room_type, T)
-    zero_set |= whisper_zero
+    disabled_mechs = resolve_efficiency_conflicts(operators, room_type)
+
+    auto_segs: list = []
+    zero_set: set[str] = set()
+    if "automation" not in disabled_mechs:
+        # automation 暂无禁用方，此分支当前恒真（预留扩展点）
+        auto_segs, zero_set = synergy_automation(operators, room_type, power_count, T)
+
+    whisper_segs: list = []
+    if "whisper" not in disabled_mechs:
+        whisper_segs, whisper_zero = synergy_whisper(operators, room_type, T)
+        zero_set |= whisper_zero
 
     zero_segs, zero_set2 = synergy_zeroing_variant(operators, room_type, product, T)
     zero_set |= zero_set2

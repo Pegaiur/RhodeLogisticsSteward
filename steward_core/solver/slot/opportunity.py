@@ -81,10 +81,13 @@ def _detect_mode(
     # 同房不可能同时存在两种归零机制（互斥），此处仅按优先级短路
 
     if room_type == "Trade":
-        for op in combo_ops:
-            for sk in op.skills:
-                if sk.buff_id.startswith(_WHISPER_PREFIX):
-                    return "whisper", {op.name}
+        from steward_core.synergy.conflicts import resolve_efficiency_conflicts
+        disabled = resolve_efficiency_conflicts(combo_ops, room_type)
+        if "whisper" not in disabled:
+            for op in combo_ops:
+                for sk in op.skills:
+                    if sk.buff_id.startswith(_WHISPER_PREFIX):
+                        return "whisper", {op.name}
 
     if room_type == "Mfg":
         auto_names: set[str] = set()

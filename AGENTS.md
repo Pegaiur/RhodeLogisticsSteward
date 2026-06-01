@@ -42,7 +42,7 @@ RhodeLogisticsSteward/
 ├── .gitignore
 ├── scan_operators.py             # 干员扫描工具
 ├── steward_core/                 # 排班核心库
-│   ├── synergy/                  # 联动体系子包（14模块）
+│   ├── synergy/                  # 联动体系子包（15模块）
 │   │   ├── __init__.py           #   ─ 全部公开符号重导出
 │   │   ├── types.py              #   ─ NamedTuple类型 + TABLES注册器
 │   │   ├── helpers.py            #   ─ 名称集合/常量/辅助函数
@@ -54,6 +54,7 @@ RhodeLogisticsSteward/
 │   │   ├── buff_pool.py          #   ─ B层·BuffPool生成/消费 + 工程机器人
 │   │   ├── classification.py     #   ─ 制造站/贸易站干员分类与候选池
 │   │   ├── registry.py           #   ─ SystemContributor注册表
+│   │   ├── conflicts.py           #   ─ 效率机制冲突解析（订单机制→效率联动禁用映射）
 │   │   ├── _derived.py            #   ─ 脚本推导的锚点表+名称集合
 │   │   └── mood.py               #   ─ 中枢心情恢复
 │   ├── solver/                   # 排班求解器子包（15模块）
@@ -141,6 +142,7 @@ RhodeLogisticsSteward/
 | 联动映射表 | [`types.py`](file:///d:/Dev/RhodeLogisticsSteward/steward_core/synergy/types.py) `TABLES` 注册器 | 13 张 dict 表，含消费者函数和更新触发条件 |
 | 名称集合 | [`helpers.py`](file:///d:/Dev/RhodeLogisticsSteward/steward_core/synergy/helpers.py) | `_KNIGHT_NAMES`、`_OP_PLATFORM_NAMES`、`_MH_NAMES` 等 10 个集合/常量 |
 | 辅助常量 | [`helpers.py`](#) | `_PINUS_GROUP`、`_ORDER_ANCHOR_PREFIXES`、`_B_ROSEMARY` 等 |
+| 效率冲突禁用表 | [`conflicts.py`](file:///d:/Dev/RhodeLogisticsSteward/steward_core/synergy/conflicts.py) `_EFF_MECH_DISABLERS` | 订单机制 buff 前缀 → 被禁用的效率机制名映射。消费者：`resolve_efficiency_conflicts`（evaluate.py + opportunity.py）。更新触发：新增覆盖型订单机制 buff |
 
 ### 维护流程
 
