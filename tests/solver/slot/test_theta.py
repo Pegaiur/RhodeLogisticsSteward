@@ -1,10 +1,9 @@
-"""λ_k 种子化单元测试
+"""λ 种子化单元测试
 
 验证:
 1. λ 种子化使 lambda_ops 不为空
-2. θ = lambda_k 语义正确
+2. 候选池 λ>0 过滤在种子化后正确通过
 """
-import pytest
 
 from steward_core.models import EfficiencyMap, LayoutConfig, Operator, Skill
 from steward_core.solver.params import SolverParams
@@ -31,40 +30,6 @@ def _mk_dorm_op(name: str, char_id: str) -> Operator:
             efficient=EfficiencyMap(raw={"all": 0.25}),
         )],
     )
-
-
-class TestTheta:
-    """θ = lambda_k 单元测试"""
-
-    def test_theta_equals_lambda_k(self):
-        """θ 始终等于 lambda_k，不依赖 assigned_ids"""
-        from steward_core.solver.slot.contribution import _avg_unassigned_worker_lambda
-
-        ops = [
-            _mk_mfg_op("制造A", "mfg_a", 30.0),
-            _mk_mfg_op("制造B", "mfg_b", 30.0),
-        ]
-        ctx = SlotContext.from_layout(ops, LayoutConfig.layout_243(), SolverParams())
-        ctx.lambda_k = 500.0
-
-        result = _avg_unassigned_worker_lambda(ctx, 0)
-        assert result == 500.0
-
-    def test_theta_independent_of_assigned(self):
-        """已分配状态不影响 θ"""
-        from steward_core.solver.slot.contribution import _avg_unassigned_worker_lambda
-
-        ops = [
-            _mk_mfg_op("制造A", "mfg_a", 30.0),
-            _mk_mfg_op("制造B", "mfg_b", 30.0),
-        ]
-        ctx = SlotContext.from_layout(ops, LayoutConfig.layout_243(), SolverParams())
-        ctx.lambda_k = 300.0
-        ctx.lambda_ops = {"制造A": 9999.0, "制造B": 5000.0}
-        ctx.place(0, "mfg_0_0", "制造A")
-
-        result = _avg_unassigned_worker_lambda(ctx, 0)
-        assert result == 300.0  # θ = lambda_k，不受已分配高 λ 影响
 
 
 class TestLambdaSeeding:

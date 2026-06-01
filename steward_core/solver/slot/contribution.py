@@ -390,10 +390,11 @@ def _dorm_contribution(
     D: dict[str, float],
     room_index: int,
 ) -> float:
-    """宿舍贡献 = type2状态写入*D + 室友恢复增量 - 槽位机会成本
+    """宿舍贡献 = type2状态写入*D + 自恢复价值 + 室友恢复增量
 
     按房间计算边际贡献，自然覆盖 C 类冗余（同房间第2个C类增量=0）、
-    D 类累加、槽位稀缺性定价。无需硬编码守卫。
+    D 类累加。贪心排序本身承担机会成本定价——λ 更高的候选者自然胜出，
+    无需显式减项。
     """
     total = 0.0
     hours = ctx.params.shift_hours if ctx.params else 12.0
@@ -452,15 +453,6 @@ def _dorm_contribution(
             if delta_rec > 0 and rmbda > 0:
                 total += delta_rec * rmbda * hours
 
-    # 部分3: 槽位机会成本
-    unassigned_theta = _avg_unassigned_worker_lambda(ctx, window_idx)
-    if unassigned_theta > 0:
-        baseline_rate = _baseline_dorm_recovery(
-            existing_ops, dorm_bonus_all, dorm_bonus_elite,
-            yanhuo_bonus, dorm_level, amb,
-        )
-        total -= baseline_rate * hours * unassigned_theta
-
     return total
 
 
@@ -503,40 +495,3 @@ def _evaluate_dorm_recovery_for(
         dorm_level=dorm_level,
         dorm_ambiance_per_room=dorm_ambiance,
     )
-
-
-def _baseline_dorm_recovery(
-    dorm_ops: list,
-    dorm_bonus_all: float,
-    dorm_bonus_elite: float,
-    yanhuo_bonus: float,
-    dorm_level: int,
-    dorm_ambiance: int,
-) -> float:
-    """用虚拟干员评估基准恢复速率，供槽位机会成本定价
-
-    将 baseline 纳入 dorm_ops 以确保 evaluate_dorm_recovery Rule 0
-    基础恢复（1.5+0.1*level+0.0004*ambiance）始终参与计算。
-    不纳入时若 dorm_ops 为空，空列表导致 if dorm_ops: 为 False，
-    Rule 0 被跳过，机会成本低估约 4.0/h（Lv5 宿舍 5000 氛围）。
-    """
-    from steward_core.models import Operator
-    baseline = Operator(char_id="", name="_baseline_")
-    return _evaluate_dorm_recovery_for(
-        dorm_ops + [baseline], baseline, dorm_bonus_all, dorm_bonus_elite,
-        yanhuo_bonus, dorm_level, dorm_ambiance,
-    )
-
-
-def _avg_unassigned_worker_lambda(
-    ctx: "SlotContext",
-    window_idx: int,
-    top_k: int = 3,
-) -> float:
-    """取全局生产干员的 top-k lambda 平均值
-
-    不按 assigned_ids 过滤。λ_k 为效率中位数锚点，
-    θ 以此为基准——代表"典型生产干员"的恢复机会成本。
-    过高的 θ 会阻止所有干员入宿，过低则让宿管垄断。
-    """
-    return ctx.lambda_k
