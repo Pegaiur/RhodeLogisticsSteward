@@ -81,11 +81,6 @@ def phase_remaining(
             if best_op_name is None:
                 break
 
-            # 宿舍槽位的边际贡献严格为负时停止填充
-            # 模型语义：当所有未选宿管的边际贡献 < 0，该槽位不值得占
-            if facility_type == "Dormitory" and best_score < 0.0:
-                break
-
             existing = ctx.ops_of_type(window_idx, facility_type)
             room_idx = _find_room_with_space(
                 ctx, window_idx, facility_type, room_count,

@@ -1,4 +1,4 @@
-﻿"""SlotSolver — 槽位加工模型求解引擎
+"""SlotSolver — 槽位加工模型求解引擎
 
 直接实现 slot-processing-model.md §9.5 混合状态迭代策略。
 """
@@ -89,6 +89,8 @@ def solve_slot(
 
             phase_control(ctx, w, D, mood_ctx=mc)
             ctx.lambda_k = _compute_lambda_k(ctx, w, shift_hours, mood_ctx=mc)
+            if not ctx.lambda_ops and ctx.lambda_k > 0:
+                _seed_lambda_ops(ctx, operators)
             phase_remaining(ctx, w, D, mood_ctx=mc)
 
             if mc is not None:
@@ -243,6 +245,18 @@ def _update_lambda_shadow(
 
 _MFG_CR_BASE_RATE = 1.0 / 3.0
 _CR_LMD_PER_UNIT = 1000.0 / 1.3
+
+
+def _seed_lambda_ops(ctx: "SlotContext", operators: list) -> None:
+    """λ 种子化：为所有生产干员设置统一的初始 λ = lambda_k
+
+    迭代 0 时 lambda_ops 为空，候选池 λ>0 检查、Part 1.5 自恢复项均失效。
+    lambda_k 已在 phase_mfg/trade 之后计算，为全局效率中位数。
+    种子化后迭代 0 即可正常工作，后续迭代由 _update_lambda_shadow 更新为个体值。
+    """
+    for op in operators:
+        if op.has_skill_for("Mfg") or op.has_skill_for("Trade"):
+            ctx.lambda_ops[op.name] = ctx.lambda_k
 
 
 def _pool_for(

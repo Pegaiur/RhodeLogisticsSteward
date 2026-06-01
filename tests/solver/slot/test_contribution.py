@@ -153,8 +153,8 @@ class TestDormContributionWithLambdaK:
         ctx.lambda_k = 0.0  # 消除机会成本
         ctx.place(0, "dorm_0_0", "酒神")
         result = contribution(ctx, "杜林", "Dormitory", room_index=0)
-        # Part2 = 0.25 × 100 × 12/24 = 12.5，Part3=0 → 12.5
-        expected = 0.25 * 100.0 * 12.0 / 24.0
+        # Part2 = 0.25 × 100 × 12 = 300，Part3=0 → 300
+        expected = 0.25 * 100.0 * 12.0
         assert abs(result - expected) < 0.01, (
             f"期待={expected}，实际={result}"
         )

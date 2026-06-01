@@ -447,6 +447,8 @@ def _dorm_contribution(
             )
             delta_rec = after - before
             rmbda = ctx.lambda_ops.get(roommate_name, 0.0)
+            if rmbda > 0 and ctx.lambda_k > 0:
+                rmbda = min(rmbda, ctx.lambda_k)
             if delta_rec > 0 and rmbda > 0:
                 total += delta_rec * rmbda * hours
 
@@ -531,16 +533,10 @@ def _avg_unassigned_worker_lambda(
     window_idx: int,
     top_k: int = 3,
 ) -> float:
-    """取未分配生产干员的 top-k lambda 平均值"""
-    assigned_ids = ctx.assigned_ids(window_idx)
-    lambdas = []
-    for op in ctx.operators:
-        if op.char_id in assigned_ids:
-            continue
-        if not (op.has_skill_for("Mfg") or op.has_skill_for("Trade")):
-            continue
-        lambdas.append(ctx.lambda_ops.get(op.name, ctx.lambda_k))
-    if not lambdas:
-        return ctx.lambda_k
-    top = sorted(lambdas, reverse=True)[:top_k]
-    return sum(top) / len(top)
+    """取全局生产干员的 top-k lambda 平均值
+
+    不按 assigned_ids 过滤。λ_k 为效率中位数锚点，
+    θ 以此为基准——代表"典型生产干员"的恢复机会成本。
+    过高的 θ 会阻止所有干员入宿，过低则让宿管垄断。
+    """
+    return ctx.lambda_k
