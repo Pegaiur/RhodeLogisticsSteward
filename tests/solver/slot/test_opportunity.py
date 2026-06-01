@@ -88,17 +88,17 @@ class TestWhisperFormula:
 
 
 class TestAutomationFormula:
-    """automation 公式数值验证"""
+    """automation 公式数值验证（全额扣减，无 sensitivity）"""
 
     @patch.object(Operator, "best_efficiency", _fake_best_efficiency)
-    def test_basic_cost_with_sensitivity(self):
+    def test_basic_cost_full(self):
         _EFF_MAP.clear()
         _EFF_MAP["A"] = 30.0
         _EFF_MAP["B"] = 20.0
         saria = _mk_op("森蚺", "saria", ["manu_prod_spd&power[000]"])
         ops = [saria, _mk_op("A", "a"), _mk_op("B", "b")]
         cost = compute_opportunity_cost_lmd(ops, "Mfg", "CombatRecord", 12.0)
-        expected_pct = (30.0 + 20.0) * 0.5
+        expected_pct = 30.0 + 20.0
         expected_lmd = expected_pct * (1.0 / 3.0) * (1000.0 / 1.3) * 12.0 / 100.0
         assert abs(cost - expected_lmd) < 0.01
         assert cost > 0.0
@@ -110,7 +110,7 @@ class TestAutomationFormula:
         wenti = _mk_op("温蒂", "wenti", [])
         ops = [wenti, _mk_op("A", "a"), _mk_op("B", "b")]
         cost = compute_opportunity_cost_lmd(ops, "Mfg", "PureGold", 12.0)
-        expected_pct = 25.0 * 0.5
+        expected_pct = 25.0
         expected_lmd = expected_pct * (1.0 / 1.2) * 500.0 * 12.0 / 100.0
         assert abs(cost - expected_lmd) < 0.01
         assert cost > 0.0
@@ -125,17 +125,17 @@ class TestAutomationFormula:
 
 
 class TestZeroingVariantFormula:
-    """归零变体公式数值验证"""
+    """归零变体公式数值验证（全额扣减）"""
 
     @patch.object(Operator, "best_efficiency", _fake_best_efficiency)
-    def test_basic_cost_same_as_automation(self):
+    def test_basic_cost_full(self):
         _EFF_MAP.clear()
         _EFF_MAP["A"] = 30.0
         _EFF_MAP["B"] = 20.0
         holder = _mk_op("Z", "z", ["manu_prod_spd&manu[100]"])
         ops = [holder, _mk_op("A", "a"), _mk_op("B", "b")]
         cost = compute_opportunity_cost_lmd(ops, "Mfg", "CombatRecord", 12.0)
-        expected_pct = (30.0 + 20.0) * 0.5
+        expected_pct = 30.0 + 20.0
         assert cost > 0.0
         assert abs(cost - expected_pct * (1.0 / 3.0) * (1000.0 / 1.3) * 12.0 / 100.0) < 0.01
 

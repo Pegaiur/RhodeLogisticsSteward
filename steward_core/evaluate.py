@@ -93,14 +93,16 @@ def evaluate_room(
     # 技能类型别名（海沫等），基于完整房间组成判定
     alias = synergy_skill_alias(operators)
 
-    # 第三步：效率加成型联动（仅非归零干员的效率参与计算）
+    # 第三步：效率加成型联动（仅非归零干员的个人效率参与计算）
     total += integrate_segments(synergy_faction_room(non_zero_ops, room_type, product, T), T)
     total += integrate_segments(synergy_skill_count(non_zero_ops, room_type, alias, T), T)
-    total += integrate_segments(synergy_facility_count(
-        non_zero_ops, room_type, product, layout, T=T,
-    ), T)
+
+    # 设施属性类联动不受归零影响——游戏描述"不包含根据设施数量提供加成的生产力"
     total += integrate_segments(synergy_trade_gold_lines(
-        non_zero_ops, room_type, product, layout, T=T,
+        operators, room_type, product, layout, T=T,
+    ), T)
+    total += integrate_segments(synergy_facility_count(
+        operators, room_type, product, layout, T=T,
     ), T)
 
     # 第四步：归零加成自身的效率段
@@ -142,13 +144,14 @@ def evaluate_room(
                         mood_initial=op_mood,
                     ), T,
                 )
-    total += integrate_segments(synergy_capacity_to_eff(non_zero_ops, room_type, product, T), T)
+    # 仓库容量→效率：容量是房间属性，不受归零影响
+    total += integrate_segments(synergy_capacity_to_eff(operators, room_type, product, T), T)
 
     # 效率放大器（仅未归零干员的效率参与计算）
     total += integrate_segments(synergy_efficiency_amplifier(non_zero_ops, room_type, product, T), T)
 
-    # 机械精通（作业平台在发电站）
-    total += integrate_segments(synergy_token_prod(non_zero_ops, room_type, product, power_platforms, T), T)
+    # 机械精通：作业平台数量是设施属性，不受归零影响
+    total += integrate_segments(synergy_token_prod(operators, room_type, product, power_platforms, T), T)
 
     # A7 孑订单压缩机制
     if control_operators is not None and room_type == "Trade":

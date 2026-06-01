@@ -1,4 +1,4 @@
-﻿"""归零组合的机会成本计算
+"""归零组合的机会成本计算
 
 所有归零类联动（whisper / automation / zeroing_variant）的机会成本
 均通过本模块的 compute_opportunity_cost_lmd() 计算，
@@ -8,10 +8,10 @@ whisper（巫恋低语）:
   归零室友，自身 +45%/人。补偿存在 → max(own_eff - 45%, 0)
 
 automation（森蚺/温蒂/异客/掠风）:
-  归零室友，自身获发电加成。无补偿 → own_eff 全额 × sensitivity
+  归零室友个人效率，自身获发电加成。"根据设施数量提供加成的生产力"不受归零影响
 
 zeroing_variant（科学改造/流程优化）:
-  归零室友。无补偿 → 同 automation
+  归零室友个人效率。无补偿 → own_eff 全额
 
 这是"机会成本补充覆盖方案"(time-slot-scheduling-model.md) 的 Phase 1：
 组合级求值修正。Phase 2 的 lambda_mood + swap_cost 跨窗口定价
@@ -35,16 +35,6 @@ _MFG_PG_BASE = 1.0 / 1.2
 # ─── 归零检测 ─────────────────────────────────────────────────────────
 
 _WHISPER_PREFIX = "trade_ord_vodfox"
-
-# ─── 缩放参数 ─────────────────────────────────────────────────────────
-
-_AUTOMATION_SENSITIVITY = 0.5
-"""自动化/归零变体敏感度缩放。
-
-归零室友无等价补偿，全额 own_eff 扣减会导致组合从不被选中。
-0.5 使自动化组合在室友效率较低时仍有机会参与排序。
-Phase 2 可升级为 SolverParams 可调参数。
-"""
 
 
 def compute_opportunity_cost_lmd(
@@ -133,8 +123,6 @@ def _cost_pct(
             total += max(own_eff - 45.0, 0.0)
         else:
             total += own_eff
-    if mode != "whisper":
-        total *= _AUTOMATION_SENSITIVITY
     return total
 
 
