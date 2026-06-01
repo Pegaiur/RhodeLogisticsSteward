@@ -8,8 +8,8 @@
 <!-- 格式: - [ ] 简短标题 — 描述 — 提出日期 — 可能路由 -->
 <!-- 完成后标记 [x]，发版时清理已完成条目  -->
 
-[x] **数据加载器 product 映射 roomType 驱动化** — 已修复 (7d8a5ff): Trade→直接 Money、Mfg→保留文本判定、其他→all。候选池 63→74 (+11人)，全部 7 名裁缝干员入池。 — 2026-06-01 → 2026-06-01 完成
-- [ ] **制造站侧数据加载 product 映射审计** — Trade 侧已修，Mfg 侧 MANUFACTURE buff 描述含"贵金属/赤金"是否也存在同类误映射？需审计 _determine_product 在所有 roomType 下的正确性。 — 2026-06-01 — `data_loader.py`
+[x] **数据加载器 product 映射 roomType 驱动化** — 已修复 (7d8a5ff): Trade→直接 Money、Mfg→targets 结构判定、其他→all。候选池 63→74 (+11人)，全部 7 名裁缝干员入池。 — 2026-06-01 → 2026-06-01 完成
+[x] **制造站侧数据加载 product 映射审计** — Trade 侧已修，Mfg 侧 MANUFACTURE buff 描述含"贵金属/赤金"是否也存在同类误映射？审计完成：当前 109 条 Mfg buff targets 与 description 100% 一致无误判。已切换为 targets 结构化字段判定，删除 _determine_product + _build_efficiency_map。 — 2026-06-01 — `data_loader.py`
 - [ ] **贸易站未建模技能补全** — 91 个 TRADING buff 中约 20% 仅有基础效率建模，特殊加成未覆盖。详见 `synergy/trade_linkages.py` 模块 docstring。主要缺口：赫德雷 per-operator 缩放、琳琅诗怀雅/锏 可变效率、拉普兰德/德克萨斯 订单上限+配对、贝洛内 limit+cost_P 配对。 — 2026-06-01 — `trade_linkages.py` + `evaluate.py`
 - [ ] **贸易站候选池 0 贡献干员过滤** — 塑心/芳汀 无任何 TRADING buff 却通过 has_skill_for 进入候选池。铎铃/火哨/史都华德/暗索/桃金娘/佩佩/雪雉 eff=0 且无 trade_ord_* 机制。候选池中约 11 人贡献为 0。应在 phase_trade 或 candidate_pool 构建阶段过滤。 — 2026-06-01 — `trade.py` + `classification.py`
 - [ ] **宿舍恢复不覆盖高效率生产干员** — `phase_remaining` 中宿舍填充只看 dorm_rec_* 技能（`has_skill_for("Dormitory","Rest")`），无宿舍技能的高效生产干员（Mfg/Trade eff≥30）根本无法竞争宿舍槽位。14 班排班中 Mfg 0/高职入宿舍、Trade 仅 1/高。高效干员工作 2-3 班后心情耗尽被丢弃，从未进宿舍恢复。修复方向：宿舍 contribution 评分应包含被恢复者的替代生产力（λ 影子乘子），或放宽候选池准入条件。 — 2026-06-01 — `remaining.py` + `contribution.py` + `context.py`

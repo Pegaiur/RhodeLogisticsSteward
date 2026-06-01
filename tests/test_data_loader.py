@@ -198,10 +198,10 @@ class TestSkillParsing:
 # ─── 产物匹配 ────────────────────────────────────────────────────
 
 class TestProductMatching:
-    """MV0-3: 根据 description 文本判定产物匹配"""
+    """MV0-3: 根据 targets 结构化字段判定产物匹配"""
 
     def test_作战记录技能_产物匹配(self, tmp_path):
-        """description 含"作战记录" → 判定为 CombatRecord 产物"""
+        """targets 含 "F_EXP" → 判定为 CombatRecord 产物"""
         # Arrange
         ci = {
             "char_test": {
@@ -221,6 +221,7 @@ class TestProductMatching:
                 "roomType": "MANUFACTURE",
                 "description": "进驻制造站时，作战记录类配方的生产力+30%",
                 "efficiency": 30,
+                "targets": ["F_EXP"],
             }
         }
         ci_path = _write_json(tmp_path, "character_identity.json", ci)
@@ -235,7 +236,7 @@ class TestProductMatching:
         assert sk.efficient.get("PureGold") == -999.0
 
     def test_贵金属技能_产物匹配(self, tmp_path):
-        """description 含"贵金属" → 判定为 PureGold 产物"""
+        """targets 含 "F_GOLD" → 判定为 PureGold 产物"""
         # Arrange
         ci = {
             "char_test": {
@@ -255,6 +256,7 @@ class TestProductMatching:
                 "roomType": "MANUFACTURE",
                 "description": "进驻制造站时，贵金属类配方的生产力+25%",
                 "efficiency": 25,
+                "targets": ["F_GOLD"],
             }
         }
         ci_path = _write_json(tmp_path, "character_identity.json", ci)

@@ -5,7 +5,7 @@
 
 与旧版 data_loader 的区别：
 - 数据源：character_identity.json (替代 building_data.json) + buffs_infrastructure.json (替代 infrast.json)
-- 效率值：buffs_infrastructure.json 的 efficiency 字段 (float)，通过 description 文本判定产物匹配
+- 效率值：buffs_infrastructure.json 的 efficiency 字段 (float)，通过 targets 结构化字段判定产物匹配
 - 身份字段：nationId/groupId/teamId → nation_id/group_id/team_id
 """
 
@@ -46,47 +46,23 @@ def _load_json(path: Path) -> dict:
         return json.load(f)
 
 
-def _determine_product(description: str) -> Optional[str]:
-    """根据 buff description 文本判定 MANUFACTURE 产物类型
+_MFG_TARGETS_MAP: dict[frozenset[str], str] = {
+    frozenset({"F_GOLD"}): "PureGold",
+    frozenset({"F_EXP"}): "CombatRecord",
+    frozenset({"F_DIAMOND"}): "OriginStone",
+}
 
-    仅适用于 roomType=MANUFACTURE 设施。
-    TRADING 等其他设施通过 roomType 直接映射，不经过此函数。
 
-    返回 'CombatRecord', 'PureGold', 'OriginStone', 或 None (通用技能)。
-    注意：源石类配方（F_DIAMOND）与贵金属/作战记录互斥，必须单独排除，
-    否则会被误判为通用技能导致跨产物生效。
+def _mfg_product_from_targets(targets: list[str]) -> Optional[str]:
+    """根据 buff targets 结构化字段判定制造站产物类型
+
+    仅适用于 roomType=MANUFACTURE。
+    targets 为 ["F_GOLD","F_EXP","F_DIAMOND"] 或 [] 时返回 None（通用技能）。
+    注意：前提假设 targets 不存在双产品组合（如仅 F_GOLD+F_EXP），
+    当前 109 条 Mfg buff 均符合此模式。若未来游戏新增双产品 buff，
+    需在 _MFG_TARGETS_MAP 中追加对应映射。
     """
-    desc = description
-    has_record = "作战记录" in desc
-    has_gold = "贵金属" in desc or "赤金" in desc
-    has_originium = "源石" in desc
-
-    if has_originium:
-        return "OriginStone"
-    if has_record and not has_gold:
-        return "CombatRecord"
-    if has_gold and not has_record:
-        return "PureGold"
-    return None
-
-
-def _build_efficiency_map(efficiency: float, product: Optional[str]) -> EfficiencyMap:
-    """将 buffs_infrastructure 的 efficiency 字段转换为 EfficiencyMap
-
-    产物匹配逻辑：
-    - 纯作战记录技能: EfficiencyMap({"CombatRecord": efficiency})
-    - 纯贵金属技能: EfficiencyMap({"PureGold": efficiency})
-    - 通用技能: EfficiencyMap({"all": efficiency})
-    - efficiency=0 的条件技能: EfficiencyMap({"all": 0.0})
-    """
-    if product == "CombatRecord":
-        return EfficiencyMap(raw={"CombatRecord": efficiency})
-    elif product == "PureGold":
-        return EfficiencyMap(raw={"PureGold": efficiency})
-    elif product == "OriginStone":
-        return EfficiencyMap(raw={"OriginStone": efficiency})
-    else:
-        return EfficiencyMap(raw={"all": efficiency})
+    return _MFG_TARGETS_MAP.get(frozenset(targets))
 
 
 def _parse_dorm_efficiency(description: str) -> float:
@@ -214,8 +190,12 @@ def load_operators_v2(
             if room_type == "Trade":
                 efficient = EfficiencyMap(raw={"Money": efficiency})
             elif room_type == "Mfg":
-                product = _determine_product(description)
-                efficient = _build_efficiency_map(efficiency, product)
+                targets = buff.get("targets", [])
+                product = _mfg_product_from_targets(targets)
+                if product:
+                    efficient = EfficiencyMap(raw={product: efficiency})
+                else:
+                    efficient = EfficiencyMap(raw={"all": efficiency})
             else:
                 efficient = EfficiencyMap(raw={"all": efficiency})
 
