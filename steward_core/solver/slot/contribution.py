@@ -11,7 +11,7 @@ from typing import TYPE_CHECKING
 
 from steward_core.models import LayoutConfig
 from steward_core.synergy import compute_control_global_bonus, control_per_operator_bonus, compute_control_reception_bonus
-from steward_core.synergy import _OP_PLATFORM_NAMES, compute_facility_group_bonus
+from steward_core.synergy import _OP_PLATFORM_NAMES, compute_facility_group_bonus, operator_expected_12h_efficiency
 from .context import STATE_DIMS
 from .partials import _product_base_rate, _product_lmd_per_unit
 
@@ -412,7 +412,7 @@ def _select_reception_combo(
 
         for op in combo_list:
             implicit = _reception_implicit_bonus(op, reception_level, dorm_ambiance)
-            skill_eff = max(op.best_efficiency("Reception", "General"), 0.0)
+            skill_eff = max(operator_expected_12h_efficiency(op, "Reception", "General"), 0.0)
             total += (implicit + skill_eff) * _RECEPTION_TO_MFG_RATIO / 100.0 * base_lmd * hours
 
         total += _reception_conditional_bonus(combo_list, ctx, window_idx, mc_snapshot) \
@@ -592,7 +592,7 @@ def _power_contribution(
     """
     total = 0.0
 
-    eff = max(op.best_efficiency("Power", ""), 0.0)
+    eff = max(operator_expected_12h_efficiency(op, "Power", ""), 0.0)
     eff += _power_dynamic_bonus(op, ctx)
     eff += _power_conditional_bonus(op, ctx, window_idx)
 
@@ -681,7 +681,7 @@ def _reception_contribution(
     reception_level = ctx.params.reception_level if ctx.params else 3
     dorm_ambiance = ctx.params.dorm_ambiance if ctx.params else 5000
     implicit = _reception_implicit_bonus(op, reception_level, dorm_ambiance)
-    skill_eff = max(op.best_efficiency("Reception", "General"), 0.0)
+    skill_eff = max(operator_expected_12h_efficiency(op, "Reception", "General"), 0.0)
     dynamic = _reception_individual_bonus(op, ctx, window_idx)
     eff = implicit + skill_eff + dynamic
 
@@ -718,7 +718,7 @@ def _office_contribution(
         if delta != 0.0 and D.get(d, 0.0) > 0:
             total += delta * D[d]
 
-    eff = max(op.best_efficiency("Office", "HR"), 0.0)
+    eff = max(operator_expected_12h_efficiency(op, "Office", "HR"), 0.0)
     office_level = ctx.params.office_level if ctx.params else 3
     extra_slots = max(office_level - 1, 0)
     if any(sk.buff_id == "hire_spd_cost&extra[000]" for sk in op.active_skills_for("Office")):

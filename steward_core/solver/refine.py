@@ -9,7 +9,7 @@
 
 from steward_core.evaluate import evaluate_room
 from steward_core.models import Operator, RoomAssignment, ShiftPlan, SolveResult
-from steward_core.synergy import control_per_operator_bonus
+from steward_core.synergy import control_per_operator_bonus, operator_expected_12h_efficiency
 
 from .context import GlobalContext
 
@@ -126,7 +126,7 @@ def local_search_refine(
 
             sorted_candidates = sorted(
                 candidates,
-                key=lambda op: -op.best_efficiency(room_type, product),
+                key=lambda op: -operator_expected_12h_efficiency(op, room_type, product),
             )
 
             new_operators = [op.name for op in sorted_candidates[:slots]]
