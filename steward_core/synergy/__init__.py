@@ -33,6 +33,8 @@ from steward_core.synergy.types import (
     ZeroingVariantEntry,
     RampingSkillEntry,
     GlobalBonusEntry,
+    ControlConditionalEntry,
+    ControlPerOpEntry,
     TradeShareEntry,
     TradeEffAmpEntry,
     TradeConditionalEffEntry,
@@ -134,6 +136,8 @@ from steward_core.synergy.control_linkages import (
     control_per_operator_bonus,
     GlobalBonus,
     _C_CONTROL_GLOBAL_TABLE,
+    _CONTROL_CONDITIONAL_TABLE,
+    _CONTROL_PER_OP_TABLE,
     _CONTROL_TRADE_LIMIT_TABLE,
 )
 

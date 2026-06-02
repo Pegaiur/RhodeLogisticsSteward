@@ -86,9 +86,45 @@ class RampingSkillEntry(NamedTuple):
 
 
 class GlobalBonusEntry(NamedTuple):
-    """C·中枢全局效率条目"""
+    """C·中枢无条件全局效率条目 — 干员名 → 全局制造/贸易加成"""
     mfg_bonus: float
     trade_bonus: float
+
+
+class ControlConditionalEntry(NamedTuple):
+    """C·中枢条件型全局效率条目 — 替代散落 if 分支的统合表
+
+    condition:
+      "望"          — 外势(trade+power) >= 实地(mfg)
+      "作业平台"     — >=2台作业平台在发电站
+      "MH队友"       — 同中枢有其他怪物猎人小队干员
+      "龙门近卫局队友" — 同中枢有其他龙门近卫局干员
+    condition_names: 条件所需队友的名称集合（仅 MH队友/龙门近卫局队友 用，其余为空 set）
+    """
+    condition: str
+    condition_names: frozenset[str]
+    mfg_bonus: float
+    trade_bonus: float
+
+
+class ControlPerOpEntry(NamedTuple):
+    """C·中枢 per-operator 条件加成条目
+
+    中枢干员对制造站/贸易站内每个符合条件的干员或房间提供的加成。
+
+    room_type:      目标设施 "Mfg" | "Trade"
+    scope:          "per_op"=每名符合条件干员, "per_room"=每个符合条件的房间
+    condition_field:  "group_id" | "nation_id" | "is_knight" | "count_ge"
+    condition_value:  匹配值（group_id="pinus", nation_id="siracusa", count_ge="3"）
+    bonus_per:      加成%, 每符合条件的单位
+    product:        限定产物, None=全部
+    """
+    room_type: str
+    scope: str
+    condition_field: str
+    condition_value: str
+    bonus_per: float
+    product: str | None
 
 
 class OrderLimitEntry(NamedTuple):
@@ -184,7 +220,7 @@ from .mfg_linkages import _A_PAIR_TABLE, _A_ROOM_FACTION_TABLE, _A_ROOM_FACTION_
 from .facility_linkages import _A_FACILITY_LINK_TABLE  # noqa: E402
 from .buff_pool import _B_BUFF_CONSUMER_TABLE, _OPERATOR_BUFF_PRODUCERS  # noqa: E402
 from .global_linkages import _B_CROSS_ROOM_PAIR_TABLE, _B_GLOBAL_FACTION_TABLE  # noqa: E402
-from .control_linkages import _C_CONTROL_GLOBAL_TABLE  # noqa: E402
+from .control_linkages import _C_CONTROL_GLOBAL_TABLE, _CONTROL_CONDITIONAL_TABLE, _CONTROL_PER_OP_TABLE  # noqa: E402
 from .trade_linkages import _ORDER_LIMIT_TABLE, _TRADE_PAIR_TABLE, _JIE_MECH_TABLE, _TRADE_TRIGGER_TABLE, _ORDER_OVERRIDE_TABLE, _TRADE_SHARE_TABLE, _TRADE_EFF_AMPLIFIER_TABLE, _TRADE_CONDITIONAL_EFF_TABLE  # noqa: E402
 from .control_linkages import _CONTROL_TRADE_LIMIT_TABLE  # noqa: E402
 from .facility_group import _FACILITY_GROUP_TABLE  # noqa: E402
@@ -212,6 +248,8 @@ TABLES: dict[str, TableMeta] = {
     "B·buff生产者":      TableMeta(_OPERATOR_BUFF_PRODUCERS,   ["compute_buff_pool"],          "新增 buff 池生产者"),
     "B·跨房间配对":      TableMeta(_B_CROSS_ROOM_PAIR_TABLE,  ["synergy_cross_room_pair"],    "新增跨设施干员条件配对 buff"),
     "B·全局阵营计数":    TableMeta(_B_GLOBAL_FACTION_TABLE,   ["synergy_global_faction"],     "新增全局阵营计数型 buff"),
-    "C·中枢全局效率":    TableMeta(_C_CONTROL_GLOBAL_TABLE,   ["compute_control_global_bonus"], "新增中枢全局 buff"),
+    "C·中枢全局效率":    TableMeta(_C_CONTROL_GLOBAL_TABLE,   ["compute_control_global_bonus"], "新增中枢全局 buff（无条件）"),
+    "C·中枢条件全局":    TableMeta(_CONTROL_CONDITIONAL_TABLE, ["compute_control_global_bonus"], "新增中枢条件型全局 buff（望/布丁/MH队友等）"),
+    "C·中枢PerOp加成":  TableMeta(_CONTROL_PER_OP_TABLE,      ["control_per_operator_bonus"],   "新增中枢 per-operator 条件加成"),
     "B·设施group计数":   TableMeta(_FACILITY_GROUP_TABLE,    ["synergy_facility_group", "compute_facility_group_bonus"], "新增设施 group 计数型 buff（精英/岁等）"),
 }

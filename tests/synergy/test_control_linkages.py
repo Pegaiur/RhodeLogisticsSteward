@@ -114,8 +114,8 @@ class TestControlGlobalExtended:
         from steward_core.synergy import compute_control_global_bonus
 
         yedao = _mk_op("麒麟R夜刀")
-        lianjin = _mk_op("炼金术士")
-        bonus = compute_control_global_bonus([yedao, lianjin])
+        heijiao = _mk_op("火龙S黑角")
+        bonus = compute_control_global_bonus([yedao, heijiao])
 
         assert bonus.mfg_bonus == 2.0
 
@@ -129,12 +129,12 @@ class TestControlGlobalExtended:
         assert bonus.mfg_bonus == 0.0
 
     def test_秘传交涉术_MH同中枢_贸易加7(self):
-        """炼金术士秘传交涉术: MH同中枢 → 贸易+7%"""
+        """火龙S黑角秘传交涉术: MH同中枢 → 贸易+7%"""
         from steward_core.synergy import compute_control_global_bonus
 
-        lianjin = _mk_op("炼金术士")
+        heijiao = _mk_op("火龙S黑角")
         yedao = _mk_op("麒麟R夜刀")
-        bonus = compute_control_global_bonus([lianjin, yedao])
+        bonus = compute_control_global_bonus([heijiao, yedao])
 
         assert bonus.trade_bonus == 7.0
 
@@ -221,8 +221,8 @@ class TestC1Trade7Fallback:
     def test_佩佩_贸易加7(self):
         from steward_core.synergy import compute_control_global_bonus
 
-        peper = _mk_op("佩佩")
-        bonus = compute_control_global_bonus([peper])
+        mingjiao = _mk_op("明椒")
+        bonus = compute_control_global_bonus([mingjiao])
 
         assert bonus.trade_bonus == 7.0
 
@@ -275,6 +275,62 @@ class TestC2PerOperatorBonus:
         )
         assert bonus == 0.0
 
+    def test_焰尾_红松骑士团Mfg_CR加10_PG减10(self):
+        """焰尾在中枢 → 每个红松骑士团 Mfg 干员: CR +10%, PG -10%"""
+        from steward_core.synergy import control_per_operator_bonus
+
+        flammetail = _mk_op("焰尾")
+        p1 = _mk_op("野鬃", group_id="pinus")
+        p2 = _mk_op("灰毫", group_id="pinus")
+
+        bonus_cr = control_per_operator_bonus(
+            [flammetail], [p1, p2], "CombatRecord", room_type="Mfg",
+        )
+        assert bonus_cr == 20.0
+
+        bonus_pg = control_per_operator_bonus(
+            [flammetail], [p1], "PureGold", room_type="Mfg",
+        )
+        assert bonus_pg == -10.0
+
+    def test_焰尾_Trade房间_不触发(self):
+        """焰尾加成仅对 Mfg 生效"""
+        from steward_core.synergy import control_per_operator_bonus
+
+        flammetail = _mk_op("焰尾")
+        p1 = _mk_op("野鬃", group_id="pinus")
+
+        bonus = control_per_operator_bonus(
+            [flammetail], [p1], "Money", room_type="Trade",
+        )
+        assert bonus == 0.0
+
+    def test_薇薇安娜_骑士Mfg每人加7(self):
+        """薇薇安娜在中枢 → 每个骑士 Mfg 干员 +7%"""
+        from steward_core.synergy import control_per_operator_bonus
+
+        vvana = _mk_op("薇薇安娜")
+        k1 = _mk_op("耀骑士临光", nation_id="kazimierz")
+        k2 = _mk_op("砾", nation_id="kazimierz")
+
+        bonus = control_per_operator_bonus(
+            [vvana], [k1, k2], "CombatRecord", room_type="Mfg",
+        )
+        assert bonus == 14.0
+
+    def test_涤火杰西卡_黑钢国际Mfg每人加5(self):
+        """涤火杰西卡(老友相聚)在中枢 → 每个黑钢国际 Mfg 干员 +5%"""
+        from steward_core.synergy import control_per_operator_bonus
+
+        jessica = _mk_op("涤火杰西卡")
+        b1 = _mk_op("香草", group_id="blacksteel")
+        b2 = _mk_op("杰西卡", group_id="blacksteel")
+
+        bonus = control_per_operator_bonus(
+            [jessica], [b1, b2], "CombatRecord", room_type="Mfg",
+        )
+        assert bonus == 10.0
+
     def test_八幡海铃不在中枢_不加成(self):
         """中枢无八幡海铃 → 叙拉古加成不触发"""
         from steward_core.synergy import control_per_operator_bonus
@@ -314,10 +370,10 @@ class TestC2PerOperatorBonus:
         assert bonus == 10.0
 
     def test_银灰异格_Trade满3谢拉格_加10(self):
-        """银灰异格在中枢，Trade 房 ≥3 谢拉格干员 → +10%"""
+        """凛御银灰在中枢，Trade 房 ≥3 谢拉格干员 → +10%"""
         from steward_core.synergy import control_per_operator_bonus
 
-        silverash = _mk_op("银灰异格")
+        silverash = _mk_op("凛御银灰")
         k1 = _mk_op("崖心", group_id="karlan")
         k2 = _mk_op("讯使", group_id="karlan")
         k3 = _mk_op("角峰", group_id="karlan")
@@ -328,10 +384,10 @@ class TestC2PerOperatorBonus:
         assert bonus == 10.0
 
     def test_银灰异格_Trade不足3谢拉格_不加成(self):
-        """银灰异格在中枢，Trade 房仅 2 谢拉格 → 0"""
+        """凛御银灰在中枢，Trade 房仅 2 谢拉格 → 0"""
         from steward_core.synergy import control_per_operator_bonus
 
-        silverash = _mk_op("银灰异格")
+        silverash = _mk_op("凛御银灰")
         k1 = _mk_op("崖心", group_id="karlan")
         k2 = _mk_op("讯使", group_id="karlan")
 
@@ -366,10 +422,10 @@ class TestC2PerOperatorBonus:
         assert bonus == 0.0
 
     def test_银灰异格_Mfg房间_不触发(self):
-        """银灰异格加成仅对 Trade 生效"""
+        """凛御银灰加成仅对 Trade 生效"""
         from steward_core.synergy import control_per_operator_bonus
 
-        silverash = _mk_op("银灰异格")
+        silverash = _mk_op("凛御银灰")
         k1 = _mk_op("崖心", group_id="karlan")
         k2 = _mk_op("讯使", group_id="karlan")
         k3 = _mk_op("角峰", group_id="karlan")
@@ -392,7 +448,7 @@ class TestC2PerOperatorBonus:
         assert bonus == 0.0
 
     def test_银灰异格不在中枢_不加成(self):
-        """中枢无银灰异格 → 加成不触发"""
+        """中枢无凛御银灰 → 加成不触发"""
         from steward_core.synergy import control_per_operator_bonus
 
         other = _mk_op("凯尔希")
