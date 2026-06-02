@@ -302,6 +302,12 @@ def _compute_self_mp_cost(
 
     扫描干员所有 skill，累加 _SELF_MP_COST 表中的修正值。
     多条技能叠加生效（如精英化前后的不同 buff）。
+
+    已知限制：对升级型技能（如火神 manu_prod_spd&limit&cost[000]→[001]）
+    会 double-count mp_cost（应为 -0.25 却得 -0.40）。
+    裁缝 trade_ord_wt&cost 则恰好正确（α+β 在游戏中叠加，不同于效率计算）。
+    正确修复需 per-prefix 豁免机制（类似 _extract_tailor_level），
+    偏离量仅 0.15-0.25，排班影响边际，暂缓处理。
     """
     op = op_lookup.get(op_name)
     if op is None:

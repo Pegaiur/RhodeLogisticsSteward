@@ -2,7 +2,6 @@
 
 from steward_core.models import LinearSegment, Operator, LayoutConfig
 from .types import FacilityLinkEntry
-from .helpers import _DEFAULT_DORM_LEVELS
 
 
 _A_FACILITY_LINK_TABLE: dict[str, FacilityLinkEntry] = {
@@ -22,10 +21,13 @@ def synergy_facility_count(
     room_type: str,
     product: str,
     layout: LayoutConfig,
-    dorm_levels: int = _DEFAULT_DORM_LEVELS,
+    dorm_levels: int | None = None,
     T: float = 12.0,
 ) -> list[LinearSegment]:
     """根据全基建设施数量/等级为当前房间提供联动加成
+
+    dorm_levels 为 None 时从 layout.rooms 中 Dormitory 房间的 level 求和计算。
+    显式传入则使用传入值（主要用于测试注入）。
 
     Returns:
         联动加成段列表，每个非零加成对应一个常数段
@@ -33,6 +35,10 @@ def synergy_facility_count(
     names = {op.name for op in operators}
     segments = []
 
+    if dorm_levels is None:
+        dorm_levels = sum(
+            r.level for r in layout.rooms if r.room_type == "Dormitory"
+        )
     trade_count = sum(1 for r in layout.rooms if r.room_type == "Trade")
     meeting_level = sum(
         r.level for r in layout.rooms if r.room_type == "Reception"

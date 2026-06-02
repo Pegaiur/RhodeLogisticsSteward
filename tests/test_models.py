@@ -9,17 +9,20 @@ import pytest
 from steward_core.models import EfficiencyMap, LinearSegment, Operator, Skill
 
 
-def _mk_op(name: str = "测试干员", skills: list[Skill] | None = None) -> Operator:
-    return Operator(char_id=name, name=name, skills=skills or [])
+def _mk_op(name: str = "测试干员", skills: list[Skill] | None = None,
+           elite_phase: int = 2) -> Operator:
+    return Operator(char_id=name, name=name, skills=skills or [], elite_phase=elite_phase)
 
 
-def _mk_skill(room_type: str, efficient: dict[str, float], buff_id: str = "test_buff") -> Skill:
+def _mk_skill(room_type: str, efficient: dict[str, float], buff_id: str = "test_buff",
+              phase: int = 0) -> Skill:
     return Skill(
         buff_id=buff_id,
         buff_name="测试技能",
         skill_icon=f"test_{buff_id}",
         room_type=room_type,
         efficient=EfficiencyMap(raw=efficient),
+        phase=phase,
     )
 
 
@@ -176,3 +179,122 @@ class TestLinearSegmentHelpers:
 
         # Assert
         assert pytest.approx(val) == seg.integrate()
+
+
+# ─── active_skills_for 升级/共存判定 ─────────────────────────────
+
+class TestActiveSkillsFor:
+    """Operator.active_skills_for — 同前缀升级去重、异前缀共存"""
+
+    def test_同前缀不同phase_取最高phase(self):
+        """同前缀 buffId，phase 0→2 升级链，仅保留 phase 2"""
+        # Arrange: 迷迭香: bd_n1[000](phase 0) + bd[000](phase 0) + bd[010](phase 2)
+        bd_n1 = _mk_skill("Mfg", {"all": 0.0}, buff_id="manu_prod_spd_bd_n1[000]", phase=0)
+        bd_alpha = _mk_skill("Mfg", {"all": 0.0}, buff_id="manu_prod_spd_bd[000]", phase=0)
+        bd_beta = _mk_skill("Mfg", {"all": 0.0}, buff_id="manu_prod_spd_bd[010]", phase=2)
+        op = _mk_op("迷迭香", skills=[bd_n1, bd_alpha, bd_beta])
+
+        # Act
+        active = op.active_skills_for("Mfg")
+
+        # Assert: bd_n1 不同前缀共存 + bd 组内取 bd_beta
+        assert len(active) == 2
+        buff_ids = {sk.buff_id for sk in active}
+        assert "manu_prod_spd_bd_n1[000]" in buff_ids
+        assert "manu_prod_spd_bd[010]" in buff_ids
+        assert "manu_prod_spd_bd[000]" not in buff_ids
+
+    def test_异前缀_全部保留(self):
+        """不同前缀技能全部共存"""
+        # Arrange: 德克萨斯: spd&cost_P + limit&cost_P
+        sk1 = _mk_skill("Trade", {"all": 65.0}, buff_id="trade_ord_spd&cost_P[000]", phase=0)
+        sk2 = _mk_skill("Trade", {"all": 0.0}, buff_id="trade_ord_limit&cost_P[010]", phase=2)
+        op = _mk_op("德克萨斯", skills=[sk1, sk2])
+
+        # Act
+        active = op.active_skills_for("Trade")
+
+        # Assert: 两个都保留
+        assert len(active) == 2
+        buff_ids = {sk.buff_id for sk in active}
+        assert "trade_ord_spd&cost_P[000]" in buff_ids
+        assert "trade_ord_limit&cost_P[010]" in buff_ids
+
+    def test_同前缀同phase取效率高者(self):
+        """同前缀且 phase 相同，取效率值更高的"""
+        # Arrange
+        sk_weak = _mk_skill("Trade", {"all": 15.0}, buff_id="trade_ord_spd[010]", phase=0)
+        sk_strong = _mk_skill("Trade", {"all": 25.0}, buff_id="trade_ord_spd[011]", phase=0)
+        op = _mk_op("测试", skills=[sk_weak, sk_strong])
+
+        # Act
+        active = op.active_skills_for("Trade")
+
+        # Assert: 仅保留效率高的
+        assert len(active) == 1
+        assert active[0].buff_id == "trade_ord_spd[011]"
+        assert active[0].efficient.max_value() == 25.0
+
+    def test_裁缝同前缀仍走升级去重_豁免由调用方负责(self):
+        """裁缝 trade_ord_wt&cost 在 active_skills_for 层面仍升级去重
+
+        裁缝是已知豁免：α+β 在游戏中共存叠加。
+        但 active_skills_for 不做特殊处理——豁免由调用方 (_extract_tailor_level)
+        使用 raw op.skills 实现。
+        """
+        # Arrange
+        tailor_a = _mk_skill("Trade", {"all": 0.0}, buff_id="trade_ord_wt&cost[000]", phase=0)
+        tailor_b = _mk_skill("Trade", {"all": 0.0}, buff_id="trade_ord_wt&cost[010]", phase=2)
+        op = _mk_op("柏喙", skills=[tailor_a, tailor_b])
+
+        # Act
+        active = op.active_skills_for("Trade")
+
+        # Assert: 按通用规则，同前缀升级去重 → 仅保留 β
+        assert len(active) == 1
+        assert active[0].buff_id == "trade_ord_wt&cost[010]"
+
+    def test_elite_phase过滤_仅保留已解锁技能(self):
+        """Operator.elite_phase=1 时，phase=2 的技能被过滤"""
+        # Arrange
+        sk_e0 = _mk_skill("Mfg", {"all": 15.0}, buff_id="manu_prod_spd[001]", phase=0)
+        sk_e2 = _mk_skill("Mfg", {"all": 25.0}, buff_id="manu_prod_spd[011]", phase=2)
+        op = _mk_op("赫默", skills=[sk_e0, sk_e2], elite_phase=1)
+
+        # Act
+        active = op.active_skills_for("Mfg")
+
+        # Assert: 仅 phase 0 可用
+        assert len(active) == 1
+        assert active[0].buff_id == "manu_prod_spd[001]"
+
+    def test_elite_phase等于2_全部技能可用(self):
+        """Operator.elite_phase=2 时，phase 0/1/2 均可用"""
+        # Arrange
+        sk0 = _mk_skill("Mfg", {"all": 10.0}, buff_id="manu_prod_spd[000]", phase=0)
+        sk2 = _mk_skill("Mfg", {"all": 30.0}, buff_id="manu_prod_spd[010]", phase=2)
+        op = _mk_op("测试", skills=[sk0, sk2], elite_phase=2)
+
+        # Act
+        active = op.active_skills_for("Mfg")
+
+        # Assert: phase 2 生效（同前缀升级）
+        assert len(active) == 1
+        assert active[0].buff_id == "manu_prod_spd[010]"
+
+    def test_不同roomType不互相干扰(self):
+        """Mfg 技能不受 Trade 技能迭代影响"""
+        # Arrange
+        mfg_sk = _mk_skill("Mfg", {"all": 25}, buff_id="manu_prod_spd[011]", phase=2)
+        trade_sk = _mk_skill("Trade", {"all": 20}, buff_id="trade_ord_spd[000]", phase=0)
+        op = _mk_op("测试", skills=[mfg_sk, trade_sk])
+
+        # Act
+        mfg_active = op.active_skills_for("Mfg")
+        trade_active = op.active_skills_for("Trade")
+
+        # Assert
+        assert len(mfg_active) == 1
+        assert mfg_active[0].buff_id == "manu_prod_spd[011]"
+        assert len(trade_active) == 1
+        assert trade_active[0].buff_id == "trade_ord_spd[000]"

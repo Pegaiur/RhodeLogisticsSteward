@@ -369,16 +369,17 @@ class TestComputeTradeOrderLimit:
         assert ctx.contributions.get("多面逢源") == 3
 
     def test_贝洛内加伺夜_加2(self):
-        """贝洛内 + 伺夜同房 → +2"""
+        """贝洛内 + 伺夜同房 → +2（表驱动，需 buff 存在）"""
         from steward_core.synergy.trade_linkages import compute_trade_order_limit
 
         bellone = _mk_op("贝洛内")
+        bellone.skills.append(_mk_skill("trade_ord_limit&cost_P[020]", "Trade", "未偿还的债务"))
         siye = _mk_op("伺夜")
         ctx = compute_trade_order_limit(
             [bellone, siye], self._mk_trade_layout(), [],
         )
         assert ctx.total == 12
-        assert ctx.contributions.get("贝洛内+伺夜") == 2
+        assert ctx.contributions.get("未偿还的债务") == 2
 
     def test_灵知中枢_1喀兰贸易_加6(self):
         """灵知在中枢 + 1名谢拉格在Trade → +6"""
@@ -601,7 +602,7 @@ class TestDegenbrecherOrderLimit:
         degen.skills.append(_mk_skill("trade_ord_spd_variable3[000]", "Trade", "冠军风采"))
         ctx = OrderLimitContext()
         ctx.add("谈判", 5)
-        ctx.add("贝洛内+伺夜", 2)
+        ctx.add("未偿还的债务", 2)
         # total=27, floor(27/5)=5, 5×25=125, cap=100
         for i in range(10):
             ctx.add(f"buf{i}", 1)

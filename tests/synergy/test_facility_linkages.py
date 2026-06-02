@@ -76,8 +76,8 @@ class TestSynergyFacilityCount:
         kongxian = _mk_op("空弦")
         layout = LayoutConfig(rooms=[])
 
-        # Act: dorm_levels 默认 20 (4×Lv5)
-        segs = synergy_facility_count([kongxian], "Trade", "Money", layout, T=12.0)
+        # Act: 显式传入 dorm_levels=20 (4×Lv5)
+        segs = synergy_facility_count([kongxian], "Trade", "Money", layout, dorm_levels=20, T=12.0)
 
         # Assert: +40%
         assert len(segs) == 1
@@ -163,8 +163,8 @@ class TestSynergyFacilityCount:
         narentuya = _mk_op("娜仁图亚")
         layout = LayoutConfig(rooms=[])
 
-        # Act: dorm_levels 默认 20 (4×Lv5)
-        segs = synergy_facility_count([narentuya], "Mfg", "PureGold", layout, T=12.0)
+        # Act: 显式传入 dorm_levels=20 (4×Lv5)
+        segs = synergy_facility_count([narentuya], "Mfg", "PureGold", layout, dorm_levels=20, T=12.0)
 
         # Assert: +20%
         assert len(segs) == 1

@@ -73,6 +73,8 @@ _ORDER_LIMIT_TABLE: dict[str, OrderLimitEntry] = {
     "trade_ord_spd&limit[010]":    OrderLimitEntry("供应管理", 1),
     "trade_ord_spd&limit[020]":    OrderLimitEntry("喀兰贸易·α", 2),
     "trade_ord_spd&limit[022]":    OrderLimitEntry("喀兰之主", 4),
+    "trade_ord_spd&limit[036]":    OrderLimitEntry("半身人公会代表", 1),
+    "trade_ord_limit&cost_P[020]": OrderLimitEntry("未偿还的债务", 2, requires="伺夜"),
 }
 """订单上限贡献表
 
@@ -182,9 +184,7 @@ def _collect_mechs(
     """
     mechs: set[str] = set()
     for op in operators:
-        for sk in op.skills:
-            if sk.room_type != "Trade":
-                continue
+        for sk in op.active_skills_for("Trade"):
             mech = table.get(sk.buff_id)
             if mech:
                 mechs.add(mech)
@@ -328,9 +328,6 @@ def compute_trade_order_limit(
                 value *= trade_level
             ctx.add(entry.source, value)
 
-    if "贝洛内" in names and "伺夜" in names:
-        ctx.add("贝洛内+伺夜", 2)
-
     if control_operators:
         from .control_linkages import _CONTROL_TRADE_LIMIT_TABLE
         ctrl_names = {op.name for op in control_operators}
@@ -423,9 +420,7 @@ def synergy_trade_share(
         return []
     bonus = 0.0
     for op in operators:
-        for sk in op.skills:
-            if sk.room_type != "Trade":
-                continue
+        for sk in op.active_skills_for("Trade"):
             entry = _TRADE_SHARE_TABLE.get(sk.buff_id)
             if entry is not None:
                 bonus += (len(operators) - 1) * entry.bonus_per_worker

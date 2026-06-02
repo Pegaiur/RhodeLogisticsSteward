@@ -81,14 +81,32 @@ trade_ord_spd&tag[010] → 前缀 trade_ord_spd&tag
 ### 实现
 
 - `Operator.active_skills_for(room_type)` — 位于 [models.py](file:///d:/Dev/RhodeLogisticsSteward/steward_core/models.py)，按上述规则返回实际生效的技能列表
-- `_buff_id_prefix(buff_id)` — 提取前缀的辅助函数
-- 所有遍历 `op.skills` 的联动函数已统一改为遍历 `op.active_skills_for(room_type)`，防止升级关系被当作共存重复计算
+- `_buff_id_prefix(buff_id)` — 提取前缀的辅助函数（`re.sub(r"\[\d+\]$", "", buff_id)`）
+- **效率累加类联动函数（7 处）**已改为遍历 `op.active_skills_for(room_type)`，防止升级关系被当作共存重复计算：
+  - `synergy_capacity_to_eff`（mfg_linkages.py）— 仓库容量去重
+  - `compute_trade_order_limit`、`synergy_trade_efficiency_amplifier`、`synergy_trade_conditional_eff`、`synergy_trade_gold_lines`、`compute_trade_share`（trade_linkages.py）— 各类贸易联动去重
+  - `_collect_mechs`（trade_linkages.py）— 一致性修复（集合语义，无实际数值影响）
+- **以下站点保留原始 `op.skills` 遍历且正确**：
+  - `classification.py` / `buff_pool.py` / `conflicts.py` / `facility_linkages.py` / `control_linkages.py` — 布尔检测 / buffId 精确匹配，不涉及数值累加
+  - `mood_flow.py` / `dorm_recovery.py` — 心情/宿舍类技能几乎无同前缀升级模式，保留原始遍历
+  - `production.py` `_extract_tailor_level` — 见下方"已知豁免"
+
+### 已知豁免
+
+**裁缝/手工艺品系列（`trade_ord_wt&cost`）是同前缀=升级规则的唯一确认反例**：
+
+- `trade_ord_wt&cost[000]`（裁缝·α, phase=0）与 `trade_ord_wt&cost[010]`（裁缝·β, phase=2）共享前缀
+- 游戏实际机制：α 级小幅提升 + β 级大幅概率提升**叠加共存**（裁缝等级 3），而非 β 覆盖 α
+- 涉及干员：柏喙、明椒、卡夫卡、折光
+- 豁免方式：`_extract_tailor_level`（production.py）使用 raw `op.skills` 遍历，不经过 `active_skills_for`
+- **任何未来重构不得将 `_extract_tailor_level` 改为 `active_skills_for`**，否则裁缝等级将从 3 退化为 2
 
 ### 设计的非完美因素
 
 1. **规则仅对 `character_identity.json` 中同一干员的多 skills 做组内去重**：不同干员间的同名技能线（如帕拉斯 α + 柏喙 β）各自独立，由各联动表自行处理
 2. **依赖 `elite_phase`**：当前由 rarity 推导（rarity≤1→E0, rarity=2→E1, rarity≥3→E2），未来改用 MAA 扫描的实际练度数据后无需额外改动
 3. **前缀提取基于严格的 `[NNN]` 后缀解析**：所有 727 个 buffId 均遵循此格式，无例外
+4. **mood_flow.py 的心情消耗累加（`_compute_self_mp_cost`）独立于此方案**：该函数直接累加 buffId 对应的 mp_cost 值，对升级型技能（如火神工匠精神 α+β）存在 double-count 预存 bug，但对裁缝（α+β 应叠加）恰好正确。两种需求矛盾，需独立方案处理
 
 ---
 

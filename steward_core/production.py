@@ -68,6 +68,10 @@ def _extract_tailor_level(ops: list[Operator]) -> int:
 
     buff_id 格式为 trade_ord_wt&cost[ABC]，B=0表示α级，B=1表示β级。
 
+    注意：此处**必须**使用 raw op.skills 遍历，不能替换为 active_skills_for。
+    裁缝是 buffId 前缀升级规则的唯一确认豁免——α 和 β 在游戏中共存叠加，
+    而非 β 覆盖 α。详见 docs/synergy-systems.md §技能升级与共存判定·已知豁免。
+
     Returns:
         0: 无裁缝
         1: 仅α（一个或多个）
