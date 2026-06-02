@@ -53,7 +53,7 @@
 - `recovery_rate` 受类型 5b 技能修正（宿舍 buff、中枢全局宿舍加成）
 - 菲亚梅塔自律：`recovery_rate = 2.0/h`，不依赖他人
 
-**关键区分**：`pool_hard` 是可持续性的硬约束（干员心情不能退化），λ 影子乘子对此约束进行经济性惩罚（§8.5）。`pool_max` 中的恢复部分是独立资源，由 Phase D 宿舍分配竞争，通过 `+ recovery × λ × hours` 独立估值——**不纳入 λ 的池容检查**，避免"假设所有干员都能获得宿舍恢复"的过度乐观。
+**关键区分**：`pool_hard` 是可持续性的硬约束（干员心情不能退化）。效率截断 (`evaluate_room` t_red) 和 `mood_is_viable` 硬卡口共同保障此约束——低 mood combo 自动打折，极低 mood 直接阻止。宿舍恢复是独立资源（由 Phase D 宿舍分配竞争），不纳入 pool_hard 计算。
 
 干员将工作时长分配到具体槽位。分配后，该槽位的 `effective_hours = 分配的时长`。
 
@@ -208,9 +208,7 @@ pool_hard[op] = mood_full / mood_burn
   recovery_modifiers = control_recovery + yanhuo_recovery + mlynar_spread
 ```
 
-**含义**：单干员在排班周期内的可持续工作小时数上限。超过此值，干员心情将退化至无法在下个周期正常启动。此为**硬约束**——多窗口求解中，λ 影子乘子将此硬约束转化为经济信号（§8.5），使 contribution 评分中自动惩罚超池行为。
-
-**注意**：宿舍恢复是独立资源（由 Phase D 宿舍分配竞争），**不纳入 pool_hard 计算**——避免"假设所有干员都能获得宿舍恢复"的过度乐观。宿舍恢复的价值由 §8.5 的 `+ recovery_rate × λ × hours` 独立估值。
+**含义**：单干员在排班周期内的可持续工作小时数上限。超过此值，干员心情将退化至无法在下个周期正常启动。此为**硬约束**——多窗口求解中，通过效率截断 (`evaluate_room` t_red) 将 mood 不足的 combo 自动打折，`mood_is_viable` 硬卡口阻止极低 mood 干员上工。宿舍恢复的价值由 `mood_deficit × recovery_rate × eff_weight` 独立估值，通过 Phase D 贪心竞争分配。
 
 ### 3.2 时长修正技能
 
@@ -242,10 +240,10 @@ pool_hard[op] = mood_full / mood_burn
 
 窗口边界只是**重新布置槽位的选择权**——求解器可以在此处改变干员→槽位的映射，也可以保持不变。选择权越多（窗口越多），解空间越大，但理论上限不变。
 
-> **"窗口模型"是本文档定义的求解框架**。基于该框架的 Phase A→D 贪心 + λ bisection
-> 跨期约束构成当前求解器（`solver/slot/solver.py`）的实现骨架。
+> **"窗口模型"是本文档定义的求解框架**。基于该框架的 Phase A→D 贪心 + mood 驱动恢复
+> 构成当前求解器（`solver/slot/solver.py`）的实现骨架。
 > [机会成本补充覆盖方案](./opportunity-cost-supplement.md) 在此骨架之上叠加正交维度
-> （组合级归零机会成本、跨窗口 λ_mood + swap_cost），不替换骨架本身。
+> （组合级归零机会成本），不替换骨架本身。
 
 ### 3.4 宿舍恢复：时长池的补充
 
@@ -382,8 +380,8 @@ pool_hard[op] = mood_full / mood_burn
 
 ## 8. 决策过程推导
 
-> **实现路线**：§8.5 的混合策略（Mfg/Trade 穷举 + Control/Dorm contribution 贪心 +
-> λ bisection）已实施于 `solver/slot/solver.py`。V1 SlotIterationStrategy →
+> **实现路线**：§8.5 的混合策略（Mfg/Trade 穷举 + Control/Dorm contribution 贪心）
+> 已实施于 `solver/slot/solver.py`。V1 SlotIterationStrategy →
 > V2 SlotSolver 的演进记录见 `archive/slot-iteration-record.md`。
 > Phase 1 归零机会成本（whisper/automation/zeroing）见 [opportunity.py](../steward_core/solver/slot/opportunity.py)。
 
@@ -477,27 +475,17 @@ D[d] = ∂P / ∂S[d]
 
 **混合策略**：在组合爆炸可接受的范围（Mfg/Trade 的 C(n,3) ≤ 1140 组合）保留穷举 + 完整联动求值；在组合爆炸不可接受的范围（Control/Power/Office/Reception/Dormitory 的全局分配）用偏导数迭代传导。
 
-#### 可持续性约束与 λ 影子乘子
+#### 可持续性保障
 
-跨周期可持续性（约束基线 H6）是多班次排班的核心硬约束：
+跨周期可持续性（约束基线 H6）通过三层机制直接保障，无需影子乘子：
 
-```
-对每名干员 op:
-  Σ_w hours_used(op, w) × mood_burn ≤ mood_full
-  ⇔ Σ_w hours_used(op, w) ≤ mood_full / mood_burn = pool_hard[op]
-```
+| 层 | 机制 | 位置 |
+|----|------|------|
+| 效率截断 | `evaluate_room` t_red：低 mood combo 效率自动打折 | `efficiency_fn.py` |
+| 硬卡口 | `mood_is_viable`：mood < 1.0 禁止上工 | `context.py` |
+| 恢复激励 | mood-driven dorm scoring：`mood_deficit × recovery_rate × eff_weight` 驱动宿舍分配 | `contribution.py` |
 
-λ 是此约束的影子乘子（shadow multiplier），通过离散 bisection 将硬约束转化为经济信号：
-
-| 机制 | 说明 |
-|------|------|
-| λ 更新 | 每轮迭代后：`hours_used > pool_hard` → λ 翻倍（收紧）；`hours_used ≤ pool_hard` 且 λ>0 → λ 减半（释放）。λ 跨迭代保持，逐步收敛 |
-| λ 惩罚 | contribution 中 `- λ[op] × hours`——超池干员在所有设施中被压低评分，迭代中被替代 |
-| λ 奖励 | dorm contribution 中 `+ recovery_rate × hours × λ`——λ 越高，恢复越值钱，宿舍干员获得更高优先级 |
-| λ 锚定 | `λ_k = median(base_rate × efficiency × unit_value / window_hours)`——取 Phase A/B 已分配槽位的每小时边际 LMD 等值，保证 λ 与 contribution 同一量纲 |
-| 收敛 | λ 的离散 bisection 保证 O(log₂(值域/粒度)) 步收敛。λ≈0 时约束全部满足，迭代终止 |
-
-**注意**：宿舍恢复是独立资源（由 Phase D 宿舍分配竞争），不纳入 pool_hard 计算。pool_hard 仅由心情续航决定——避免"假设所有干员都能获得宿舍恢复"的过度乐观。
+宿舍恢复是独立资源（由 Phase D 宿舍分配竞争），不纳入 pool_hard 计算。
 
 #### 迭代框架
 
@@ -505,7 +493,6 @@ D[d] = ∂P / ∂S[d]
 初始化: A₀[w] = BaselineStrategy 结果逐窗口展平（热启动，默认）或 S₀_max 冷启动（见 §8.7）
         S₀[w] = G(A₀[w])
         D₀[w][d] = δP/δS[w]|_{S=S₀, A=A₀}
-        λ₀[op] = 0  （初始时长池充裕假设）
 
 循环 k (状态不动点迭代):
   对每个窗口 w ∈ [1..W]:
@@ -536,7 +523,6 @@ D[d] = ∂P / ∂S[d]
       contribution(op, w) = Σ(写入 S[w][d] × D_k[w][d])         ← 类型 2 状态写入
                           + 类型 3 全局注入 × 受影响槽位数
                           + 类型 5a burn 修正 × 工作时长等值
-                          - λ_k[op] × window_hours[w]           ← 工作时长池约束
     对每个 Control 槽位，选 contribution 最高 → 写入 A_{k+1}[w]
 
     > **设计决策：类型 3 全局注入的后置求值**。Phase C 在 Phase A/B 之后执行，"受影响槽位数"
@@ -555,44 +541,32 @@ D[d] = ∂P / ∂S[d]
       contribution(op, w) = Σ(写入S[w][d] × D_k[w][d])              ← 类型 2
                           + power_eff × drone_to_mfg_ratio           ← 类型 7，§1.4
                           × mfg_base_rate_avg ÷ xp_lmd_ratio         ← LMD等值
-                          - λ_k[op] × window_hours[w]               ← 时长池约束
 
     **Reception**:
       contribution(op, w) = Σ(写入S[w][d] × D_k[w][d])              ← 类型 2
                           + reception_eff × reception_to_mfg_ratio   ← §1.4
                           × mfg_base_rate_avg ÷ xp_lmd_ratio         ← LMD等值
-                          - λ_k[op] × window_hours[w]
 
     **Office**:
       contribution(op, w) = Σ(写入S[w][d] × D_k[w][d])              ← 类型 2
                           + office_eff × office_to_mfg_ratio         ← §1.4
                           × mfg_base_rate_avg ÷ xp_lmd_ratio         ← LMD等值
-                          - λ_k[op] × window_hours[w]
 
     **Dormitory**:
       contribution(op, w) = Σ(写入S[w][d] × D_k[w][d])              ← 类型 2
-                          + recovery_rate × window_hours[w] × λ_k   ← 类型 5b
-                          - λ_k[op] × window_hours[w]               ← 时长池约束
+                          + mood_deficit × recovery_rate × eff_weight ← mood-driven 恢复
 
     参数默认值（工程常量，用户可覆写）:
       reception_to_mfg_ratio  = 0.10      ← 1% Reception ≡ 0.1% Mfg 单槽
       office_to_mfg_ratio     = 1.10      ← 1% Office ≡ 1.1% Mfg 单槽
       xp_lmd_ratio            = 1.3(243) / 1.0(153)
       drone_to_mfg_ratio      = 0.5       ← 1% Power ≡ 0.5% Mfg 单槽，§1.4
-      λ_k                     = median(base_rate × efficiency × unit_value / window_hours[w])
-                                （当前轮 Phase A/B 已分配槽位的每小时边际 LMD 等值）
 
     选 contribution 最高 → 写入 A_{k+1}[w]
 
   ― Step 更新: 从 A_{k+1}[w] 计算新状态和偏导数 ―
   S_{k+1}[w] = G(A_{k+1}[w])
   D_{k+1}[w][d] = δP/δS[w]|_{S=S_{k+1}, A=A_{k+1}}
-
-  ― λ 更新: 影子乘子（离散 bisection） ——
-  检查 Σ_w hours_used(op, w) ≤ pool_hard[op]（可持续性约束，见上文）:
-    若违反: λ ← λ × 2  （若 λ=0 则设初始步长 hourly_value × 0.25）
-    若满足且 λ > 0: λ ← λ / 2
-  λ 跨迭代保持，O(log₂(值域/粒度)) 步收敛。
 
   ― 记忆与收敛检查 ―
   V_{k+1} = V_k ∪ {A_k}                                  ← 记录已访问状态
@@ -666,7 +640,7 @@ N(A) = ∪_{w, phase} { A' | A' 与 A 仅在窗口 w 的 phase 内不同，使�
 | Power | ≤8 | — | 纯 drone 贡献，无跨槽位互补 |
 | Office | ≤5 | — | 单槽位 |
 | Reception | ≤6 | — | 单槽位 |
-| Dormitory | ≤30 | — | 4 间各 5 槽，状态写入 vs 恢复 buff 通过 D 和 λ 权衡，组合搜索无收益 |
+| Dormitory | ≤30 | — | 4 间各 5 槽，状态写入 vs 恢复 buff 通过 D 和 mood-driven scoring 权衡 |
 
 #### 为什么不需要供过于求/供不应求的价格调整
 
@@ -781,7 +755,7 @@ S₀_max 冷启动（§8.7）的 D₀ 基于"所有类型 2 写入者均在场"�
 | 类型 2（状态写入） | 通过 D[d] 估值 + S₀_max 冷启动 |
 | 类型 3（全局注入/规则修正） | 直接计入 contribution 或 evaluate_room；per-operator 规则在 contribution 阶段用当前分配近似 |
 | 类型 4（屏蔽） | 在 Mfg 效果组穷举中精确处理 |
-| 类型 5（心情修正） | work_burn 通过工作时长等值计入，dorm_recovery 通过 λ 权衡 |
+| 类型 5（心情修正） | work_burn 通过工作时长等值计入，dorm_recovery 通过 mood_deficit × eff_weight 权衡 |
 | 类型 6（订单参数） | 在 Trade 效果组穷举中精确处理 |
 | 类型 7（无人机） | drone 等值计入 contribution，经验书锚定 |
 | Office 直接效率 | 通过凭证→理智→关卡链折算为等效 Mfg 效率（§1.4），参数化 |
@@ -840,5 +814,5 @@ H1-H2 由游戏系统保证（有限干员池/槽位），H3-H4 为建模假设�
 - **解质量**：SlotSolver 在所有数据集上不低于 BaselineStrategy，典型场景
   积分反超 +1,356 LMD 等值（详见 `archive/slot-iteration-record.md` 第四期验收）
 - **E2E 测试**：`tests/solver/slot/` 下 12 个测试模块，覆盖 context/mfg/trade/control/
-  contribution/partials/opportunity/solver/strategy/lambda_k/phases/lambda_shadow
+  contribution/partials/opportunity/solver/strategy/phases/no_lambda
 - **回归**：全量 567 测试零回归
