@@ -198,6 +198,10 @@ def synergy_token_prod(
 
 _RAMPING_SKILL_TABLE: dict[str, tuple[float, float, float]] = {
     "manu_prod_spd_addition[100]": (0.0, 2.0, 20.0),  # 例行清扫: 0→20%@2%/h
+    "manu_prod_spd_addition[030]": (20.0, 1.0, 25.0),  # 急性子: 20→25%@1%/h
+    "manu_prod_spd_addition[031]": (20.0, 1.0, 25.0),  # "等不及": 20→25%@1%/h
+    "manu_prod_spd_addition[040]": (15.0, 2.0, 25.0),  # 慢性子: 15→25%@2%/h
+    "manu_prod_spd_addition[041]": (15.0, 2.0, 25.0),  # 延时摄影: 15→25%@2%/h
 }
 
 

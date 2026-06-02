@@ -58,7 +58,7 @@ def ramping_efficiency(
     t_initial: float = 0.0,
     mood_initial: float = 24.0,
 ) -> list[LinearSegment]:
-    """时变效率技能 → 分段表示（7 条 buff）
+    """时变效率技能 → 分段表示（5 条 manu_prod_spd_addition[*] + 发电站爬升预留）
 
     k0: 首小时效率值
     r: 每小时增量（百分值/h）
