@@ -117,7 +117,7 @@ def phase_trade(
     power_modifier_names = {
         op.name for op in ctx.operators if _has_power_count_modifier(op)
     }
-    effective_power = BASE_POWER_COUNT + len(
+    effective_power = (params.base_power_count if params else BASE_POWER_COUNT) + len(
         power_modifier_names - assigned_names
     )
 

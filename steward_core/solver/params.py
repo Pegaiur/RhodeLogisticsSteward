@@ -24,6 +24,10 @@ class SolverParams:
     """班次时长（小时），默认 12h"""
 
     # === 设施布局（243 默认值） ===
+    base_power_count: int = 3
+    """基础发电站数（243 布局默认 3 间）。
+    可通过外部 JSON 覆盖以适配 252/153 等布局。
+    最终有效发电站数 = base_power_count + 技能发电站增量（如承曦格雷伊）。"""
     control_max_slots: int = 5
     """中枢最大工位"""
     dorm_room_count: int = 4
@@ -166,6 +170,8 @@ class SolverParams:
             errors.append("shift_hours 必须 > 0")
         if self.control_max_slots < 1:
             errors.append("control_max_slots 必须 >= 1")
+        if self.base_power_count < 1 or self.base_power_count > 5:
+            errors.append("base_power_count 必须在 [1, 5] 范围内")
         if self.combo_upper_bound_threshold < 0 or self.combo_upper_bound_threshold > 1:
             errors.append("combo_upper_bound_threshold 必须在 [0, 1] 区间")
         if self.local_search_max_rounds < 1:
@@ -196,6 +202,7 @@ class SolverParams:
             f"  心情: 消耗率 {self.base_burn_rate3:.2f} (3人), "
             f"满 {self.mood_full:.0f}h, 工作阈值 {self.mood_work_threshold:.1f}h",
             f"  设施: 中枢 {self.control_max_slots}槽, "
+            f"发电 {self.base_power_count}间, "
             f"宿舍 {self.dorm_room_count}x{self.dorm_room_size}=Lv{self.dorm_levels_sum}",
             f"  外部: 日常任务 {self.daily_task_lmd:,.0f} LMD/天",
         ]

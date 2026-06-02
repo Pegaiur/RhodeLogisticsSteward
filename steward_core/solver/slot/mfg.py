@@ -69,7 +69,7 @@ def phase_mfg(
     mood_threshold = params.mood_work_threshold if params else 0.0
 
     for product, count in [("CombatRecord", 2), ("PureGold", 2)]:
-        effective_power = BASE_POWER_COUNT + len(
+        effective_power = (params.base_power_count if params else BASE_POWER_COUNT) + len(
             power_modifier_names - assigned_names
         )
 

@@ -170,7 +170,15 @@ def _estimate_total_production(
     hours = params.shift_hours if params else 12.0
     suich_count = params.suich_count if params else 5
     dorm_level = params.dorm_level if params else 5
+    base_power = params.base_power_count if params else 3
     layout = ctx.layout if ctx.layout else LayoutConfig.layout_243()
+
+    from steward_core.synergy.facility_linkages import _has_power_count_modifier
+
+    power_modifier_count = sum(
+        1 for op in ctx.operators if _has_power_count_modifier(op)
+    )
+    effective_power = base_power + power_modifier_count
 
     for w in range(ctx.num_windows):
         ctrl_names = ctx.ops_of_type(w, "Control")
@@ -220,7 +228,7 @@ def _estimate_total_production(
                 )
                 score = evaluate_room(
                     room_ops, a.facility_type, a.product,
-                    3, hours, global_bonus, pool,
+                    effective_power, hours, global_bonus, pool,
                     ctrl_per_op_bonus=ctrl_bonus,
                     all_operators=ctx.operators,
                     control_operators=ctrl_ops,
