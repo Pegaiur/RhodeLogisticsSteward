@@ -17,7 +17,7 @@ from steward_core.data_loader import load_operators_v2
 from steward_core.output import save_json
 from steward_core.solver.params import SolverParams
 from steward_core.pipeline import run as run_pipeline
-from steward_core.report import format_report
+from steward_core.report import save_report_md
 
 
 def _parse_cli():
@@ -101,8 +101,8 @@ def main():
     else:
         opath = ""
 
-    report = format_report(pipe, output_path=opath, brief=brief_mode)
-    print(report)
+    report = save_report_md(pipe, output_path=opath, brief=brief_mode)
+    print(f"  [报告] {report}")
 
 
 if __name__ == "__main__":

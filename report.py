@@ -16,7 +16,7 @@ sys.path.insert(0, str(Path(__file__).parent))
 from steward_core.data_loader import load_operators_v2
 from steward_core.solver.params import SolverParams
 from steward_core.pipeline import run as run_pipeline
-from steward_core.report import format_report
+from steward_core.report import save_report_md
 
 
 def main():
@@ -33,8 +33,8 @@ def main():
     print(f"  [求解] SlotStrategy, {shifts}x{hours:.0f}h...")
     pipe = run_pipeline(ops, params)
 
-    report = format_report(pipe, output_path="", brief=False)
-    print(report)
+    filepath = save_report_md(pipe, output_path="", brief=False)
+    print(f"  [报告] {filepath}")
 
 
 if __name__ == "__main__":

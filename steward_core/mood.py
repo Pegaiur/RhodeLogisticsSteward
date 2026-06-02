@@ -27,6 +27,10 @@ class RoomMood:
     base_burn: float = 0.0
     net_burn: float = 0.0
     remaining_after_shift: float = 24.0
+    operator_initial: dict[str, float] = field(default_factory=dict)
+    """每人班次前心情值"""
+    operator_remaining: dict[str, float] = field(default_factory=dict)
+    """每人班次后剩余心情值"""
     is_red_face: bool = False
 
     def status(self) -> str:
@@ -52,17 +56,30 @@ class MoodReport:
 
     def summary(self) -> str:
         lines = [
-            f"控制中枢: {self.control_operators} → 全局减免 {self.control_bonus:.2f}/时",
+            f"控制中枢: {self.control_operators} -> 全局减免 {self.control_bonus:.2f}/时",
             f"班次时长: {self.shift_hours:.0f}h",
         ]
         for room in self.rooms:
             ops_str = ", ".join(room.operators)
-            lines.append(
-                f"  {room.room_type}[{room.room_index}]: "
-                f"{ops_str}"
-                f" → 净消耗={room.net_burn:.2f}/时, "
-                f"剩余={room.remaining_after_shift:.1f} ({room.status()})"
-            )
+            if room.operator_remaining:
+                indiv = ", ".join(
+                    f"{n}={room.operator_remaining[n]:.1f}"
+                    for n in room.operators
+                    if n in room.operator_remaining
+                )
+                lines.append(
+                    f"  {room.room_type}[{room.room_index}]: "
+                    f"{ops_str}"
+                    f" -> 净消耗={room.net_burn:.2f}/时, "
+                    f"剩余: {indiv} ({room.status()})"
+                )
+            else:
+                lines.append(
+                    f"  {room.room_type}[{room.room_index}]: "
+                    f"{ops_str}"
+                    f" -> 净消耗={room.net_burn:.2f}/时, "
+                    f"剩余={room.remaining_after_shift:.1f} ({room.status()})"
+                )
         lines.append(
             f"结果: 红脸{self.red_face_count}间"
         )
@@ -89,6 +106,7 @@ def calculate(
     *,
     base_burn_per_hour: float = 1.0,
     control_recovery_per_op: float = 0.05,
+    initial_moods: dict[str, float] | None = None,
 ) -> MoodReport:
     """计算班次心情消耗
 
@@ -96,8 +114,13 @@ def calculate(
         plan: 排班计划
         operators: 全量干员池
         shift_hours: 班次时长 (默认 24h)
+        base_burn_per_hour: 单干员基础消耗率
+        control_recovery_per_op: 每中枢干员减免量
+        initial_moods: 每人班次前心情值，缺省按满心情 24.0 计
     """
     op_lookup = _operator_lookup(operators)
+    if initial_moods is None:
+        initial_moods = {}
 
     # 1. 收集控制中枢干员，计算全局减免
     control_ops: list[str] = []
@@ -136,26 +159,43 @@ def calculate(
         if not _is_work_facility(assignment.room_type):
             continue
 
-        op_count = len(assignment.operators)
+        names = assignment.operators
+        op_count = len(names)
         if op_count == 0:
             continue
 
-        # 基础消耗: 1.0 - 0.05 × (人数-1)，1人无减免
+        # 基础消耗: 1.0 - 0.05 x (人数-1)，1人无减免
         base_burn = base_burn_per_hour - control_recovery_per_op * max(0, op_count - 1)
 
         # 净消耗 = 基础消耗 - 控制中枢减免 (最低为 0)
         net_burn = max(0.0, base_burn - control_bonus)
 
-        remaining = _MOOD_MAX - net_burn * shift_hours
+        # 每人独立计算班次后剩余
+        per_initial: dict[str, float] = {}
+        per_remaining: dict[str, float] = {}
+        any_red = False
+        min_remaining = _MOOD_MAX
+
+        for name in names:
+            init_val = initial_moods.get(name, _MOOD_MAX)
+            remain = max(0.0, init_val - net_burn * shift_hours)
+            per_initial[name] = init_val
+            per_remaining[name] = remain
+            if remain < min_remaining:
+                min_remaining = remain
+            if remain <= _RED_FACE_THRESHOLD:
+                any_red = True
 
         room_mood = RoomMood(
             room_type=assignment.room_type,
             room_index=assignment.room_index,
-            operators=assignment.operators,
+            operators=names,
             base_burn=base_burn,
             net_burn=net_burn,
-            remaining_after_shift=remaining,
-            is_red_face=remaining <= _RED_FACE_THRESHOLD,
+            remaining_after_shift=min_remaining,
+            operator_initial=per_initial,
+            operator_remaining=per_remaining,
+            is_red_face=any_red,
         )
 
         report.rooms.append(room_mood)

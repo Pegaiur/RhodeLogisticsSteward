@@ -6,6 +6,9 @@
 
 from __future__ import annotations
 
+from dataclasses import replace
+from datetime import datetime
+from pathlib import Path
 from typing import TYPE_CHECKING
 
 from steward_core import mood as mood_calc
@@ -14,9 +17,11 @@ from steward_core.production import _RECORD_EXP_PER_UNIT, _GOLD_LMD_PER_UNIT
 if TYPE_CHECKING:
     from steward_core.pipeline import PipelineResult
     from steward_core.solver.params import SolverParams
-    from steward_core.models import ShiftPlan
+    from steward_core.models import ShiftPlan, Operator
     from steward_core.production import DailyProduction
     from steward_core.mood import MoodReport
+
+_OUTPUT_DIR = Path(__file__).resolve().parent.parent / "output"
 
 
 _HEADER_WIDTH = 72
@@ -60,16 +65,80 @@ def format_params(params: "SolverParams") -> str:
     return "\n".join(lines)
 
 
+_FACILITY_SLOTS: dict[str, int] = {
+    "Control": 5, "Mfg": 3, "Trade": 3, "Power": 1, "Reception": 1, "Office": 1,
+}
+_NON_WORK_FACILITIES: frozenset[str] = frozenset({"Dormitory", "Training", "Workshop"})
+
+
+def _compute_chained_mood_reports(
+    plans: list["ShiftPlan"],
+    operators: list["Operator"],
+    shift_hours: float,
+) -> list["MoodReport"]:
+    """链式计算跨班次心情报告
+
+    使用 MoodContext 正确传递班次间的心情状态（消耗+宿舍恢复），
+    替代 mood_calc.calculate() 独立计算导致的"每个班次都从满心情开始"问题。
+    与 solve_slot() 中 MoodContext 流转逻辑保持一致。
+    """
+    from steward_core.mood_flow import MoodContext, RoomBurnContext
+
+    mc = MoodContext.fresh(operators)
+    reports: list["MoodReport"] = []
+
+    for plan in plans:
+        report = mood_calc.calculate(
+            plan, operators, shift_hours,
+            initial_moods=dict(mc.operator_moods),
+        )
+        reports.append(report)
+
+        # 更新 MoodContext 准备下一班次
+        mc.control_operators = report.control_operators
+
+        working_names: set[str] = set()
+        working_slots: dict[str, "RoomBurnContext"] = {}
+        for a in plan.assignments:
+            if a.room_type in _NON_WORK_FACILITIES or not a.operators:
+                continue
+            for name in a.operators:
+                working_names.add(name)
+                working_slots[name] = RoomBurnContext(
+                    room_type=a.room_type,
+                    room_slots=_FACILITY_SLOTS.get(a.room_type, 3),
+                    room_index=a.room_index,
+                    co_workers=a.operators,
+                )
+
+        mc = mc.after_shift(working_names, working_slots=working_slots)
+
+        # 应用宿舍恢复
+        dorm_map: dict[str, str] = {}
+        for a in plan.assignments:
+            if a.room_type == "Dormitory":
+                for name in a.operators:
+                    dorm_map[name] = str(a.room_index)
+
+        if dorm_map:
+            mc = replace(mc, dorm_assignments=dorm_map)
+            new_moods = dict(mc.operator_moods)
+            for name in dorm_map:
+                rate = mc.dorm_recovery(name)
+                if rate > 0:
+                    new_moods[name] = min(24.0, new_moods.get(name, 24.0) + rate * shift_hours)
+            mc = replace(mc, operator_moods=new_moods)
+
+    return reports
+
+
 def format_shift_overview(
     plans: list["ShiftPlan"],
     operators: list["Operator"],
     shift_hours: float,
 ) -> tuple[str, list["MoodReport"]]:
     """各班次紧凑概览表 — 每班一行，含心情状态"""
-    mood_reports = []
-    for plan in plans:
-        mr = mood_calc.calculate(plan, operators, shift_hours)
-        mood_reports.append(mr)
+    mood_reports = _compute_chained_mood_reports(plans, operators, shift_hours)
 
     tracked = [
         ("Control", 0, "Ctl"),
@@ -390,4 +459,48 @@ def format_report(
     parts.append("")
 
     return "\n".join(parts)
+
+
+def save_report_md(
+    pipe: "PipelineResult",
+    output_path: str = "",
+    brief: bool = False,
+    output_dir: Path | None = None,
+) -> Path:
+    """将排班报告写入 output/*.md 文件
+
+    Args:
+        pipe: 管道执行结果
+        output_path: JSON 输出路径（显示在报告末尾）
+        brief: 简洁模式，跳过详细排班与产出明细
+        output_dir: 输出目录，默认项目根目录下的 output/
+
+    Returns:
+        写入的 .md 文件路径
+    """
+    if output_dir is None:
+        output_dir = _OUTPUT_DIR
+    output_dir.mkdir(parents=True, exist_ok=True)
+
+    params = pipe.params
+    strategy = _strategy_name(pipe)
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    filename = f"report_{strategy}_{params.shift_count}x{params.shift_hours:.0f}h_{timestamp}.md"
+    filepath = output_dir / filename
+
+    report_text = format_report(pipe, output_path=output_path, brief=brief)
+
+    md_content = (
+        f"# 排班报告\n\n"
+        f"**日期**: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n"
+        f"**策略**: {strategy}  ·  "
+        f"{params.shift_count}x{params.shift_hours:.0f}h  ·  "
+        f"干员 {len(pipe.operators)} 人\n\n"
+        f"```text\n"
+        f"{report_text}\n"
+        f"```\n"
+    )
+
+    filepath.write_text(md_content, encoding="utf-8")
+    return filepath
 
