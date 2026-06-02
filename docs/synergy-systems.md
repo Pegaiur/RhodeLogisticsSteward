@@ -1,4 +1,4 @@
-﻿# 基建联动体系建模
+# 基建联动体系建模
 
 > **版本**: 2026-05-28 · 基于 `buffs_infrastructure.json` (520 buff) + `character_identity.json` (415 干员) 交叉核验，已删除 Trade 贪心迭代相关过时章节
 >
@@ -94,7 +94,7 @@ def synergy_pair(
 
 **边界情况**:
 - 一个干员可能参与多个配对（如德克萨斯同时触发拉普兰德+能天使两条）
-- 12h 单班次内心情消耗/恢复变化不影响 e(t)，但需记录 `mood_burn_modifier` 留作多班次扩展点
+- 12h 班次内心情消耗/恢复变化不影响 e(t)，但需记录 `mood_burn_modifier` 留作多班次扩展点
 
 ---
 
@@ -628,7 +628,7 @@ def compute_global_burn(
     孤光共照/巴别塔之帜 = 工作干员直接心情恢复
     burn = max(0, 基础 - 减免)
 
-    MVP 单班次 12h: burn 为常数，由中枢配置动态决定。
+    12h 班次: burn 为常数，由中枢配置动态决定。
     """
 ```
 

@@ -4,6 +4,8 @@ r"""全 box 满练度求解器 — 槽位加工模型
     python run_solver.py                              # 默认 14班x12h (7天)
     python run_solver.py --hours 8 --shifts 3         # 3班x8h
     python run_solver.py --params custom.json          # 自定义参数文件
+    python run_solver.py --brief                      # 简洁模式，跳过详细排班明细
+    python run_solver.py --report                     # 只输出报表，不保存 JSON
 
 数据文件 (character_identity.json + buffs_infrastructure.json) 需在项目根目录。
 输出 output/custom_infrast/ 目录。
@@ -15,7 +17,7 @@ from steward_core.data_loader import load_operators_v2
 from steward_core.output import save_json
 from steward_core.solver.params import SolverParams
 from steward_core.pipeline import run as run_pipeline
-from steward_core.production import _RECORD_EXP_PER_UNIT, _GOLD_LMD_PER_UNIT
+from steward_core.report import format_report
 
 
 def _parse_cli():
@@ -24,6 +26,8 @@ def _parse_cli():
     params_file = None
     hours_override = 12.0
     shifts_override = 14
+    brief_mode = False
+    report_only = False
 
     i = 0
     while i < len(args):
@@ -33,14 +37,18 @@ def _parse_cli():
             hours_override = float(args[i + 1]); i += 2
         elif args[i] == "--shifts" and i + 1 < len(args):
             shifts_override = int(args[i + 1]); i += 2
+        elif args[i] == "--brief":
+            brief_mode = True; i += 1
+        elif args[i] == "--report":
+            report_only = True; i += 1
         else:
             print(f"[警告] 未知参数: {args[i]}"); i += 1
 
-    return params_file, hours_override, shifts_override
+    return params_file, hours_override, shifts_override, brief_mode, report_only
 
 
 def main():
-    params_file, hours_override, shifts_override = _parse_cli()
+    params_file, hours_override, shifts_override, brief_mode, report_only = _parse_cli()
 
     if params_file:
         params = SolverParams.from_json(params_file)
@@ -65,85 +73,36 @@ def main():
             print("[提示] 请确保两个文件已放置在项目根目录")
             return
 
-    print("[加载] 正在解析 character_identity.json + buffs_infrastructure.json ...")
     all_operators = load_operators_v2(ci_path, bi_path)
 
-    total_skills = sum(len(op.skills) for op in all_operators)
     ops_with_skills = sum(1 for op in all_operators if op.skills)
-    print(f"[加载] 干员总数: {len(all_operators)}, 有基建技能: {ops_with_skills}, 技能条目: {total_skills}")
-
     mfg_ops = [op for op in all_operators if op.has_skill_for("Mfg")]
     trade_ops = [op for op in all_operators if op.has_skill_for("Trade")]
     ctrl_ops = [op for op in all_operators if op.has_skill_for("Control")]
-    print(f"[统计] 制造站: {len(mfg_ops)}, 贸易站: {len(trade_ops)}, 控制中枢: {len(ctrl_ops)}")
 
-    print(f"\n[参数]")
-    print(params.summary())
-    print(f"  周期: {shift_count}x{shift_hours:.0f}h = {shift_count * shift_hours:.0f}h ({shift_count * shift_hours / 24:.1f}天)")
+    print(f"  [数据] 干员 {len(all_operators)} | "
+          f"有技能 {ops_with_skills} | "
+          f"制造 {len(mfg_ops)} | "
+          f"贸易 {len(trade_ops)} | "
+          f"中枢 {len(ctrl_ops)}")
 
     mode_desc = f"{shift_count}x{shift_hours:.0f}h"
-    print(f"\n[求解] SlotStrategy, {mode_desc}...")
+    print(f"  [求解] SlotStrategy, {mode_desc}...")
 
     pipe = run_pipeline(all_operators, params)
-    all_plans = pipe.solve_result.plans
-
-    print(f"[结果] 班次数: {len(all_plans)}\n")
-
-    for pi, plan in enumerate(all_plans):
-        print(f"── 班次 {pi + 1}: {plan.name} ──")
-        for a in plan.assignments:
-            tag = " [autofill]" if a.autofill else ""
-            product_str = f" ({a.product})" if a.product else ""
-            print(f"  {a.room_type}[{a.room_index}]{product_str}: {a.operators}{tag}")
-
-    for pi, plan in enumerate(all_plans):
-        print(f"\n[产出·班次{pi + 1}] {shift_hours:.0f}h 生产结果...\n")
-
-        dp = pipe.productions[pi]
-
-        print("── 作战记录（经验）──")
-        for room in dp.record_rooms:
-            drone = f" (含无人机+{room.drone_boost_pct:.0%})" if room.drone_boost_pct > 0 else ""
-            head_base = 100 + room.head_count
-            skill_pct = (room.productivity - 1.0) * 100
-            exp_value = room.output_per_day * _RECORD_EXP_PER_UNIT
-            print(f"  Mfg[{room.room_index}]: {room.operators} -> {exp_value:,.0f} 经验/{shift_hours:.0f}h (基础{head_base}%+{skill_pct:.0f}%){drone}")
-        total_exp = dp.total_records_per_day * _RECORD_EXP_PER_UNIT
-        print(f"  合计: {total_exp:,.0f} 经验/{shift_hours:.0f}h\n")
-
-        print("── 赤金制造 ──")
-        for room in dp.gold_rooms:
-            drone = f" (含无人机+{room.drone_boost_pct:.0%})" if room.drone_boost_pct > 0 else ""
-            head_base = 100 + room.head_count
-            skill_pct = (room.productivity - 1.0) * 100
-            lmd_value = room.output_per_day * _GOLD_LMD_PER_UNIT
-            print(f"  Mfg[{room.room_index}]: {room.operators} -> {lmd_value:,.0f} LMD等值/{shift_hours:.0f}h (基础{head_base}%+{skill_pct:.0f}%){drone}")
-        total_gold_lmd = dp.total_gold_produced_per_day * _GOLD_LMD_PER_UNIT
-        print(f"  合计: {total_gold_lmd:,.0f} LMD等值/{shift_hours:.0f}h")
-        if dp.external_gold_per_day > 0:
-            external_gold_shift = dp.external_gold_per_day * (shift_hours / 24.0)
-            external_lmd_shift = external_gold_shift * _GOLD_LMD_PER_UNIT
-            print(f"  外部收入: +{external_lmd_shift:,.0f} LMD等值/{shift_hours:.0f}h ({external_gold_shift:.1f} 赤金)\n")
-        else:
-            print()
-
-        print("── 贸易站（龙门币）──")
-        for room in dp.trade_rooms:
-            drone = f" (含无人机+{room.drone_boost_pct:.0%})" if room.drone_boost_pct > 0 else ""
-            head_base = 100 + room.head_count
-            skill_pct = (room.productivity - 1.0) * 100
-            gold_use = room.output_per_day / dp.total_lmd_per_day * dp.total_gold_consumed_per_day
-            print(f"  Trade[{room.room_index}]: {room.operators} -> {room.output_per_day:,.0f} LMD/{shift_hours:.0f}h (基础{head_base}%+{skill_pct:.0f}%){drone}  |  消耗赤金 {gold_use:.1f}/{shift_hours:.0f}h")
-        print(f"  合计: {dp.total_lmd_per_day:,.0f} LMD/{shift_hours:.0f}h")
-        print(f"  赤金消耗: {dp.total_gold_consumed_per_day:.1f} 个/{shift_hours:.0f}h (等值 {dp.total_gold_consumed_per_day * _GOLD_LMD_PER_UNIT:,.0f} LMD)")
-        if dp.gold_surplus >= 0:
-            print(f"  赤金盈余: +{dp.gold_surplus:.1f} 个/{shift_hours:.0f}h")
-        else:
-            print(f"  赤金缺口: {abs(dp.gold_surplus):.1f} 个 -> 有效收入 {dp.effective_lmd_per_day:,.0f} LMD/{shift_hours:.0f}h")
 
     suffix = f"243_layout_slot_{shift_hours:.0f}h_x{shift_count}"
     output_path = project_root / "output" / "custom_infrast" / f"{suffix}.json"
-    save_json(pipe.solve_result, output_path, title=f"排班方案 slot {shift_count}x{shift_hours:.0f}h")
+
+    if not report_only:
+        save_json(pipe.solve_result, output_path,
+                  title=f"排班方案 slot {shift_count}x{shift_hours:.0f}h")
+        opath = str(output_path)
+    else:
+        opath = ""
+
+    report = format_report(pipe, output_path=opath, brief=brief_mode)
+    print(report)
 
 
 if __name__ == "__main__":

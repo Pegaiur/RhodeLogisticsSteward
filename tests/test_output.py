@@ -75,10 +75,20 @@ class TestTopLevelSchema:
         data = to_json(result)
         assert data["buildingType"] == 243
 
-    def test_planTimes_为单班(self):
+    def test_planTimes_由班次数决定(self):
         result = SolveResult(plans=[_mk_plan()])
         data = to_json(result)
         assert data["planTimes"] == "单班"
+
+    def test_planTimes_多班次(self):
+        result = SolveResult(plans=[_mk_plan(), _mk_plan()])
+        data = to_json(result)
+        assert data["planTimes"] == "双班"
+
+    def test_planTimes_三班以上(self):
+        result = SolveResult(plans=[_mk_plan(), _mk_plan(), _mk_plan()])
+        data = to_json(result)
+        assert data["planTimes"] == "3班"
 
     def test_description_存在(self):
         result = SolveResult(plans=[_mk_plan()])
@@ -138,7 +148,7 @@ class TestPlanSchema:
         data = to_json(result)
         assert "晚班" in data["plans"][0]["description"]
 
-    def test_Fiammetta_单班次不启用(self):
+    def test_Fiammetta_默认不启用(self):
         plan = _mk_plan(assignments=[_mk_mfg("mf0")])
         result = SolveResult(plans=[plan])
         data = to_json(result)

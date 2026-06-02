@@ -21,7 +21,7 @@ class SolverParams:
 
     # === 排班基础 ===
     shift_hours: float = 12.0
-    """单班次时长（小时），默认 12h"""
+    """班次时长（小时），默认 12h"""
 
     # === 设施布局（243 默认值） ===
     control_max_slots: int = 5
@@ -58,7 +58,7 @@ class SolverParams:
 
     # === 多班次 ===
     shift_count: int = 1
-    """班次数（1=单班次，2=双班次）"""
+    """班次数"""
     fiammetta_enabled: bool = False
     """是否启用菲亚梅塔心情交换（交换决策算法待实现）"""
 

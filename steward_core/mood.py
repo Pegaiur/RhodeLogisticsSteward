@@ -4,7 +4,7 @@
   https://prts.wiki/w/罗德岛基建/制造站  (心情消耗/时)
   https://prts.wiki/w/罗德岛基建/控制中枢 (全局减免)
 
-阶段范围: 单班次/多班次的工作侧心情消耗计算。
+阶段范围: 工作侧心情消耗计算，覆盖任意班次数。
          宿舍恢复暂不纳入 (MAA 宿舍技能 efficient 全为 0，Phase B 另行处理)。
 """
 
@@ -37,7 +37,7 @@ class RoomMood:
 
 @dataclass
 class MoodReport:
-    """单班次心情分析报告"""
+    """心情分析报告"""
     shift_hours: float
     shift_name: str
     control_operators: list[str] = field(default_factory=list)
@@ -90,7 +90,7 @@ def calculate(
     base_burn_per_hour: float = 1.0,
     control_recovery_per_op: float = 0.05,
 ) -> MoodReport:
-    """计算单班次心情消耗
+    """计算班次心情消耗
 
     Args:
         plan: 排班计划

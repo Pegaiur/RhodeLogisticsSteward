@@ -98,12 +98,21 @@ def to_json(result: SolveResult, title: str = "RhodeLogisticsSteward 排班方�
     mood_ctx = result.config_used.mood_ctx if result.config_used else None
     plans = [_shift_to_json(p, mood_ctx) for p in result.plans]
     schedule_type = _build_schedule_type(result.plans[0]) if result.plans else {}
+    n = len(result.plans)
+    if n == 0:
+        plan_times = "无"
+    elif n == 1:
+        plan_times = "单班"
+    elif n == 2:
+        plan_times = "双班"
+    else:
+        plan_times = f"{n}班"
     return {
         "id": _new_id(),
         "title": title,
         "description": "由 RhodeLogisticsSteward 自动生成",
         "buildingType": 243,
-        "planTimes": "单班",
+        "planTimes": plan_times,
         "scheduleType": schedule_type,
         "plans": plans,
     }

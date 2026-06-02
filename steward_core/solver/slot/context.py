@@ -1,4 +1,4 @@
-﻿"""槽位求解器统一状态载体
+"""槽位求解器统一状态载体
 
 SlotContext 替代旧的 locked_support / assigned_ids / assigned_names
 等多个可变 dict 的碎片化状态传递，提供统一的读写接口。
@@ -270,7 +270,7 @@ def mood_is_viable(
 ) -> bool:
     """检查干员心情是否满足工作阈值
 
-    mood_ctx 为 None 时视为无心情约束（单班次兼容模式）。
+    mood_ctx 为 None 时视为无心情约束（向后兼容模式）。
     """
     if mood_ctx is None:
         return True

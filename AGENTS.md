@@ -1,4 +1,4 @@
-﻿﻿# AGENTS.md
+﻿# AGENTS.md
 
 ## 项目概述
 
@@ -84,7 +84,7 @@ RhodeLogisticsSteward/
 │   ├── output.py                 # MAA 基建排班协议输出
 │   ├── efficiency_fn.py          # 效率函数（常数/爬升/梯级衰减）
 │   ├── data_loader.py            # 数据加载器（v2）
-│   ├── mood.py                   # 心情/消耗模型（单班次分析报告）
+│   ├── mood.py                   # 心情/消耗模型（班次心情分析报告）
 │   ├── mood_flow.py              # 心情流转引擎（MoodContext + MoodModifiers）
 │   ├── dorm_recovery.py          # 宿舍恢复速率评估
 │   └── constants.py              # 布局/设施常量

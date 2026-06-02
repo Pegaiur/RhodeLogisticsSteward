@@ -2,7 +2,7 @@
 
 > **版本**: 2026-05-28 · 已实现 — 通过 `efficiency_fn.py` 的 `LinearSegment` + `constant_efficiency`/`ramping_efficiency` 构造器 + `evaluate.py` 的 `evaluate_room()` 统一积分
 >
-> **简化**：单班次 12h 内心情截断不触发（`t_red ≥ 16h`），e(t) 在单窗口内退化为全常数段。跨窗口场景下 `mood_burn` 参与工作时长池计算（见 slot-processing-model.md §3.1 / §9.5），但不在 e(t) 中引入截断。
+> **简化**：12h 班次内心情截断不触发（`t_red ≥ 16h`），e(t) 在单窗口内退化为全常数段。跨窗口场景下 `mood_burn` 参与工作时长池计算（见 slot-processing-model.md §3.1 / §9.5），但不在 e(t) 中引入截断。
 
 ## 1. 动机
 
@@ -55,7 +55,7 @@ P(t) = 1 + 0.01·n + Σ eᵢ(t) / 100
 
 心情-效率的边界是 `mood = 0` 时注意力涣散（效率归零）。`mood(t) = 24 - burn·t`，截断点 `t_red = 24 / burn`。
 
-12h 单班次下，最差单人工位 `burn = 1.5/h` → `t_red = 16h > 12h`。心情截断不触发，e(t) 全程为常数段。
+12h 班次下，最差单人工位 `burn = 1.5/h` → `t_red = 16h > 12h`。心情截断不触发，e(t) 全程为常数段。
 
 > 多班次轮换策略下每班 ≤ 12h，且班间干员不重复使用（`mood(0) = 24`），因此 MVP 阶段 `mood_burn = 0.0`，无需 t_red 截断逻辑。
 

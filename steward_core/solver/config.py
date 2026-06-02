@@ -34,7 +34,7 @@ class SolverConfig:
     # Step 2: 局部搜索后处理
     local_search_enabled: bool = False
 
-    # 心情上下文（多班次框架层注入，单班次为 None）
+    # 心情上下文（框架层注入）
     mood_ctx: "MoodContext | None" = None
     """多班次心情上下文，通过 Config 传递到 Phase 层，避免修改 Strategy 签名"""
 

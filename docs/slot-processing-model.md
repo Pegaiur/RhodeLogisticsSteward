@@ -837,7 +837,7 @@ H1-H2 由游戏系统保证（有限干员池/槽位），H3-H4 为建模假设�
 ### 8.11 验证结果
 
 - **收敛**：14×12h 真实数据集上热启动 1-2 轮、冷启动 ≤5 轮收敛
-- **解质量**：SlotSolver 在所有数据集上不低于 BaselineStrategy，典型场景单班次
+- **解质量**：SlotSolver 在所有数据集上不低于 BaselineStrategy，典型场景
   积分反超 +1,356 LMD 等值（详见 `archive/slot-iteration-record.md` 第四期验收）
 - **E2E 测试**：`tests/solver/slot/` 下 12 个测试模块，覆盖 context/mfg/trade/control/
   contribution/partials/opportunity/solver/strategy/lambda_k/phases/lambda_shadow

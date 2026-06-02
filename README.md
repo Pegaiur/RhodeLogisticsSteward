@@ -5,17 +5,14 @@
 ## 快速开始
 
 ```powershell
-# 默认 Baseline 策略，8h × 3 班次（多班次为主）
+# 默认 14x12h (7天周期)
 python run_solver.py
 
-# 单班次（快捷方式）
-python run_solver.py --single
+# 精简报告（只显示概览/换班/产能）
+python run_solver.py --brief
 
-# 双班次 12h（自定义班次与时長）
+# 自定义班次（双班 12h）
 python run_solver.py --shifts 2 --hours 12
-
-# 自定义班次间隔
-python run_solver.py --shifts 2 --hours 12 --interval 4
 
 # K-Beam 策略（制造站 top-K 多路径保留）
 python run_solver.py --strategy kbeam3
