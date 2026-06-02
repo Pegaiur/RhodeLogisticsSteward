@@ -71,7 +71,8 @@ class ReceptionCondition:
         self.target = target
 
 # buff_id → ReceptionCondition
-# cond_type: "solo"=仅自身, "pair"=指定干员同房, "faction"=同阵营, "dorm_has"=目标在宿舍
+# cond_type: "solo"=仅自身, "pair"=指定干员同房, "faction"=同阵营, "dorm_has"=目标在宿舍,
+#            "office_slots"=额外招募位驱动(bonus=每格%), "monster_cuisine"=魔物料理驱动(bonus=每点%)
 _RECEPTION_CONDITIONAL: dict[str, ReceptionCondition] = {
     "meet_spd_condChar[000]":          ReceptionCondition("solo", 35),
     "meet_spd&cost_condChar[000]":     ReceptionCondition("solo", 50),
@@ -86,7 +87,49 @@ _RECEPTION_CONDITIONAL: dict[str, ReceptionCondition] = {
     "meet_spd&sami[100]":              ReceptionCondition("faction", 15, "blacksteel"),
     "meet_spd&sami[110]":              ReceptionCondition("faction", 20, "blacksteel"),
     "meet_spd_ext&P[000]":             ReceptionCondition("dorm_has", 10, "菲亚梅塔"),
+    # 动态加成（bonus 为乘数，不依赖同房间组合）
+    "meet_spd&clue[000]":              ReceptionCondition("office_slots", 5),
+    "meet_spd_bd[001]":                ReceptionCondition("monster_cuisine", 2),
 }
+
+# ─── 会客室/办公室 故意不建模的机制性 buff ───────────────────────
+# 以下 buff 效率=0，效果为线索派系倾向/未拥有偏向/必定获得等，
+# 与求解器优化目标（Mfg/Trade 产值最大化）无关，故意不建模。
+#
+# 【会客室 — 线索派系倾向 (meet_team)】
+#   meet_team[020]     梅      更容易获得企鹅物流线索
+#   meet_team[050]     苦艾    更容易获得乌萨斯学生自治团线索
+#   meet_team[060]     极境    更容易获得罗德岛制药线索
+#   meet_team[070]     柏喙    更容易获得格拉斯哥帮线索
+#   meet_team&char[000] 哈罗德  提升另一干员所属派系的线索倾向
+#
+# 【会客室 — 线索派系补偿 (meet_flag)】
+#   meet_flag[010]     巡林者  非莱茵生命时 ↑莱茵生命概率
+#   meet_flag[040]     耶拉    非喀兰贸易时 ↑喀兰贸易概率
+#   meet_flag[050]     苦艾    非乌萨斯时 ↑乌萨斯概率
+#   meet_flag[060]     极境    非罗德岛制药时 ↑罗德岛制药概率
+#   meet_flag[070]     柏喙    非格拉斯哥帮时 ↑格拉斯哥帮概率
+#
+# 【会客室 — 线索拥有偏向】
+#   meet_spd_notOwned[000] 车尔尼  易获未拥有线索
+#   meet_spd_notOwned[001] 谜图    同上
+#   meet_spd_notOwned[002] 玛吉莉  同上
+#   meet_spd_notOwned[003] 陈(假日) 同上
+#   meet_spd_notOwned&exchange[000] 维荻  线索交流时易获未拥有
+#   meet_spd_Owned[000]    尤丽卡  易获已拥有线索
+#
+# 【会客室 — 线索交流期间加速】
+#   meet_spd&exchange[000] 凯珀    线索交流时搜集速度+30%
+#   meet_spd&exchange[001] 凯恩    同上
+#   （需要感知线索交流状态，当前无此上下文）
+#
+# 【会客室 — 必定获得 (solo 耗尽心情后)】
+#   meet_spd&condChar_mustget[000] 赫雅克  solo 连续消耗>16心情，下次必定莱茵生命
+#   meet_spd&condChar_mustget[100] 奥达    solo 连续消耗>16心情，下次必定罗德岛制药
+#
+# 【办公室 — 无产值影响的机制性 buff】
+#   （全部 43 条 HIRE buff 中仅 hire_spd_cost&extra[000] 效率=0 且无产值影响，
+#    已在 _office_contribution() 中建模）
 
 
 def contribution(
@@ -224,17 +267,27 @@ def _reception_conditional_bonus(
     combo: list["Operator"],
     ctx: "SlotContext",
     window_idx: int,
+    monster_cuisine: float | None = None,
 ) -> float:
     """计算会客室组合的条件型 buff 加成总和
 
     遍历 combo 中每个干员的活跃技能，匹配 _RECEPTION_CONDITIONAL 表：
-    - solo:   len(combo)==1 时激活
-    - pair:   目标干员在 combo 中时激活
-    - faction: combo 中有同 nation_id 的干员时激活
-    - dorm_has: 目标干员在宿舍时激活（乐观假设：宿舍阶段会保证该干员入宿）
+    - solo:           len(combo)==1 时激活
+    - pair:           目标干员在 combo 中时激活
+    - faction:        combo 中有同 nation_id 的干员时激活
+    - dorm_has:       目标干员在宿舍时激活（乐观假设：宿舍阶段会保证该干员入宿）
+    - office_slots:   额外招募位 × bonus%（bonus=每格%）
+    - monster_cuisine: 魔物料理 × bonus%（bonus=每点%），mc 由调用方传入
     """
     names = {op.name for op in combo}
     bonus = 0.0
+
+    params = ctx.params
+    office_level = params.office_level if params else 3
+    extra_slots = max(office_level - 1, 0)
+
+    if monster_cuisine is None:
+        monster_cuisine = 0.0
 
     for op in combo:
         for sk in op.active_skills_for("Reception"):
@@ -265,6 +318,10 @@ def _reception_conditional_bonus(
                     }
                     if entry.target not in assigned_all:
                         bonus += entry.bonus
+            elif ct == "office_slots":
+                bonus += entry.bonus * extra_slots
+            elif ct == "monster_cuisine":
+                bonus += entry.bonus * monster_cuisine
 
     return bonus
 
@@ -297,6 +354,16 @@ def _build_reception_pool(
                     existing.add(enabler.name)
 
     return pool
+
+
+def _snapshot_for_reception(
+    ctx: "SlotContext",
+    window_idx: int,
+    ctrl_names: list[str],
+) -> float:
+    """获取当前窗口的魔物料理值，供会客室条件型 buff 使用"""
+    sv = _compute_state_snapshot(ctx, window_idx, ctrl_names)
+    return sv.get("monster_cuisine", 0.0)
 
 
 def _select_reception_combo(
@@ -332,6 +399,9 @@ def _select_reception_combo(
     hours = ctx.params.shift_hours if ctx.params else 12.0
     base_lmd = _mfg_base_rate_lmd_avg()
 
+    ctrl_names = ctx.ops_of_type(window_idx, "Control")
+    mc_snapshot = _snapshot_for_reception(ctx, window_idx, ctrl_names)
+
     for combo in combos:
         combo_list = list(combo)
         total = 0.0
@@ -341,7 +411,7 @@ def _select_reception_combo(
             skill_eff = max(op.best_efficiency("Reception", "General"), 0.0)
             total += (implicit + skill_eff) * _RECEPTION_TO_MFG_RATIO / 100.0 * base_lmd * hours
 
-        total += _reception_conditional_bonus(combo_list, ctx, window_idx) \
+        total += _reception_conditional_bonus(combo_list, ctx, window_idx, mc_snapshot) \
             * _RECEPTION_TO_MFG_RATIO / 100.0 * base_lmd * hours
 
         if total > best_score:
@@ -491,15 +561,45 @@ def _reception_implicit_bonus(
     return total
 
 
+def _reception_individual_bonus(
+    op: "Operator",
+    ctx: "SlotContext",
+    window_idx: int,
+) -> float:
+    """计算不依赖同房间组合的个人条件型 buff 加成
+
+    覆盖 office_slots（维荻广交义友）和 monster_cuisine（莱欧斯饱餐的干劲）。
+    这些 buff 的加成与同房间是否有其他干员无关。
+    """
+    bonus = 0.0
+    params = ctx.params
+    office_level = params.office_level if params else 3
+    extra_slots = max(office_level - 1, 0)
+
+    for sk in op.active_skills_for("Reception"):
+        entry = _RECEPTION_CONDITIONAL.get(sk.buff_id)
+        if entry is None:
+            continue
+        if entry.cond_type == "office_slots":
+            bonus += entry.bonus * extra_slots
+        elif entry.cond_type == "monster_cuisine":
+            ctrl_names = ctx.ops_of_type(window_idx, "Control")
+            mc = _snapshot_for_reception(ctx, window_idx, ctrl_names)
+            bonus += entry.bonus * mc
+
+    return bonus
+
+
 def _reception_contribution(
     ctx: "SlotContext",
     op: "Operator",
     window_idx: int,
     D: dict[str, float],
 ) -> float:
-    """会客室贡献 = 隐式加成 + 技能效率 → 等效Mfg
+    """会客室贡献 = 隐式加成 + 技能效率 + 个人条件型 buff → 等效Mfg
     Reception 干员不通过 BuffPool 写入全局状态。
     隐式加成包括: 非涣散/稀有度/精英阶段/会客室等级/宿舍氛围。
+    个人条件型 buff 包括: office_slots（维荻广交义友）、monster_cuisine（莱欧斯饱餐的干劲）。
     """
     total = 0.0
 
@@ -507,7 +607,8 @@ def _reception_contribution(
     dorm_ambiance = ctx.params.dorm_ambiance if ctx.params else 5000
     implicit = _reception_implicit_bonus(op, reception_level, dorm_ambiance)
     skill_eff = max(op.best_efficiency("Reception", "General"), 0.0)
-    eff = implicit + skill_eff
+    dynamic = _reception_individual_bonus(op, ctx, window_idx)
+    eff = implicit + skill_eff + dynamic
 
     hours = ctx.params.shift_hours if ctx.params else 12.0
     base_lmd = _mfg_base_rate_lmd_avg()
@@ -538,6 +639,10 @@ def _office_contribution(
             total += delta * D[d]
 
     eff = max(op.best_efficiency("Office", "HR"), 0.0)
+    office_level = ctx.params.office_level if ctx.params else 3
+    extra_slots = max(office_level - 1, 0)
+    if any(sk.buff_id == "hire_spd_cost&extra[000]" for sk in op.active_skills_for("Office")):
+        eff += extra_slots * 10.0
     hours = ctx.params.shift_hours if ctx.params else 12.0
     base_lmd = _mfg_base_rate_lmd_avg()
     total += eff * _OFFICE_TO_MFG_RATIO / 100.0 * base_lmd * hours

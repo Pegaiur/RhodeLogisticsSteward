@@ -38,6 +38,10 @@ class SolverParams:
     """宿舍总等级（4间 × Lv5）"""
     reception_level: int = 3
     """会客室等级（1-3），影响隐式线索搜集加成"""
+    office_level: int = 3
+    """办公室等级（1-3），衍生额外招募位数量（level-1）。
+    Lv3=2额外位，影响 hire_spd_cost&extra[000]（林用人唯才）
+    和 meet_spd&clue[000]（维荻广交义友）。"""
     dorm_ambiance: int = 5000
     """宿舍氛围累计值，影响隐式线索搜集加成。默认 5000 对应 >4000 档位（+15%）"""
 
@@ -175,6 +179,8 @@ class SolverParams:
             errors.append("daily_task_lmd 必须 >= 0")
         if self.reception_level not in (1, 2, 3):
             errors.append("reception_level 必须在 {1, 2, 3} 中")
+        if self.office_level not in (1, 2, 3):
+            errors.append("office_level 必须在 {1, 2, 3} 中")
         return errors
 
     def summary(self) -> str:
