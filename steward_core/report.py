@@ -18,15 +18,11 @@ from steward_core.production import _RECORD_EXP_PER_UNIT, _GOLD_LMD_PER_UNIT
 if TYPE_CHECKING:
     from steward_core.pipeline import PipelineResult
     from steward_core.solver.params import SolverParams
-    from steward_core.models import ShiftPlan, Operator
+    from steward_core.models import ShiftPlan, Operator, RoomAssignment
     from steward_core.production import DailyProduction
     from steward_core.mood import MoodReport
 
 _OUTPUT_DIR = Path(__file__).resolve().parent.parent / "output"
-
-
-_HEADER_WIDTH = 72
-_SEP = "=" * _HEADER_WIDTH
 
 
 def _strategy_name(pipe: "PipelineResult") -> str:
@@ -42,13 +38,16 @@ def format_header(pipe: "PipelineResult", output_path: str = "") -> str:
     total_h = params.shift_count * params.shift_hours
     days = total_h / 24.0
     lines = [
-        _SEP,
-        f"  RhodeLogisticsSteward 排班报告",
-        f"  策略: {_strategy_name(pipe)}  ·  "
+        "# RhodeLogisticsSteward 排班报告",
+        "",
+        f"**策略**: {_strategy_name(pipe)}  ·  "
         f"{params.shift_count}x{params.shift_hours:.0f}h={total_h:.0f}h ({days:.1f}天)  ·  "
         f"干员 {len(pipe.operators)} 人",
-        _SEP,
+        "",
     ]
+    if output_path:
+        lines.append(f"**排班文件**: `{output_path}`")
+        lines.append("")
     return "\n".join(lines)
 
 
@@ -58,10 +57,12 @@ def format_params(params: "SolverParams") -> str:
     days = total_h / 24.0
     inner = params.summary()
     lines = [
-        "\n── 求解参数 ──",
-        inner,
-        f"  周期: {params.shift_count}x{params.shift_hours:.0f}h "
-        f"= {total_h:.0f}h ({days:.1f}天)",
+        "## 求解参数",
+        "",
+        inner.strip(),
+        "",
+        f"**周期**: {params.shift_count}x{params.shift_hours:.0f}h = {total_h:.0f}h ({days:.1f}天)",
+        "",
     ]
     return "\n".join(lines)
 
@@ -151,15 +152,18 @@ def format_shift_overview(
     ]
 
     header_cols = ["班次"] + [abbr for _, _, abbr in tracked] + ["心情"]
+    ml_header = "| " + " | ".join(header_cols) + " |"
+    ml_sep = "|" + "|".join(["------" for _ in header_cols]) + "|"
     lines = [
-        "\n── 各班次概览 ──",
-        "  " + "  ".join(f"{h:<5}" for h in header_cols),
-        "  " + "-" * (6 + 6 * len(header_cols)),
+        "## 各班次概览",
+        "",
+        ml_header,
+        ml_sep,
     ]
 
     for pi, plan in enumerate(plans):
         mr = mood_reports[pi]
-        col_values = [f"W{pi:<2}"]
+        col_values = [f"W{pi}"]
         for rt, ri, _ in tracked:
             found = ""
             for a in plan.assignments:
@@ -174,7 +178,7 @@ def format_shift_overview(
             col_values.append("OK")
         else:
             col_values.append(f"!{mr.red_face_count}")
-        lines.append("  " + "  ".join(f"{v:<5}" for v in col_values))
+        lines.append("| " + " | ".join(col_values) + " |")
 
     lines.append("")
     return "\n".join(lines), mood_reports
@@ -196,26 +200,29 @@ def _bar(v: float, ref: float, w: int = 10) -> str:
 def format_overlap_matrix(plans: list["ShiftPlan"]) -> str:
     """重叠矩阵 — NxN 显示每两班间共有干员数"""
     n = len(plans)
+    cols = ["W"] + [f"W{w}" for w in range(n)] + ["变化"]
+    ml_header = "| " + " | ".join(cols) + " |"
+    ml_sep = "|" + "|".join(["---" for _ in cols]) + "|"
     lines = [
-        "\n── 换班分析 ──",
+        "## 换班分析",
         "",
-        f"  重叠矩阵  (x,y) = Wx 与 Wy 共有干员数",
+        "重叠矩阵 (x,y) = Wx 与 Wy 共有干员数",
+        "",
+        ml_header,
+        ml_sep,
     ]
-    header = "   W    | " + " ".join(f"W{w:<2}" for w in range(n)) + " | 变化"
-    lines.append(header)
-    lines.append("  " + "-" * (9 + 5 * n))
     for wi in range(n):
         ni = _plan_names(plans[wi])
-        row = f"  W{wi:<2}   | "
+        row = f"| W{wi} |"
         for wj in range(n):
             nj = _plan_names(plans[wj])
-            row += f"{len(ni & nj):<4}"
+            row += f" {len(ni & nj)} |"
         if wi == 0:
-            row += " | --"
+            row += " -- |"
         else:
             prev = _plan_names(plans[wi - 1])
             diff = len(ni) - len(ni & prev)
-            row += f" | 换{diff}人"
+            row += f" 换{diff}人 |"
         lines.append(row)
     return "\n".join(lines)
 
@@ -227,8 +234,8 @@ def format_facility_swaps(plans: list["ShiftPlan"]) -> str:
         ("Mfg", 0), ("Mfg", 1), ("Mfg", 2), ("Mfg", 3),
     ]
     lines = [
+        "## 换班统计",
         "",
-        "  设施换班统计:",
     ]
     shifts_n = max(len(plans) - 1, 1)
     for ft, ri in tracked:
@@ -245,8 +252,8 @@ def format_facility_swaps(plans: list["ShiftPlan"]) -> str:
         rate = swaps / shifts_n * 100
         b = _bar(swaps, 7, 7)
         if swaps >= 7:
-            b = "#" * 7
-        lines.append(f"  {ft}[{ri}]: {swaps}/{shifts_n} 换班 ({rate:.0f}%)  [{b}]")
+            b = "█" * 7
+        lines.append(f"- {ft}[{ri}]: {swaps}/{shifts_n} 换班 ({rate:.0f}%)  `{b}`")
 
     overlaps = []
     for wi in range(1, len(plans)):
@@ -255,9 +262,11 @@ def format_facility_swaps(plans: list["ShiftPlan"]) -> str:
         overlaps.append(len(ni & nj))
     if overlaps:
         avg_o = sum(overlaps) / len(overlaps)
-        lines.append(f"\n  相邻重叠: {avg_o:.1f} 人  "
+        lines.append("")
+        lines.append(f"- 相邻重叠: {avg_o:.1f} 人  "
                      f"(范围 {min(overlaps)}-{max(overlaps)})")
-        lines.append(f"  平均换人: {len(_plan_names(plans[0])) - avg_o:.1f} 人/班")
+        lines.append(f"- 平均换人: {len(_plan_names(plans[0])) - avg_o:.1f} 人/班")
+    lines.append("")
     return "\n".join(lines)
 
 
@@ -267,13 +276,15 @@ def format_production_table(
     mood_reports: list["MoodReport"] | None = None,
 ) -> str:
     """各班次产能明细表"""
+    h = int(shift_hours)
+    cols = ["班次", f"经验/{h}h", f"LMD/{h}h", "赤金盈余", "vsW0经验", "vsW0LMD", "心情"]
+    ml_header = "| " + " | ".join(cols) + " |"
+    ml_sep = "|" + "|".join(["------:" for _ in cols]) + "|"
     lines = [
-        "\n── 产能明细 ──",
+        "## 产能明细",
         "",
-        f"  {'班次':<5}{'经验/' + str(int(shift_hours)) + 'h':>10}"
-        f"{'LMD/' + str(int(shift_hours)) + 'h':>10}"
-        f"{'赤金盈余':>10}  {'vsW0经验':>10}{'vsW0LMD':>10}  {'心情':>6}",
-        f"  {'-' * 68}",
+        ml_header,
+        ml_sep,
     ]
     ref_exp = productions[0].total_records_per_day * _RECORD_EXP_PER_UNIT if productions else 0.0
     ref_lmd = productions[0].effective_lmd_per_day if productions else 0.0
@@ -288,11 +299,11 @@ def format_production_table(
             mr = mood_reports[pi]
             mood_str = "OK" if mr.red_face_count == 0 else f"!{mr.red_face_count}"
         lines.append(
-            f"  W{pi:<4}{exp:>10,.0f}{lmd:>10,.0f}"
-            f"{dp.gold_surplus:>+10.1f}{de:>+10,.0f}{dl:>+10,.0f}  "
-            f"{mood_str:>6}"
+            f"| W{pi} | {exp:,.0f} | {lmd:,.0f} | "
+            f"{dp.gold_surplus:+.1f} | {de:+,.0f} | {dl:+,.0f} | {mood_str} |"
         )
 
+    lines.append("")
     return "\n".join(lines)
 
 
@@ -313,19 +324,60 @@ def format_24h_summary(productions: list["DailyProduction"], total_hours: float)
     surplus_lmd = surplus_gold * _GOLD_LMD_PER_UNIT
 
     lines = [
-        "\n── 24h 折算产能 (周期日均) ──",
-        f"  作战记录经验: {sum_exp:>12,.0f} /天",
-        f"  赤金制造等值: {sum_gold:>12,.0f} LMD /天",
+        "## 24h 折算产能",
+        "",
+        f"- 作战记录经验: **{sum_exp:,.0f}** /天",
+        f"- 赤金制造等值: **{sum_gold:,.0f}** LMD /天",
     ]
-    labeled = f"  龙门币收入:   {sum_eff_lmd:>12,.0f} /天"
+    labeled = f"- 龙门币收入:   **{sum_eff_lmd:,.0f}** /天"
     if sum_lmd != sum_eff_lmd:
-        labeled += f"  (理论 {sum_lmd:,.0f}，赤金不足缩减)"
+        labeled += f" _(理论 {sum_lmd:,.0f}，赤金不足缩减)_"
     lines.append(labeled)
     if surplus_gold >= 0:
-        lines.append(f"  赤金盈余:     {surplus_lmd:>12,.0f} LMD等值 /天")
+        lines.append(f"- 赤金盈余:     **{surplus_lmd:,.0f}** LMD等值 /天")
     else:
-        lines.append(f"  赤金缺口:     {abs(surplus_lmd):>12,.0f} LMD等值 /天")
+        lines.append(f"- 赤金缺口:     **{abs(surplus_lmd):,.0f}** LMD等值 /天")
+    lines.append("")
     return "\n".join(lines)
+
+
+_GROUP_LABELS: dict[str, str] = {
+    "Control": "Ctl", "Trade": "Trade", "Power": "Power",
+    "Reception": "Rec", "Office": "Ofc", "Dormitory": "Dorm",
+}
+
+_GROUP_ORDER = ["Ctl", "CR", "PG", "Trade", "Power", "Rec", "Ofc", "Dorm"]
+
+
+def _group_shift_assignments(
+    assignments: list["RoomAssignment"],
+) -> list[tuple[str, list[str]]]:
+    """将班次排班按类型+产物分组，返回 [(标签, [房间条目]), ...]
+
+    同类型房间同行显示但不合并干员：CR[0]: [...]  CR[1]: [...]
+    """
+    groups: dict[str, list[tuple[int, list[str]]]] = {}
+    for a in assignments:
+        if not a.operators:
+            continue
+        rt = a.room_type
+        if rt == "Mfg" and a.product:
+            label = _PRODUCT_ABBR.get(a.product, a.product[:2])
+        else:
+            label = _GROUP_LABELS.get(rt, rt)
+        if label not in groups:
+            groups[label] = []
+        groups[label].append((a.room_index, a.operators))
+
+    result: list[tuple[str, list[str]]] = []
+    for key in _GROUP_ORDER:
+        if key not in groups:
+            continue
+        parts = []
+        for ri, names in groups[key]:
+            parts.append(f"{key}[{ri}]: {names}")
+        result.append((key, parts))
+    return result
 
 
 def format_detail(
@@ -335,86 +387,41 @@ def format_detail(
     shift_hours: float,
     mood_reports: list["MoodReport"],
 ) -> str:
-    """详细排班与产出明细 — 逐班次展开"""
-    lines = ["\n── 详细排班与产出 ──"]
+    """详细排班与产出明细 — 逐班次"""
+    lines = ["## 详细排班", ""]
 
     for pi, plan in enumerate(plans):
-        lines.append(f"\n  ── 班次 {pi + 1}: {plan.name} ──")
-        for a in plan.assignments:
-            tag = " [autofill]" if a.autofill else ""
-            product_str = f" ({a.product})" if a.product else ""
-            lines.append(f"    {a.room_type}[{a.room_index}]{product_str}: "
-                         f"{a.operators}{tag}")
+        lines.append(f"### W{pi} ({plan.name})")
+        lines.append("")
+
+        groups = _group_shift_assignments(plan.assignments)
+        for _label, parts in groups:
+            lines.append(f"- {'  '.join(parts)}")
 
         if pi < len(productions):
             dp = productions[pi]
-            lines.append("")
-            lines.append(f"  ── 作战记录（经验）──")
-            for room in dp.record_rooms:
-                drone = f" (含无人机+{room.drone_boost_pct:.0%})" if room.drone_boost_pct > 0 else ""
-                head_base = 100 + room.head_count
-                skill_pct = (room.productivity - 1.0) * 100
-                exp_value = room.output_per_day * _RECORD_EXP_PER_UNIT
-                lines.append(
-                    f"    Mfg[{room.room_index}]: {room.operators} -> "
-                    f"{exp_value:,.0f} 经验/{shift_hours:.0f}h "
-                    f"(基础{head_base}%+{skill_pct:.0f}%){drone}"
-                )
             total_exp = dp.total_records_per_day * _RECORD_EXP_PER_UNIT
-            lines.append(f"    合计: {total_exp:,.0f} 经验/{shift_hours:.0f}h")
-
-            lines.append("")
-            lines.append(f"  ── 赤金制造 ──")
-            for room in dp.gold_rooms:
-                drone = f" (含无人机+{room.drone_boost_pct:.0%})" if room.drone_boost_pct > 0 else ""
-                head_base = 100 + room.head_count
-                skill_pct = (room.productivity - 1.0) * 100
-                lmd_value = room.output_per_day * _GOLD_LMD_PER_UNIT
-                lines.append(
-                    f"    Mfg[{room.room_index}]: {room.operators} -> "
-                    f"{lmd_value:,.0f} LMD等值/{shift_hours:.0f}h "
-                    f"(基础{head_base}%+{skill_pct:.0f}%){drone}"
-                )
             total_gold_lmd = dp.total_gold_produced_per_day * _GOLD_LMD_PER_UNIT
-            lines.append(f"    合计: {total_gold_lmd:,.0f} LMD等值/{shift_hours:.0f}h")
-            if dp.external_gold_per_day > 0:
-                ext_gold_shift = dp.external_gold_per_day * (shift_hours / 24.0)
-                ext_lmd_shift = ext_gold_shift * _GOLD_LMD_PER_UNIT
-                lines.append(
-                    f"    外部收入: +{ext_lmd_shift:,.0f} LMD等值/{shift_hours:.0f}h "
-                    f"({ext_gold_shift:.1f} 赤金)"
-                )
 
-            lines.append("")
-            lines.append(f"  ── 贸易站（龙门币）──")
-            for room in dp.trade_rooms:
-                drone = f" (含无人机+{room.drone_boost_pct:.0%})" if room.drone_boost_pct > 0 else ""
-                head_base = 100 + room.head_count
-                skill_pct = (room.productivity - 1.0) * 100
-                gold_use = room.output_per_day / max(dp.total_lmd_per_day, 1.0) * dp.total_gold_consumed_per_day
-                lines.append(
-                    f"    Trade[{room.room_index}]: {room.operators} -> "
-                    f"{room.output_per_day:,.0f} LMD/{shift_hours:.0f}h "
-                    f"(基础{head_base}%+{skill_pct:.0f}%){drone}  |  "
-                    f"消耗赤金 {gold_use:.1f}/{shift_hours:.0f}h"
-                )
-            lines.append(f"    合计: {dp.total_lmd_per_day:,.0f} LMD/{shift_hours:.0f}h")
-            lines.append(
-                f"    赤金消耗: {dp.total_gold_consumed_per_day:.1f} 个/{shift_hours:.0f}h "
-                f"(等值 {dp.total_gold_consumed_per_day * _GOLD_LMD_PER_UNIT:,.0f} LMD)"
-            )
-            if dp.gold_surplus >= 0:
-                lines.append(f"    赤金盈余: +{dp.gold_surplus:.1f} 个/{shift_hours:.0f}h")
+            parts = [
+                f"CR {total_exp:,.0f}exp",
+                f"PG {total_gold_lmd:,.0f} LMD",
+                f"Trade {dp.total_lmd_per_day:,.0f} LMD",
+            ]
+            surplus = dp.gold_surplus
+            if surplus >= 0:
+                parts.append(f"赤金+{surplus:.1f}")
             else:
-                lines.append(
-                    f"    赤金缺口: {abs(dp.gold_surplus):.1f} 个 -> "
-                    f"有效收入 {dp.effective_lmd_per_day:,.0f} LMD/{shift_hours:.0f}h"
-                )
+                parts.append(f"赤金{surplus:.1f}")
+            lines.append(f"- >> 产出: {' | '.join(parts)} /{shift_hours:.0f}h")
 
         if pi < len(mood_reports):
             lines.append("")
-            lines.append(f"  ── 心情 ──")
-            lines.append(mood_reports[pi].summary())
+            mr_text = mood_reports[pi].summary()
+            for mr_line in mr_text.split("\n"):
+                lines.append(f"> {mr_line}")
+
+        lines.append("")
 
     return "\n".join(lines)
 
@@ -429,11 +436,11 @@ def format_report(
 
     Args:
         pipe: 管道执行结果
-        output_path: JSON 输出路径（显示在报告末尾）
+        output_path: JSON 输出路径（显示在报告头部）
         brief: 简洁模式，跳过详细排班与产出明细
 
     Returns:
-        格式化的多行报告字符串
+        格式化的 Markdown 报告字符串
     """
     params = pipe.params
     plans = pipe.solve_result.plans
@@ -456,11 +463,7 @@ def format_report(
     if not brief:
         parts.append(format_detail(plans, productions, operators, shift_hours, mood_reports))
 
-    if output_path:
-        parts.append(f"\n[输出] 排班文件: {output_path}")
-    parts.append("")
-
-    return "\n".join(parts)
+    return "\n".join(parts) + "\n"
 
 
 def save_report_md(
@@ -491,18 +494,6 @@ def save_report_md(
     filepath = output_dir / filename
 
     report_text = format_report(pipe, output_path=output_path, brief=brief)
-
-    md_content = (
-        f"# 排班报告\n\n"
-        f"**日期**: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n"
-        f"**策略**: {strategy}  ·  "
-        f"{params.shift_count}x{params.shift_hours:.0f}h  ·  "
-        f"干员 {len(pipe.operators)} 人\n\n"
-        f"```text\n"
-        f"{report_text}\n"
-        f"```\n"
-    )
-
-    filepath.write_text(md_content, encoding="utf-8")
+    filepath.write_text(report_text, encoding="utf-8")
     return filepath
 
