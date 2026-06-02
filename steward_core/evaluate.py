@@ -22,8 +22,11 @@ from steward_core.synergy import (
     synergy_global_faction,
     synergy_jie_order,
     synergy_trade_pair,
+    synergy_trade_share,
     synergy_swires_order_limit,
     synergy_degenbrecher_order_limit,
+    synergy_trade_efficiency_amplifier,
+    synergy_trade_conditional_eff,
     compute_trade_order_limit,
     GlobalBonus,
 )
@@ -129,6 +132,7 @@ def evaluate_room(
 
     # Trade 站专属联动
     total += integrate_segments(synergy_trade_pair(operators, room_type, T), T)
+    total += integrate_segments(synergy_trade_share(operators, room_type, T), T)
     if order_ctx is not None:
         total += integrate_segments(
             synergy_swires_order_limit(operators, room_type, order_ctx, T), T,
@@ -182,6 +186,12 @@ def evaluate_room(
     # 效率放大器（仅未归零干员的效率参与计算）
     total += integrate_segments(synergy_efficiency_amplifier(non_zero_ops, room_type, product, T), T)
 
+    # 贸易站效率→效率放大器（雪雉天道酬勤）
+    if room_type == "Trade":
+        total += integrate_segments(
+            synergy_trade_efficiency_amplifier(operators, room_type, total / T, T), T,
+        )
+
     # 机械精通：作业平台数量是设施属性，不受归零影响
     total += integrate_segments(synergy_token_prod(operators, room_type, product, power_platforms, T), T)
 
@@ -196,6 +206,10 @@ def evaluate_room(
         total += integrate_segments(
             synergy_cross_room_pair(non_zero_ops, room_type, product, all_assignments, T), T,
         )
+        if room_type == "Trade":
+            total += integrate_segments(
+                synergy_trade_conditional_eff(operators, room_type, all_assignments, T), T,
+            )
 
     # B6 全局阵营计数
     if all_operators is not None:

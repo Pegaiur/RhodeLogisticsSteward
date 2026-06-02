@@ -670,3 +670,464 @@ class TestJieOrderWithContext:
         segs = synergy_jie_order([jie, a, b], "Trade", [], 12.0)
         assert len(segs) == 1
         assert segs[0].a == 16.0  # 原始行为不变
+
+
+# ─── 订单上限表补全（trade_ord_spd&limit） ────────────────────────
+
+class TestOrderLimitTableExpansion:
+    """_ORDER_LIMIT_TABLE 补全: 5 条新增订单上限贡献 buff"""
+
+    def _mk_trade_layout(self, level: int = 3):
+        from steward_core.models import LayoutConfig, RoomConfig
+        return LayoutConfig(rooms=[
+            RoomConfig("Trade", 0, 3, "Money", level=level),
+            RoomConfig("Trade", 1, 3, "Money", level=level),
+        ])
+
+    def test_黑角订单管理alpha_加2(self):
+        """trade_ord_spd&limit[000] → 订单上限 +2"""
+        from steward_core.synergy.trade_linkages import compute_trade_order_limit
+
+        heijiao = _mk_op("黑角")
+        heijiao.skills.append(_mk_skill("trade_ord_spd&limit[000]", "Trade", "订单管理·α"))
+        ctx = compute_trade_order_limit([heijiao], self._mk_trade_layout(), [])
+        assert ctx.total == 12
+        assert ctx.contributions.get("订单管理·α") == 2
+
+    def test_涤火杰西卡订单管理beta_加4(self):
+        """trade_ord_spd&limit[001] → 订单上限 +4"""
+        from steward_core.synergy.trade_linkages import compute_trade_order_limit
+
+        jessica = _mk_op("涤火杰西卡")
+        jessica.skills.append(_mk_skill("trade_ord_spd&limit[001]", "Trade", "订单管理·β"))
+        ctx = compute_trade_order_limit([jessica], self._mk_trade_layout(), [])
+        assert ctx.total == 14
+        assert ctx.contributions.get("订单管理·β") == 4
+
+    def test_远山供应管理_加1(self):
+        """trade_ord_spd&limit[010] → 订单上限 +1"""
+        from steward_core.synergy.trade_linkages import compute_trade_order_limit
+
+        yuanshan = _mk_op("远山")
+        yuanshan.skills.append(_mk_skill("trade_ord_spd&limit[010]", "Trade", "供应管理"))
+        ctx = compute_trade_order_limit([yuanshan], self._mk_trade_layout(), [])
+        assert ctx.total == 11
+        assert ctx.contributions.get("供应管理") == 1
+
+    def test_银灰喀兰贸易alpha_加2(self):
+        """trade_ord_spd&limit[020] → 订单上限 +2"""
+        from steward_core.synergy.trade_linkages import compute_trade_order_limit
+
+        silverash = _mk_op("银灰")
+        silverash.skills.append(_mk_skill("trade_ord_spd&limit[020]", "Trade", "喀兰贸易·α"))
+        ctx = compute_trade_order_limit([silverash], self._mk_trade_layout(), [])
+        assert ctx.total == 12
+        assert ctx.contributions.get("喀兰贸易·α") == 2
+
+    def test_银灰喀兰之主_加4(self):
+        """trade_ord_spd&limit[022] → 订单上限 +4"""
+        from steward_core.synergy.trade_linkages import compute_trade_order_limit
+
+        silverash = _mk_op("银灰")
+        silverash.skills.append(_mk_skill("trade_ord_spd&limit[022]", "Trade", "喀兰之主"))
+        ctx = compute_trade_order_limit([silverash], self._mk_trade_layout(), [])
+        assert ctx.total == 14
+        assert ctx.contributions.get("喀兰之主") == 4
+
+    def test_银灰精2两条技能_累加6(self):
+        """银灰精2持有 α[020]+主[022] 两条技能 → +2+4=6"""
+        from steward_core.synergy.trade_linkages import compute_trade_order_limit
+
+        silverash = _mk_op("银灰")
+        silverash.skills.append(_mk_skill("trade_ord_spd&limit[020]", "Trade", "喀兰贸易·α"))
+        silverash.skills.append(_mk_skill("trade_ord_spd&limit[022]", "Trade", "喀兰之主"))
+        ctx = compute_trade_order_limit([silverash], self._mk_trade_layout(), [])
+        assert ctx.total == 16
+        assert ctx.contributions.get("喀兰贸易·α") == 2
+        assert ctx.contributions.get("喀兰之主") == 4
+
+
+# ─── 贸易站 per-operator 分享（火哨/吉星） ─────────────────────────
+
+class TestTradeShareSynergy:
+    """A层·贸易分享 — synergy_trade_share"""
+
+    def test_火哨代为说项_3队友_45percent(self):
+        """火哨 + 3名队友 → (4-1)×15 = 45%"""
+        from steward_core.synergy.trade_linkages import synergy_trade_share
+
+        huoshao = _mk_op("火哨")
+        huoshao.skills.append(_mk_skill("trade_ord_spd&share[000]", "Trade", "代为说项"))
+        ops = [huoshao] + [_mk_op(f"队友{i}") for i in range(3)]
+        segs = synergy_trade_share(ops, "Trade", 12.0)
+        assert len(segs) == 1
+        assert segs[0].a == 45.0
+
+    def test_吉星勤俭经营alpha_3队友_30percent(self):
+        """吉星α + 3名队友 → (4-1)×10 = 30%"""
+        from steward_core.synergy.trade_linkages import synergy_trade_share
+
+        jixing = _mk_op("吉星")
+        jixing.skills.append(_mk_skill("trade_ord_spd&share[001]", "Trade", "勤俭经营·α"))
+        ops = [jixing] + [_mk_op(f"队友{i}") for i in range(3)]
+        segs = synergy_trade_share(ops, "Trade", 12.0)
+        assert len(segs) == 1
+        assert segs[0].a == 30.0
+
+    def test_吉星勤俭经营beta_3队友_60percent(self):
+        """吉星β + 3名队友 → (4-1)×20 = 60%"""
+        from steward_core.synergy.trade_linkages import synergy_trade_share
+
+        jixing = _mk_op("吉星")
+        jixing.skills.append(_mk_skill("trade_ord_spd&share[002]", "Trade", "勤俭经营·β"))
+        ops = [jixing] + [_mk_op(f"队友{i}") for i in range(3)]
+        segs = synergy_trade_share(ops, "Trade", 12.0)
+        assert len(segs) == 1
+        assert segs[0].a == 60.0
+
+    def test_火哨独自_0percent(self):
+        """火哨独自 → 0 名队友 → 0%"""
+        from steward_core.synergy.trade_linkages import synergy_trade_share
+
+        huoshao = _mk_op("火哨")
+        huoshao.skills.append(_mk_skill("trade_ord_spd&share[000]", "Trade", "代为说项"))
+        segs = synergy_trade_share([huoshao], "Trade", 12.0)
+        assert segs == []
+
+    def test_非Trade_返回空(self):
+        """火哨在 Mfg → 不触发"""
+        from steward_core.synergy.trade_linkages import synergy_trade_share
+
+        huoshao = _mk_op("火哨")
+        huoshao.skills.append(_mk_skill("trade_ord_spd&share[000]", "Trade", "代为说项"))
+        segs = synergy_trade_share([huoshao], "Mfg", 12.0)
+        assert segs == []
+
+    def test_无buff_返回空(self):
+        """无人持有 trade_ord_spd&share → 0"""
+        from steward_core.synergy.trade_linkages import synergy_trade_share
+
+        op = _mk_op("其他")
+        segs = synergy_trade_share([op, _mk_op("队友")], "Trade", 12.0)
+        assert segs == []
+
+
+# ─── 雪雉 效率→效率放大器 ───────────────────────────────────────
+
+class TestTradeEfficiencyAmplifier:
+    """A层·效率放大 — synergy_trade_efficiency_amplifier"""
+
+    def test_雪雉alpha_60percent总效率_额外30percent_capped_at_25(self):
+        """雪雉α: room_eff=60, floor(60/5)=12步, 12×5=60, cap=25 → 25%"""
+        from steward_core.synergy.trade_linkages import synergy_trade_efficiency_amplifier
+
+        xuezhi = _mk_op("雪雉")
+        xuezhi.skills.append(_mk_skill("trade_ord_spd_variable2[000]", "Trade", "天道酬勤·α"))
+        segs = synergy_trade_efficiency_amplifier([xuezhi], "Trade", 60.0, 12.0)
+        assert len(segs) == 1
+        assert segs[0].a == 25.0
+
+    def test_雪雉alpha_20percent总效率_20percent(self):
+        """雪雉α: room_eff=20, floor(20/5)=4步, 4×5=20, cap=25 → 20%"""
+        from steward_core.synergy.trade_linkages import synergy_trade_efficiency_amplifier
+
+        xuezhi = _mk_op("雪雉")
+        xuezhi.skills.append(_mk_skill("trade_ord_spd_variable2[000]", "Trade", "天道酬勤·α"))
+        segs = synergy_trade_efficiency_amplifier([xuezhi], "Trade", 20.0, 12.0)
+        assert len(segs) == 1
+        assert segs[0].a == 20.0
+
+    def test_雪雉beta_60percent总效率_额外30percent(self):
+        """雪雉β: room_eff=60, floor(60/5)=12步, 12×5=60, cap=35 → 35%"""
+        from steward_core.synergy.trade_linkages import synergy_trade_efficiency_amplifier
+
+        xuezhi = _mk_op("雪雉")
+        xuezhi.skills.append(_mk_skill("trade_ord_spd_variable2[001]", "Trade", "天道酬勤·β"))
+        segs = synergy_trade_efficiency_amplifier([xuezhi], "Trade", 60.0, 12.0)
+        assert len(segs) == 1
+        assert segs[0].a == 35.0
+
+    def test_雪雉总效率小于步长_返回空(self):
+        """雪雉α: room_eff=3, floor(3/5)=0 → 0%"""
+        from steward_core.synergy.trade_linkages import synergy_trade_efficiency_amplifier
+
+        xuezhi = _mk_op("雪雉")
+        xuezhi.skills.append(_mk_skill("trade_ord_spd_variable2[000]", "Trade", "天道酬勤·α"))
+        segs = synergy_trade_efficiency_amplifier([xuezhi], "Trade", 3.0, 12.0)
+        assert segs == []
+
+    def test_无buff_返回空(self):
+        """无人持有 trade_ord_spd_variable2 → 空"""
+        from steward_core.synergy.trade_linkages import synergy_trade_efficiency_amplifier
+
+        op = _mk_op("其他")
+        segs = synergy_trade_efficiency_amplifier([op], "Trade", 50.0, 12.0)
+        assert segs == []
+
+    def test_非Trade_返回空(self):
+        """雪雉在 Mfg → 不触发"""
+        from steward_core.synergy.trade_linkages import synergy_trade_efficiency_amplifier
+
+        xuezhi = _mk_op("雪雉")
+        xuezhi.skills.append(_mk_skill("trade_ord_spd_variable2[000]", "Trade", "天道酬勤·α"))
+        segs = synergy_trade_efficiency_amplifier([xuezhi], "Mfg", 50.0, 12.0)
+        assert segs == []
+
+
+# ─── 贝洛内/赫德雷 per-operator 条件效率 ──────────────────────────
+
+class TestTradeConditionalEff:
+    """A层·条件效率 — synergy_trade_conditional_eff"""
+
+    def _mk_assignments(self, **facilities: list):
+        """构造 all_assignments: {facility_name: operator_list}"""
+        return dict(facilities)
+
+    def test_贝洛内alpha_伺夜在基建_加5(self):
+        """贝洛内α + 伺夜在 Control → +5%"""
+        from steward_core.synergy.trade_linkages import synergy_trade_conditional_eff
+
+        bellone = _mk_op("贝洛内")
+        bellone.skills.append(_mk_skill("trade_ord_spd_ext[020]", "Trade", "家族经营·α"))
+        siye = _mk_op("伺夜")
+        assignments = {"Control": [siye]}
+
+        segs = synergy_trade_conditional_eff([bellone], "Trade", assignments, 12.0)
+        assert len(segs) == 1
+        assert segs[0].a == 5.0
+
+    def test_贝洛内beta_伺夜在基建_加10(self):
+        """贝洛内β + 伺夜在 Mfg → +10%"""
+        from steward_core.synergy.trade_linkages import synergy_trade_conditional_eff
+
+        bellone = _mk_op("贝洛内")
+        bellone.skills.append(_mk_skill("trade_ord_spd_ext[021]", "Trade", "家族经营·β"))
+        siye = _mk_op("伺夜")
+        assignments = {"Mfg": [siye]}
+
+        segs = synergy_trade_conditional_eff([bellone], "Trade", assignments, 12.0)
+        assert len(segs) == 1
+        assert segs[0].a == 10.0
+
+    def test_贝洛内_伺夜不在基建_不加(self):
+        """贝洛内α + 伺夜不在基建 → 空"""
+        from steward_core.synergy.trade_linkages import synergy_trade_conditional_eff
+
+        bellone = _mk_op("贝洛内")
+        bellone.skills.append(_mk_skill("trade_ord_spd_ext[020]", "Trade", "家族经营·α"))
+        assignments = {}  # 伺夜不在任何地方
+
+        segs = synergy_trade_conditional_eff([bellone], "Trade", assignments, 12.0)
+        assert segs == []
+
+    def test_赫德雷alpha_伊内丝在工作场所_加5(self):
+        """赫德雷α + 伊内丝在 Trade → target_scope="workspace" → +5%"""
+        from steward_core.synergy.trade_linkages import synergy_trade_conditional_eff
+
+        hederei = _mk_op("赫德雷")
+        hederei.skills.append(_mk_skill("trade_ord_par&per[000]", "Trade", "白手起家·α"))
+        yineisi = _mk_op("伊内丝")
+        assignments = {"Trade": [yineisi]}
+
+        segs = synergy_trade_conditional_eff([hederei], "Trade", assignments, 12.0)
+        assert len(segs) == 1
+        assert segs[0].a == 5.0
+
+    def test_赫德雷alpha_伊内丝在宿舍_不加(self):
+        """赫德雷α + 伊内丝在 Dormitory（非workspace）→ 不触发"""
+        from steward_core.synergy.trade_linkages import synergy_trade_conditional_eff
+
+        hederei = _mk_op("赫德雷")
+        hederei.skills.append(_mk_skill("trade_ord_par&per[000]", "Trade", "白手起家·α"))
+        yineisi = _mk_op("伊内丝")
+        assignments = {"Dormitory": [yineisi]}
+
+        segs = synergy_trade_conditional_eff([hederei], "Trade", assignments, 12.0)
+        assert segs == []
+
+    def test_赫德雷beta_伊内丝和W都在_各加5(self):
+        """赫德雷β + 伊内丝在 Control + W 在 Mfg → +5+5=10%"""
+        from steward_core.synergy.trade_linkages import synergy_trade_conditional_eff
+
+        hederei = _mk_op("赫德雷")
+        hederei.skills.append(_mk_skill("trade_ord_par&per[001]", "Trade", "白手起家·β"))
+        yineisi = _mk_op("伊内丝")
+        w_op = _mk_op("W")
+        assignments = {"Control": [yineisi], "Mfg": [w_op]}
+
+        segs = synergy_trade_conditional_eff([hederei], "Trade", assignments, 12.0)
+        assert len(segs) == 1
+        assert segs[0].a == 10.0
+
+    def test_赫德雷beta_仅W在_伊内丝不在_5percent(self):
+        """赫德雷β + W 在 Mfg（伊内丝不在）→ 仅 W 触发 +5%"""
+        from steward_core.synergy.trade_linkages import synergy_trade_conditional_eff
+
+        hederei = _mk_op("赫德雷")
+        hederei.skills.append(_mk_skill("trade_ord_par&per[001]", "Trade", "白手起家·β"))
+        w_op = _mk_op("W")
+        assignments = {"Mfg": [w_op]}
+
+        segs = synergy_trade_conditional_eff([hederei], "Trade", assignments, 12.0)
+        assert len(segs) == 1
+        assert segs[0].a == 5.0
+
+    def test_非Trade_返回空(self):
+        """贝洛内在 Mfg → 不触发"""
+        from steward_core.synergy.trade_linkages import synergy_trade_conditional_eff
+
+        bellone = _mk_op("贝洛内")
+        bellone.skills.append(_mk_skill("trade_ord_spd_ext[020]", "Trade", "家族经营·α"))
+        siye = _mk_op("伺夜")
+        assignments = {"Control": [siye]}
+
+        segs = synergy_trade_conditional_eff([bellone], "Mfg", assignments, 12.0)
+        assert segs == []
+
+
+# ─── 维什戴尔→赫德雷 中枢贸易订单上限联动 ────────────────────────────
+
+class TestControlTradeLimit:
+    """C层·中枢→贸易站订单上限 — _CONTROL_TRADE_LIMIT_TABLE"""
+
+    def _mk_trade_layout(self, level: int = 3):
+        from steward_core.models import LayoutConfig, RoomConfig
+        return LayoutConfig(rooms=[
+            RoomConfig("Trade", 0, 3, "Money", level=level),
+            RoomConfig("Trade", 1, 3, "Money", level=level),
+        ])
+
+    def test_维什戴尔alpha_赫德雷在贸易站_加1(self):
+        """维什戴尔α(精0)在中枢 + 赫德雷在Trade → +1"""
+        from steward_core.synergy.trade_linkages import compute_trade_order_limit
+        from steward_core.models import Operator
+
+        hederei = _mk_op("赫德雷")
+        wishadel = Operator(
+            char_id="维什戴尔", name="维什戴尔",
+            skills=[_mk_skill("control_meeting&ord[000]", "Control", "同谋·α")],
+            elite_phase=0,
+        )
+        ctx = compute_trade_order_limit(
+            [hederei], self._mk_trade_layout(), [wishadel],
+        )
+        assert ctx.total == 11
+        assert ctx.contributions.get("维什戴尔->赫德雷") == 1
+
+    def test_维什戴尔beta_赫德雷在贸易站_加2(self):
+        """维什戴尔β(精2)在中枢 + 赫德雷在Trade → +2"""
+        from steward_core.synergy.trade_linkages import compute_trade_order_limit
+        from steward_core.models import Operator
+
+        hederei = _mk_op("赫德雷")
+        wishadel = Operator(
+            char_id="维什戴尔", name="维什戴尔",
+            skills=[_mk_skill("control_meeting&ord[001]", "Control", "同谋·β")],
+            elite_phase=2,
+        )
+        ctx = compute_trade_order_limit(
+            [hederei], self._mk_trade_layout(), [wishadel],
+        )
+        assert ctx.total == 12
+        assert ctx.contributions.get("维什戴尔->赫德雷") == 2
+
+    def test_维什戴尔在中枢_赫德雷不在贸易站_不加(self):
+        """维什戴尔在中枢 + 赫德雷不在 → 不触发"""
+        from steward_core.synergy.trade_linkages import compute_trade_order_limit
+
+        other = _mk_op("其他干员")
+        wishadel = _mk_op("维什戴尔", skills=[
+            _mk_skill("control_meeting&ord[000]", "Control", "同谋·α"),
+        ])
+        ctx = compute_trade_order_limit(
+            [other], self._mk_trade_layout(), [wishadel],
+        )
+        assert ctx.total == 10
+        assert "维什戴尔->赫德雷" not in ctx.contributions
+
+    def test_赫德雷在贸易站_维什戴尔不在中枢_不加(self):
+        """赫德雷在Trade + 维什戴尔不在中枢 → 不触发"""
+        from steward_core.synergy.trade_linkages import compute_trade_order_limit
+
+        hederei = _mk_op("赫德雷")
+        ctx = compute_trade_order_limit(
+            [hederei], self._mk_trade_layout(), [],
+        )
+        assert ctx.total == 10
+        assert "维什戴尔->赫德雷" not in ctx.contributions
+
+
+# ─── 绮良赤金线增强（synergy_trade_gold_lines 扩展） ──────────────
+
+class TestGoldLineKirara:
+    """synergy_trade_gold_lines — 绮良订单流可视化 赤金线追加"""
+
+    def test_绮良alpha_4条赤金线_额外2条(self):
+        """绮良α + 4 基础赤金线 → floor(4/4)×2=2 追加 → 总 6 线 × 5% = 30%"""
+        from steward_core.synergy.trade_linkages import synergy_trade_gold_lines
+        from steward_core.models import LayoutConfig, RoomConfig
+
+        hongxue = _mk_op("鸿雪")
+        hongxue.skills.append(_mk_skill("trade_ord_spd&gold[100]", "Trade", "销路宣发"))
+        kirara = _mk_op("绮良")
+        kirara.skills.append(_mk_skill("trade_ord_line_gold[000]", "Trade", "订单流可视化·α"))
+        layout = LayoutConfig(rooms=[
+            RoomConfig("Mfg", 0, 3, "PureGold"),
+            RoomConfig("Mfg", 1, 3, "PureGold"),
+            RoomConfig("Mfg", 2, 3, "PureGold"),
+            RoomConfig("Mfg", 3, 3, "PureGold"),
+        ])
+
+        segs = synergy_trade_gold_lines([hongxue, kirara], "Trade", "Money", layout, T=12.0)
+        assert len(segs) == 1
+        assert segs[0].a == 30.0  # (4基础+2绮良) × 5%
+
+    def test_绮良beta_2条赤金线_额外2条(self):
+        """绮良β + 2 基础赤金线 → floor(2/2)×2=2 追加 → 总 4 线 × 5% = 20%"""
+        from steward_core.synergy.trade_linkages import synergy_trade_gold_lines
+        from steward_core.models import LayoutConfig, RoomConfig
+
+        hongxue = _mk_op("鸿雪")
+        hongxue.skills.append(_mk_skill("trade_ord_spd&gold[100]", "Trade", "销路宣发"))
+        kirara = _mk_op("绮良")
+        kirara.skills.append(_mk_skill("trade_ord_line_gold[010]", "Trade", "订单流可视化·β"))
+        layout = LayoutConfig(rooms=[
+            RoomConfig("Mfg", 0, 3, "PureGold"),
+            RoomConfig("Mfg", 1, 3, "PureGold"),
+        ])
+
+        segs = synergy_trade_gold_lines([hongxue, kirara], "Trade", "Money", layout, T=12.0)
+        assert len(segs) == 1
+        assert segs[0].a == 20.0  # (2基础+2绮良) × 5%
+
+    def test_绮良alpha_不足4线_不追加(self):
+        """绮良α + 2 基础赤金线 → floor(2/4)=0 → 不减反触发为0"""
+        from steward_core.synergy.trade_linkages import synergy_trade_gold_lines
+        from steward_core.models import LayoutConfig, RoomConfig
+
+        hongxue = _mk_op("鸿雪")
+        hongxue.skills.append(_mk_skill("trade_ord_spd&gold[100]", "Trade", "销路宣发"))
+        kirara = _mk_op("绮良")
+        kirara.skills.append(_mk_skill("trade_ord_line_gold[000]", "Trade", "订单流可视化·α"))
+        layout = LayoutConfig(rooms=[
+            RoomConfig("Mfg", 0, 3, "PureGold"),
+            RoomConfig("Mfg", 1, 3, "PureGold"),
+        ])
+
+        segs = synergy_trade_gold_lines([hongxue, kirara], "Trade", "Money", layout, T=12.0)
+        assert len(segs) == 1
+        assert segs[0].a == 10.0  # 2×5%，无追加
+
+    def test_仅绮良_无鸿雪_无金线触发(self):
+        """仅有绮良（无鸿雪 gold_lines 机制）→ 空"""
+        from steward_core.synergy.trade_linkages import synergy_trade_gold_lines
+        from steward_core.models import LayoutConfig, RoomConfig
+
+        kirara = _mk_op("绮良")
+        kirara.skills.append(_mk_skill("trade_ord_line_gold[000]", "Trade", "订单流可视化·α"))
+        layout = LayoutConfig(rooms=[
+            RoomConfig("Mfg", 0, 3, "PureGold"),
+        ])
+
+        segs = synergy_trade_gold_lines([kirara], "Trade", "Money", layout, T=12.0)
+        assert segs == []

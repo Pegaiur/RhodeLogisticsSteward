@@ -11,7 +11,10 @@
 from dataclasses import dataclass, field
 
 from steward_core.models import LinearSegment, Operator, LayoutConfig
-from steward_core.synergy.types import OrderLimitEntry, TradePairEntry, OrderOverrideEntry
+from steward_core.synergy.types import (
+    OrderLimitEntry, TradePairEntry, OrderOverrideEntry,
+    TradeShareEntry, TradeEffAmpEntry, TradeConditionalEffEntry,
+)
 from .helpers import _DURIN_NAMES  # TODO: 际崖居民 durin_names 参数链待 evaluate_room 接入
 
 # ─── 模块级常量 ─────────────────────────────────────────────────
@@ -65,6 +68,11 @@ _ORDER_LIMIT_TABLE: dict[str, OrderLimitEntry] = {
     "trade_ord_limit&cost_P[001]":  OrderLimitEntry("醉翁之意·β", 4, requires="德克萨斯"),
     "trade_ord_limit&trade&lv[000]": OrderLimitEntry("多面逢源", 1, per_trade_level=True),
     "trade_ord_limit&trade&lv[001]": OrderLimitEntry("钱不我待", 1, per_trade_level=True),
+    "trade_ord_spd&limit[000]":    OrderLimitEntry("订单管理·α", 2),
+    "trade_ord_spd&limit[001]":    OrderLimitEntry("订单管理·β", 4),
+    "trade_ord_spd&limit[010]":    OrderLimitEntry("供应管理", 1),
+    "trade_ord_spd&limit[020]":    OrderLimitEntry("喀兰贸易·α", 2),
+    "trade_ord_spd&limit[022]":    OrderLimitEntry("喀兰之主", 4),
 }
 """订单上限贡献表
 
@@ -129,6 +137,39 @@ def get_active_override(operators: list[Operator]) -> OrderOverrideEntry | None:
             if best is None or entry.priority > best.priority:
                 best = entry
     return best
+
+_TRADE_SHARE_TABLE: dict[str, TradeShareEntry] = {
+    "trade_ord_spd&share[000]": TradeShareEntry(bonus_per_worker=15.0),
+    "trade_ord_spd&share[001]": TradeShareEntry(bonus_per_worker=10.0),
+    "trade_ord_spd&share[002]": TradeShareEntry(bonus_per_worker=20.0),
+}
+"""贸易站 per-operator 分享表 — 火哨代为说项、吉星勤俭经营
+
+buff_id → TradeShareEntry
+持有者自身不计入计数。
+"""
+
+_TRADE_EFF_AMPLIFIER_TABLE: dict[str, TradeEffAmpEntry] = {
+    "trade_ord_spd_variable2[000]": TradeEffAmpEntry(cap=25.0),
+    "trade_ord_spd_variable2[001]": TradeEffAmpEntry(cap=35.0),
+}
+"""贸易站效率→效率放大表 — 雪雉天道酬勤
+
+buff_id → TradeEffAmpEntry
+每 5% 房间总效率额外 +5%，上限由 cap 约束。
+"""
+
+_TRADE_CONDITIONAL_EFF_TABLE: dict[str, TradeConditionalEffEntry] = {
+    "trade_ord_spd_ext[020]": TradeConditionalEffEntry(5.0, ("伺夜",), "base"),
+    "trade_ord_spd_ext[021]": TradeConditionalEffEntry(10.0, ("伺夜",), "base"),
+    "trade_ord_par&per[000]": TradeConditionalEffEntry(5.0, ("伊内丝",), "workspace"),
+    "trade_ord_par&per[001]": TradeConditionalEffEntry(5.0, ("伊内丝", "W"), "workspace"),
+}
+"""贸易站条件型 per-operator 效率表 — 贝洛内家族经营、赫德雷白手起家
+
+buff_id → TradeConditionalEffEntry
+target_scope: "base"=基建任意位置 "workspace"=Control/Mfg/Trade
+"""
 
 
 def _collect_mechs(
@@ -214,8 +255,9 @@ def synergy_trade_gold_lines(
     T: float = 12.0,
 ) -> list[LinearSegment]:
     """鸿雪销路宣发(每赤金线+5%) + 际崖居民(杜林族→额外赤金线，上限4)
+    + 绮良订单流可视化(每N条赤金线额外+M条)
 
-    赤金线 = Mfg PureGold 房间数 + min(杜林族干员数, 4)
+    赤金线 = Mfg PureGold 房间数 + min(杜林族干员数, 4) + 绮良追加。
     """
     if room_type != "Trade":
         return []
@@ -228,6 +270,15 @@ def synergy_trade_gold_lines(
     if durin_names:
         durin_count = len(durin_names)
         gold_lines += min(durin_count, 4)
+
+    for op in operators:
+        for sk in op.skills:
+            if sk.room_type != "Trade":
+                continue
+            if sk.buff_id == "trade_ord_line_gold[000]":
+                gold_lines += (gold_lines // 4) * 2
+            elif sk.buff_id == "trade_ord_line_gold[010]":
+                gold_lines += (gold_lines // 2) * 2
 
     bonus = gold_lines * 5.0
     return [LinearSegment(a=bonus, b=0.0, t_start=0.0, dt=T)] if bonus > 0 else []
@@ -285,7 +336,16 @@ def compute_trade_order_limit(
         ctx.add("贝洛内+伺夜", 2)
 
     if control_operators:
+        from .control_linkages import _CONTROL_TRADE_LIMIT_TABLE
         ctrl_names = {op.name for op in control_operators}
+        for ctrl_name, entry in _CONTROL_TRADE_LIMIT_TABLE.items():
+            if ctrl_name in ctrl_names and entry.target_name in names:
+                e2_count = sum(
+                    1 for op in control_operators
+                    if op.name == ctrl_name and op.elite_phase >= 2
+                )
+                bonus = entry.bonus_e2 if e2_count > 0 else entry.bonus_e0
+                ctx.add(f"{ctrl_name}->{entry.target_name}", bonus)
         if "灵知" in ctrl_names:
             count = sum(1 for op in operators if op.group_id == "karlan")
             if count > 0:
@@ -352,3 +412,90 @@ def synergy_degenbrecher_order_limit(
         return []
     bonus = min(int(order_ctx.total / 5) * 25, 100)
     return [LinearSegment(a=float(bonus), b=0.0, t_start=0.0, dt=T)] if bonus > 0 else []
+
+
+def synergy_trade_share(
+    operators: list[Operator],
+    room_type: str,
+    T: float,
+) -> list[LinearSegment]:
+    """贸易站 per-operator 分享效率：火哨代为说项、吉星勤俭经营
+
+    遍历 _TRADE_SHARE_TABLE，持有者自身不计入计数。
+    """
+    if room_type != "Trade":
+        return []
+    bonus = 0.0
+    for op in operators:
+        for sk in op.skills:
+            if sk.room_type != "Trade":
+                continue
+            entry = _TRADE_SHARE_TABLE.get(sk.buff_id)
+            if entry is not None:
+                bonus += (len(operators) - 1) * entry.bonus_per_worker
+    return [LinearSegment(a=bonus, b=0.0, t_start=0.0, dt=T)] if bonus > 0 else []
+
+
+def synergy_trade_efficiency_amplifier(
+    operators: list[Operator],
+    room_type: str,
+    room_total_eff: float,
+    T: float,
+) -> list[LinearSegment]:
+    """贸易站效率→效率放大器：雪雉天道酬勤
+
+    room_total_eff 为房间当前总效率（百分值），
+    每 step_size% 额外 bonus_per_step%，上限 cap%。
+    """
+    if room_type != "Trade":
+        return []
+    bonus = 0.0
+    for op in operators:
+        for sk in op.skills:
+            if sk.room_type != "Trade":
+                continue
+            entry = _TRADE_EFF_AMPLIFIER_TABLE.get(sk.buff_id)
+            if entry is not None:
+                steps = int(room_total_eff / entry.step_size)
+                local = min(steps * entry.bonus_per_step, entry.cap)
+                bonus += local
+    return [LinearSegment(a=bonus, b=0.0, t_start=0.0, dt=T)] if bonus > 0 else []
+
+
+def synergy_trade_conditional_eff(
+    operators: list[Operator],
+    room_type: str,
+    all_assignments: dict[str, list[Operator]],
+    T: float,
+) -> list[LinearSegment]:
+    """贸易站条件型 per-operator 效率加成：贝洛内家族经营、赫德雷白手起家
+
+    all_assignments: facility_type → operator_list
+    target_scope 枚举:
+      "base"    — 基建任意位置（遍历 all_assignments 全量）
+      "workspace" — 工作设施 Control/Mfg/Trade
+    """
+    if room_type != "Trade":
+        return []
+    bonus = 0.0
+    for op in operators:
+        for sk in op.skills:
+            if sk.room_type != "Trade":
+                continue
+            entry = _TRADE_CONDITIONAL_EFF_TABLE.get(sk.buff_id)
+            if entry is None:
+                continue
+            for target in entry.target_names:
+                if entry.target_scope == "base":
+                    target_found = any(
+                        any(o.name == target for o in ops)
+                        for ops in all_assignments.values()
+                    )
+                else:
+                    target_found = any(
+                        any(o.name == target for o in all_assignments.get(fac, []))
+                        for fac in ("Control", "Mfg", "Trade")
+                    )
+                if target_found:
+                    bonus += entry.bonus_per
+    return [LinearSegment(a=bonus, b=0.0, t_start=0.0, dt=T)] if bonus > 0 else []

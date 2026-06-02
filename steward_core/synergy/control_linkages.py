@@ -3,7 +3,7 @@
 from dataclasses import dataclass
 
 from steward_core.models import LinearSegment, Operator
-from .types import GlobalBonusEntry
+from .types import GlobalBonusEntry, ControlTradeLimitEntry
 from .helpers import (
     _MH_NAMES, _LUNG_MEN_GUARD_NAMES, _BLACKSTEEL_HOLDERS,
     _BLACKSTEEL_GROUP, _PINUS_GROUP, _KNIGHT_NAMES, _OP_PLATFORM_NAMES,
@@ -19,6 +19,15 @@ _C_CONTROL_GLOBAL_TABLE: dict[str, GlobalBonusEntry] = {
     "佩佩": GlobalBonusEntry(0.0, 7.0),
     "阿斯卡纶": GlobalBonusEntry(0.0, 7.0),
 }
+
+_CONTROL_TRADE_LIMIT_TABLE: dict[str, ControlTradeLimitEntry] = {
+    "维什戴尔": ControlTradeLimitEntry(target_name="赫德雷", bonus_e0=1, bonus_e2=2),
+}
+"""中枢→贸易站订单上限联动表
+
+中枢干员名 → ControlTradeLimitEntry
+当 target_name 在贸易站时，根据中枢干员精英阶段提供订单上限加成。
+"""
 
 
 @dataclass
