@@ -319,9 +319,7 @@ def compute_trade_order_limit(
     )
 
     for op in operators:
-        for sk in op.skills:
-            if sk.room_type != "Trade":
-                continue
+        for sk in op.active_skills_for("Trade"):
             entry = _ORDER_LIMIT_TABLE.get(sk.buff_id)
             if entry is None:
                 continue
@@ -451,9 +449,7 @@ def synergy_trade_efficiency_amplifier(
         return []
     bonus = 0.0
     for op in operators:
-        for sk in op.skills:
-            if sk.room_type != "Trade":
-                continue
+        for sk in op.active_skills_for("Trade"):
             entry = _TRADE_EFF_AMPLIFIER_TABLE.get(sk.buff_id)
             if entry is not None:
                 steps = int(room_total_eff / entry.step_size)
@@ -479,9 +475,7 @@ def synergy_trade_conditional_eff(
         return []
     bonus = 0.0
     for op in operators:
-        for sk in op.skills:
-            if sk.room_type != "Trade":
-                continue
+        for sk in op.active_skills_for("Trade"):
             entry = _TRADE_CONDITIONAL_EFF_TABLE.get(sk.buff_id)
             if entry is None:
                 continue

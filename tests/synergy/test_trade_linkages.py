@@ -14,7 +14,7 @@ def _mk_op(name: str = "测试", skills: list[Skill] | None = None,
 
 def _mk_skill(buff_id: str, room_type: str, buff_name: str = "测试技能",
               efficient: dict[str, float] | None = None,
-              capacity: int = 0) -> Skill:
+              capacity: int = 0, phase: int = 0) -> Skill:
     return Skill(
         buff_id=buff_id,
         buff_name=buff_name,
@@ -22,6 +22,7 @@ def _mk_skill(buff_id: str, room_type: str, buff_name: str = "测试技能",
         room_type=room_type,
         efficient=EfficiencyMap(raw=efficient or {"all": 0.0}),
         capacity_bonus=capacity,
+        phase=phase,
     )
 
 
@@ -734,17 +735,17 @@ class TestOrderLimitTableExpansion:
         assert ctx.total == 14
         assert ctx.contributions.get("喀兰之主") == 4
 
-    def test_银灰精2两条技能_累加6(self):
-        """银灰精2持有 α[020]+主[022] 两条技能 → +2+4=6"""
+    def test_银灰精2两条技能_仅beta生效(self):
+        """银灰精2持有 α[020](phase 0)+主[022](phase 2) → 同前缀升级，仅主(+4)生效"""
         from steward_core.synergy.trade_linkages import compute_trade_order_limit
 
         silverash = _mk_op("银灰")
-        silverash.skills.append(_mk_skill("trade_ord_spd&limit[020]", "Trade", "喀兰贸易·α"))
-        silverash.skills.append(_mk_skill("trade_ord_spd&limit[022]", "Trade", "喀兰之主"))
+        silverash.skills.append(_mk_skill("trade_ord_spd&limit[020]", "Trade", "喀兰贸易·α", phase=0))
+        silverash.skills.append(_mk_skill("trade_ord_spd&limit[022]", "Trade", "喀兰之主", phase=2))
         ctx = compute_trade_order_limit([silverash], self._mk_trade_layout(), [])
-        assert ctx.total == 16
-        assert ctx.contributions.get("喀兰贸易·α") == 2
+        assert ctx.total == 14
         assert ctx.contributions.get("喀兰之主") == 4
+        assert ctx.contributions.get("喀兰贸易·α") is None
 
 
 # ─── 贸易站 per-operator 分享（火哨/吉星） ─────────────────────────

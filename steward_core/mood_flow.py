@@ -455,7 +455,7 @@ class MoodContext:
 
         co_workers 为同房间干员名列表，用于检测房间级 mp_cost buff
         （槐琥 manu_cost_all[000] 消除全房间消耗等）。
-        为 None 时跳过检测（_pool_for 保守计算场景）。
+        为 None 时跳过检测。
         """
         burn_per_hour = self.params.base_burn_per_hour if self.params else 1.0
         recovery_per_op = self.params.control_recovery_per_op if self.params else 0.05

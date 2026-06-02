@@ -62,7 +62,7 @@ def synergy_capacity_to_eff(
     if not has_paopao and not has_hongyun:
         return []
 
-    total_cap = sum(sk.capacity_bonus for op in operators for sk in op.skills)
+    total_cap = sum(sk.capacity_bonus for op in operators for sk in op.active_skills_for("Mfg"))
 
     if has_paopao:
         eff = min(total_cap, 16) * 1.0 + max(0, total_cap - 16) * 3.0

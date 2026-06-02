@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Optional
 
@@ -122,6 +123,40 @@ class Operator:
             if skill.effective_for(room_type, product):
                 return True
         return False
+
+    def active_skills_for(self, room_type: str) -> list[Skill]:
+        """本 roomType 下扣除升级覆写后实际生效的技能。
+
+        判定规则：同 buffId 前缀组内取 phase 最高且已解锁的技能。
+        不同前缀组共存。同 phase 时取效率值更高的。
+        前缀 = buffId 去掉末尾 [数字]，如 'manu_prod_spd_bd[010]' -> 'manu_prod_spd_bd'
+        """
+        available = [sk for sk in self.skills if sk.phase <= self.elite_phase]
+        groups: dict[str, Skill] = {}
+        for sk in available:
+            if sk.room_type != room_type:
+                continue
+            prefix = _buff_id_prefix(sk.buff_id)
+            if prefix not in groups:
+                groups[prefix] = sk
+                continue
+            existing = groups[prefix]
+            if sk.phase > existing.phase:
+                groups[prefix] = sk
+            elif sk.phase == existing.phase:
+                if sk.efficient.max_value() > existing.efficient.max_value():
+                    groups[prefix] = sk
+        return list(groups.values())
+
+
+def _buff_id_prefix(buff_id: str) -> str:
+    """去掉 buffId 末尾 [NNN] 后缀，返回前缀。
+
+    'manu_prod_spd_bd[010]' -> 'manu_prod_spd_bd'
+    'trade_ord_spd&tag[000]' -> 'trade_ord_spd&tag'
+    """
+    m = re.match(r"^(.+)\[\d+\]$", buff_id)
+    return m.group(1) if m else buff_id
 
 
 # ─── 设施布局配置 ───────────────────────────────────────────────

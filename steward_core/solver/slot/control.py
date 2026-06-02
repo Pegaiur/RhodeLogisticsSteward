@@ -33,7 +33,7 @@ def phase_control(
     3. 顺序贪心：每轮选 contribution 最高的干员，写入 ctx，下一轮重算
 
     中枢容量从 ctx.params.control_max_slots 读取（默认 5）。
-    跨窗口可持续性由 λ 影子乘子经济惩罚 + mood_is_viable 心情阈值共同保障。
+    跨窗口可持续性由 mood_is_viable 心情阈值保障。
     """
     params = ctx.params
     max_slots = params.control_max_slots if params else 5
