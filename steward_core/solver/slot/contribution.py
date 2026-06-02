@@ -10,7 +10,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from steward_core.models import LayoutConfig
-from steward_core.synergy import compute_control_global_bonus, control_per_operator_bonus
+from steward_core.synergy import compute_control_global_bonus, control_per_operator_bonus, compute_control_reception_bonus
 from steward_core.synergy import _OP_PLATFORM_NAMES, compute_facility_group_bonus
 from .context import STATE_DIMS
 from .partials import _product_base_rate, _product_lmd_per_unit
@@ -403,8 +403,11 @@ def _select_reception_combo(
     ctrl_names = ctx.ops_of_type(window_idx, "Control")
     mc_snapshot = _snapshot_for_reception(ctx, window_idx, ctrl_names)
 
+    ctrl_ops_objects = [ctx.op_lookup[n] for n in ctrl_names if n in ctx.op_lookup]
+
     for combo in combos:
         combo_list = list(combo)
+        combo_names = {op.name for op in combo_list}
         total = 0.0
 
         for op in combo_list:
@@ -414,6 +417,11 @@ def _select_reception_combo(
 
         total += _reception_conditional_bonus(combo_list, ctx, window_idx, mc_snapshot) \
             * _RECEPTION_TO_MFG_RATIO / 100.0 * base_lmd * hours
+
+        ctrl_rec_bonus = compute_control_reception_bonus(
+            ctrl_ops_objects, ctx, window_idx, reception_names=combo_names,
+        )
+        total += ctrl_rec_bonus * _RECEPTION_TO_MFG_RATIO / 100.0 * base_lmd * hours
 
         if total > best_score:
             best_score = total
@@ -679,6 +687,11 @@ def _reception_contribution(
 
     hours = ctx.params.shift_hours if ctx.params else 12.0
     base_lmd = _mfg_base_rate_lmd_avg()
+    ctrl_names = ctx.ops_of_type(window_idx, "Control")
+    if ctrl_names:
+        ctrl_ops_list = [ctx.op_lookup[n] for n in ctrl_names if n in ctx.op_lookup]
+        ctrl_rec_bonus = compute_control_reception_bonus(ctrl_ops_list, ctx, window_idx)
+        eff += ctrl_rec_bonus
     total += eff * _RECEPTION_TO_MFG_RATIO / 100.0 * base_lmd * hours
 
     return total
@@ -713,6 +726,9 @@ def _office_contribution(
     all_assignments = ctx.build_all_assignments(window_idx)
     if all_assignments:
         eff += compute_facility_group_bonus(op, all_assignments, "Office")
+    if "琴柳" in ctrl_names:
+        if 5.0 + eff < 30.0:
+            eff += 20.0
     hours = ctx.params.shift_hours if ctx.params else 12.0
     base_lmd = _mfg_base_rate_lmd_avg()
     total += eff * _OFFICE_TO_MFG_RATIO / 100.0 * base_lmd * hours

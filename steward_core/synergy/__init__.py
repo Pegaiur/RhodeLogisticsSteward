@@ -35,6 +35,7 @@ from steward_core.synergy.types import (
     GlobalBonusEntry,
     ControlConditionalEntry,
     ControlPerOpEntry,
+    ControlReceptionEntry,
     TradeShareEntry,
     TradeEffAmpEntry,
     TradeConditionalEffEntry,
@@ -133,11 +134,13 @@ from steward_core.synergy.facility_group import (
 
 from steward_core.synergy.control_linkages import (
     compute_control_global_bonus,
+    compute_control_reception_bonus,
     control_per_operator_bonus,
     GlobalBonus,
     _C_CONTROL_GLOBAL_TABLE,
     _CONTROL_CONDITIONAL_TABLE,
     _CONTROL_PER_OP_TABLE,
+    _CONTROL_RECEPTION_TABLE,
     _CONTROL_TRADE_LIMIT_TABLE,
 )
 

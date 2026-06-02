@@ -127,6 +127,20 @@ class ControlPerOpEntry(NamedTuple):
     product: str | None
 
 
+class ControlReceptionEntry(NamedTuple):
+    """C·中枢→会客室加成条目
+
+    condition:
+      "unconditional"    — 无条件加成（同种取最高）
+      "per_nation"       — 全基建每名 nation_id==value 干员 bonus%，上限 cap
+      "per_faction_room" — 指定干员 target 在会客室时 +bonus%
+    """
+    condition: str
+    condition_value: str
+    cap: float
+    bonus_per: float
+
+
 class OrderLimitEntry(NamedTuple):
     """A·贸易站订单上限贡献条目"""
     source: str
@@ -220,7 +234,7 @@ from .mfg_linkages import _A_PAIR_TABLE, _A_ROOM_FACTION_TABLE, _A_ROOM_FACTION_
 from .facility_linkages import _A_FACILITY_LINK_TABLE  # noqa: E402
 from .buff_pool import _B_BUFF_CONSUMER_TABLE, _OPERATOR_BUFF_PRODUCERS  # noqa: E402
 from .global_linkages import _B_CROSS_ROOM_PAIR_TABLE, _B_GLOBAL_FACTION_TABLE  # noqa: E402
-from .control_linkages import _C_CONTROL_GLOBAL_TABLE, _CONTROL_CONDITIONAL_TABLE, _CONTROL_PER_OP_TABLE  # noqa: E402
+from .control_linkages import _C_CONTROL_GLOBAL_TABLE, _CONTROL_CONDITIONAL_TABLE, _CONTROL_PER_OP_TABLE, _CONTROL_RECEPTION_TABLE  # noqa: E402
 from .trade_linkages import _ORDER_LIMIT_TABLE, _TRADE_PAIR_TABLE, _JIE_MECH_TABLE, _TRADE_TRIGGER_TABLE, _ORDER_OVERRIDE_TABLE, _TRADE_SHARE_TABLE, _TRADE_EFF_AMPLIFIER_TABLE, _TRADE_CONDITIONAL_EFF_TABLE  # noqa: E402
 from .control_linkages import _CONTROL_TRADE_LIMIT_TABLE  # noqa: E402
 from .facility_group import _FACILITY_GROUP_TABLE  # noqa: E402
@@ -251,5 +265,6 @@ TABLES: dict[str, TableMeta] = {
     "C·中枢全局效率":    TableMeta(_C_CONTROL_GLOBAL_TABLE,   ["compute_control_global_bonus"], "新增中枢全局 buff（无条件）"),
     "C·中枢条件全局":    TableMeta(_CONTROL_CONDITIONAL_TABLE, ["compute_control_global_bonus"], "新增中枢条件型全局 buff（望/布丁/MH队友等）"),
     "C·中枢PerOp加成":  TableMeta(_CONTROL_PER_OP_TABLE,      ["control_per_operator_bonus"],   "新增中枢 per-operator 条件加成"),
+    "C·中枢→会客室":    TableMeta(_CONTROL_RECEPTION_TABLE,    ["compute_control_reception_bonus"], "新增中枢→会客室加成"),
     "B·设施group计数":   TableMeta(_FACILITY_GROUP_TABLE,    ["synergy_facility_group", "compute_facility_group_bonus"], "新增设施 group 计数型 buff（精英/岁等）"),
 }

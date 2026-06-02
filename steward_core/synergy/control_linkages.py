@@ -7,7 +7,7 @@
 from dataclasses import dataclass
 
 from steward_core.models import Operator
-from .types import ControlConditionalEntry, ControlPerOpEntry, ControlTradeLimitEntry, GlobalBonusEntry
+from .types import ControlConditionalEntry, ControlPerOpEntry, ControlReceptionEntry, ControlTradeLimitEntry, GlobalBonusEntry
 from .helpers import _OP_PLATFORM_NAMES, _is_knight
 
 # ─── 表 A: 无条件全局效率 ─────────────────────────────────────────
@@ -77,6 +77,9 @@ _CONTROL_PER_OP_TABLE: dict[str, list[ControlPerOpEntry]] = {
     "戴菲恩": [
         ControlPerOpEntry("Trade", "per_op", "group_id", "glasgow", 10.0, None),
     ],
+    "灵知": [
+        ControlPerOpEntry("Trade", "per_op", "group_id", "karlan", -15.0, None),
+    ],
 }
 """per-operator 条件加成 — 中枢干员名 → 加成条目列表"""
 
@@ -89,6 +92,60 @@ _CONTROL_TRADE_LIMIT_TABLE: dict[str, ControlTradeLimitEntry] = {
 中枢干员名 → ControlTradeLimitEntry
 当 target_name 在贸易站时，根据中枢干员精英阶段提供订单上限加成。
 """
+
+# ─── 表 D: 中枢→会客室加成 ────────────────────────────────────────
+
+_CONTROL_RECEPTION_TABLE: dict[str, ControlReceptionEntry | list[ControlReceptionEntry]] = {
+    "老鲤": ControlReceptionEntry("unconditional", "", 0, 25.0),
+    "魔王": ControlReceptionEntry("unconditional", "", 0, 15.0),
+    "摆渡人": ControlReceptionEntry("per_nation", "minos", 25.0, 5.0),
+    "维什戴尔": ControlReceptionEntry("per_faction_room", "伊内丝", 0, 5.0),
+    "怒潮凛冬": ControlReceptionEntry("per_nation", "ursus", 0, 10.0),
+}
+"""中枢→会客室全局加成 — 干员名 → ControlReceptionEntry"""
+
+
+def compute_control_reception_bonus(
+    control_ops: list["Operator"],
+    ctx: "SlotContext",
+    window_idx: int,
+    *,
+    reception_names: set[str] | None = None,
+) -> float:
+    """计算中枢干员对会客室的全局速度加成（%）
+
+    无条件类: 同种取最高
+    per_nation 类: 全基建统计 nation_id 干员数 × bonus%, 不超过 cap
+    per_faction_room 类: 目标干员在 Reception 时 +bonus%
+    reception_names: 会客室干员名集合; 若为 None 则从 ctx 读取
+    """
+    names = {op.name for op in control_ops}
+    best_uncond = 0.0
+    total_cond = 0.0
+
+    if reception_names is None:
+        reception_names = set(ctx.ops_of_type(window_idx, "Reception"))
+
+    for name in names:
+        entry_raw = _CONTROL_RECEPTION_TABLE.get(name)
+        if not entry_raw:
+            continue
+        entries = entry_raw if isinstance(entry_raw, list) else [entry_raw]
+        for e in entries:
+            if e.condition == "unconditional":
+                best_uncond = max(best_uncond, e.bonus_per)
+            elif e.condition == "per_nation":
+                count = sum(
+                    1 for op in ctx.op_lookup.values()
+                    if getattr(op, "nation_id", None) == e.condition_value
+                )
+                val = min(count * e.bonus_per, e.cap) if e.cap > 0 else count * e.bonus_per
+                total_cond += val
+            elif e.condition == "per_faction_room":
+                if e.condition_value in reception_names:
+                    total_cond += e.bonus_per
+
+    return best_uncond + total_cond
 
 
 @dataclass

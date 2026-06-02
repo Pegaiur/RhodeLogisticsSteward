@@ -460,3 +460,178 @@ class TestC2PerOperatorBonus:
             [other], [k1, k2, k3], "Money", room_type="Trade",
         )
         assert bonus == 0.0
+
+    def test_灵知_谢拉格Trade每名负15(self):
+        """灵知在中枢 → 每名谢拉格 Trade 干员 -15%"""
+        from steward_core.synergy import control_per_operator_bonus
+
+        gnosis = _mk_op("灵知")
+        k1 = _mk_op("崖心", group_id="karlan")
+        k2 = _mk_op("讯使", group_id="karlan")
+
+        bonus = control_per_operator_bonus(
+            [gnosis], [k1, k2], "Money", room_type="Trade",
+        )
+        assert bonus == -30.0
+
+    def test_灵知_Mfg房间_不触发(self):
+        """灵知加成仅对 Trade 生效"""
+        from steward_core.synergy import control_per_operator_bonus
+
+        gnosis = _mk_op("灵知")
+        k1 = _mk_op("崖心", group_id="karlan")
+
+        bonus = control_per_operator_bonus(
+            [gnosis], [k1], "CombatRecord", room_type="Mfg",
+        )
+        assert bonus == 0.0
+
+
+# ─── C3 中枢→会客室加成 ──────────────────────────────────────────
+
+class TestC3ControlReception:
+    """C3: compute_control_reception_bonus — 中枢干员对会客室的全局加成"""
+
+    def _make_ctx(self, control_names, reception_names=None, **op_kwargs):
+        """构造最小 SlotContext: 仅填充 Control 槽位"""
+        from steward_core.solver.slot.context import SlotContext
+        from steward_core.solver.params import SolverParams
+
+        params = SolverParams()
+        ops = []
+        for name in control_names:
+            ops.append(_mk_op(name, **op_kwargs))
+        if reception_names:
+            for name in reception_names:
+                ops.append(_mk_op(name, **op_kwargs))
+
+        extra_names = []
+        if reception_names:
+            extra_names = list(reception_names)
+        for name in set(control_names) | set(extra_names or []):
+            if not any(o.name == name for o in ops):
+                ops.append(_mk_op(name))
+
+        ctx = SlotContext(operators=ops, op_lookup={o.name: o for o in ops}, params=params)
+        ctx.windows = [type("_W", (), {"assignments": []})()]
+        from steward_core.solver.slot.context import WindowState
+        ctx.windows = [WindowState()]
+
+        for i, name in enumerate(control_names):
+            ctx.windows[0].assignments.append(type("_A", (), {
+                "slot_id": f"control_0_{i}",
+                "facility_type": "Control",
+                "product": "",
+                "operator_name": name,
+                "room_index": 0,
+            })())
+        if reception_names:
+            for i, name in enumerate(reception_names):
+                ctx.windows[0].assignments.append(type("_A", (), {
+                    "slot_id": f"reception_0_{i}",
+                    "facility_type": "Reception",
+                    "product": "",
+                    "operator_name": name,
+                    "room_index": 0,
+                })())
+        return ctx
+
+    def test_老鲤_会客室加25(self):
+        """老鲤在中枢 → 无条件 +25%"""
+        from steward_core.synergy.control_linkages import compute_control_reception_bonus
+
+        ctx = self._make_ctx(["老鲤"])
+        ctrl_ops = [ctx.op_lookup["老鲤"]]
+
+        bonus = compute_control_reception_bonus(ctrl_ops, ctx, 0)
+        assert bonus == 25.0
+
+    def test_魔王_会客室加15(self):
+        """魔王在中枢 → 无条件 +15%"""
+        from steward_core.synergy.control_linkages import compute_control_reception_bonus
+
+        ctx = self._make_ctx(["魔王"])
+        ctrl_ops = [ctx.op_lookup["魔王"]]
+
+        bonus = compute_control_reception_bonus(ctrl_ops, ctx, 0)
+        assert bonus == 15.0
+
+    def test_老鲤魔王共存_取最高25(self):
+        """老鲤+魔王同在中枢 → max(25, 15) = 25"""
+        from steward_core.synergy.control_linkages import compute_control_reception_bonus
+
+        ctx = self._make_ctx(["老鲤", "魔王"])
+        ctrl_ops = [ctx.op_lookup["老鲤"], ctx.op_lookup["魔王"]]
+
+        bonus = compute_control_reception_bonus(ctrl_ops, ctx, 0)
+        assert bonus == 25.0
+
+    def test_摆渡人_3名米诺斯_加15(self):
+        """摆渡人在中枢 + 全基建 3 名米诺斯干员 → 3×5 = 15%"""
+        from steward_core.synergy.control_linkages import compute_control_reception_bonus
+
+        ctx = self._make_ctx(["摆渡人"])
+        ferryman = ctx.op_lookup["摆渡人"]
+        ferryman.nation_id = "minos"
+        m1 = _mk_op("帕拉斯", nation_id="minos")
+        m2 = _mk_op("刻俄柏", nation_id="minos")
+        ctx.op_lookup[m1.name] = m1
+        ctx.op_lookup[m2.name] = m2
+        ctx.operators.extend([m1, m2])
+        ctrl_ops = [ferryman]
+
+        bonus = compute_control_reception_bonus(ctrl_ops, ctx, 0)
+        assert bonus == 15.0
+
+    def test_摆渡人_米诺斯超上限_截断25(self):
+        """摆渡人在中枢 + 6 名米诺斯 → min(6×5, 25) = 25"""
+        from steward_core.synergy.control_linkages import compute_control_reception_bonus
+
+        ctx = self._make_ctx(["摆渡人"])
+        ferryman = ctx.op_lookup["摆渡人"]
+        ferryman.nation_id = "minos"
+        for i in range(5):
+            m = _mk_op(f"米诺斯{i}", nation_id="minos")
+            ctx.op_lookup[m.name] = m
+            ctx.operators.append(m)
+        ctrl_ops = [ferryman]
+
+        bonus = compute_control_reception_bonus(ctrl_ops, ctx, 0)
+        assert bonus == 25.0
+
+    def test_维什戴尔_伊内丝在会客室_加5(self):
+        """维什戴尔在中枢 + 伊内丝在会客室 → +5%"""
+        from steward_core.synergy.control_linkages import compute_control_reception_bonus
+
+        ctx = self._make_ctx(["维什戴尔"], reception_names=["伊内丝"])
+        ctrl_ops = [ctx.op_lookup["维什戴尔"]]
+
+        bonus = compute_control_reception_bonus(ctrl_ops, ctx, 0)
+        assert bonus == 5.0
+
+    def test_维什戴尔_伊内丝不在会客室_不加(self):
+        """维什戴尔在中枢 but 伊内丝不在 Reception → 0"""
+        from steward_core.synergy.control_linkages import compute_control_reception_bonus
+
+        ctx = self._make_ctx(["维什戴尔"])
+        ctrl_ops = [ctx.op_lookup["维什戴尔"]]
+
+        bonus = compute_control_reception_bonus(ctrl_ops, ctx, 0)
+        assert bonus == 0.0
+
+    def test_怒潮凛冬_2名乌萨斯会客室_加20(self):
+        """怒潮凛冬在中枢 + 2 名乌萨斯在会客室 → 2×10 = 20%"""
+        from steward_core.synergy.control_linkages import compute_control_reception_bonus
+
+        ctx = self._make_ctx(
+            ["怒潮凛冬"],
+            reception_names=["早露", "真理"],
+        )
+        early_dew = ctx.op_lookup["早露"]
+        early_dew.nation_id = "ursus"
+        truth = ctx.op_lookup["真理"]
+        truth.nation_id = "ursus"
+        ctrl_ops = [ctx.op_lookup["怒潮凛冬"]]
+
+        bonus = compute_control_reception_bonus(ctrl_ops, ctx, 0)
+        assert bonus == 20.0
