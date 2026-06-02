@@ -37,18 +37,26 @@ class TestReportInterface:
             red_face_count=0,
         )
         s = report.summary()
-        assert "控制中枢" in s
-        assert "通过" in s
+        assert "中枢" in s
+        assert "OK" in s
 
     def test_summary_红脸场景(self):
-        """红脸时 summary 应提示轮换"""
+        """红脸时 summary 应显示 ! 标记"""
         report = MoodReport(
             shift_hours=24,
             shift_name="测试",
             red_face_count=1,
+            rooms=[
+                RoomMood(
+                    room_type="Mfg", room_index=0,
+                    operators=["B"],
+                    net_burn=0.65, remaining_after_shift=-1,
+                    is_red_face=True,
+                ),
+            ],
         )
         s = report.summary()
-        assert "轮换" in s
+        assert "!" in s
 
     def test_RoomMood_status(self):
         """RoomMood.status() 在不同心情下返回正确字符串"""

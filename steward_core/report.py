@@ -128,6 +128,9 @@ def _compute_chained_mood_reports(
     return reports
 
 
+_PRODUCT_ABBR: dict[str, str] = {"CombatRecord": "CR", "PureGold": "PG"}
+
+
 def format_shift_overview(
     plans: list["ShiftPlan"],
     operators: list["Operator"],
@@ -161,7 +164,9 @@ def format_shift_overview(
             found = ""
             for a in plan.assignments:
                 if a.room_type == rt and a.room_index == ri:
-                    product_tag = f"({a.product[:2]})" if a.product else ""
+                    p = a.product or ""
+                    abbr = _PRODUCT_ABBR.get(p, p[:2]) if p else ""
+                    product_tag = f"({abbr})" if abbr else ""
                     found = f"{len(a.operators)}人{product_tag}"
                     break
             col_values.append(found)

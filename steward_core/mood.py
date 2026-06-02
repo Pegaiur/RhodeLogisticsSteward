@@ -24,6 +24,7 @@ class RoomMood:
     room_type: str
     room_index: int
     operators: list[str] = field(default_factory=list)
+    product: str = ""
     base_burn: float = 0.0
     net_burn: float = 0.0
     remaining_after_shift: float = 24.0
@@ -56,38 +57,46 @@ class MoodReport:
 
     def summary(self) -> str:
         lines = [
-            f"控制中枢: {self.control_operators} -> 全局减免 {self.control_bonus:.2f}/时",
-            f"班次时长: {self.shift_hours:.0f}h",
+            f"中枢: {', '.join(self.control_operators)} "
+            f"| -{self.control_bonus:.2f}/h | {self.shift_hours:.0f}h",
         ]
-        for room in self.rooms:
-            ops_str = ", ".join(room.operators)
-            if room.operator_remaining:
-                indiv = ", ".join(
-                    f"{n}={room.operator_remaining[n]:.1f}"
-                    for n in room.operators
-                    if n in room.operator_remaining
-                )
-                lines.append(
-                    f"  {room.room_type}[{room.room_index}]: "
-                    f"{ops_str}"
-                    f" -> 净消耗={room.net_burn:.2f}/时, "
-                    f"剩余: {indiv} ({room.status()})"
-                )
-            else:
-                lines.append(
-                    f"  {room.room_type}[{room.room_index}]: "
-                    f"{ops_str}"
-                    f" -> 净消耗={room.net_burn:.2f}/时, "
-                    f"剩余={room.remaining_after_shift:.1f} ({room.status()})"
-                )
-        lines.append(
-            f"结果: 红脸{self.red_face_count}间"
-        )
-        if self.all_pass():
-            lines.append("✅ 全部通过，无需轮换")
-        else:
-            lines.append("❌ 存在红脸，需要缩短班次或增加轮换")
+
+        groups = self._group_rooms()
+        for label, rooms in groups:
+            all_ops: list[str] = []
+            for r in rooms:
+                all_ops.extend(r.operators)
+            all_net = rooms[0].net_burn
+            min_rem = min(r.remaining_after_shift for r in rooms)
+            n_red = sum(1 for r in rooms if r.is_red_face)
+            status = "!" if n_red > 0 else "OK"
+            lines.append(
+                f"  {label} {', '.join(all_ops)} "
+                f"| -{all_net:.2f}/h | 余{min_rem:.0f} [{status}]"
+            )
+
+        lines.append(f"{self.red_face_count}红脸 " + ("!" if self.red_face_count else "v"))
         return "\n".join(lines)
+
+    def _group_rooms(self) -> list[tuple[str, list["RoomMood"]]]:
+        """将 rooms 按设施类型+产品分组，Mfg 按产物 CR/PG 区分"""
+        product_labels = {"CombatRecord": "CR", "PureGold": "PG"}
+        grouped: list[tuple[str, int, list["RoomMood"]]] = []
+        for room in self.rooms:
+            key = room.room_type
+            if room.room_type == "Mfg" and room.product:
+                label = product_labels.get(room.product, room.product[:2] or "??")
+                key = f"Mfg.{label}"
+            matched = False
+            for gk, _, g_rooms in grouped:
+                if gk == key:
+                    g_rooms.append(room)
+                    matched = True
+                    break
+            if not matched:
+                grouped.append((key, room.room_index, [room]))
+        grouped.sort(key=lambda x: x[1])
+        return [(g_key, g_rooms) for g_key, _, g_rooms in grouped]
 
 
 def _operator_lookup(operators: list[Operator]) -> dict[str, Operator]:
@@ -190,6 +199,7 @@ def calculate(
             room_type=assignment.room_type,
             room_index=assignment.room_index,
             operators=names,
+            product=assignment.product or "",
             base_burn=base_burn,
             net_burn=net_burn,
             remaining_after_shift=min_remaining,
