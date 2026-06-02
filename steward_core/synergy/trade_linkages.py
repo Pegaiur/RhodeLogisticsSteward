@@ -11,7 +11,7 @@
 from dataclasses import dataclass, field
 
 from steward_core.models import LinearSegment, Operator, LayoutConfig
-from steward_core.synergy.types import OrderLimitEntry, TradePairEntry
+from steward_core.synergy.types import OrderLimitEntry, TradePairEntry, OrderOverrideEntry
 from .helpers import _DURIN_NAMES  # TODO: 际崖居民 durin_names 参数链待 evaluate_room 接入
 
 # ─── 模块级常量 ─────────────────────────────────────────────────
@@ -45,16 +45,19 @@ constant:    恒定 ceiling（摊贩经济，精2）
 缺失 constant 则走 ramp 爬升路径（精1）
 """
 
-_OBSERVE_BLACKLIST: tuple[str, ...] = (
-    "trade_ord_law", "trade_ord_long", "trade_ord_closure",
+_OBSERVE_BLACKLIST_BASE: tuple[str, ...] = (
+    "trade_ord_law", "trade_ord_long",
 )
-"""孑订单压缩时排除的效率来源
+"""孑订单压缩时排除的订单机制基础列表
 
-合同法/投资/特别订单会改变订单类型机制，
-其效率不计入 other_eff，否则干扰压缩计算。
-仅在孑订单压缩上下文中使用，与 slot/trade.py 的
-_ORDER_MECHANISM_PREFIXES 用途不同。
+合同法/投资会改变订单类型，其效率不计入 other_eff。
+trade_ord_closure 等 override 类型通过 _ORDER_OVERRIDE_TABLE 动态追加。
 """
+
+
+def _observe_blacklist() -> tuple[str, ...]:
+    """返回完整的订单机制排除列表 = 基础列表 + override keys"""
+    return _OBSERVE_BLACKLIST_BASE + tuple(_ORDER_OVERRIDE_TABLE.keys())
 
 _ORDER_LIMIT_TABLE: dict[str, OrderLimitEntry] = {
     "trade_ord_limit&cost[000]":    OrderLimitEntry("谈判", 5),
@@ -99,6 +102,33 @@ buff_id → 机制标签
 - swires_limit: 琳琅诗怀雅 招商引资
 - degenbrecher_limit: 锏 冠军风采
 """
+
+_ORDER_OVERRIDE_TABLE: dict[str, OrderOverrideEntry] = {
+    "trade_ord_closure": OrderOverrideEntry(
+        prefix="trade_ord_closure",
+        order_time_h=2.4, lmd_per_order=1200, gold_per_order=2,
+        priority=1,
+    ),
+    "trade_ord_pepe": OrderOverrideEntry(
+        prefix="trade_ord_pepe",
+        order_time_h=4.5, lmd_per_order=1000, gold_per_order=0,
+        no_efficiency=True, no_drone=True, priority=2,
+    ),
+}
+"""订单覆盖表 — buff_id 前缀 → OrderOverrideEntry
+
+priority 决定同房冲突时高优先级胜出。
+"""
+
+
+def get_active_override(operators: list[Operator]) -> OrderOverrideEntry | None:
+    """返回房间内最高优先级的活跃订单 override"""
+    best: OrderOverrideEntry | None = None
+    for prefix, entry in _ORDER_OVERRIDE_TABLE.items():
+        if any(sk.buff_id.startswith(prefix) for op in operators for sk in op.skills):
+            if best is None or entry.priority > best.priority:
+                best = entry
+    return best
 
 
 def _collect_mechs(
@@ -147,7 +177,7 @@ def synergy_jie_order(
         names = {op.name for op in operators}
         other_eff = 0.0
         for op in operators:
-            if any(s.buff_id.startswith(_OBSERVE_BLACKLIST) for s in op.skills if s.room_type == "Trade"):
+            if any(s.buff_id.startswith(_observe_blacklist()) for s in op.skills if s.room_type == "Trade"):
                 continue
             eff = op.best_efficiency(room_type, "Money")
             if eff > 0:
@@ -222,7 +252,7 @@ def compute_trade_order_limit(
         other_eff = 0.0
         for op in operators:
             if any(
-                s.buff_id.startswith(_OBSERVE_BLACKLIST)
+                s.buff_id.startswith(_observe_blacklist())
                 for s in op.skills if s.room_type == "Trade"
             ):
                 continue

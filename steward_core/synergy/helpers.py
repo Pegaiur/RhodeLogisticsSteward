@@ -43,7 +43,7 @@ _DEFAULT_DORM_LEVELS = 20  # 4 间 Lv5 宿舍
 
 # ─── Trade 订单机制型锚点 buff_id 前缀 ────────────────────────────────
 
-_ORDER_ANCHOR_PREFIXES = ("trade_ord_law", "trade_ord_long", "trade_ord_closure", "trade_ord_limit_count")
+_ORDER_ANCHOR_PREFIXES = ("trade_ord_law", "trade_ord_long", "trade_ord_closure", "trade_ord_limit_count", "trade_ord_pepe")
 
 # ─── 加成包 ───────────────────────────────────────────────────────────
 

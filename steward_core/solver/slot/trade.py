@@ -36,6 +36,7 @@ _LAYOUT_243 = LayoutConfig.layout_243()
 _ORDER_MECHANISM_PREFIXES = (
     "trade_ord_law", "trade_ord_long", "trade_ord_closure",
     "trade_ord_vodfox", "trade_ord_limit_count",
+    "trade_ord_pepe",
 )
 
 
@@ -152,14 +153,21 @@ def phase_trade(
         lmd_per_day, _gold, _equiv = _get_trade_order_multiplier(
             combo_ops, shift_hours,
         )
-        lmd = efficiency_integrated / 24.0 * lmd_per_day
+
+        from steward_core.synergy.trade_linkages import get_active_override
+        override = get_active_override(combo_ops)
+        if override is not None and override.no_efficiency:
+            lmd = shift_hours / 24.0 * lmd_per_day
+        else:
+            lmd = efficiency_integrated / 24.0 * lmd_per_day
 
         lambda_penalty = sum(
             ctx.lambda_ops.get(name, 0.0) for name in combo_names
         ) * shift_hours
         lmd -= lambda_penalty
 
-        lmd -= compute_opportunity_cost_lmd(combo_ops, "Trade", "Money", shift_hours)
+        if override is None:
+            lmd -= compute_opportunity_cost_lmd(combo_ops, "Trade", "Money", shift_hours)
 
         evaluated.append((lmd, combo_names))
 

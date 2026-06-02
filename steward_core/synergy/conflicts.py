@@ -18,7 +18,7 @@ _ORDER_PREFIXES = tuple(sorted(_ORDER_ANCHOR_PREFIXES))
 # 效率机制名 → 导致其被禁用的订单机制 buff 前缀集合
 # Phase B 扩展点：新增覆盖型订单机制时在此表追加条目
 _EFF_MECH_DISABLERS: dict[str, set[str]] = {
-    "whisper": {"trade_ord_closure"},
+    "whisper": {"trade_ord_closure", "trade_ord_pepe"},
 }
 
 # ─── 订单层竞争关系（Phase B） ───────────────────────────────────────
@@ -35,6 +35,10 @@ _ORDER_LAYER_COMPETITION: dict[tuple[str, str], dict] = {
     ("trade_ord_closure", "trade_ord_law"):        {"type": "cover",  "desc": "可露希尔特别订单覆盖但书违约"},
     ("trade_ord_closure", "trade_ord_long"):       {"type": "cover",  "desc": "可露希尔覆盖龙舌兰投资"},
     ("trade_ord_closure", "trade_ord_wt"):         {"type": "cover",  "desc": "可露希尔覆盖裁缝品质"},
+    ("trade_ord_pepe", "trade_ord_law"):          {"type": "cover",  "desc": "佩佩独占订单覆盖但书违约"},
+    ("trade_ord_pepe", "trade_ord_long"):         {"type": "cover",  "desc": "佩佩覆盖龙舌兰投资"},
+    ("trade_ord_pepe", "trade_ord_wt"):           {"type": "cover",  "desc": "佩佩覆盖裁缝品质"},
+    ("trade_ord_pepe", "trade_ord_closure"):      {"type": "cover",  "desc": "佩佩覆盖可露希尔特别订单"},
     ("trade_ord_wt", "trade_ord_law"):             {"type": "dilute", "desc": "裁缝P4↑降低但书2/3金订单池份额"},
     ("trade_ord_wt", "trade_ord_long"):            {"type": "boost",  "desc": "裁缝P4↑扩大龙舌兰4金投资触发率"},
 }

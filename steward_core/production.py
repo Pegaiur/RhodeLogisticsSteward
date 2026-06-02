@@ -291,8 +291,8 @@ def _get_trade_order_multiplier(ops: list[Operator], hours: float = 24.0) -> tup
 
     检测干员组合中的特殊订单机制，返回加强后的每日产出。
 
-    优先级: 可露希尔特别订单 > 但书违约 > 龙舌兰投资 > 裁缝品质
-    可露希尔在场时，但书/龙舌兰/裁缝机制均不生效。
+    订单覆盖优先级由 OrderOverrideEntry.priority 决定，
+    无 override 时走但书违约 > 龙舌兰投资 > 裁缝品质。
 
     Args:
         ops: 贸易站干员列表
@@ -302,12 +302,15 @@ def _get_trade_order_multiplier(ops: list[Operator], hours: float = 24.0) -> tup
         (lmd_per_day, gold_per_day, equiv_gold_per_day):
         100%效率 24h 的 LMD 日产、赤金消耗、等效赤金产出（赤金/天）
     """
-    from steward_core.synergy.conflicts import has_order_override
+    from steward_core.synergy.trade_linkages import get_active_override
 
-    if has_order_override(ops):
-        orders = 24.0 / 2.4
-        equiv_gold = orders * (1200.0 - 1000.0) / 500.0
-        return (12000.0, orders * 2.0, equiv_gold)
+    override = get_active_override(ops)
+    if override is not None:
+        orders = 24.0 / override.order_time_h
+        lmd = orders * override.lmd_per_order
+        gold = orders * override.gold_per_order
+        equiv = orders * (override.lmd_per_order - override.gold_per_order * 500.0) / 500.0
+        return (lmd, gold, equiv)
 
     has_law = any(s.buff_id.startswith("trade_ord_law") for op in ops for s in op.skills)
     has_tequila_beta = any(s.buff_id == "trade_ord_long[010]" for op in ops for s in op.skills)
@@ -520,7 +523,16 @@ def _calc_trade(
     drone_boost = _drone_boost(assignment, ctx, _DRONE_MINUTES_TRADE)
 
     lmd_per_day, gold_per_day, equiv_gold_per_day = _get_trade_order_multiplier(ops, ctx.hours)
-    base_factor = efficiency_integrated / 24.0
+
+    from steward_core.synergy.trade_linkages import get_active_override
+    override = get_active_override(ops)
+
+    if override is not None and override.no_efficiency:
+        base_factor = ctx.hours / 24.0
+    else:
+        base_factor = efficiency_integrated / 24.0
+
+    drone_boost = 0.0 if (override is not None and override.no_drone) else _drone_boost(assignment, ctx, _DRONE_MINUTES_TRADE)
     lmd_output = base_factor * lmd_per_day * (1.0 + drone_boost)
     gold_consumed = base_factor * gold_per_day * (1.0 + drone_boost)
 
