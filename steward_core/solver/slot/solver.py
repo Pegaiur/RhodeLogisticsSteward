@@ -8,6 +8,7 @@ from __future__ import annotations
 from dataclasses import replace
 from typing import TYPE_CHECKING
 
+from steward_core.constants import FACILITY_SLOTS, NON_WORK_FACILITIES
 from steward_core.models import LayoutConfig, SolveResult
 from steward_core.solver.config import SolverConfig
 from steward_core.solver.refine import local_search_refine
@@ -26,19 +27,6 @@ if TYPE_CHECKING:
 
 _MAX_ITERATIONS = 10
 """默认最大迭代轮数"""
-
-_NON_WORK_FACILITIES = frozenset({"Dormitory", "Training", "Workshop"})
-"""不消耗心情的设施类型集合"""
-
-_FACILITY_SLOTS: dict[str, int] = {
-    "Control": 5,
-    "Mfg": 3,
-    "Trade": 3,
-    "Power": 1,
-    "Reception": 1,
-    "Office": 1,
-}
-"""每种设施类型的标准槽位数"""
 
 
 def solve_slot(
@@ -93,18 +81,18 @@ def solve_slot(
                 ctx.control_operators = list(mc.control_operators)
                 working_names = {
                     a.operator_name for a in ctx.windows[w].assignments
-                    if a.operator_name and a.facility_type not in _NON_WORK_FACILITIES
+                    if a.operator_name and a.facility_type not in NON_WORK_FACILITIES
                 }
                 working_slots = {}
                 for a in ctx.windows[w].assignments:
-                    if a.operator_name and a.facility_type not in _NON_WORK_FACILITIES:
+                    if a.operator_name and a.facility_type not in NON_WORK_FACILITIES:
                         ft = a.facility_type
                         ri = a.room_index
                         room_ops = ctx.room_ops(w, ft, ri)
                         from steward_core.mood_flow import RoomBurnContext
                         working_slots[a.operator_name] = RoomBurnContext(
                             room_type=ft,
-                            room_slots=_FACILITY_SLOTS.get(ft, 3),
+                            room_slots=FACILITY_SLOTS.get(ft, 3),
                             room_index=ri,
                             co_workers=room_ops,
                         )

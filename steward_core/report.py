@@ -12,6 +12,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 from steward_core import mood as mood_calc
+from steward_core.constants import FACILITY_SLOTS, NON_WORK_FACILITIES
 from steward_core.production import _RECORD_EXP_PER_UNIT, _GOLD_LMD_PER_UNIT
 
 if TYPE_CHECKING:
@@ -65,16 +66,11 @@ def format_params(params: "SolverParams") -> str:
     return "\n".join(lines)
 
 
-_FACILITY_SLOTS: dict[str, int] = {
-    "Control": 5, "Mfg": 3, "Trade": 3, "Power": 1, "Reception": 1, "Office": 1,
-}
-_NON_WORK_FACILITIES: frozenset[str] = frozenset({"Dormitory", "Training", "Workshop"})
-
-
 def _compute_chained_mood_reports(
     plans: list["ShiftPlan"],
     operators: list["Operator"],
     shift_hours: float,
+    params: "SolverParams | None" = None,
 ) -> list["MoodReport"]:
     """链式计算跨班次心情报告
 
@@ -84,7 +80,7 @@ def _compute_chained_mood_reports(
     """
     from steward_core.mood_flow import MoodContext, RoomBurnContext
 
-    mc = MoodContext.fresh(operators)
+    mc = MoodContext.fresh(operators, params)
     reports: list["MoodReport"] = []
 
     for plan in plans:
@@ -100,13 +96,13 @@ def _compute_chained_mood_reports(
         working_names: set[str] = set()
         working_slots: dict[str, "RoomBurnContext"] = {}
         for a in plan.assignments:
-            if a.room_type in _NON_WORK_FACILITIES or not a.operators:
+            if a.room_type in NON_WORK_FACILITIES or not a.operators:
                 continue
             for name in a.operators:
                 working_names.add(name)
                 working_slots[name] = RoomBurnContext(
                     room_type=a.room_type,
-                    room_slots=_FACILITY_SLOTS.get(a.room_type, 3),
+                    room_slots=FACILITY_SLOTS.get(a.room_type, 3),
                     room_index=a.room_index,
                     co_workers=a.operators,
                 )
@@ -136,9 +132,10 @@ def format_shift_overview(
     plans: list["ShiftPlan"],
     operators: list["Operator"],
     shift_hours: float,
+    params: "SolverParams | None" = None,
 ) -> tuple[str, list["MoodReport"]]:
     """各班次紧凑概览表 — 每班一行，含心情状态"""
-    mood_reports = _compute_chained_mood_reports(plans, operators, shift_hours)
+    mood_reports = _compute_chained_mood_reports(plans, operators, shift_hours, params=params)
 
     tracked = [
         ("Control", 0, "Ctl"),
@@ -439,7 +436,7 @@ def format_report(
     operators = pipe.operators
     shift_hours = params.shift_hours
 
-    overview_str, mood_reports = format_shift_overview(plans, operators, shift_hours)
+    overview_str, mood_reports = format_shift_overview(plans, operators, shift_hours, params=params)
 
     parts = [
         format_header(pipe, output_path),
