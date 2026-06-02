@@ -11,6 +11,7 @@ from typing import TYPE_CHECKING
 
 from steward_core.models import LayoutConfig
 from steward_core.synergy import compute_control_global_bonus, control_per_operator_bonus
+from steward_core.synergy import _OP_PLATFORM_NAMES
 from .context import STATE_DIMS
 from .partials import _product_base_rate, _product_lmd_per_unit
 
@@ -513,23 +514,89 @@ def _per_operator_contribution(
     return total
 
 
+def _power_dynamic_bonus(
+    op: "Operator",
+    ctx: "SlotContext",
+) -> float:
+    """不依赖同房间组合的发电站动态加成
+
+    覆盖 drone_cap（Greyy2 巡线框架）和 dorm_levels（Philae 灵河共鸣）。
+    """
+    bonus = 0.0
+    params = ctx.params
+
+    for sk in op.active_skills_for("Power"):
+        if sk.buff_id == "power_rec_drone[000]":
+            drone_cap = params.drone_cap if params else 235
+            bonus += min(drone_cap // 10, 25)
+        elif sk.buff_id == "power_rec_spd&dorm&lv[000]":
+            dorm_levels = params.dorm_levels_sum if params else 20
+            bonus += dorm_levels * 0.5
+
+    return bonus
+
+
+def _power_conditional_bonus(
+    op: "Operator",
+    ctx: "SlotContext",
+    window_idx: int,
+) -> float:
+    """检查跨房间/同房间条件，返回条件型无人机充能加成
+
+    power_rec_spd_P[001]（Phonor 咒文共鸣：逻各斯在训练室）故意不建模——
+    Training 是 NON_WORK_FACILITY，求解器不分配干员到训练室。
+    """
+    bonus = 0.0
+
+    for sk in op.active_skills_for("Power"):
+        if sk.buff_id == "power_rec_spd_P[000]":
+            if "凯尔希" in ctx.ops_of_type(window_idx, "Control"):
+                bonus += 5.0
+        elif sk.buff_id == "power_rec_spd_ext&faction[000]":
+            power_ops = ctx.ops_of_type(window_idx, "Power")
+            if any(
+                pn != op.name
+                and (other := ctx.op_lookup.get(pn))
+                and getattr(other, "nation_id", "") == "laterano"
+                for pn in power_ops
+            ):
+                bonus += 5.0
+        elif sk.buff_id == "power_rec_spd_ext&tag[000]":
+            power_ops = ctx.ops_of_type(window_idx, "Power")
+            if any(pn in _OP_PLATFORM_NAMES for pn in power_ops if pn != op.name):
+                bonus += 5.0
+
+    return bonus
+
+
 def _power_contribution(
     ctx: "SlotContext",
     op: "Operator",
     window_idx: int,
     D: dict[str, float],
 ) -> float:
-    """发电站贡献 = type2状态写入*D + 发电效率->无人机等价
-    Power 干员不通过 BuffPool 写入全局状态，仅计算直接效率贡献。
+    """发电站贡献 = (发电效率 + 动态加成 + 条件型加成) × 无人机折算 + Mfg直接加成
+
+    Power 干员不通过 BuffPool 写入全局状态。
+    动态加成：drone_cap（巡线框架）、dorm_levels（灵河共鸣）。
+    条件型加成：凯尔希中枢联动、拉特兰/作业平台同房。
+    power_prod_spd_P[000] 野鬃 Mfg +5% 为直接 Mfg 加成，不经无人机折算。
     """
     total = 0.0
 
-    eff = op.best_efficiency("Power", "")
-    if eff <= 0:
-        eff = 0.0
+    eff = max(op.best_efficiency("Power", ""), 0.0)
+    eff += _power_dynamic_bonus(op, ctx)
+    eff += _power_conditional_bonus(op, ctx, window_idx)
+
     hours = ctx.params.shift_hours if ctx.params else 12.0
     base_lmd = _mfg_base_rate_lmd_avg()
     total += eff * _DRONE_TO_MFG_RATIO / 100.0 * base_lmd * hours
+
+    # power_prod_spd_P[000]（Justice Knight "滴滴，启动！"）：野鬃在 Mfg 时直接 +5%
+    for sk in op.active_skills_for("Power"):
+        if sk.buff_id == "power_prod_spd_P[000]":
+            if "野鬃" in ctx.ops_of_type(window_idx, "Mfg"):
+                total += 5.0 * base_lmd * hours / 100.0
 
     return total
 

@@ -47,6 +47,9 @@ class SolverParams:
 
     dorm_ambiance_per_room: int = 5000
     """每间宿舍氛围值，用于宿舍基础恢复公式: 0.0004 × ambiance"""
+    drone_cap: int = 235
+    """无人机上限，影响 power_rec_drone[000]（Greyy2 巡线框架）。
+    可通过外部 JSON 覆盖。243 布局满级中枢默认 235。"""
 
     # === 心情/消耗 ===
     base_burn_per_hour: float = 1.0
@@ -181,6 +184,8 @@ class SolverParams:
             errors.append("reception_level 必须在 {1, 2, 3} 中")
         if self.office_level not in (1, 2, 3):
             errors.append("office_level 必须在 {1, 2, 3} 中")
+        if self.drone_cap <= 0 or self.drone_cap > 300:
+            errors.append("drone_cap 必须在 (0, 300] 范围内")
         return errors
 
     def summary(self) -> str:
