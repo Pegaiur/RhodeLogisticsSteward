@@ -85,6 +85,8 @@ class TestOperatorIdentity:
 
         # Assert
         assert eff == 30.0
+        assert has is True
+        assert op.group_id is None
 
 
 # ─── LinearSegment ───────────────────────────────────────────────
