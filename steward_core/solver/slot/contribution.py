@@ -59,6 +59,35 @@ _RECEPTION_DORM_AMBIANCE_THRESHOLDS: list[tuple[int, float]] = [
     (0, 0.0),
 ]
 
+# ─── Reception 条件型 buff 表 ────────────────────────────────────
+
+class ReceptionCondition:
+    """会客室条件型 buff 条目"""
+    __slots__ = ("cond_type", "bonus", "target")
+
+    def __init__(self, cond_type: str, bonus: float, target: str | None = None):
+        self.cond_type = cond_type
+        self.bonus = bonus
+        self.target = target
+
+# buff_id → ReceptionCondition
+# cond_type: "solo"=仅自身, "pair"=指定干员同房, "faction"=同阵营, "dorm_has"=目标在宿舍
+_RECEPTION_CONDITIONAL: dict[str, ReceptionCondition] = {
+    "meet_spd_condChar[000]":          ReceptionCondition("solo", 35),
+    "meet_spd&cost_condChar[000]":     ReceptionCondition("solo", 50),
+    "meet_spd&cost_condChar[001]":     ReceptionCondition("solo", 15),
+    "meet_spd&cost_condChar[011]":     ReceptionCondition("solo", 35),
+    "meet_spd&cost_condChar[020]":     ReceptionCondition("solo", 15),
+    "meet_spd&cost_condChar[021]":     ReceptionCondition("solo", 35),
+    "meet_spd&bd[000]":                ReceptionCondition("pair", 15, "提丰"),
+    "meet_spd&bd[010]":                ReceptionCondition("pair", 15, "提丰"),
+    "meet_spd&bd[100]":                ReceptionCondition("pair", 30, "铃兰"),
+    "meet_spd&sami[000]":              ReceptionCondition("faction", 5, "sami"),
+    "meet_spd&sami[100]":              ReceptionCondition("faction", 15, "blacksteel"),
+    "meet_spd&sami[110]":              ReceptionCondition("faction", 20, "blacksteel"),
+    "meet_spd_ext&P[000]":             ReceptionCondition("dorm_has", 10, "菲亚梅塔"),
+}
+
 
 def contribution(
     ctx: "SlotContext",
@@ -189,6 +218,137 @@ def _control_contribution(
     total += _type3_contribution(ctx, op, window_idx)
     total += _per_operator_contribution(ctx, op, window_idx)
     return total
+
+
+def _reception_conditional_bonus(
+    combo: list["Operator"],
+    ctx: "SlotContext",
+    window_idx: int,
+) -> float:
+    """计算会客室组合的条件型 buff 加成总和
+
+    遍历 combo 中每个干员的活跃技能，匹配 _RECEPTION_CONDITIONAL 表：
+    - solo:   len(combo)==1 时激活
+    - pair:   目标干员在 combo 中时激活
+    - faction: combo 中有同 nation_id 的干员时激活
+    - dorm_has: 目标干员在宿舍时激活（乐观假设：宿舍阶段会保证该干员入宿）
+    """
+    names = {op.name for op in combo}
+    bonus = 0.0
+
+    for op in combo:
+        for sk in op.active_skills_for("Reception"):
+            entry = _RECEPTION_CONDITIONAL.get(sk.buff_id)
+            if entry is None:
+                continue
+            ct = entry.cond_type
+            if ct == "solo":
+                if len(combo) == 1:
+                    bonus += entry.bonus
+            elif ct == "pair":
+                if entry.target in names:
+                    bonus += entry.bonus
+            elif ct == "faction":
+                faction_nations = _FACTION_NATION_MAP.get(entry.target, entry.target)
+                if any(getattr(o, "nation_id", None) == faction_nations
+                       for o in combo if o.name != op.name):
+                    bonus += entry.bonus
+            elif ct == "dorm_has":
+                dorm_names = set(ctx.ops_of_type(window_idx, "Dormitory"))
+                if entry.target in dorm_names:
+                    bonus += entry.bonus
+                else:
+                    assigned_all = {
+                        n for t in ["Control", "Mfg", "Trade", "Power",
+                                     "Reception", "Office", "Training", "Workshop"]
+                        for n in ctx.ops_of_type(window_idx, t)
+                    }
+                    if entry.target not in assigned_all:
+                        bonus += entry.bonus
+
+    return bonus
+
+
+_FACTION_NATION_MAP: dict[str, str] = {
+    "sami": "sami",
+    "blacksteel": "blacksteel",
+}
+
+
+def _build_reception_pool(
+    ctx: "SlotContext",
+    window_idx: int,
+) -> list["Operator"]:
+    """构建会客室候选池，含使能者（无 Reception 技能但被 pair 条件引用的干员）"""
+    assigned_ids = ctx.assigned_ids(window_idx)
+    pool = [op for op in ctx.operators
+            if op.char_id not in assigned_ids
+            and op.has_skill_for("Reception", "General")]
+
+    existing = {op.name for op in pool}
+    for op in pool:
+        for sk in op.active_skills_for("Reception"):
+            entry = _RECEPTION_CONDITIONAL.get(sk.buff_id)
+            if entry and entry.cond_type == "pair" and entry.target:
+                enabler = ctx.op_lookup.get(entry.target)
+                if enabler and enabler.name not in existing \
+                        and enabler.char_id not in assigned_ids:
+                    pool.append(enabler)
+                    existing.add(enabler.name)
+
+    return pool
+
+
+def _select_reception_combo(
+    ctx: "SlotContext",
+    window_idx: int,
+    D: dict[str, float],
+) -> list[str]:
+    """枚举会客室组合 (C(N,1)+C(N,2))，取总分最高的组合
+
+    Reception 仅 2 槽位，候选池 ≤25 人，穷举开销可忽略。
+    需要组合评估的原因：条件型 buff（solo/pair/faction/dorm_has）
+    的单点效率取决于同房间配置，贪心单点无法感知。
+    """
+    import itertools
+
+    pool = _build_reception_pool(ctx, window_idx)
+    if not pool:
+        return []
+
+    max_slots = 2
+    combos = []
+    for r in range(1, min(max_slots, len(pool)) + 1):
+        combos.extend(itertools.combinations(pool, r))
+
+    if not combos:
+        return []
+
+    best_score = float("-inf")
+    best_combo: list[str] = []
+
+    reception_level = ctx.params.reception_level if ctx.params else 3
+    dorm_ambiance = ctx.params.dorm_ambiance if ctx.params else 5000
+    hours = ctx.params.shift_hours if ctx.params else 12.0
+    base_lmd = _mfg_base_rate_lmd_avg()
+
+    for combo in combos:
+        combo_list = list(combo)
+        total = 0.0
+
+        for op in combo_list:
+            implicit = _reception_implicit_bonus(op, reception_level, dorm_ambiance)
+            skill_eff = max(op.best_efficiency("Reception", "General"), 0.0)
+            total += (implicit + skill_eff) * _RECEPTION_TO_MFG_RATIO / 100.0 * base_lmd * hours
+
+        total += _reception_conditional_bonus(combo_list, ctx, window_idx) \
+            * _RECEPTION_TO_MFG_RATIO / 100.0 * base_lmd * hours
+
+        if total > best_score:
+            best_score = total
+            best_combo = [op.name for op in combo_list]
+
+    return best_combo
 
 
 def _type3_contribution(

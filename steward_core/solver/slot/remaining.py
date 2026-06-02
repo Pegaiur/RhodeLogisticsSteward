@@ -59,6 +59,20 @@ def phase_remaining(
         filled = len(existing)
         room_count = _room_count_for(ctx, facility_type)
 
+        if facility_type == "Reception" and filled == 0:
+            from .contribution import _select_reception_combo
+
+            combo = _select_reception_combo(ctx, window_idx, D)
+            for name in combo:
+                room_idx = _find_room_with_space(
+                    ctx, window_idx, facility_type, room_count,
+                )
+                slot_idx = _next_slot_in_room(ctx, window_idx, facility_type, room_idx)
+                slot_id = _make_slot_id_inline(facility_type, room_idx, slot_idx)
+                ctx.place(window_idx, slot_id, name)
+                assigned_ids.add(ctx.op_lookup[name].char_id)
+            continue
+
         for _ in range(total_slots - filled):
             best_op_name = None
             best_score = float("-inf")
