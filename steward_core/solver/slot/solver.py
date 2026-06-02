@@ -222,6 +222,9 @@ def _estimate_total_production(
                     room_ops, a.facility_type, a.product,
                     3, hours, global_bonus, pool,
                     ctrl_per_op_bonus=ctrl_bonus,
+                    all_operators=ctx.operators,
+                    control_operators=ctrl_ops,
+                    all_assignments=ctx.build_all_assignments(w),
                     mood_ctx=mood_ctx,
                 )
                 window_total += score

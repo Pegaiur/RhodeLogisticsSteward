@@ -143,6 +143,7 @@ def phase_mfg(
                 ctrl_per_op_bonus=ctrl_bonus,
                 all_operators=ctx.operators,
                 control_operators=ctrl_ops,
+                all_assignments=ctx.build_all_assignments(window_idx),
                 mood_ctx=mood_ctx,
             )
             combo_names = [op.name for op in combo_ops]

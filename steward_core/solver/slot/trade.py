@@ -146,6 +146,7 @@ def phase_trade(
             ctrl_per_op_bonus=ctrl_bonus,
             all_operators=ctx.operators,
             control_operators=ctrl_ops,
+            all_assignments=ctx.build_all_assignments(window_idx),
             mood_ctx=mood_ctx,
         )
         n = len(combo_ops)

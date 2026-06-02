@@ -238,6 +238,25 @@ class SlotContext:
         import copy
         return copy.deepcopy(self)
 
+    def build_all_assignments(self, window_idx: int) -> dict[str, list]:
+        """构建跨设施干员分配表
+
+        从当前窗口的 SlotAssignment 状态构建 facility_type → [Operator] 映射，
+        供 evaluate_room() 的 all_assignments 参数使用。
+
+        Phase A/B 中 Control/Dorm 为冷启动估计（与 compute_buff_pool 同源），
+        Phase 全部完成后为真实分配。
+        """
+        result: dict[str, list] = {}
+        for a in self.windows[window_idx].assignments:
+            if not a.operator_name or a.operator_name not in self.op_lookup:
+                continue
+            op = self.op_lookup[a.operator_name]
+            result.setdefault(a.facility_type, [])
+            if op not in result[a.facility_type]:
+                result[a.facility_type].append(op)
+        return result
+
 
 _FACILITY_PREFIX = {
     "Mfg": "mfg",
