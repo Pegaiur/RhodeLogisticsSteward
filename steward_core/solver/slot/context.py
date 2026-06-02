@@ -112,6 +112,8 @@ class SlotContext:
     lambda_k: float = 0.0
     hours_used: dict[str, float] = field(default_factory=dict)
     control_operators: list[str] = field(default_factory=list)
+    op_peak_eff: dict[str, float] = field(default_factory=dict)
+    """干员名 → 最高效率值(%), Phase A/B 写入供宿舍恢复权重使用"""
 
     prev_P: float = 0.0
     visited: set[str] = field(default_factory=set)

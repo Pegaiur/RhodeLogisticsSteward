@@ -18,6 +18,13 @@ if TYPE_CHECKING:
     from steward_core.mood_flow import MoodContext
 
 
+def _needs_recovery(name: str, mood_ctx: "MoodContext | None") -> bool:
+    """干员是否需要宿舍恢复：mood_ctx 非空且心情未满"""
+    if mood_ctx is None:
+        return False
+    return mood_ctx.mood_of(name) < 24.0 - 0.01
+
+
 def phase_remaining(
     ctx: "SlotContext",
     window_idx: int = 0,
@@ -65,7 +72,7 @@ def phase_remaining(
                     continue
                 if facility_type == "Dormitory":
                     if not (op.has_skill_for(facility_type, "Rest")
-                            or ctx.lambda_ops.get(op.name, 0.0) > 0):
+                            or _needs_recovery(op.name, mood_ctx)):
                         continue
                 elif not op.has_skill_for(facility_type, _product_for(facility_type)):
                     continue
@@ -73,7 +80,7 @@ def phase_remaining(
                     continue
 
                 score = contribution(ctx, op.name, facility_type, window_idx, D,
-                                     room_index=target_room)
+                                     room_index=target_room, mood_ctx=mood_ctx)
                 if score > best_score:
                     best_score = score
                     best_op_name = op.name

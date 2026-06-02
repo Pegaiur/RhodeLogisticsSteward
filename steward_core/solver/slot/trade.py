@@ -161,15 +161,15 @@ def phase_trade(
         else:
             lmd = efficiency_integrated / 24.0 * lmd_per_day
 
-        lambda_penalty = sum(
-            ctx.lambda_ops.get(name, 0.0) for name in combo_names
-        ) * shift_hours
-        lmd -= lambda_penalty
-
         if override is None:
             lmd -= compute_opportunity_cost_lmd(combo_ops, "Trade", "Money", shift_hours)
 
         evaluated.append((lmd, combo_names))
+
+        for combo_op in combo_ops:
+            eff_pct = max((sk.efficient.raw.get("all", 0) for sk in combo_op.skills), default=0.0)
+            if eff_pct > 0:
+                ctx.op_peak_eff[combo_op.name] = max(ctx.op_peak_eff.get(combo_op.name, 0.0), eff_pct)
 
     evaluated.sort(key=lambda x: -x[0])
 

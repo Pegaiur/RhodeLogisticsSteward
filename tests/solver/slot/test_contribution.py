@@ -6,6 +6,7 @@ from steward_core.models import EfficiencyMap, LayoutConfig, Operator, Skill
 from steward_core.solver.params import SolverParams
 from steward_core.solver.slot.context import SlotContext
 from steward_core.solver.slot.contribution import contribution
+from steward_core.mood_flow import MoodContext
 
 
 def _dummy_op(char_id: str, name: str) -> Operator:
@@ -149,15 +150,12 @@ class TestDormContributionWithLambdaK:
             LayoutConfig.layout_243(),
             SolverParams(),
         )
-        ctx.lambda_ops["酒神"] = 100.0
-        ctx.lambda_k = 0.0  # 消除机会成本
         ctx.place(0, "dorm_0_0", "酒神")
-        result = contribution(ctx, "杜林", "Dormitory", room_index=0)
-        # Part2 = 0.25 × 100 × 12 = 300，Part3=0 → 300
-        expected = 0.25 * 100.0 * 12.0
-        assert abs(result - expected) < 0.01, (
-            f"期待={expected}，实际={result}"
-        )
+        mc = MoodContext.fresh([dorm_recovery_op, work_op], SolverParams())
+        object.__setattr__(mc, "operator_moods", {"酒神": 12.0, "杜林": 24.0})
+        ctx.op_peak_eff["酒神"] = 25.0
+        result = contribution(ctx, "杜林", "Dormitory", room_index=0, mood_ctx=mc)
+        assert result > 0, f"室友恢复增量应为正: {result}"
 
     def test_single_type_redundant_delta_zero(self, dorm_single_op, work_op):
         """同房间第2个C类增量=0（Rule3取max）"""

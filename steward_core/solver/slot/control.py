@@ -62,7 +62,7 @@ def phase_control(
             if not mood_is_viable(op.name, mood_ctx, mood_threshold):
                 continue
 
-            score = contribution(ctx, op.name, "Control", window_idx, D)
+            score = contribution(ctx, op.name, "Control", window_idx, D, mood_ctx=mood_ctx)
             if score > best_score:
                 best_score = score
                 best_op_name = op.name

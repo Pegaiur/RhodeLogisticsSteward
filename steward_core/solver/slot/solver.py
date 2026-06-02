@@ -75,13 +75,11 @@ def solve_slot(
     visited = set()
     best_ctx = None
     best_P = 0.0
-    prev_max_lambda = -1.0
 
     for iteration in range(max_iterations):
         if iteration > 0:
             _reset_ctx(ctx)
         mc = mood_ctx
-        mood_start_snapshot = dict(mc.operator_moods) if mc and num_windows > 1 else {}
         for w in range(num_windows):
             phase_mfg(ctx, w, mood_ctx=mc)
             phase_trade(ctx, w, mood_ctx=mc)
@@ -127,14 +125,6 @@ def solve_slot(
 
             _track_hours_used(ctx, w, shift_hours)
 
-        max_lambda = 0.0
-        if num_windows > 1:
-            max_lambda = _update_lambda_shadow(
-                ctx, operators, params,
-                mood_start=mood_start_snapshot,
-                mood_ctx=mc,
-            )
-
         sig = "||".join(ctx.signature(w) for w in range(ctx.num_windows))
         if sig in visited:
             break
@@ -150,11 +140,6 @@ def solve_slot(
             best_P = P
             best_ctx = ctx.clone()
         ctx.prev_P = P
-
-        if num_windows > 1 and max_lambda < 0.001 and iteration > 0:
-            if prev_max_lambda >= 0 and abs(max_lambda - prev_max_lambda) < 0.001:
-                break
-        prev_max_lambda = max_lambda
 
     if best_ctx is None:
         best_ctx = ctx

@@ -72,6 +72,7 @@ def contribution(
     window_idx: int = 0,
     D: dict[str, float] | None = None,
     room_index: int = 0,
+    mood_ctx: "MoodContext | None" = None,
 ) -> float:
     """统一贡献评分入口
 
@@ -89,6 +90,12 @@ def contribution(
 
     if facility_type == "Control":
         base = _control_contribution(ctx, op, window_idx, D)
+        if mood_ctx is not None:
+            burn = _mood_burn_for_control(ctx, mood_ctx, op_name)
+            if burn > 0:
+                current = mood_ctx.mood_of(op_name)
+                effective = min(current / max(burn * hours, 0.01), 1.0)
+                base *= effective
     elif facility_type == "Power":
         base = _power_contribution(ctx, op, window_idx, D)
     elif facility_type == "Reception":
@@ -96,11 +103,11 @@ def contribution(
     elif facility_type == "Office":
         base = _office_contribution(ctx, op, window_idx, D)
     elif facility_type == "Dormitory":
-        return _dorm_contribution(ctx, op, window_idx, D, room_index)
+        return _dorm_contribution(ctx, op, window_idx, D, room_index, mood_ctx=mood_ctx)
     else:
         return float("-inf")
 
-    return base - ctx.lambda_ops.get(op_name, 0.0) * hours
+    return base
 
 
 def _mfg_base_rate_lmd_avg() -> float:
@@ -383,21 +390,35 @@ def _office_contribution(
     return total
 
 
+def _mood_burn_for_control(
+    ctx: "SlotContext",
+    mood_ctx: "MoodContext",
+    op_name: str,
+) -> float:
+    """估算控制中枢干员的心情消耗率
+
+    应使用 _control_burn 精确计算，但其依赖 control_operators 列表
+    （Phase C 期间尚未设置）。此处用 work_burn 近似——
+    对绝大多数干员无差异（wisdel/mlynar 边际情况除外）。
+    """
+    return mood_ctx.work_burn(op_name, "Control", 5)
+
+
 def _dorm_contribution(
     ctx: "SlotContext",
     op: "Operator",
     window_idx: int,
     D: dict[str, float],
     room_index: int,
+    mood_ctx: "MoodContext | None" = None,
 ) -> float:
     """宿舍贡献 = type2状态写入*D + 自恢复价值 + 室友恢复增量
 
-    按房间计算边际贡献，自然覆盖 C 类冗余（同房间第2个C类增量=0）、
-    D 类累加。贪心排序本身承担机会成本定价——λ 更高的候选者自然胜出，
-    无需显式减项。
+    恢复价值不再依赖 lambda——改用 mood deficit × recovery_rate × base_lmd × eff_weight。
     """
     total = 0.0
     hours = ctx.params.shift_hours if ctx.params else 12.0
+    mood_full = ctx.params.mood_full if ctx.params else 24.0
 
     # 部分1: 状态向量增量
     ctrl_names = ctx.ops_of_type(window_idx, "Control")
@@ -423,20 +444,28 @@ def _dorm_contribution(
     existing_ops = [ctx.op_lookup[n] for n in existing_names if n in ctx.op_lookup]
 
     # 部分1.5: 被恢复者自身恢复价值
-    op_lambda = ctx.lambda_ops.get(op.name, 0.0)
-    if op_lambda > 0:
-        all_dorm_ops = existing_ops + [op]
-        recovery_rate = _evaluate_dorm_recovery_for(
-            all_dorm_ops, op, dorm_bonus_all, dorm_bonus_elite,
-            yanhuo_bonus, dorm_level, amb,
-        )
-        total += op_lambda * recovery_rate * hours
+    if mood_ctx is not None:
+        current = mood_ctx.mood_of(op.name)
+        if current < mood_full - 0.01:
+            all_dorm_ops = existing_ops + [op]
+            recovery_rate = _evaluate_dorm_recovery_for(
+                all_dorm_ops, op, dorm_bonus_all, dorm_bonus_elite,
+                yanhuo_bonus, dorm_level, amb,
+            )
+            mood_deficit = mood_full - current
+            recoverable = min(mood_deficit, recovery_rate * hours)
+            eff = ctx.op_peak_eff.get(op.name, 0.0)
+            eff_weight = max(eff / 30.0, 0.1)
+            total += recoverable * _mfg_base_rate_lmd_avg() * eff_weight
 
     # 部分2: 室友恢复增量
-    if existing_names:
+    if mood_ctx is not None and existing_names:
         for roommate_name in existing_names:
             roommate = ctx.op_lookup.get(roommate_name)
             if roommate is None:
+                continue
+            rm_mood = mood_ctx.mood_of(roommate_name)
+            if rm_mood >= mood_full - 0.01:
                 continue
             before = _evaluate_dorm_recovery_for(
                 existing_ops, roommate, dorm_bonus_all, dorm_bonus_elite,
@@ -447,11 +476,10 @@ def _dorm_contribution(
                 yanhuo_bonus, dorm_level, amb,
             )
             delta_rec = after - before
-            rmbda = ctx.lambda_ops.get(roommate_name, 0.0)
-            if rmbda > 0 and ctx.lambda_k > 0:
-                rmbda = min(rmbda, ctx.lambda_k)
-            if delta_rec > 0 and rmbda > 0:
-                total += delta_rec * rmbda * hours
+            if delta_rec > 0:
+                rm_eff = ctx.op_peak_eff.get(roommate_name, 0.0)
+                rm_eff_weight = max(rm_eff / 30.0, 0.1)
+                total += delta_rec * hours * _mfg_base_rate_lmd_avg() * rm_eff_weight
 
     return total
 
