@@ -109,8 +109,7 @@ class SlotContext:
     windows: list[WindowState] = field(default_factory=list)
 
     lambda_ops: dict[str, float] = field(default_factory=dict)
-    lambda_k: float = 0.0
-    hours_used: dict[str, float] = field(default_factory=dict)
+    """已废弃——全局移除 lambda 后不再使用，保留字段向后兼容"""
     control_operators: list[str] = field(default_factory=list)
     op_peak_eff: dict[str, float] = field(default_factory=dict)
     """干员名 → 最高效率值(%), Phase A/B 写入供宿舍恢复权重使用"""

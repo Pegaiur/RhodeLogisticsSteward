@@ -88,7 +88,6 @@ def solve_slot(
             ctx.windows[w].D = D
 
             phase_control(ctx, w, D, mood_ctx=mc)
-            ctx.lambda_k = _compute_lambda_k(ctx, w, shift_hours, mood_ctx=mc)
             phase_remaining(ctx, w, D, mood_ctx=mc)
 
             if mc is not None:
@@ -122,8 +121,6 @@ def solve_slot(
                         if rate > 0:
                             new_moods[name] = min(24.0, new_moods.get(name, 24.0) + rate * shift_hours)
                     mc = replace(mc, operator_moods=new_moods)
-
-            _track_hours_used(ctx, w, shift_hours)
 
         sig = "||".join(ctx.signature(w) for w in range(ctx.num_windows))
         if sig in visited:
@@ -163,17 +160,10 @@ def _build_dorm_assignments(ctx: SlotContext, window_idx: int) -> dict[str, str]
 
 
 def _reset_ctx(ctx: SlotContext) -> None:
-    """清空所有窗口槽位用于迭代重新求解
-
-    保留 lambda_ops（跨迭代持久化，delta 模型需要历史累积）、
-    control_operators（供 contribution.py 计算贡献度）。
-    仅清空 operator_name、hours_used。
-    """
+    """清空所有窗口槽位用于迭代重新求解"""
     for w in range(ctx.num_windows):
         for a in ctx.windows[w].assignments:
             a.operator_name = ""
-    ctx.hours_used.clear()
-    ctx.lambda_k = 0.0
 
 
 def _track_hours_used(ctx: SlotContext, window_idx: int, hours: float) -> None:

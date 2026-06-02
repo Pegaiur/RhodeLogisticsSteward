@@ -18,11 +18,11 @@ if TYPE_CHECKING:
     from steward_core.mood_flow import MoodContext
 
 
-def _needs_recovery(name: str, mood_ctx: "MoodContext | None") -> bool:
+def _needs_recovery(name: str, mood_ctx: "MoodContext | None", mood_full: float = 24.0) -> bool:
     """干员是否需要宿舍恢复：mood_ctx 非空且心情未满"""
     if mood_ctx is None:
         return False
-    return mood_ctx.mood_of(name) < 24.0 - 0.01
+    return mood_ctx.mood_of(name) < mood_full - 0.01
 
 
 def phase_remaining(
@@ -43,6 +43,7 @@ def phase_remaining(
     params = ctx.params
     dorm_max = params.dorm_max_operators if params else 20
     mood_threshold = params.mood_work_threshold if params else 0.0
+    mood_full = params.mood_full if params else 24.0
 
     facility_configs = [
         ("Power", 3),
@@ -72,7 +73,7 @@ def phase_remaining(
                     continue
                 if facility_type == "Dormitory":
                     if not (op.has_skill_for(facility_type, "Rest")
-                            or _needs_recovery(op.name, mood_ctx)):
+                            or _needs_recovery(op.name, mood_ctx, mood_full)):
                         continue
                 elif not op.has_skill_for(facility_type, _product_for(facility_type)):
                     continue

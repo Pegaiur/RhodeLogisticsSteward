@@ -40,11 +40,7 @@ _LAMBDA_EFF_SCALE = {
     "CombatRecord": _MFG_CR_BASE_RATE * _CR_LMD_PER_UNIT / 100.0,
     "PureGold": _MFG_PG_BASE_RATE * _PG_LMD_PER_UNIT / 100.0,
 }
-"""λ 惩罚从 LMD 到效率积分域的换算系数
-
-1 单位效率积分（%×h）对应 base_rate × unit_value / 100 LMD。
-λ×hours（LMD）除以本系数即得效率积分域等值惩罚。
-"""
+"""机会成本从 LMD 到效率积分域的换算系数（原用于 lambda 惩罚，现仅用于机会成本）"""
 
 
 def phase_mfg(

@@ -401,7 +401,8 @@ def _mood_burn_for_control(
     （Phase C 期间尚未设置）。此处用 work_burn 近似——
     对绝大多数干员无差异（wisdel/mlynar 边际情况除外）。
     """
-    return mood_ctx.work_burn(op_name, "Control", 5)
+    slots = ctx.params.control_max_slots if ctx.params else 5
+    return mood_ctx.work_burn(op_name, "Control", slots)
 
 
 def _dorm_contribution(
