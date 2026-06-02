@@ -4,7 +4,7 @@ import itertools
 
 from steward_core.efficiency_fn import constant_efficiency, rank_by_dominance
 from steward_core.models import LayoutConfig, Operator, RoomAssignment
-from steward_core.synergy import synergy_facility_count, operator_expected_12h_efficiency
+from steward_core.synergy import synergy_facility_count, operator_estimated_efficiency
 from steward_core.synergy.trade_linkages import _TRADE_PAIR_TABLE
 
 _LAYOUT_243 = LayoutConfig.layout_243()
@@ -228,7 +228,7 @@ def _greedy_remaining(
                 continue
             if not op.has_skill_for(room.room_type, room.product):
                 continue
-            eff = operator_expected_12h_efficiency(op, room.room_type, room.product)
+            eff = operator_estimated_efficiency(op, room.room_type, room.product)
             if eff <= 0:
                 a6_segs = synergy_facility_count([op], room.room_type, room.product, _LAYOUT_243, T=T)
                 eff = sum(s.a for s in a6_segs)

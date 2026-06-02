@@ -539,67 +539,67 @@ class TestRampingOperator:
         assert segs[1].a == 25.0 and segs[1].b == 0.0
 
 
-# ─── operator_expected_12h_efficiency ───────────────────────────────
+# ─── operator_estimated_efficiency ───────────────────────────────
 
 class TestExpected12hEfficiency:
-    """爬升感知的平均效率预估: operator_expected_12h_efficiency"""
+    """爬升感知的平均效率预估: operator_estimated_efficiency"""
 
     def test_阿罗玛_例行清扫_12h平均约11_67(self):
         """阿罗玛 [100]: 0→20%@2%/h, 10h饱和 → 12h平均 = (100+40)/12 = 11.67%"""
-        from steward_core.synergy import operator_expected_12h_efficiency
+        from steward_core.synergy import operator_estimated_efficiency
 
         aluoma = _mk_op("阿罗玛")
         aluoma.skills.append(_mk_skill(
             "manu_prod_spd_addition[100]", "Mfg", "例行清扫", {"all": 0.0},
         ))
 
-        eff = operator_expected_12h_efficiency(aluoma, "Mfg", "PureGold", T=12.0)
+        eff = operator_estimated_efficiency(aluoma, "Mfg", "PureGold", T=12.0)
         assert pytest.approx(eff, rel=0.01) == 11.67
 
     def test_芬_急性子_12h平均约23_96(self):
         """芬 [030]: 20→25%@1%/h, 5h饱和 → 12h平均 = (112.5+175)/12 ≈ 23.96%"""
-        from steward_core.synergy import operator_expected_12h_efficiency
+        from steward_core.synergy import operator_estimated_efficiency
 
         fen = _mk_op("芬")
         fen.skills.append(_mk_skill(
             "manu_prod_spd_addition[030]", "Mfg", "急性子", {"all": 20.0},
         ))
 
-        eff = operator_expected_12h_efficiency(fen, "Mfg", "CombatRecord", T=12.0)
+        eff = operator_estimated_efficiency(fen, "Mfg", "CombatRecord", T=12.0)
         # ramp: integrate(20+1t, 0,5) + 25*7 = 112.5 + 175 = 287.5 → /12 = 23.958
         assert pytest.approx(eff, rel=0.01) == 23.96
 
     def test_克洛丝_慢性子_12h平均约22_92(self):
         """克洛丝 [040]: 15→25%@2%/h, 5h饱和 → 12h平均 = (100+175)/12 ≈ 22.92%"""
-        from steward_core.synergy import operator_expected_12h_efficiency
+        from steward_core.synergy import operator_estimated_efficiency
 
         kroos = _mk_op("克洛丝")
         kroos.skills.append(_mk_skill(
             "manu_prod_spd_addition[040]", "Mfg", "慢性子", {"all": 15.0},
         ))
 
-        eff = operator_expected_12h_efficiency(kroos, "Mfg", "PureGold", T=12.0)
+        eff = operator_estimated_efficiency(kroos, "Mfg", "PureGold", T=12.0)
         # ramp: integrate(15+2t, 0,5) + 25*7 = 100 + 175 = 275 → /12 = 22.917
         assert pytest.approx(eff, rel=0.01) == 22.92
 
     def test_非爬升技能_回退到best_efficiency(self):
         """无爬升技能 → 返回 best_efficiency 标量"""
-        from steward_core.synergy import operator_expected_12h_efficiency
+        from steward_core.synergy import operator_estimated_efficiency
 
         op = _mk_op("普通")
         op.skills.append(_mk_skill("manu_prod_spd[001]", "Mfg", "普通技能", {"all": 30.0}))
 
-        eff = operator_expected_12h_efficiency(op, "Mfg", "PureGold", T=12.0)
+        eff = operator_estimated_efficiency(op, "Mfg", "PureGold", T=12.0)
         assert eff == 30.0
 
     def test_非Mfg房间_回退到best_efficiency(self):
         """Trade 设施无爬升 → 返回 best_efficiency 标量"""
-        from steward_core.synergy import operator_expected_12h_efficiency
+        from steward_core.synergy import operator_estimated_efficiency
 
         op = _mk_op("贸易干员")
         op.skills.append(_mk_skill("trade_ord_spd[001]", "Trade", "贸易技能", {"Money": 30.0}))
 
-        eff = operator_expected_12h_efficiency(op, "Trade", "Money", T=12.0)
+        eff = operator_estimated_efficiency(op, "Trade", "Money", T=12.0)
         assert eff == 30.0
 
 

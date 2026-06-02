@@ -23,7 +23,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from .partials import _CR_EXP_PER_UNIT, _PG_LMD_PER_UNIT, _TRADE_BASE_LMD_PER_HOUR
-from steward_core.synergy import operator_expected_12h_efficiency
+from steward_core.synergy import operator_estimated_efficiency
 
 if TYPE_CHECKING:
     from steward_core.models import Operator
@@ -122,7 +122,7 @@ def _cost_pct(
     """逐干员计算被归零的效率百分比机会成本汇总"""
     total = 0.0
     for op in zeroed_ops:
-        own_eff = max(operator_expected_12h_efficiency(op, room_type, product), 0.0)
+        own_eff = max(operator_estimated_efficiency(op, room_type, product), 0.0)
         if mode == "whisper":
             total += max(own_eff - 45.0, 0.0)
         else:

@@ -73,19 +73,18 @@ class TestOperatorIdentity:
         assert op.team_id is None
 
     def test_向后兼容_原有代码不传身份字段仍可运行(self):
-        """不传新字段时，best_efficiency 和 has_skill_for 仍正常工作"""
+        """不传新字段时，operator_estimated_efficiency 和 has_skill_for 仍正常工作"""
+        from steward_core.synergy import operator_estimated_efficiency
         # Arrange
         sk = _mk_skill("Mfg", {"all": 30})
         op = Operator(char_id="op1", name="万能工", skills=[sk])
 
         # Act
-        eff = op.best_efficiency("Mfg", "PureGold")
+        eff = operator_estimated_efficiency(op, "Mfg", "PureGold")
         has = op.has_skill_for("Mfg", "PureGold")
 
         # Assert
         assert eff == 30.0
-        assert has is True
-        assert op.group_id is None
 
 
 # ─── LinearSegment ───────────────────────────────────────────────

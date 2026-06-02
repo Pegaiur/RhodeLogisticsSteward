@@ -4,7 +4,7 @@ from dataclasses import dataclass, field
 
 from steward_core.models import Operator
 from .helpers import _DURIN_NAMES, _ORDER_ANCHOR_PREFIXES
-from .mfg_linkages import skill_class, _ZEROING_VARIANT_TABLE, operator_expected_12h_efficiency
+from .mfg_linkages import skill_class, _ZEROING_VARIANT_TABLE, operator_estimated_efficiency
 from .buff_pool import _B_BUFF_CONSUMER_TABLE
 from .facility_linkages import _A_FACILITY_LINK_TABLE
 
@@ -53,7 +53,7 @@ def classify_mfg_operators(
 
 def prune_equivalent(pure_ops: list, top_k: int = 3) -> list:
     """等价类合并 — 纯效率只保留 top_k 名"""
-    sorted_ops = sorted(pure_ops, key=lambda op: -operator_expected_12h_efficiency(op, "Mfg"))
+    sorted_ops = sorted(pure_ops, key=lambda op: -operator_estimated_efficiency(op, "Mfg"))
     return sorted_ops[:top_k]
 
 
@@ -68,7 +68,7 @@ def build_candidate_pool(
     """
     seen = {op.char_id for op in classification.anchors}
     if room_type is not None:
-        anchors = sorted(classification.anchors, key=lambda op: -operator_expected_12h_efficiency(op, room_type, product))
+        anchors = sorted(classification.anchors, key=lambda op: -operator_estimated_efficiency(op, room_type, product))
     else:
         anchors = list(classification.anchors)
     pool = list(anchors)

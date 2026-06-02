@@ -92,7 +92,7 @@ def synergy_efficiency_amplifier(
         return []
 
     others_eff = sum(
-        operator_expected_12h_efficiency(op, room_type, product)
+        operator_estimated_efficiency(op, room_type, product)
         for op in operators if op.name != "槐琥"
     )
     bonus = (int(others_eff) // 5) * 5
@@ -233,7 +233,7 @@ def operator_ramp_segments(
     return None
 
 
-def operator_expected_12h_efficiency(
+def operator_estimated_efficiency(
     op: Operator,
     room_type: str,
     product: str | None = None,
@@ -242,7 +242,8 @@ def operator_expected_12h_efficiency(
     """获取干员在指定设施下的预期平均效率（含爬升）
 
     对爬升型技能计算 T 小时 ramp 积分后的平均效率，
-    非爬升技能回退到 best_efficiency。
+    非爬升技能回退到 skill.efficient 字段最高值，
+    无匹配技能返回 0。
 
     用于排序/比较场景——槐琥配合意识、孑订单压缩等游戏公式
     中"效率"是全口径概念，包含爬升增量。
@@ -252,7 +253,14 @@ def operator_expected_12h_efficiency(
     ramp = operator_ramp_segments(op, room_type, product or "", T)
     if ramp is not None:
         return integrate_segments(ramp, T) / T
-    return op.best_efficiency(room_type, product)
+    # 回退：直接取 skill.efficient 最高值，无 misleading 命名
+    best = -999.0
+    for sk in op.skills:
+        if sk.effective_for(room_type, product):
+            eff = sk.efficient.get(product) if product else sk.efficient.max_value()
+            if eff > best:
+                best = eff
+    return best if best > -999.0 else 0.0
 
 
 # ─── A·技能计数 ─────────────────────────────────────────────

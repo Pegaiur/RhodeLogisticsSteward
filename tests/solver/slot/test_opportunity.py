@@ -31,8 +31,8 @@ def _room_for(buff_id: str) -> str:
 _EFF_MAP: dict[str, float] = {}
 
 
-def _fake_best_efficiency(self, room_type, product=None):
-    return _EFF_MAP.get(self.name, 0.0)
+def _fake_estimated_efficiency(op, room_type, product=None, T=12.0):
+    return _EFF_MAP.get(op.name, 0.0)
 
 
 class TestNoZeroing:
@@ -48,7 +48,7 @@ class TestNoZeroing:
 class TestWhisperFormula:
     """whisper 公式数值验证"""
 
-    @patch.object(Operator, "best_efficiency", _fake_best_efficiency)
+    @patch("steward_core.solver.slot.opportunity.operator_estimated_efficiency", _fake_estimated_efficiency)
     def test_low_eff_below_45_no_cost(self):
         _EFF_MAP.clear()
         _EFF_MAP["A"] = 30.0
@@ -57,7 +57,7 @@ class TestWhisperFormula:
         ops = [shamare, _mk_op("A", "a"), _mk_op("B", "b")]
         assert compute_opportunity_cost_lmd(ops, "Trade", "Money", 12.0) == 0.0
 
-    @patch.object(Operator, "best_efficiency", _fake_best_efficiency)
+    @patch("steward_core.solver.slot.opportunity.operator_estimated_efficiency", _fake_estimated_efficiency)
     def test_high_eff_above_45_has_cost(self):
         _EFF_MAP.clear()
         _EFF_MAP["A"] = 75.0
@@ -70,7 +70,7 @@ class TestWhisperFormula:
         assert abs(cost - expected_lmd) < 0.01
         assert cost > 0.0
 
-    @patch.object(Operator, "best_efficiency", _fake_best_efficiency)
+    @patch("steward_core.solver.slot.opportunity.operator_estimated_efficiency", _fake_estimated_efficiency)
     def test_exactly_45_no_cost(self):
         _EFF_MAP.clear()
         _EFF_MAP["A"] = 45.0
@@ -78,7 +78,7 @@ class TestWhisperFormula:
         ops = [shamare, _mk_op("A", "a"), _mk_op("B", "b")]
         assert compute_opportunity_cost_lmd(ops, "Trade", "Money", 12.0) == 0.0
 
-    @patch.object(Operator, "best_efficiency", _fake_best_efficiency)
+    @patch("steward_core.solver.slot.opportunity.operator_estimated_efficiency", _fake_estimated_efficiency)
     def test_mfg_whisper_still_zero(self):
         _EFF_MAP.clear()
         _EFF_MAP["A"] = 75.0
@@ -90,7 +90,7 @@ class TestWhisperFormula:
 class TestAutomationFormula:
     """automation 公式数值验证（全额扣减，无 sensitivity）"""
 
-    @patch.object(Operator, "best_efficiency", _fake_best_efficiency)
+    @patch("steward_core.solver.slot.opportunity.operator_estimated_efficiency", _fake_estimated_efficiency)
     def test_basic_cost_full(self):
         _EFF_MAP.clear()
         _EFF_MAP["A"] = 30.0
@@ -103,7 +103,7 @@ class TestAutomationFormula:
         assert abs(cost - expected_lmd) < 0.01
         assert cost > 0.0
 
-    @patch.object(Operator, "best_efficiency", _fake_best_efficiency)
+    @patch("steward_core.solver.slot.opportunity.operator_estimated_efficiency", _fake_estimated_efficiency)
     def test_fallback_name_detection(self):
         _EFF_MAP.clear()
         _EFF_MAP["A"] = 25.0
@@ -115,7 +115,7 @@ class TestAutomationFormula:
         assert abs(cost - expected_lmd) < 0.01
         assert cost > 0.0
 
-    @patch.object(Operator, "best_efficiency", _fake_best_efficiency)
+    @patch("steward_core.solver.slot.opportunity.operator_estimated_efficiency", _fake_estimated_efficiency)
     def test_trade_ignored(self):
         _EFF_MAP.clear()
         _EFF_MAP["A"] = 50.0
@@ -127,7 +127,7 @@ class TestAutomationFormula:
 class TestZeroingVariantFormula:
     """归零变体公式数值验证（全额扣减）"""
 
-    @patch.object(Operator, "best_efficiency", _fake_best_efficiency)
+    @patch("steward_core.solver.slot.opportunity.operator_estimated_efficiency", _fake_estimated_efficiency)
     def test_basic_cost_full(self):
         _EFF_MAP.clear()
         _EFF_MAP["A"] = 30.0
@@ -143,14 +143,14 @@ class TestZeroingVariantFormula:
 class TestEdgeCases:
     """边界条件"""
 
-    @patch.object(Operator, "best_efficiency", _fake_best_efficiency)
+    @patch("steward_core.solver.slot.opportunity.operator_estimated_efficiency", _fake_estimated_efficiency)
     def test_single_zeroer_only(self):
         _EFF_MAP.clear()
         saria = _mk_op("森蚺", "saria", ["manu_prod_spd&power[000]"])
         ops = [saria, _mk_op("A", "a"), _mk_op("B", "b")]
         assert compute_opportunity_cost_lmd(ops, "Mfg", "CombatRecord", 12.0) == 0.0
 
-    @patch.object(Operator, "best_efficiency", _fake_best_efficiency)
+    @patch("steward_core.solver.slot.opportunity.operator_estimated_efficiency", _fake_estimated_efficiency)
     def test_all_same_eff_single_roommate(self):
         _EFF_MAP.clear()
         _EFF_MAP["A"] = 40.0

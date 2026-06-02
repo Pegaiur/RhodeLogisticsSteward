@@ -183,7 +183,8 @@ class TestPruning:
 
         # Assert: 只保留前3名
         assert len(pure_pool) == 3
-        efficiencies = [op.best_efficiency("Mfg") for op in pure_pool]
+        from steward_core.synergy import operator_estimated_efficiency
+        efficiencies = [operator_estimated_efficiency(op, "Mfg") for op in pure_pool]
         assert 35.0 in efficiencies
         assert 25.0 not in efficiencies
 

@@ -30,7 +30,7 @@ from steward_core.synergy import (
     synergy_facility_group,
     compute_trade_order_limit,
     GlobalBonus,
-    operator_expected_12h_efficiency,
+    operator_estimated_efficiency,
 )
 
 _LAYOUT_243 = LayoutConfig.layout_243()
@@ -174,7 +174,7 @@ def evaluate_room(
             )
             total += integrate_segments(qianhuai_segs, T)
         else:
-            eff = operator_expected_12h_efficiency(op, room_type, product)
+            eff = operator_estimated_efficiency(op, room_type, product)
             if eff > 0:
                 total += integrate_segments(
                     constant_efficiency(

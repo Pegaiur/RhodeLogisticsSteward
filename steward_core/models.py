@@ -107,16 +107,6 @@ class Operator:
     nation_id: Optional[str] = None
     team_id: Optional[str] = None
 
-    def best_efficiency(self, room_type: str, product: Optional[str] = None) -> float:
-        """获取该干员在指定设施和产物下的最高效率值"""
-        best = -999.0
-        for skill in self.skills:
-            if skill.effective_for(room_type, product):
-                eff = skill.efficient.get(product) if product else skill.efficient.max_value()
-                if eff > best:
-                    best = eff
-        return best
-
     def has_skill_for(self, room_type: str, product: Optional[str] = None) -> bool:
         """检查该干员是否有适用于指定设施和产物的技能"""
         for skill in self.skills:

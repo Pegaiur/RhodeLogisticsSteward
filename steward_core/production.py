@@ -16,7 +16,7 @@ from steward_core.synergy import (
     GlobalBonus, compute_control_global_bonus,
     compute_effective_power_count,
     control_per_operator_bonus,
-    operator_expected_12h_efficiency,
+    operator_estimated_efficiency,
 )
 from steward_core.constants import FIXED_CONTROL, BASE_POWER_COUNT
 from steward_core.evaluate import evaluate_room
@@ -418,7 +418,7 @@ def _calc_drone_daily(
         op = op_lookup.get(name)
         if op is None:
             continue
-        best = operator_expected_12h_efficiency(op, "Power", "Drone")
+        best = operator_estimated_efficiency(op, "Power", "Drone")
         if best >= 1.0:
             bonus_sum += best
     return _DRONE_BASE_PER_DAY * (1.0 + bonus_sum / 100.0)
