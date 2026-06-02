@@ -11,7 +11,7 @@ from typing import TYPE_CHECKING
 
 from steward_core.models import LayoutConfig
 from steward_core.synergy import compute_control_global_bonus, control_per_operator_bonus
-from steward_core.synergy import _OP_PLATFORM_NAMES
+from steward_core.synergy import _OP_PLATFORM_NAMES, compute_facility_group_bonus
 from .context import STATE_DIMS
 from .partials import _product_base_rate, _product_lmd_per_unit
 
@@ -710,6 +710,9 @@ def _office_contribution(
     extra_slots = max(office_level - 1, 0)
     if any(sk.buff_id == "hire_spd_cost&extra[000]" for sk in op.active_skills_for("Office")):
         eff += extra_slots * 10.0
+    all_assignments = ctx.build_all_assignments(window_idx)
+    if all_assignments:
+        eff += compute_facility_group_bonus(op, all_assignments, "Office")
     hours = ctx.params.shift_hours if ctx.params else 12.0
     base_lmd = _mfg_base_rate_lmd_avg()
     total += eff * _OFFICE_TO_MFG_RATIO / 100.0 * base_lmd * hours

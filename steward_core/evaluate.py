@@ -27,6 +27,7 @@ from steward_core.synergy import (
     synergy_degenbrecher_order_limit,
     synergy_trade_efficiency_amplifier,
     synergy_trade_conditional_eff,
+    synergy_facility_group,
     compute_trade_order_limit,
     GlobalBonus,
 )
@@ -210,6 +211,12 @@ def evaluate_room(
             total += integrate_segments(
                 synergy_trade_conditional_eff(operators, room_type, all_assignments, T), T,
             )
+
+    # B8 设施 group 计数加成（真言精英小队/凯尔希异格/风絮岁等）
+    if all_assignments is not None:
+        total += integrate_segments(
+            synergy_facility_group(non_zero_ops, room_type, all_assignments, T), T,
+        )
 
     # B6 全局阵营计数
     if all_operators is not None:

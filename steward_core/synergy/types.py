@@ -160,6 +160,15 @@ class OrderOverrideEntry(NamedTuple):
     priority: int = 0
 
 
+class FacilityGroupEntry(NamedTuple):
+    """B·设施 group 计数加成条目 — buff_id 为键"""
+    buff_id: str
+    group_id: str              # "elite" | "sui"
+    bonus_per_facility: float  # 每间设施加成 (%)
+    cap_facilities: int        # 计入设施数上限
+    target_room: str            # 目标设施类型，房间过滤守卫
+
+
 class TableMeta(NamedTuple):
     """硬编码表元信息"""
     table: object
@@ -178,6 +187,7 @@ from .global_linkages import _B_CROSS_ROOM_PAIR_TABLE, _B_GLOBAL_FACTION_TABLE  
 from .control_linkages import _C_CONTROL_GLOBAL_TABLE  # noqa: E402
 from .trade_linkages import _ORDER_LIMIT_TABLE, _TRADE_PAIR_TABLE, _JIE_MECH_TABLE, _TRADE_TRIGGER_TABLE, _ORDER_OVERRIDE_TABLE, _TRADE_SHARE_TABLE, _TRADE_EFF_AMPLIFIER_TABLE, _TRADE_CONDITIONAL_EFF_TABLE  # noqa: E402
 from .control_linkages import _CONTROL_TRADE_LIMIT_TABLE  # noqa: E402
+from .facility_group import _FACILITY_GROUP_TABLE  # noqa: E402
 
 TABLES: dict[str, TableMeta] = {
     "A·干员配对":        TableMeta(_A_PAIR_TABLE,             ["synergy_pair"],              "新增配对型联动 buff"),
@@ -203,4 +213,5 @@ TABLES: dict[str, TableMeta] = {
     "B·跨房间配对":      TableMeta(_B_CROSS_ROOM_PAIR_TABLE,  ["synergy_cross_room_pair"],    "新增跨设施干员条件配对 buff"),
     "B·全局阵营计数":    TableMeta(_B_GLOBAL_FACTION_TABLE,   ["synergy_global_faction"],     "新增全局阵营计数型 buff"),
     "C·中枢全局效率":    TableMeta(_C_CONTROL_GLOBAL_TABLE,   ["compute_control_global_bonus"], "新增中枢全局 buff"),
+    "B·设施group计数":   TableMeta(_FACILITY_GROUP_TABLE,    ["synergy_facility_group", "compute_facility_group_bonus"], "新增设施 group 计数型 buff（精英/岁等）"),
 }

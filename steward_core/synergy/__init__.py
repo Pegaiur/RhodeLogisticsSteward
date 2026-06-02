@@ -37,6 +37,7 @@ from steward_core.synergy.types import (
     TradeEffAmpEntry,
     TradeConditionalEffEntry,
     ControlTradeLimitEntry,
+    FacilityGroupEntry,
     TableMeta,
     TABLES,
 )
@@ -119,6 +120,13 @@ from steward_core.synergy.facility_linkages import (
     compute_effective_power_count,
     _has_power_count_modifier,
     _A_FACILITY_LINK_TABLE,
+)
+
+from steward_core.synergy.facility_group import (
+    count_facilities_with_group,
+    compute_facility_group_bonus,
+    synergy_facility_group,
+    _FACILITY_GROUP_TABLE,
 )
 
 from steward_core.synergy.control_linkages import (
