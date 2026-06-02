@@ -1,13 +1,8 @@
 """统一贡献评分 — contribution(op, facility_type, ctx, window_idx) -> LMD等值/窗口
 
-中枢/发电/会客/办公室/宿舍的干员选择统一通过边际贡献评分，
-替代旧的 locked_support 累积 + best_efficiency 排序模式。
-
-公式:
-  contribution = type2 状态写入 * D[d]
-               + type3 全局注入 * 受影响槽位数
-               + type2 per-operator 条件加成
-               - λ[op] × hours
+中枢/发电/会客/办公室/宿舍的干员选择统一通过边际贡献评分。
+Control 干员贡献含 mood 截断（与 evaluate_room t_red 等价），
+宿舍恢复价值由 mood_deficit × recovery_rate × eff_weight 驱动。
 """
 
 from __future__ import annotations

@@ -272,9 +272,7 @@ def synergy_trade_gold_lines(
         gold_lines += min(durin_count, 4)
 
     for op in operators:
-        for sk in op.skills:
-            if sk.room_type != "Trade":
-                continue
+        for sk in op.active_skills_for("Trade"):
             if sk.buff_id == "trade_ord_line_gold[000]":
                 gold_lines += (gold_lines // 4) * 2
             elif sk.buff_id == "trade_ord_line_gold[010]":

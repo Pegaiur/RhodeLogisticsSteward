@@ -1,6 +1,6 @@
 # 基建联动体系建模
 
-> **版本**: 2026-05-28 · 基于 `buffs_infrastructure.json` (520 buff) + `character_identity.json` (415 干员) 交叉核验，已删除 Trade 贪心迭代相关过时章节
+> **版本**: 2026-06-02 · 新增 §技能升级与共存判定，修正同前缀技能效率虚高问题
 >
 > 每个体系一个独立函数。同层体系之间并行计算后线性叠加（游戏内效果本即加法，利用 `∫ Σ = Σ ∫` 分别积分后求和）。
 
@@ -45,6 +45,50 @@ evaluate_room(operators, room_type, product, ...)
 | Phase 3b | Power/Reception/Office | `_greedy_remaining()` → 支配偏序排序（个体效率，不含联动） |
 
 中枢不再固定预设——Phase 1 通过 `compute_optimal_support()` 动态决定支撑干员，Phase 2 填充中枢后，Phase 3a 直接使用实际中枢计算 global_bonus 和 buff_pool。
+
+---
+
+## 技能升级与共存判定
+
+同一干员在精二后可能持有同一技能线的多个变体（如 α、β、γ），也可能持有不同机制的独立技能。判定一个干员实际生效哪些技能是正确建模效率的前提。
+
+### 判定规则
+
+> **同 buffId 前缀（去掉末尾 `[NNN]` 后缀）→ 升级关系：取 phase 最高（同 phase 取效率最高）**
+> **不同 buffId 前缀 → 共存关系：全部生效**
+
+`buffId` 的通用格式为 `base[NNN]`，去掉 `[\d+]$` 即得前缀。示例：
+
+```
+manu_prod_spd_bd[000]  → 前缀 manu_prod_spd_bd
+trade_ord_spd&tag[010] → 前缀 trade_ord_spd&tag
+```
+
+### 典型案例
+
+| 干员 | buffId α (phase) | buffId β (phase) | 前缀 | 判定 |
+|------|------------------|-------------------|------|------|
+| 迷迭香 | `manu_prod_spd_bd_n1[000]` (0) | — | `..bd_n1` vs `..bd` | **共存**：超感+意识实体 |
+| 迷迭香 | `manu_prod_spd_bd[000]` (0) | `manu_prod_spd_bd[010]` (2) | 同前缀 | **升级**：意识实体覆盖念力 |
+| 真言 | `trade_ord_spd&tag[000]` (0) | `trade_ord_spd&tag[010]` (2) | 同前缀 | **升级**：精英小队覆盖订单分发·α |
+| 德克萨斯 | `trade_ord_spd&cost_P[000]` (0) | `trade_ord_limit&cost_P[010]` (2) | `..spd&cost_P` vs `..limit&cost_P` | **共存**：效率+上限都生效 |
+| 琳琅诗怀雅 | `trade_ord_spd[000]` (0) | `trade_ord_spd_variable[000]` (2) | `..spd` vs `..spd_variable` | **共存**：固定+变量都生效 |
+| 雪雉 | `trade_ord_spd_variable2[000]` (0) | `trade_ord_spd_variable2[001]` (2) | 同前缀 | **升级**：天道酬勤·β覆盖α |
+| 孑 | `trade_ord_limit_diff[000]` (0) | `trade_ord_limit_count[000]` (1) | `..limit_diff` vs `..limit_count` | **共存**：摊贩经济+市井之道 |
+| 银灰 | `trade_ord_spd&limit[020]` (0) | `trade_ord_spd&limit[022]` (2) | 同前缀 | **升级**：喀兰之主覆盖α |
+| 黑键 | `trade_ord_spd_bd_n1[000]` (0) | `trade_ord_spd_bd[010]` (2) | `..bd_n1` vs `..bd` | **共存**：感性的+意识实体 |
+
+### 实现
+
+- `Operator.active_skills_for(room_type)` — 位于 [models.py](file:///d:/Dev/RhodeLogisticsSteward/steward_core/models.py)，按上述规则返回实际生效的技能列表
+- `_buff_id_prefix(buff_id)` — 提取前缀的辅助函数
+- 所有遍历 `op.skills` 的联动函数已统一改为遍历 `op.active_skills_for(room_type)`，防止升级关系被当作共存重复计算
+
+### 设计的非完美因素
+
+1. **规则仅对 `character_identity.json` 中同一干员的多 skills 做组内去重**：不同干员间的同名技能线（如帕拉斯 α + 柏喙 β）各自独立，由各联动表自行处理
+2. **依赖 `elite_phase`**：当前由 rarity 推导（rarity≤1→E0, rarity=2→E1, rarity≥3→E2），未来改用 MAA 扫描的实际练度数据后无需额外改动
+3. **前缀提取基于严格的 `[NNN]` 后缀解析**：所有 727 个 buffId 均遵循此格式，无例外
 
 ---
 

@@ -54,7 +54,7 @@ def phase_mfg(
     1. 构建候选池（含联动使能者）
     2. 生成 C(n,3) 组合
     3. 基于当前 ctx 中的 Control/Dorm 计算 buff_pool
-    4. evaluate_room 评分 + 机会成本扣减 + λ 扣减
+    4. evaluate_room 评分 + 机会成本扣减
     5. 贪心分配并写入 ctx
     """
     assigned_ids = ctx.assigned_ids(window_idx)

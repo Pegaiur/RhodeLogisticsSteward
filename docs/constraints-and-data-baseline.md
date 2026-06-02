@@ -147,7 +147,7 @@ mindmap
 |---|------|------|
 | S1 | 效率最大化 | 在合规前提下追求最高综合产出效率 |
 | S2 | 心情平衡 | 控制同一设施干员的心情消耗节奏，避免集中耗尽。由 H6（跨周期可持续性）的形式化约束 + MoodContext 心情流转引擎共同保证 |
-| S3 | 宿舍恢复 | 宿舍恢复是独立资源，通过 λ 影子乘子估值（`+ recovery × λ × hours`，详见 `slot-processing-model.md` §9.5），不纳入 H6 的池容计算——避免"假设所有干员都能获得宿舍恢复"的过度乐观 |
+| S3 | 宿舍恢复 | 宿舍恢复是独立资源，通过 mood-driven 恢复估值（`mood_deficit × recovery_rate × eff_weight`，详见 `slot-processing-model.md` §8.5），不纳入 H6 的池容计算 |
 | S4 | 会客室线索轮换 | 会客室只需凑齐线索，非效率优先场景可降低优先级 |
 
 > **注意**：技能联动体系的详细分类见 [`synergy-systems.md`](./synergy-systems.md)。
