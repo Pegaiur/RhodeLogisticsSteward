@@ -82,6 +82,7 @@ from steward_core.synergy.mfg_linkages import (
     synergy_zeroing_variant,
     synergy_token_prod,
     operator_ramp_segments,
+    operator_expected_12h_efficiency,
     skill_class,
     synergy_skill_count,
     synergy_skill_alias,

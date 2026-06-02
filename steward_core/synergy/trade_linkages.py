@@ -16,6 +16,7 @@ from steward_core.synergy.types import (
     TradeShareEntry, TradeEffAmpEntry, TradeConditionalEffEntry,
 )
 from .helpers import _DURIN_NAMES  # TODO: 际崖居民 durin_names 参数链待 evaluate_room 接入
+from .mfg_linkages import operator_expected_12h_efficiency
 
 # ─── 模块级常量 ─────────────────────────────────────────────────
 
@@ -220,7 +221,7 @@ def synergy_jie_order(
         for op in operators:
             if any(s.buff_id.startswith(_observe_blacklist()) for s in op.skills if s.room_type == "Trade"):
                 continue
-            eff = op.best_efficiency(room_type, "Money")
+            eff = operator_expected_12h_efficiency(op, room_type, "Money")
             if eff > 0:
                 other_eff += eff
         order_limit = max(1, 10 - int(other_eff) // 10)
@@ -290,7 +291,7 @@ def compute_trade_order_limit(
     """计算贸易站房间的订单上限，供后续爆仓计算及各 synergy 消费
 
     订单上限 = 基础10 + 表驱动贡献 + 孑压缩 + 贝洛内+伺夜 + 灵知中枢。
-    孑压缩使用 raw best_efficiency（非 synergy 叠加后效率）近似，
+    孑压缩使用 operator_expected_12h_efficiency（含爬升）近似，
     与 synergy_jie_order 回退路径口径一致。
     """
     ctx = OrderLimitContext()
@@ -305,7 +306,7 @@ def compute_trade_order_limit(
                 for s in op.skills if s.room_type == "Trade"
             ):
                 continue
-            eff = op.best_efficiency("Trade", "Money")
+            eff = operator_expected_12h_efficiency(op, "Trade", "Money")
             if eff > 0:
                 other_eff += eff
         compressed = max(1, 10 - int(other_eff) // 10)

@@ -5,7 +5,7 @@
 """
 
 from steward_core.models import LinearSegment, Operator, LayoutConfig
-from steward_core.efficiency_fn import ramping_efficiency
+from steward_core.efficiency_fn import ramping_efficiency, integrate_segments
 from .types import FacilityLinkEntry, FactionEntry, ExtraFactionEntry, ZeroingVariantEntry, RampingSkillEntry
 from .helpers import _OP_PLATFORM_NAMES
 
@@ -92,7 +92,7 @@ def synergy_efficiency_amplifier(
         return []
 
     others_eff = sum(
-        op.best_efficiency(room_type, product)
+        operator_expected_12h_efficiency(op, room_type, product)
         for op in operators if op.name != "槐琥"
     )
     bonus = (int(others_eff) // 5) * 5
@@ -231,6 +231,28 @@ def operator_ramp_segments(
                 mood_initial=mood_initial,
             )
     return None
+
+
+def operator_expected_12h_efficiency(
+    op: Operator,
+    room_type: str,
+    product: str | None = None,
+    T: float = 12.0,
+) -> float:
+    """获取干员在指定设施下的预期平均效率（含爬升）
+
+    对爬升型技能计算 T 小时 ramp 积分后的平均效率，
+    非爬升技能回退到 best_efficiency。
+
+    用于排序/比较场景——槐琥配合意识、孑订单压缩等游戏公式
+    中"效率"是全口径概念，包含爬升增量。
+
+    T: 排班时长（h），默认 12.0。多班次调用应传入实际班次时长。
+    """
+    ramp = operator_ramp_segments(op, room_type, product or "", T)
+    if ramp is not None:
+        return integrate_segments(ramp, T) / T
+    return op.best_efficiency(room_type, product)
 
 
 # ─── A·技能计数 ─────────────────────────────────────────────
