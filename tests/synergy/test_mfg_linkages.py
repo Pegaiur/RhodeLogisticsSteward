@@ -478,6 +478,66 @@ class TestRampingOperator:
         segs = operator_ramp_segments(aluoma, "Trade", "Money", T=12.0)
         assert segs is None
 
+    def test_急性子_芬_20爬升至25(self):
+        """芬持有 急性子(20→25%@1%/h) → 爬升段(20% + 1%/h ramp + 5h后饱和25%)"""
+        from steward_core.synergy import operator_ramp_segments
+
+        fen = _mk_op("芬")
+        fen.skills.append(_mk_skill(
+            "manu_prod_spd_addition[030]", "Mfg", "急性子", {"all": 20.0},
+        ))
+
+        segs = operator_ramp_segments(fen, "Mfg", "PureGold", T=12.0)
+        assert segs is not None
+        assert len(segs) == 2
+        assert segs[0].a == 20.0 and segs[0].b == 1.0  # ramp
+        assert segs[1].a == 25.0 and segs[1].b == 0.0  # saturated
+
+    def test_等不及_刻俄柏_20爬升至25(self):
+        """刻俄柏持有 "等不及"(20→25%@1%/h) → 爬升段(20% + 1%/h ramp + 5h后饱和25%)"""
+        from steward_core.synergy import operator_ramp_segments
+
+        keeba = _mk_op("刻俄柏")
+        keeba.skills.append(_mk_skill(
+            "manu_prod_spd_addition[031]", "Mfg", "\"等不及\"", {"all": 20.0},
+        ))
+
+        segs = operator_ramp_segments(keeba, "Mfg", "CombatRecord", T=12.0)
+        assert segs is not None
+        assert len(segs) == 2
+        assert segs[0].a == 20.0 and segs[0].b == 1.0
+        assert segs[1].a == 25.0 and segs[1].b == 0.0
+
+    def test_慢性子_克洛丝_15爬升至25(self):
+        """克洛丝持有 慢性子(15→25%@2%/h) → 爬升段(15% + 2%/h ramp + 5h后饱和25%)"""
+        from steward_core.synergy import operator_ramp_segments
+
+        kroos = _mk_op("克洛丝")
+        kroos.skills.append(_mk_skill(
+            "manu_prod_spd_addition[040]", "Mfg", "慢性子", {"all": 15.0},
+        ))
+
+        segs = operator_ramp_segments(kroos, "Mfg", "PureGold", T=12.0)
+        assert segs is not None
+        assert len(segs) == 2
+        assert segs[0].a == 15.0 and segs[0].b == 2.0  # ramp
+        assert segs[1].a == 25.0 and segs[1].b == 0.0  # saturated
+
+    def test_延时摄影_稀音_15爬升至25(self):
+        """稀音持有 延时摄影(15→25%@2%/h) → 爬升段(15% + 2%/h ramp + 5h后饱和25%)"""
+        from steward_core.synergy import operator_ramp_segments
+
+        xiyin = _mk_op("稀音")
+        xiyin.skills.append(_mk_skill(
+            "manu_prod_spd_addition[041]", "Mfg", "延时摄影", {"all": 15.0},
+        ))
+
+        segs = operator_ramp_segments(xiyin, "Mfg", "CombatRecord", T=12.0)
+        assert segs is not None
+        assert len(segs) == 2
+        assert segs[0].a == 15.0 and segs[0].b == 2.0
+        assert segs[1].a == 25.0 and segs[1].b == 0.0
+
 
 # ─── 仓库容量→效率 ──────────────────────────────────────────────────
 
