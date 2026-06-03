@@ -8,15 +8,20 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from steward_core.constants import (
+    MFG_CR_BASE_RATE, MFG_PG_BASE_RATE,
+    CR_EXP_PER_UNIT, PG_LMD_PER_UNIT,
+    XP_LMD_RATIO, TRADE_BASE_LMD_PER_DAY,
+)
 from steward_core.synergy.types import _B_BUFF_CONSUMER_TABLE
 from .context import STATE_DIMS
 
 if TYPE_CHECKING:
     from .context import SlotContext
 
-_CR_EXP_PER_UNIT = 1000.0
-_PG_LMD_PER_UNIT = 500.0
-_TRADE_BASE_LMD_PER_HOUR = 10265.0 / 24.0
+_CR_EXP_PER_UNIT = CR_EXP_PER_UNIT
+_PG_LMD_PER_UNIT = PG_LMD_PER_UNIT
+_TRADE_BASE_LMD_PER_HOUR = TRADE_BASE_LMD_PER_DAY / 24.0
 
 _BUFF_CONSUMER_DIMENSION: dict[str, str] = {}
 """干员名 → 消费的状态维度名"""
@@ -41,18 +46,18 @@ for _name, _entry in _B_BUFF_CONSUMER_TABLE.items():
 def _product_base_rate(product: str) -> float:
     """产品单位小时基础产出率（个/h）"""
     if product == "CombatRecord":
-        return 1.0 / 3.0
+        return MFG_CR_BASE_RATE
     if product == "PureGold":
-        return 1.0 / 1.2
+        return MFG_PG_BASE_RATE
     if product == "Money":
         return _TRADE_BASE_LMD_PER_HOUR
     return 1.0
 
 
 def _product_lmd_per_unit(product: str) -> float:
-    """产品单位 LMD 等值（战斗记录通过 xp_lmd_ratio=1.3 折算）"""
+    """产品单位 LMD 等值（战斗记录通过 XP_LMD_RATIO 折算）"""
     if product == "CombatRecord":
-        return _CR_EXP_PER_UNIT / 1.3
+        return _CR_EXP_PER_UNIT / XP_LMD_RATIO
     if product == "PureGold":
         return _PG_LMD_PER_UNIT
     if product == "Money":

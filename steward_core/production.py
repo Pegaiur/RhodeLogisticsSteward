@@ -18,16 +18,19 @@ from steward_core.synergy import (
     control_per_operator_bonus,
     operator_estimated_efficiency,
 )
-from steward_core.constants import FIXED_CONTROL, BASE_POWER_COUNT
+from steward_core.constants import (
+    FIXED_CONTROL, BASE_POWER_COUNT,
+    MFG_CR_BASE_RATE, MFG_PG_BASE_RATE,
+    CR_EXP_PER_UNIT, PG_LMD_PER_UNIT,
+    XP_LMD_RATIO, TRADE_BASE_LMD_PER_DAY,
+)
 from steward_core.evaluate import evaluate_room
 
-# ─── 制造站 Lv3 基础参数 ────────────────────────────────────────
-# 作战记录：基础 1个/3h → 0.333 个/h，每中级经验书=1000经验
-_RECORD_BASE_PER_HOUR = 1.0 / 3.0
-_RECORD_EXP_PER_UNIT = 1000.0
-# 赤金：基础 1个/1.2h → 0.833 个/h，每赤金=500龙门币
-_GOLD_BASE_PER_HOUR = 1.0 / 1.2
-_GOLD_LMD_PER_UNIT = 500.0
+# ─── 制造站 Lv3 基础参数（值来自 constants.py）─────────────────
+_RECORD_BASE_PER_HOUR = MFG_CR_BASE_RATE
+_RECORD_EXP_PER_UNIT = CR_EXP_PER_UNIT
+_GOLD_BASE_PER_HOUR = MFG_PG_BASE_RATE
+_GOLD_LMD_PER_UNIT = PG_LMD_PER_UNIT
 
 # ─── 贸易站 Lv3 基础参数（龙门商法） ────────────────────────────
 # 订单概率与参数
@@ -55,7 +58,7 @@ _LAYOUT_243 = LayoutConfig.layout_243()
 
 # ─── 贸易站订单机制（A7 层）─ 文档倍数法 ────────────────────────
 # 文档基准：Lv3 贸易站 100% 效率 24h
-_TRADE_BASE_LMD_PER_DAY = 10265.0
+_TRADE_BASE_LMD_PER_DAY = TRADE_BASE_LMD_PER_DAY
 _TRADE_BASE_GOLD_PER_DAY = 24.0 * _TRADE_AVG_GOLD_PER_ORDER / _TRADE_AVG_TIME_HOURS  # ≈ 20.53
 
 

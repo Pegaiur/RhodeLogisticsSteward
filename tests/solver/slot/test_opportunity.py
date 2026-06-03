@@ -172,15 +172,15 @@ class TestConversionConsistency:
         assert abs(_TRADE_BASE_LMD_PER_HOUR - c_val) < 0.001
 
     def test_mfg_cr_constants(self):
+        from steward_core.constants import MFG_CR_BASE_RATE, CR_EXP_PER_UNIT
         from steward_core.solver.slot.partials import _CR_EXP_PER_UNIT
-        from steward_core.solver.slot.contribution import _MFG_CR_BASE_RATE as c_base
         from steward_core.solver.slot.opportunity import _MFG_CR_BASE
-        assert abs(_MFG_CR_BASE - c_base) < 0.001
-        assert abs(_CR_EXP_PER_UNIT - 1000.0) < 0.001
+        assert abs(_MFG_CR_BASE - MFG_CR_BASE_RATE) < 0.001
+        assert abs(_CR_EXP_PER_UNIT - CR_EXP_PER_UNIT) < 0.001
 
     def test_mfg_pg_constants(self):
+        from steward_core.constants import MFG_PG_BASE_RATE, PG_LMD_PER_UNIT
         from steward_core.solver.slot.partials import _PG_LMD_PER_UNIT
-        from steward_core.solver.slot.contribution import _MFG_PG_BASE_RATE as c_base
         from steward_core.solver.slot.opportunity import _MFG_PG_BASE
-        assert abs(_MFG_PG_BASE - c_base) < 0.001
-        assert abs(_PG_LMD_PER_UNIT - 500.0) < 0.001
+        assert abs(_MFG_PG_BASE - MFG_PG_BASE_RATE) < 0.001
+        assert abs(_PG_LMD_PER_UNIT - PG_LMD_PER_UNIT) < 0.001

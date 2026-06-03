@@ -9,7 +9,7 @@ from __future__ import annotations
 import itertools
 from typing import TYPE_CHECKING
 
-from steward_core.constants import BASE_POWER_COUNT
+from steward_core.constants import BASE_POWER_COUNT, MFG_CR_BASE_RATE, MFG_PG_BASE_RATE, CR_EXP_PER_UNIT, PG_LMD_PER_UNIT, XP_LMD_RATIO
 from steward_core.models import LayoutConfig
 from steward_core.synergy import (
     classify_mfg_operators,
@@ -32,14 +32,12 @@ if TYPE_CHECKING:
 
 _LAYOUT_243 = LayoutConfig.layout_243()
 
-_MFG_CR_BASE_RATE = 1.0 / 3.0
-_MFG_PG_BASE_RATE = 1.0 / 1.2
-_CR_LMD_PER_UNIT = 1000.0 / 1.3
-_PG_LMD_PER_UNIT = 500.0
+_CR_LMD_PER_UNIT = CR_EXP_PER_UNIT / XP_LMD_RATIO
+_PG_LMD_PER_UNIT = PG_LMD_PER_UNIT
 
 _LAMBDA_EFF_SCALE = {
-    "CombatRecord": _MFG_CR_BASE_RATE * _CR_LMD_PER_UNIT / 100.0,
-    "PureGold": _MFG_PG_BASE_RATE * _PG_LMD_PER_UNIT / 100.0,
+    "CombatRecord": MFG_CR_BASE_RATE * _CR_LMD_PER_UNIT / 100.0,
+    "PureGold": MFG_PG_BASE_RATE * _PG_LMD_PER_UNIT / 100.0,
 }
 """机会成本从 LMD 到效率积分域的换算系数（原用于 lambda 惩罚，现仅用于机会成本）"""
 

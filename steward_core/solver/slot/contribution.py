@@ -10,6 +10,10 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from steward_core.models import LayoutConfig
+from steward_core.constants import (
+    MFG_CR_BASE_RATE, MFG_PG_BASE_RATE, TRADE_BASE_LMD_PER_DAY,
+    CR_EXP_PER_UNIT, PG_LMD_PER_UNIT,
+)
 from steward_core.synergy import compute_control_global_bonus, control_per_operator_bonus, compute_control_reception_bonus
 from steward_core.synergy import _OP_PLATFORM_NAMES, compute_facility_group_bonus, operator_estimated_efficiency
 from .context import STATE_DIMS, mood_is_viable
@@ -22,14 +26,11 @@ if TYPE_CHECKING:
 
 _LAYOUT_243 = LayoutConfig.layout_243()
 
-_TRADE_BASE_LMD_PER_HOUR = 10265.0 / 24.0
+_TRADE_BASE_LMD_PER_HOUR = TRADE_BASE_LMD_PER_DAY / 24.0
 
 _RECEPTION_TO_MFG_RATIO = 0.10
 _OFFICE_TO_MFG_RATIO = 1.10
 _DRONE_TO_MFG_RATIO = 0.5
-
-_MFG_CR_BASE_RATE = 1.0 / 3.0
-_MFG_PG_BASE_RATE = 1.0 / 1.2
 
 _RECEPTION_NON_DISPERSION = 5.0
 
@@ -182,8 +183,8 @@ def contribution(
 def _mfg_base_rate_lmd_avg() -> float:
     """Mfg CR/PG 加权平均单位小时 LMD 等值（243布局 0.5:0.5）"""
     return (
-        0.5 * _MFG_CR_BASE_RATE * _product_lmd_per_unit("CombatRecord")
-        + 0.5 * _MFG_PG_BASE_RATE * _product_lmd_per_unit("PureGold")
+        0.5 * MFG_CR_BASE_RATE * _product_lmd_per_unit("CombatRecord")
+        + 0.5 * MFG_PG_BASE_RATE * _product_lmd_per_unit("PureGold")
     )
 
 
