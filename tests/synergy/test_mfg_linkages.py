@@ -538,6 +538,21 @@ class TestRampingOperator:
         assert segs[0].a == 15.0 and segs[0].b == 2.0
         assert segs[1].a == 25.0 and segs[1].b == 0.0
 
+    def test_聚影_伊内丝_会客室爬升(self):
+        """伊内丝持有 聚影(20→30%@2%/h) → 会客室爬升段(20% + 2%/h ramp + 5h后饱和30%)"""
+        from steward_core.synergy import operator_ramp_segments
+
+        ines = _mk_op("伊内丝")
+        ines.skills.append(_mk_skill(
+            "meet_spd_hast[000]", "Reception", "聚影", {"all": 20.0},
+        ))
+
+        segs = operator_ramp_segments(ines, "Reception", "General", T=12.0)
+        assert segs is not None
+        assert len(segs) == 2
+        assert segs[0].a == 20.0 and segs[0].b == 2.0  # ramp
+        assert segs[1].a == 30.0 and segs[1].b == 0.0  # saturated
+
 
 # ─── operator_estimated_efficiency ───────────────────────────────
 
@@ -593,7 +608,7 @@ class TestExpected12hEfficiency:
         assert eff == 30.0
 
     def test_非Mfg房间_回退到best_efficiency(self):
-        """Trade 设施无爬升 → 返回 best_efficiency 标量"""
+        """Trade 设施无爬升 → 返回 raw 标量"""
         from steward_core.synergy import operator_estimated_efficiency
 
         op = _mk_op("贸易干员")
@@ -601,6 +616,19 @@ class TestExpected12hEfficiency:
 
         eff = operator_estimated_efficiency(op, "Trade", "Money", T=12.0)
         assert eff == 30.0
+
+    def test_伊内丝_聚影_12h平均约27_92(self):
+        """伊内丝 (Reception): 20→30%@2%/h, 5h饱和 → 12h平均 = (125+210)/12 ≈ 27.92%"""
+        from steward_core.synergy import operator_estimated_efficiency
+
+        ines = _mk_op("伊内丝")
+        ines.skills.append(_mk_skill(
+            "meet_spd_hast[000]", "Reception", "聚影", {"all": 20.0},
+        ))
+
+        eff = operator_estimated_efficiency(ines, "Reception", "General", T=12.0)
+        # ramp: integrate(20+2t, 0,5) + 30*7 = 125 + 210 = 335 → /12 = 27.917
+        assert pytest.approx(eff, rel=0.01) == 27.92
 
 
 # ─── 仓库容量→效率 ──────────────────────────────────────────────────
