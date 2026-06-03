@@ -263,7 +263,71 @@ def _control_contribution(
 
     total += _type3_contribution(ctx, op, window_idx)
     total += _per_operator_contribution(ctx, op, window_idx)
+    total += _recovery_marginal(ctx, op.name, existing_names, window_idx)
     return total
+
+
+_WORK_FACILITIES = ("Mfg", "Trade", "Office", "Power", "Reception")
+
+
+def _compute_recovery_value(
+    ctx: "SlotContext",
+    control_names: list[str],
+    window_idx: int,
+) -> float:
+    """给定中枢配置的心情恢复贡献总值（LMD 等值/窗口）
+
+    mood_saved_per_op = recovery_rate × hours
+    value = Σ mood_saved × eff_weight × base_LMD_rate
+
+    recovery_rate = len(control) × 0.05（基础减免）
+                  + Σ per-operator global recovery buffs（如玛恩纳 +0.1 + spread）
+    """
+    hours = ctx.params.shift_hours if ctx.params else 12.0
+    base_lmd = _mfg_base_rate_lmd_avg()
+    work_names = ctx.ops_of_type(window_idx, "Mfg") + ctx.ops_of_type(window_idx, "Trade")
+
+    if not work_names:
+        return 0.0
+
+    n_ctrl = len(control_names)
+    recovery = n_ctrl * 0.05
+
+    # 全局恢复技能（玛恩纳公事公办：+0.1/h + spread）
+    for cname in control_names:
+        cop = ctx.op_lookup.get(cname)
+        if cop is None:
+            continue
+        for sk in cop.skills:
+            if sk.buff_id == "control_mp_lonely[000]":
+                recovery += 0.1 + n_ctrl * 0.05  # global + spread
+                break
+
+    if recovery <= 0:
+        return 0.0
+
+    mood_saved_per_op = recovery * hours
+    total = 0.0
+    for name in work_names:
+        eff = ctx.op_peak_eff.get(name, 0.0)
+        eff_weight = max(eff / 30.0, 0.1)
+        total += mood_saved_per_op * eff_weight * base_lmd
+
+    return total
+
+
+def _recovery_marginal(
+    ctx: "SlotContext",
+    candidate_name: str,
+    existing_names: list[str],
+    window_idx: int,
+) -> float:
+    """该中枢候选的边际恢复贡献 = value(with) - value(without)"""
+    with_val = _compute_recovery_value(ctx, existing_names + [candidate_name], window_idx)
+    without_val = _compute_recovery_value(
+        ctx, [n for n in existing_names if n != candidate_name], window_idx,
+    )
+    return with_val - without_val
 
 
 def _reception_conditional_bonus(

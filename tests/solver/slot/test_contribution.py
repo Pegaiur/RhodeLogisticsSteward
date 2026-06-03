@@ -187,3 +187,80 @@ class TestDormContributionWithLambdaK:
         ctx.lambda_ops["杜林"] = 0.0
         result = contribution(ctx, "杜林", "Dormitory")
         assert result == 0.0, f"λ=0 时贡献应为 0，实际={result}"
+
+
+class TestRecoveryContribution:
+    """中枢心情恢复贡献——mood_saved × eff_weight × base_LMD"""
+
+    @pytest.fixture
+    def params(self) -> SolverParams:
+        return SolverParams(shift_hours=12.0)
+
+    def _mk_mlynar(self) -> Operator:
+        """玛恩纳：control_mp_lonely[000] 公事公办"""
+        return Operator(
+            char_id="char_mlynar", name="玛恩纳",
+            skills=[Skill(
+                buff_id="control_mp_lonely[000]", buff_name="公事公办",
+                skill_icon="test", room_type="CONTROL",
+                efficient=EfficiencyMap(raw={"all": 0.0}),
+            )],
+        )
+
+    def _mk_work_op(self, char_id: str, name: str, eff: float = 0.0) -> Operator:
+        return Operator(
+            char_id=char_id, name=name,
+            skills=[Skill(
+                buff_id=f"work_{char_id}", buff_name="工作技能",
+                skill_icon="test", room_type="MANUFACTURE",
+                efficient=EfficiencyMap(raw={"all": eff}),
+            )],
+        )
+
+    def test_recovery_value_positive_with_working_ops(self, params):
+        """有 Mfg/Trade 工作干员时，control_recovery 贡献为正"""
+        from steward_core.solver.slot.contribution import _compute_recovery_value
+        mlynar = self._mk_mlynar()
+        w1 = self._mk_work_op("w1", "工作A", 30.0)
+        w2 = self._mk_work_op("w2", "工作B", 60.0)
+        ops = [mlynar, w1, w2] + [_dummy_op(f"d{i}", f"填位{i}") for i in range(3)]
+        ctx = SlotContext.from_layout(ops, LayoutConfig.layout_243(), params)
+        ctx.place(0, "mfg_0_0", "工作A")
+        ctx.place(0, "mfg_0_1", "工作B")
+        ctx.op_peak_eff["工作A"] = 30.0
+        ctx.op_peak_eff["工作B"] = 60.0
+
+        value = _compute_recovery_value(ctx, ["玛恩纳"], 0)
+        assert value > 0.0
+
+    def test_recovery_value_zero_without_working_ops(self, params):
+        """无 Mfg/Trade 干员时，恢复贡献为 0"""
+        from steward_core.solver.slot.contribution import _compute_recovery_value
+        mlynar = self._mk_mlynar()
+        ops = [mlynar] + [_dummy_op(f"d{i}", f"填位{i}") for i in range(3)]
+        ctx = SlotContext.from_layout(ops, LayoutConfig.layout_243(), params)
+        value = _compute_recovery_value(ctx, ["玛恩纳"], 0)
+        assert value == 0.0
+
+    def test_recovery_marginal_delta(self, params):
+        """新增中枢干员 → recovery 边际增量正确"""
+        from steward_core.solver.slot.contribution import _compute_recovery_value
+        mlynar = self._mk_mlynar()
+        amiya = _dummy_op("char_001", "阿米娅")
+        w1 = self._mk_work_op("w1", "工作A", 30.0)
+        ops = [mlynar, amiya, w1] + [_dummy_op(f"x{i}", f"填{i}") for i in range(3)]
+        ctx = SlotContext.from_layout(ops, LayoutConfig.layout_243(), params)
+        ctx.place(0, "mfg_0_0", "工作A")
+        ctx.op_peak_eff["工作A"] = 30.0
+
+        val_without = _compute_recovery_value(ctx, [], 0)
+        val_with_amiya = _compute_recovery_value(ctx, ["阿米娅"], 0)
+        val_with_both = _compute_recovery_value(ctx, ["阿米娅", "玛恩纳"], 0)
+
+        # 每增加一名中枢：control_recovery +0.05/h → mood_saved 递增
+        assert val_with_amiya > val_without
+        assert val_with_both > val_with_amiya
+        # 玛恩纳额外提供 global_work_recovery +0.1/h + spread
+        delta_mlynar = val_with_both - val_with_amiya
+        delta_amiya = val_with_amiya - val_without
+        assert delta_mlynar > delta_amiya, f"玛恩纳增量{delta_mlynar}应 > 阿米娅增量{delta_amiya}"
