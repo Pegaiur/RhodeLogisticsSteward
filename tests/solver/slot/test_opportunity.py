@@ -65,8 +65,9 @@ class TestWhisperFormula:
         shamare = _mk_op("巫恋", "char_254_vodfox", ["trade_ord_vodfox[000]"])
         ops = [shamare, _mk_op("A", "a"), _mk_op("B", "b")]
         cost = compute_opportunity_cost_lmd(ops, "Trade", "Money", 12.0)
+        from steward_core.constants import TRADE_BASE_LMD_PER_DAY
         expected_pct = (75.0 - 45.0) + (60.0 - 45.0)
-        expected_lmd = expected_pct * (10265.0 / 24.0) * 12.0 / 100.0
+        expected_lmd = expected_pct * (TRADE_BASE_LMD_PER_DAY / 24.0) * 12.0 / 100.0
         assert abs(cost - expected_lmd) < 0.01
         assert cost > 0.0
 
