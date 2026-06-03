@@ -733,3 +733,50 @@ class TestBuffPoolComposition:
         _derive_pool(pool)
         assert pool.wushu_crystal == 0
         assert pool.thought_chains == 0
+
+    def test_sub_单字段差值(self):
+        """BuffPool(yanhuo=10) - BuffPool(yanhuo=3) → yanhuo=7"""
+        from steward_core.synergy import BuffPool
+
+        a = BuffPool(yanhuo=10)
+        b = BuffPool(yanhuo=3)
+        c = a - b
+        assert c.yanhuo == 7
+        assert c.perception == 0
+
+    def test_sub_多字段各独立相减(self):
+        """7 字段各设值相减后各字段独立正确"""
+        from steward_core.synergy import BuffPool
+
+        a = BuffPool(yanhuo=10, perception=20, wushu_crystal=30, thought_chains=40,
+                     silent_resonance=50, engineering_robots=60, monster_cuisine=70)
+        b = BuffPool(yanhuo=3, perception=7, wushu_crystal=2, thought_chains=15,
+                     silent_resonance=10, engineering_robots=20, monster_cuisine=30)
+        c = a - b
+        assert c.yanhuo == 7
+        assert c.perception == 13
+        assert c.wushu_crystal == 28
+        assert c.thought_chains == 25
+        assert c.silent_resonance == 40
+        assert c.engineering_robots == 40
+        assert c.monster_cuisine == 40
+
+    def test_sub_负值归零(self):
+        """20 - 50 → 字段为 0（不是 -30）——用于外溢 diff"""
+        from steward_core.synergy import BuffPool
+
+        a = BuffPool(yanhuo=20, perception=5)
+        b = BuffPool(yanhuo=50, perception=10)
+        c = a - b
+        assert c.yanhuo == 0  # 20-50 → 归零
+        assert c.perception == 0  # 5-10 → 归零
+
+    def test_sub_相同值相减得零(self):
+        """a - a → 全零"""
+        from steward_core.synergy import BuffPool
+
+        a = BuffPool(yanhuo=10, perception=5, silent_resonance=30)
+        c = a - a
+        assert c.yanhuo == 0
+        assert c.perception == 0
+        assert c.silent_resonance == 0

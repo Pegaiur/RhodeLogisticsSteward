@@ -27,6 +27,13 @@ class BuffPool:
             for f in fields(self)
         })
 
+    def __sub__(self, other: "BuffPool") -> "BuffPool":
+        """逐字段相减，负值归零（用于外溢diff：只关心增量）"""
+        return BuffPool(**{
+            f.name: max(getattr(self, f.name) - getattr(other, f.name), 0)
+            for f in fields(self)
+        })
+
     def clone(self) -> "BuffPool":
         return replace(self)
 

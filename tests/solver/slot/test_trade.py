@@ -4,11 +4,12 @@ import pytest
 
 from steward_core.models import LayoutConfig, Operator
 from steward_core.solver.params import SolverParams
-from steward_core.solver.slot.context import SlotContext
+from steward_core.solver.slot.context import SlotContext, STATE_DIMS
 from steward_core.solver.slot.trade import (
     phase_trade,
     _joint_allocate,
 )
+from steward_core.synergy import BuffPool
 
 
 def _dummy_op(char_id: str, name: str) -> Operator:
@@ -69,3 +70,44 @@ class TestPhaseTrade:
         )
         phase_trade(ctx)
         assert isinstance(ctx.ops_of_type(0, "Trade"), list)
+
+
+class TestSpillover:
+    """Trade 外溢收益计算 — BuffPool 增量 × D_mfg"""
+
+    def test_zero_delta_returns_zero(self):
+        """delta 为全零 → spillover = 0"""
+        D_mfg = {"perception": 30.0}
+        delta = BuffPool()
+        from steward_core.solver.slot.trade import _compute_spillover
+        assert _compute_spillover(D_mfg, delta) == 0.0
+
+    def test_perception_spillover(self):
+        """perception +20, D[perception]=30 → spillover=600"""
+        D_mfg = {"perception": 30.0, "yanhuo": 50.0}
+        delta = BuffPool(perception=20)
+        from steward_core.solver.slot.trade import _compute_spillover
+        result = _compute_spillover(D_mfg, delta)
+        assert result == pytest.approx(30.0 * 20.0)
+
+    def test_multiple_dimensions_spillover(self):
+        """perception+20 + yanhuo+10 → Σ D[d]×delta"""
+        D_mfg = {"perception": 30.0, "yanhuo": 50.0, "silent_resonance": 0.0}
+        delta = BuffPool(perception=20, yanhuo=10)
+        from steward_core.solver.slot.trade import _compute_spillover
+        result = _compute_spillover(D_mfg, delta)
+        assert result == pytest.approx(30.0 * 20.0 + 50.0 * 10.0)
+
+    def test_delta_negative_clamped_to_zero(self):
+        """delta 负值字段被归零（BuffPool.__sub__ 已做负值归零）"""
+        D_mfg = {"perception": 30.0}
+        delta = BuffPool(perception=0, yanhuo=0)
+        from steward_core.solver.slot.trade import _compute_spillover
+        assert _compute_spillover(D_mfg, delta) == 0.0
+
+    def test_empty_d_returns_zero(self):
+        """D_mfg 为空 → 任何 delta 都产生 0 spillover"""
+        D_mfg: dict[str, float] = {}
+        delta = BuffPool(perception=20, yanhuo=10)
+        from steward_core.solver.slot.trade import _compute_spillover
+        assert _compute_spillover(D_mfg, delta) == 0.0

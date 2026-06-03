@@ -20,12 +20,13 @@ from steward_core.synergy import (
     control_per_operator_bonus,
 )
 from steward_core.synergy.facility_linkages import _has_power_count_modifier
-from steward_core.synergy.buff_pool import compute_buff_pool
+from steward_core.synergy.buff_pool import compute_buff_pool, BuffPool
 from steward_core.evaluate import evaluate_room
 from steward_core.synergy._derived import TRADE_ANCHORS
-from .context import SlotContext, mood_is_viable
+from .context import SlotContext, STATE_DIMS, mood_is_viable
 from ._cold_start import cold_start_ctrl_ops, cold_start_dorm_ops
 from .opportunity import compute_opportunity_cost_lmd
+from .partials import compute_partial_derivatives
 
 if TYPE_CHECKING:
     from steward_core.models import Operator
@@ -38,6 +39,15 @@ _ORDER_MECHANISM_PREFIXES = (
     "trade_ord_vodfox", "trade_ord_limit_count",
     "trade_ord_pepe",
 )
+
+
+def _compute_spillover(D: dict[str, float], delta: BuffPool) -> float:
+    """Trade combo 对 Mfg 的外溢收益 = Σ D[d] × delta[d]
+
+    D[d] 仅基于 Mfg 槽位的消费者边际价值（Trade 尚未分配）。
+    delta = combo_pool - base_pool 反映该 combo 额外产出的 BuffPool。
+    """
+    return sum(D.get(d, 0.0) * getattr(delta, d) for d in STATE_DIMS)
 
 
 def phase_trade(
@@ -121,6 +131,19 @@ def phase_trade(
         power_modifier_names - assigned_names
     )
 
+    # ── Mfg 外溢定价：仅基于当前 Mfg 槽位消费者的边际价值 ──
+    D_mfg = compute_partial_derivatives(ctx, window_idx)
+    base_pool = compute_buff_pool(
+        ctrl_ops,
+        suich_count=params.suich_count if params else 5,
+        dorm_operators=[o for o in dorm_ops_list if o],
+        dorm_level=params.dorm_level if params else 5,
+        layout=ctx.layout if ctx.layout else _LAYOUT_243,
+        mfg_operators=mfg_combo_ops,
+        office_operators=office_ops,
+        office_perception_base=params.office_perception_base if params else 20,
+    )
+
     evaluated = []
 
     for combo_ops in combos:
@@ -164,6 +187,9 @@ def phase_trade(
 
         if override is None:
             lmd -= compute_opportunity_cost_lmd(combo_ops, "Trade", "Money", shift_hours)
+
+        spillover = _compute_spillover(D_mfg, combo_pool - base_pool)
+        lmd += spillover
 
         evaluated.append((lmd, combo_names))
 
