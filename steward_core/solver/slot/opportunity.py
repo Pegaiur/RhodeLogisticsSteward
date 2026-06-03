@@ -13,9 +13,7 @@ automation（森蚺/温蒂/异客/掠风）:
 zeroing_variant（科学改造/流程优化）:
   归零室友个人效率。无补偿 → own_eff 全额
 
-这是"机会成本补充覆盖方案"(time-slot-scheduling-model.md) 的 Phase 1：
-组合级求值修正。Phase 2 的 lambda_mood + swap_cost 跨窗口定价
-将在本模块之上叠加。
+机会成本在穷举评分循环中作为减项内联使用，不影响 Phase A→D 管线结构。
 """
 
 from __future__ import annotations

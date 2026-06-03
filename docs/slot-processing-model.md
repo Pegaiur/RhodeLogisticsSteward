@@ -242,8 +242,6 @@ pool_hard[op] = mood_full / mood_burn
 
 > **"窗口模型"是本文档定义的求解框架**。基于该框架的 Phase A→D 贪心 + mood 驱动恢复
 > 构成当前求解器（`solver/slot/solver.py`）的实现骨架。
-> [机会成本补充覆盖方案](./opportunity-cost-supplement.md) 在此骨架之上叠加正交维度
-> （组合级归零机会成本），不替换骨架本身。
 
 ### 3.4 宿舍恢复：时长池的补充
 
