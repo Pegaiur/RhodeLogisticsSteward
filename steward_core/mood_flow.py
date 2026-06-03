@@ -107,6 +107,20 @@ def compute_mood_modifiers(
     return mods
 
 
+_CONTROL_MP_COST_PREFIX = "control_mp_cost["
+"""控制中枢心情恢复技能前缀 — 每技能 +0.05/h 内部恢复。
+由 control_mp_cost[000]~[014] 共 15 个技能组成，效果相同。
+玛恩纳的公事公办 control_mp_lonely[000] 是独立技能（+0.1/h + spread），不在此前缀内。"""
+
+
+def count_control_mp_cost(control_operators: list) -> int:
+    """统计中枢中持有 control_mp_cost* 技能的干员数"""
+    return sum(
+        1 for op in control_operators
+        if any(s.buff_id.startswith(_CONTROL_MP_COST_PREFIX) for s in op.skills)
+    )
+
+
 def _extract_dorm_ctrl_bonuses(
     ctrl_ops: list,
 ) -> tuple[float, float]:
@@ -341,7 +355,8 @@ def _gladiia_aegir_delta(
           每有 1 个深海猎人在宿舍内 → -0.5/h 恢复；
           宿舍内满心情 → 额外 -0.5/h。
 
-    冷启动（dorm_assignments 为空）：按 _AEGIR_COLD_START_FACILITY 假定全部在工作设施。
+    冷启动（dorm_assignments 为空）：假定全员在工作设施（非宿舍），与
+     _AEGIR_COLD_START_FACILITY 表语义一致。
     """
     # 找出其他深海猎人（排除歌蕾蒂娅自身）
     others = [n for n in _AEGIR_NAMES if n != gladiia_name and n in op_lookup]
@@ -652,7 +667,8 @@ class MoodContext:
 
         # 歌蕾蒂娅潮汐守望：动态 mp_cost 取决于深海猎人宿舍分布
         if name in _AEGIR_NAMES and name in self.control_operators:
-            if any(sk.buff_id == "control_mp_aegir1[000]" for sk in self._op_lookup[name].skills):
+            op = self._op_lookup.get(name)
+            if op and any(sk.buff_id == "control_mp_aegir1[000]" for sk in op.skills):
                 burn = max(0.0, burn + _gladiia_aegir_delta(
                     name, self._op_lookup, self.control_operators,
                     self.dorm_assignments, self.operator_moods,
