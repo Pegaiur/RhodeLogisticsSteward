@@ -15,6 +15,8 @@ from steward_core.mood_flow import (
     compute_mood_modifiers,
     _apply_mp_cost,
     _compute_self_mp_cost,
+    _gladiia_aegir_delta,
+    _AEGIR_NAMES,
 )
 from tests.helpers import mk_op, mk_skill
 
@@ -613,3 +615,102 @@ class TestSelfPairMpCost:
         burn = _apply_mp_cost(0.70, "德克萨斯",
                               ["拉普兰德", "能天使"], lookup)
         assert burn == pytest.approx(0.70)  # +0.3 -0.3 = 0
+
+
+# ─── 歌蕾蒂娅 潮汐守望 ──────────────────────────────────────────
+
+class TestGladiiaAegirDelta:
+    """_gladiia_aegir_delta() — control_mp_aegir1[000] 潮汐守望"""
+
+    def _mk_aegir_op(self, name: str, has_buff: bool = False) -> Operator:
+        """构造深海猎人测试 Operator（group_id="abyssal"）"""
+        skills = []
+        if has_buff or name == "歌蕾蒂娅":
+            skills.append(mk_skill("control_mp_aegir1[000]", "Control"))
+        return mk_op(name, skills=skills, group_id="abyssal")
+
+    def test_冷启动_全员在工作_4人全在外(self):
+        """冷启动 dorm_assignments={}: 4 个其他深海猎人 → +2.0/h"""
+        gladiia = self._mk_aegir_op("歌蕾蒂娅")
+        skadi = self._mk_aegir_op("斯卡蒂")
+        specter = self._mk_aegir_op("幽灵鲨")
+        andreana = self._mk_aegir_op("安哲拉")
+        ulpian = self._mk_aegir_op("乌尔比安")
+        lookup = {op.name: op for op in [gladiia, skadi, specter, andreana, ulpian]}
+
+        delta = _gladiia_aegir_delta(
+            "歌蕾蒂娅", lookup,
+            control_operators={"歌蕾蒂娅"},
+            dorm_assignments={},           # 冷启动
+            operator_moods={},
+        )
+        assert delta == pytest.approx(2.0)  # 4 × +0.5
+
+    def test_2人在宿舍_2人在外(self):
+        """斯卡蒂+幽灵鲨在宿舍(非满心情), 安哲拉+乌尔比安在外 → net 0"""
+        gladiia = self._mk_aegir_op("歌蕾蒂娅")
+        skadi = self._mk_aegir_op("斯卡蒂")
+        specter = self._mk_aegir_op("幽灵鲨")
+        andreana = self._mk_aegir_op("安哲拉")
+        ulpian = self._mk_aegir_op("乌尔比安")
+        lookup = {op.name: op for op in [gladiia, skadi, specter, andreana, ulpian]}
+
+        delta = _gladiia_aegir_delta(
+            "歌蕾蒂娅", lookup,
+            control_operators={"歌蕾蒂娅"},
+            dorm_assignments={"斯卡蒂": "1", "幽灵鲨": "2"},
+            operator_moods={"斯卡蒂": 12.0, "幽灵鲨": 18.0},  # 非满心情
+        )
+        # 斯卡蒂 -0.5, 幽灵鲨 -0.5, 安哲拉 +0.5, 乌尔比安 +0.5 = 0
+        assert delta == pytest.approx(0.0)
+
+    def test_全员宿舍_满心情_额外奖励(self):
+        """4 人全在宿舍且满心情 → 4 × (-0.5 - 0.5) = -4.0"""
+        gladiia = self._mk_aegir_op("歌蕾蒂娅")
+        skadi = self._mk_aegir_op("斯卡蒂")
+        specter = self._mk_aegir_op("幽灵鲨")
+        andreana = self._mk_aegir_op("安哲拉")
+        ulpian = self._mk_aegir_op("乌尔比安")
+        lookup = {op.name: op for op in [gladiia, skadi, specter, andreana, ulpian]}
+
+        delta = _gladiia_aegir_delta(
+            "歌蕾蒂娅", lookup,
+            control_operators={"歌蕾蒂娅"},
+            dorm_assignments={
+                "斯卡蒂": "1", "幽灵鲨": "2",
+                "安哲拉": "3", "乌尔比安": "4",
+            },
+            operator_moods={
+                "斯卡蒂": 24.0, "幽灵鲨": 24.0,
+                "安哲拉": 24.0, "乌尔比安": 24.0,
+            },
+        )
+        assert delta == pytest.approx(-4.0)
+
+    def test_非深海猎人不受影响(self):
+        """阿米娅不是深海猎人 → 不计入"""
+        gladiia = self._mk_aegir_op("歌蕾蒂娅")
+        amiya = mk_op("阿米娅", group_id="rhodes")
+        lookup = {"歌蕾蒂娅": gladiia, "阿米娅": amiya}
+
+        delta = _gladiia_aegir_delta(
+            "歌蕾蒂娅", lookup,
+            control_operators={"歌蕾蒂娅"},
+            dorm_assignments={},
+            operator_moods={},
+        )
+        assert delta == 0.0
+
+    def test_歌蕾蒂娅不持有buff_不触发(self):
+        """歌蕾蒂娅无 control_mp_aegir1 skill → delta=0"""
+        gladiia = mk_op("歌蕾蒂娅", skills=[], group_id="abyssal")
+        skadi = self._mk_aegir_op("斯卡蒂")
+        lookup = {"歌蕾蒂娅": gladiia, "斯卡蒂": skadi}
+
+        delta = _gladiia_aegir_delta(
+            "歌蕾蒂娅", lookup,
+            control_operators={"歌蕾蒂娅"},
+            dorm_assignments={},
+            operator_moods={},
+        )
+        assert delta == pytest.approx(0.5)  # 斯卡蒂仍在工作（函数只看 _AEGIR_NAMES）

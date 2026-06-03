@@ -295,7 +295,7 @@ _SELF_MP_COST: dict[str, float] = {
 #   "control_clue_cost[000]" [ROOM]: +1.5/h  阿  神经质  (ROOM 级, 需中枢 room 表)
 #   "control_clue_cost[010]" [ROOM]: +0.5/h  惊蛰  至察  (ROOM 级, 需中枢 room 表)
 #   "control_mp_cost&bd3[000]": +0.05/h  丰川祥子  生活的重压  (动态: 热情值>=40)
-#   "control_mp_aegir1[000]": ±0.5/h  歌蕾蒂娅  潮汐守望  (双向条件: 深海猎人在宿舍外/内)
+#   "control_mp_aegir1[000]": ±0.5/h  歌蕾蒂娅  潮汐守望  (双向条件: 深海猎人在宿舍外/内) — 已建模, 见 _gladiia_aegir_delta()
 #   "control_mp_bd&trade[000]": +0.01/h  若叶睦  演技的怪物  (动态: 每8热情值 +0.01)
 #
 # === P3: MEETING 条件型 buff (7 条) ===
@@ -306,6 +306,60 @@ _SELF_MP_COST: dict[str, float] = {
 #   "meet_spd&cost_condChar[021]": +1.0/h  复奏  专业经理·β  (条件: solo)
 #   "meet_spd&condChar_mustget[000]": 0.0/h  霍尔海雅  文献学顾问  (mp_cost=0, 无影响)
 #   "meet_spd&condChar_mustget[100]": 0.0/h  奥达  暗线  (mp_cost=0, 无影响)
+
+
+# ─── 深海猎人阵营表（潮汐守望 buff 驱动） ──────────────────────
+
+_AEGIR_NAMES: set[str] = {"歌蕾蒂娅", "斯卡蒂", "幽灵鲨", "安哲拉", "乌尔比安"}
+"""深海猎人干员名集合（不含归溟幽灵鲨异格，与本体共享槽位）"""
+
+_AEGIR_COLD_START_FACILITY: dict[str, str] = {
+    "歌蕾蒂娅": "Control",
+    "斯卡蒂":   "Mfg",
+    "幽灵鲨":   "Mfg",
+    "安哲拉":   "Mfg",
+    "乌尔比安": "Mfg",
+}
+"""深海猎人冷启动假定设施。
+
+深海猎人跨站协同需要全员在场——缺任意一人全局制造效率暴跌 ≥40%。
+冷启动时假定全员在工作设施（非宿舍），歌蕾蒂娅在中枢。
+求解器后续迭代由实际宿舍分配校正。
+"""
+
+
+def _gladiia_aegir_delta(
+    gladiia_name: str,
+    op_lookup: dict[str, "Operator"],
+    control_operators: set[str],
+    dorm_assignments: dict[str, str],
+    operator_moods: dict[str, float],
+) -> float:
+    """歌蕾蒂娅 control_mp_aegir1[000] 潮汐守望的动态 mp_cost 修正量
+
+    规则：每有 1 个深海猎人（除自身）在宿舍外 → +0.5/h 消耗；
+          每有 1 个深海猎人在宿舍内 → -0.5/h 恢复；
+          宿舍内满心情 → 额外 -0.5/h。
+
+    冷启动（dorm_assignments 为空）：按 _AEGIR_COLD_START_FACILITY 假定全部在工作设施。
+    """
+    # 找出其他深海猎人（排除歌蕾蒂娅自身）
+    others = [n for n in _AEGIR_NAMES if n != gladiia_name and n in op_lookup]
+    if not others:
+        return 0.0
+
+    delta = 0.0
+    for name in others:
+        if dorm_assignments and name in dorm_assignments:
+            # 在宿舍 → 恢复
+            delta -= 0.5
+            if operator_moods.get(name, 24.0) >= 24.0 - 0.01:
+                delta -= 0.5
+        else:
+            # 冷启动按假定表判定，或 dorm_assignments 非空但该干员不在宿舍
+            # 均视为在宿舍外工作设施 → 消耗
+            delta += 0.5
+    return delta
 
 
 def _compute_self_mp_cost(
@@ -595,6 +649,14 @@ class MoodContext:
 
         self_cost_delta = _compute_self_mp_cost(name, self._op_lookup)
         burn = max(0.0, burn + self_cost_delta)
+
+        # 歌蕾蒂娅潮汐守望：动态 mp_cost 取决于深海猎人宿舍分布
+        if name in _AEGIR_NAMES and name in self.control_operators:
+            if any(sk.buff_id == "control_mp_aegir1[000]" for sk in self._op_lookup[name].skills):
+                burn = max(0.0, burn + _gladiia_aegir_delta(
+                    name, self._op_lookup, self.control_operators,
+                    self.dorm_assignments, self.operator_moods,
+                ))
 
         if name and self.control_operators:
             burn = _apply_mp_cost(
