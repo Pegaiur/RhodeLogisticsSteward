@@ -78,12 +78,6 @@ class ZeroingVariantEntry(NamedTuple):
     bonus_per: float
 
 
-class RampingSkillEntry(NamedTuple):
-    """A·爬升型技能条目"""
-    buff_id: str
-    room_type: str
-    base_rate: float
-
 
 class GlobalBonusEntry(NamedTuple):
     """C·中枢无条件全局效率条目 — 干员名 → 全局制造/贸易加成"""
@@ -248,7 +242,7 @@ TABLES: dict[str, TableMeta] = {
     "A·自动化回退":      TableMeta(_A_AUTOMATION_FALLBACK,    ["synergy_automation"],         "新增自动化干员或 buff 变更"),
     "A·归零变体":        TableMeta(_ZEROING_VARIANT_TABLE,    ["synergy_whisper"],             "新增归零型变体 buff"),
     "A·机械精通":        TableMeta(_TOKEN_PROD_TABLE,         ["synergy_token_prod"],          "新增作业平台联动 buff"),
-    "A·爬升型技能":      TableMeta(_RAMPING_SKILL_TABLE,      ["synergy_ramping"],             "新增 manu_prod_spd_addition[*] 爬升型技能"),
+    "A·爬升型技能":      TableMeta(_RAMPING_SKILL_TABLE,      ["synergy_ramping"],             "新增爬升型技能（manu_prod_spd_addition[*] / meet_spd_hast[*]）"),
     "A·设施数量联动":    TableMeta(_A_FACILITY_LINK_TABLE,    ["synergy_facility_count"],     "新增设施数量联动 buff"),
     "A·订单上限贡献":    TableMeta(_ORDER_LIMIT_TABLE,        ["compute_trade_order_limit"],  "新增贸易站订单上限贡献 buff"),
     "A·贸易配对":        TableMeta(_TRADE_PAIR_TABLE,         ["synergy_trade_pair"],         "新增贸易站配对 buff"),

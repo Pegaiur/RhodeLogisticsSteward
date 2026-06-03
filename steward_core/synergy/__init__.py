@@ -31,7 +31,6 @@ from steward_core.synergy.types import (
     GlobalFactionEntry,
     CrossRoomPairEntry,
     ZeroingVariantEntry,
-    RampingSkillEntry,
     GlobalBonusEntry,
     ControlConditionalEntry,
     ControlPerOpEntry,
