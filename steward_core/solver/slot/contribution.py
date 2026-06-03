@@ -527,14 +527,14 @@ def _type3_contribution(
     total = 0.0
 
     if mfg_bonus != 0:
-        mfg_filled = len([a for a in ctx.slots_of_type(window_idx, "Mfg") if not a.is_empty])
-        affected = max(mfg_filled, 1)
+        mfg_rooms = len({a.room_index for a in ctx.slots_of_type(window_idx, "Mfg") if not a.is_empty})
+        affected = max(mfg_rooms, 1)
         base_lmd = _mfg_base_rate_lmd_avg()
         total += mfg_bonus * affected * base_lmd * hours / 100.0
 
     if trade_bonus != 0:
-        trade_filled = len([a for a in ctx.slots_of_type(window_idx, "Trade") if not a.is_empty])
-        affected = max(trade_filled, 1)
+        trade_rooms = len({a.room_index for a in ctx.slots_of_type(window_idx, "Trade") if not a.is_empty})
+        affected = max(trade_rooms, 1)
         total += trade_bonus * affected * _TRADE_BASE_LMD_PER_HOUR * hours / 100.0
 
     return total
