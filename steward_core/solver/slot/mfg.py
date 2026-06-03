@@ -18,6 +18,7 @@ from steward_core.synergy import (
     compute_control_global_bonus,
     control_per_operator_bonus,
 )
+from steward_core.synergy._derived import MFG_ANCHORS
 from steward_core.synergy.facility_linkages import _has_power_count_modifier
 from steward_core.synergy.buff_pool import compute_buff_pool
 from steward_core.evaluate import evaluate_room
@@ -82,7 +83,7 @@ def phase_mfg(
         if not mfg_ops:
             continue
 
-        classification = classify_mfg_operators(mfg_ops, product, set())
+        classification = classify_mfg_operators(mfg_ops, product, MFG_ANCHORS)
         pool = build_candidate_pool(
             mfg_ops, classification, room_type="Mfg", product=product,
         )
