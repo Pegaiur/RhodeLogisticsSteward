@@ -5,7 +5,8 @@ from dataclasses import dataclass, field
 
 from steward_core.models import Operator
 from .helpers import _DURIN_NAMES, _ORDER_ANCHOR_PREFIXES
-from .mfg_linkages import skill_class, _ZEROING_VARIANT_TABLE, operator_estimated_efficiency
+from .mfg_linkages import skill_class, _ZEROING_VARIANT_TABLE
+from .ramping import operator_estimated_efficiency
 from .buff_pool import _B_BUFF_CONSUMER_TABLE
 from .facility_linkages import _A_FACILITY_LINK_TABLE
 

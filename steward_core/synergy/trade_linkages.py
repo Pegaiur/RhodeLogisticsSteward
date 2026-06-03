@@ -16,7 +16,7 @@ from steward_core.synergy.types import (
     TradeShareEntry, TradeEffAmpEntry, TradeConditionalEffEntry,
 )
 from .helpers import _DURIN_NAMES  # TODO: 际崖居民 durin_names 参数链待 evaluate_room 接入
-from .mfg_linkages import operator_estimated_efficiency
+from .ramping import operator_estimated_efficiency
 
 # ─── 模块级常量 ─────────────────────────────────────────────────
 

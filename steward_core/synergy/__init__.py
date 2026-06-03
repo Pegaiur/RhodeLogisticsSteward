@@ -79,8 +79,6 @@ from steward_core.synergy.mfg_linkages import (
     synergy_efficiency_amplifier,
     synergy_zeroing_variant,
     synergy_token_prod,
-    operator_ramp_segments,
-    operator_estimated_efficiency,
     skill_class,
     synergy_skill_count,
     synergy_skill_alias,
@@ -95,8 +93,12 @@ from steward_core.synergy.mfg_linkages import (
     _A_AUTOMATION_FALLBACK,
     _POWER_BUFF_BONUS,
     _ZEROING_VARIANT_TABLE,
-    _RAMPING_SKILL_TABLE,
     _TOKEN_PROD_TABLE,
+)
+from steward_core.synergy.ramping import (
+    _RAMPING_SKILL_TABLE,
+    operator_ramp_segments,
+    operator_estimated_efficiency,
 )
 
 from steward_core.synergy.trade_linkages import (

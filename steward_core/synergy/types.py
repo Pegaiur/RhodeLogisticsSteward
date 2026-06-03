@@ -230,7 +230,8 @@ class TableMeta(NamedTuple):
 # 放在文件末尾以避免循环导入（TABLES 引用的子模块会导入 types 中的 NamedTuple 类，
 # 而此处从子模块导入表数据时，types 中的所有类定义已完成）
 
-from .mfg_linkages import _A_PAIR_TABLE, _A_ROOM_FACTION_TABLE, _A_ROOM_FACTION_EXTRA, _A_SKILL_COUNT_TABLE, _A_AUTOMATION_FALLBACK, _ZEROING_VARIANT_TABLE, _TOKEN_PROD_TABLE, _RAMPING_SKILL_TABLE  # noqa: E402
+from .mfg_linkages import _A_PAIR_TABLE, _A_ROOM_FACTION_TABLE, _A_ROOM_FACTION_EXTRA, _A_SKILL_COUNT_TABLE, _A_AUTOMATION_FALLBACK, _ZEROING_VARIANT_TABLE, _TOKEN_PROD_TABLE  # noqa: E402
+from .ramping import _RAMPING_SKILL_TABLE  # noqa: E402
 from .facility_linkages import _A_FACILITY_LINK_TABLE  # noqa: E402
 from .buff_pool import _B_BUFF_CONSUMER_TABLE, _OPERATOR_BUFF_PRODUCERS  # noqa: E402
 from .global_linkages import _B_CROSS_ROOM_PAIR_TABLE, _B_GLOBAL_FACTION_TABLE  # noqa: E402
