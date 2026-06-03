@@ -139,20 +139,22 @@ def compute_global_burn(
     base_burn_per_hour: float = 1.0,
     control_recovery_per_op: float = 0.05,
 ) -> float:
-    """计算工作干员的心情消耗率净值 (mood_burn)
+    """计算工作干员的心情消耗率净值 — 委托至 MoodContext.work_burn()
 
-    迁移自 synergy/mood.py，保留原接口以兼容存量调用方。
-    最终将被 MoodContext.work_burn() 替代。
+    保留原接口以兼容存量调用方。公式仅存一份在 work_burn() 中。
     """
-    base = base_burn_per_hour - control_recovery_per_op * max(0, worker_count - 1)
+    from steward_core.solver.params import SolverParams
 
-    modifiers = compute_mood_modifiers(
-        control_operators, buff_pool, control_recovery_per_op=control_recovery_per_op,
+    ctx = MoodContext(
+        control_operators=[op.name for op in control_operators],
+        _op_lookup={op.name: op for op in control_operators},
+        params=SolverParams(
+            base_burn_per_hour=base_burn_per_hour,
+            control_recovery_per_op=control_recovery_per_op,
+        ),
     )
-    recovery = modifiers.control_recovery + max(modifiers.yanhuo_recovery, modifiers.wisdel_recovery)
-    if modifiers.mlynar_spread:
-        recovery += modifiers.control_recovery + modifiers.global_work_recovery
-    return max(0.0, base - recovery)
+    # 使用不在 _op_lookup 中的虚拟干员名，避免 _compute_self_mp_cost 干扰
+    return ctx.work_burn("__worker__", "Mfg", worker_count, buff_pool=buff_pool)
 
 
 # ─── 房间级 mp_cost buff 修正表 ──────────────────────────────────

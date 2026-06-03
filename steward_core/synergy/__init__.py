@@ -71,9 +71,7 @@ from steward_core.synergy.registry import (
     _SYSTEM_CONTRIBUTORS,
 )
 
-from steward_core.synergy.mood import (
-    compute_global_burn,
-)
+from steward_core.mood_flow import compute_global_burn
 
 from steward_core.synergy.mfg_linkages import (
     synergy_pair,

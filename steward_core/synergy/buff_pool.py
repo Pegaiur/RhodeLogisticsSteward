@@ -1,6 +1,6 @@
 """B层·全局 buff 点数池与消费者"""
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, fields, replace
 
 from steward_core.models import LinearSegment, Operator, LayoutConfig
 from .types import BuffConsumerEntry, BuffProducerEffect
@@ -10,34 +10,25 @@ from .types import BuffConsumerEntry, BuffProducerEffect
 class BuffPool:
     """全局 buff 点数池
 
-    新增字段时需同步更新 __add__、clone 方法的字段列表。
+    新增 int 字段后 __add__ 自动遍历 dataclasses.fields() 求和（无需手动更新）。
+    若新增非数值字段，需在 __add__ 中排除。
     """
-    yanhuo: int = 0            # 人间烟火
-    perception: int = 0        # 感知信息
-    wushu_crystal: int = 0     # 巫术结晶
+    yanhuo: int = 0            # 人间烟火 (B1)
+    perception: int = 0        # 感知信息 (B1)
+    wushu_crystal: int = 0     # 巫术结晶 (B1)
     thought_chains: int = 0    # 思维链环 (B3)
     silent_resonance: int = 0  # 无声共鸣 (B5) — 由塑心宿舍 + 黑键感知转化生成
     engineering_robots: int = 0  # 工程机器人 (B2)
     monster_cuisine: int = 0     # 魔物料理 (B4)
 
     def __add__(self, other: "BuffPool") -> "BuffPool":
-        return BuffPool(
-            yanhuo=self.yanhuo + other.yanhuo,
-            perception=self.perception + other.perception,
-            wushu_crystal=self.wushu_crystal + other.wushu_crystal,
-            thought_chains=self.thought_chains + other.thought_chains,
-            silent_resonance=self.silent_resonance + other.silent_resonance,
-            engineering_robots=self.engineering_robots + other.engineering_robots,
-            monster_cuisine=self.monster_cuisine + other.monster_cuisine,
-        )
+        return BuffPool(**{
+            f.name: getattr(self, f.name) + getattr(other, f.name)
+            for f in fields(self)
+        })
 
     def clone(self) -> "BuffPool":
-        return BuffPool(
-            yanhuo=self.yanhuo, perception=self.perception,
-            wushu_crystal=self.wushu_crystal, thought_chains=self.thought_chains,
-            silent_resonance=self.silent_resonance, engineering_robots=self.engineering_robots,
-            monster_cuisine=self.monster_cuisine,
-        )
+        return replace(self)
 
 
 def _derive_pool(pool: BuffPool) -> None:

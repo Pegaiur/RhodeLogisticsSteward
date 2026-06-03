@@ -1,5 +1,6 @@
 """制造站/贸易站干员分类"""
 
+import warnings
 from dataclasses import dataclass, field
 
 from steward_core.models import Operator
@@ -7,6 +8,27 @@ from .helpers import _DURIN_NAMES, _ORDER_ANCHOR_PREFIXES
 from .mfg_linkages import skill_class, _ZEROING_VARIANT_TABLE, operator_estimated_efficiency
 from .buff_pool import _B_BUFF_CONSUMER_TABLE
 from .facility_linkages import _A_FACILITY_LINK_TABLE
+
+
+def _detect_unregistered_contributors(op_name: str, room_type: str) -> bool:
+    """检测干员是否为未注册的系统贡献者
+
+    仅在 _derived.py 过期（MFG_ANCHORS/TRADE_ANCHORS 缺失）时触发。
+    静默兜底 → 显式告警，提示开发者运行 scripts/derive.py。
+    """
+    if op_name in _B_BUFF_CONSUMER_TABLE and _B_BUFF_CONSUMER_TABLE[op_name].target_room == room_type:
+        warnings.warn(
+            f"干员 {op_name} 是 {room_type} buff 消费者但未在 _derived.py 注册，请运行 python scripts/derive.py",
+            stacklevel=2,
+        )
+        return True
+    if op_name in _A_FACILITY_LINK_TABLE and _A_FACILITY_LINK_TABLE[op_name].target_room == room_type:
+        warnings.warn(
+            f"干员 {op_name} 是 {room_type} 设施联动者但未在 _derived.py 注册，请运行 python scripts/derive.py",
+            stacklevel=2,
+        )
+        return True
+    return False
 
 
 @dataclass
@@ -39,11 +61,7 @@ def classify_mfg_operators(
             result.anchors.append(op)
         elif has_skill_label or has_zeroing:
             result.providers.append(op)
-        # 以下两步已被 MFG_ANCHORS 覆盖（derive.py 扫描同名表自动注册），
-        # 保留作为防御性兜底：如果 _derived.py 过期未更新，此检查仍能防剪枝。
-        elif op.name in _B_BUFF_CONSUMER_TABLE and _B_BUFF_CONSUMER_TABLE[op.name].target_room == "Mfg":
-            result.providers.append(op)
-        elif op.name in _A_FACILITY_LINK_TABLE and _A_FACILITY_LINK_TABLE[op.name].target_room == "Mfg":
+        elif _detect_unregistered_contributors(op.name, "Mfg"):
             result.providers.append(op)
         else:
             result.pure_efficiency.append(op)
@@ -107,10 +125,7 @@ def classify_trade_operators(
 
         if is_registered or is_order_anchor:
             result.anchors.append(op)
-        # 以下两步已被 TRADE_ANCHORS 覆盖，保留作为防御性兜底。
-        elif op.name in _B_BUFF_CONSUMER_TABLE and _B_BUFF_CONSUMER_TABLE[op.name].target_room == "Trade":
-            result.providers.append(op)
-        elif op.name in _A_FACILITY_LINK_TABLE and _A_FACILITY_LINK_TABLE[op.name].target_room == "Trade":
+        elif _detect_unregistered_contributors(op.name, "Trade"):
             result.providers.append(op)
         else:
             result.pure_efficiency.append(op)

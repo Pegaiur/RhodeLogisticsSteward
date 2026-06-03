@@ -9,6 +9,12 @@ import pytest
 
 from steward_core.models import EfficiencyMap, Operator, Skill
 
+# 分类测试中使用合成干员不在 _derived.py 中，
+# 防御性兜底自然触发 UserWarning —— 这是预期行为。
+pytestmark = pytest.mark.filterwarnings(
+    "ignore:干员.*未在 _derived.py 注册:UserWarning",
+)
+
 
 def _mk_op(name: str = "测试", skills: list[Skill] | None = None,
            group_id: str | None = None) -> Operator:
