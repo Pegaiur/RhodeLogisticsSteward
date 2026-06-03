@@ -543,3 +543,73 @@ class TestWuLianRoomMpCost:
         lookup = {"巫恋": wulian, "阿米娅": amiya}
         burn = _apply_mp_cost(0.70, "阿米娅", ["泡泡"], lookup)
         assert burn == 0.70  # 巫恋不在 co_workers 中，不触发
+
+
+# ─── TRADING _P 同僚条件配对 ──────────────────────────────────────
+
+class TestSelfPairMpCost:
+    """TRADING _P 后缀 buff: mp_cost 在同僚配对时生效"""
+
+    def test_德克萨斯_恩怨_拉普兰德同房_增加消耗(self):
+        """trade_ord_spd&cost_P[000]: 拉普兰德同房时 +0.3/h"""
+        texas = mk_op("德克萨斯", [
+            mk_skill("trade_ord_spd&cost_P[000]", "Trading", efficient={"all": 0.0}),
+        ])
+        lapland = mk_op("拉普兰德")
+        amiya = mk_op("阿米娅")
+        lookup = {"德克萨斯": texas, "拉普兰德": lapland, "阿米娅": amiya}
+        # 拉普兰德不在时不触发
+        burn_no = _apply_mp_cost(0.70, "德克萨斯", ["阿米娅"], lookup)
+        assert burn_no == 0.70
+        # 拉普兰德在时 +0.3
+        burn_yes = _apply_mp_cost(0.70, "德克萨斯", ["拉普兰德", "阿米娅"], lookup)
+        assert burn_yes == pytest.approx(1.00)
+
+    def test_德克萨斯_默契_能天使同房_减少消耗(self):
+        """trade_ord_limit&cost_P[010]: 能天使同房时 -0.3/h"""
+        texas = mk_op("德克萨斯", [
+            mk_skill("trade_ord_limit&cost_P[010]", "Trading", efficient={"all": 0.0}),
+        ])
+        exusiai = mk_op("能天使")
+        lookup = {"德克萨斯": texas, "能天使": exusiai}
+        burn_no = _apply_mp_cost(0.70, "德克萨斯", ["其他"], lookup)
+        assert burn_no == 0.70
+        burn_yes = _apply_mp_cost(0.70, "德克萨斯", ["能天使"], lookup)
+        assert burn_yes == pytest.approx(0.40)  # 0.70 - 0.30
+
+    def test_拉普兰德_醉翁之意_德克萨斯同房_减少消耗(self):
+        """trade_ord_limit&cost_P[000]: 德克萨斯同房时 -0.1/h"""
+        lapland = mk_op("拉普兰德", [
+            mk_skill("trade_ord_limit&cost_P[000]", "Trading", efficient={"all": 0.0}),
+        ])
+        texas = mk_op("德克萨斯")
+        lookup = {"拉普兰德": lapland, "德克萨斯": texas}
+        burn_no = _apply_mp_cost(0.70, "拉普兰德", ["其他"], lookup)
+        assert burn_no == 0.70
+        burn_yes = _apply_mp_cost(0.70, "拉普兰德", ["德克萨斯"], lookup)
+        assert burn_yes == pytest.approx(0.60)  # 0.70 - 0.10
+
+    def test_贝洛内_未偿还的债务_伺夜同房_减少消耗(self):
+        """trade_ord_limit&cost_P[020]: 伺夜同房时 -0.1/h"""
+        bellone = mk_op("贝洛内", [
+            mk_skill("trade_ord_limit&cost_P[020]", "Trading", efficient={"all": 0.0}),
+        ])
+        siye = mk_op("伺夜")
+        lookup = {"贝洛内": bellone, "伺夜": siye}
+        burn_no = _apply_mp_cost(0.70, "贝洛内", ["其他"], lookup)
+        assert burn_no == 0.70
+        burn_yes = _apply_mp_cost(0.70, "贝洛内", ["伺夜"], lookup)
+        assert burn_yes == pytest.approx(0.60)
+
+    def test_德克萨斯_恩怨加默契_双条件均满足_叠加(self):
+        """拉普兰德和能天使同在时，恩怨+0.3 + 默契-0.3 = 0（抵消）"""
+        texas = mk_op("德克萨斯", [
+            mk_skill("trade_ord_spd&cost_P[000]", "Trading", efficient={"all": 0.0}),
+            mk_skill("trade_ord_limit&cost_P[010]", "Trading", efficient={"all": 0.0}),
+        ])
+        lapland = mk_op("拉普兰德")
+        exusiai = mk_op("能天使")
+        lookup = {"德克萨斯": texas, "拉普兰德": lapland, "能天使": exusiai}
+        burn = _apply_mp_cost(0.70, "德克萨斯",
+                              ["拉普兰德", "能天使"], lookup)
+        assert burn == pytest.approx(0.70)  # +0.3 -0.3 = 0

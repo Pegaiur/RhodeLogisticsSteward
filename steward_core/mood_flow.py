@@ -182,6 +182,21 @@ _MP_COST_FACTION_ZERO: dict[str, str] = {
 如令 杯莫停 消除中枢内所有岁干员心情消耗。
 """
 
+# ─── 自身 mp_cost 同僚条件配对表 ─────────────────────────────────
+
+_MP_COST_SELF_PAIR: dict[str, tuple[str, float]] = {
+    "trade_ord_spd&cost_P[000]": ("拉普兰德", 0.3),
+    "trade_ord_limit&cost_P[010]": ("能天使", -0.3),
+    "trade_ord_limit&cost_P[000]": ("德克萨斯", -0.1),
+    "trade_ord_limit&cost_P[001]": ("德克萨斯", -0.1),
+    "trade_ord_limit&cost_P[020]": ("伺夜", -0.1),
+}
+"""干员自身 mp_cost buff → (目标同僚, 修正量 delta/h)
+
+持有者有该 buff 且目标同僚在同房间时，自身心情消耗修正 delta。
+多条 buff 叠加生效（如德克萨斯 恩怨+0.3 + 默契-0.3 叠加）。
+"""
+
 # ─── 自身 mp_cost buff 映射表 ──────────────────────────────────
 
 _SELF_MP_COST: dict[str, float] = {
@@ -260,25 +275,19 @@ _SELF_MP_COST: dict[str, float] = {
 """干员自身 mp_cost buff → 心情消耗修正量（delta/h）。
 
 正值 = 消耗增加（如阿罗玛 +0.25）, 负值 = 消耗减少（如泡泡 -0.25）。
-覆盖: Mfg(26) + Power(2) + Trade(11) + Hire(13) + Meeting(5) + Control(8) = 65 条。
-暂缓: P1 条件配对 (20条) + P2 CONTROL 条件型 (7条) + P3 MEETING 条件型 (7条)。
+覆盖: Mfg(26) + Power(2) + Trade(11) + Hire(13) + Meeting(5) + Control(8) = 65 条自身 buff + _P 同僚配对(5) + 巫恋 room(1)。
+暂缓: P1 动态条件 (12条) + P2 CONTROL 条件型 (7条) + P3 MEETING 条件型 (7条)。
 """
 # ─── TODO: 未建模的 mp_cost buff（按优先级） ──────────────────────
 # 以下 buff 尚未接入，待后续版本实现。
 # 格式: buff_id [ROOM]: 修正量/h  干员名  技能名
 #
-# === P1: 动态条件 + 条件配对 (20 条) ===
+# === P1: 动态条件 + 条件配对 (12 条) ===
 # HIRE 动态条件:
 #   "hire_spd_cost&clue[000]": -0.1/h  雪绒  救援队·保证体力  (动态: 每招募位 -0.1)
 # TRADING 动态条件 buff:
 #   "trade_cost&bd2[000]" [ROOM]: -0.1/h  铎铃  跋山涉水  (动态: 每10烟火额外 -0.01)
 #   "trade_cost&bd2[001]" [ROOM]: -0.1/h  铎铃  万里传书  (动态: 每10烟火额外 -0.02)
-# TRADING 同僚条件配对 (_P 后缀, 需 co_worker 检测):
-#   "trade_ord_spd&cost_P[000]": +0.3/h  德克萨斯  恩怨  (条件: 拉普兰德同房)
-#   "trade_ord_limit&cost_P[020]": -0.1/h  贝洛内  未偿还的债务  (条件: 伺夜同房)
-#   "trade_ord_limit&cost_P[010]": -0.3/h  德克萨斯  默契  (条件: 能天使同房)
-#   "trade_ord_limit&cost_P[000]": -0.1/h  拉普兰德  醉翁之意·α  (条件: 德克萨斯同房)
-#   "trade_ord_limit&cost_P[001]": -0.1/h  拉普兰德  醉翁之意·β  (条件: 德克萨斯同房)
 #
 # === P2: CONTROL 条件型 buff (7 条) ===
 #   "control_meeting&mp_cost[000]": +0.02/h  摆渡人  英雄的骄傲·α  (条件: 萨尔贡干员同中枢)
@@ -354,6 +363,17 @@ def _apply_mp_cost(
                     continue
             if sk.buff_id in _MP_COST_ROOM_REDUCE:
                 burn = max(0.0, burn - _MP_COST_ROOM_REDUCE[sk.buff_id])
+
+    # 扫描自身技能的 _P 同僚配对 buff
+    if op is not None:
+        co_worker_set = set(co_workers)
+        for sk in op.skills:
+            pair_entry = _MP_COST_SELF_PAIR.get(sk.buff_id)
+            if pair_entry is not None:
+                target, delta = pair_entry
+                if target in co_worker_set:
+                    burn = max(0.0, burn + delta)
+
     return burn
 
 
