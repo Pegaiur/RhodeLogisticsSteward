@@ -325,3 +325,221 @@ class TestSelfMpCost:
         burn_aloma = mc.work_burn("阿罗玛", "Mfg", 3)
         burn_plain = mc.work_burn("阿米娅", "Mfg", 3)
         assert burn_aloma > burn_plain
+
+
+# ─── Step A 新增 mp_cost buff 回归测试 ─────────────────────────────
+
+class TestNewSelfMpCost:
+    """Step A + D：新接入的 mp_cost buff 自身修正校验
+
+    覆盖 HIRE / MEETING / CONTROL 三类设施的无条件自身 buff。
+    """
+
+    # ── HIRE 自身 buff ──────────────────────────────────────────
+
+    def test_地灵_准时下班_增加2消耗(self):
+        """hire_spd_cost[200] = +2.0/h"""
+        op = mk_op("地灵", [
+            mk_skill("hire_spd_cost[200]", "HIRE", efficient={"all": 0.0}),
+        ])
+        delta = _compute_self_mp_cost("地灵", {"地灵": op})
+        assert delta == 2.0
+
+    def test_斥罪_法为正典_增加0点5消耗(self):
+        """hire_spd_cost[210] = +0.5/h"""
+        op = mk_op("斥罪", [
+            mk_skill("hire_spd_cost[210]", "HIRE", efficient={"all": 0.0}),
+        ])
+        delta = _compute_self_mp_cost("斥罪", {"斥罪": op})
+        assert delta == 0.5
+
+    def test_水灯心_alpha_增加1消耗(self):
+        """hire_spd_cost[220] = +1.0/h"""
+        op = mk_op("水灯心", [
+            mk_skill("hire_spd_cost[220]", "HIRE", efficient={"all": 0.0}),
+        ])
+        delta = _compute_self_mp_cost("水灯心", {"水灯心": op})
+        assert delta == 1.0
+
+    def test_水灯心_beta_增加1消耗(self):
+        """hire_spd_cost[230] = +1.0/h"""
+        op = mk_op("水灯心", [
+            mk_skill("hire_spd_cost[230]", "HIRE", efficient={"all": 0.0}),
+        ])
+        delta = _compute_self_mp_cost("水灯心", {"水灯心": op})
+        assert delta == 1.0
+
+    def test_桑葚_救援队珠算_减少消耗(self):
+        """hire_spd_cost[100] = -0.25/h"""
+        op = mk_op("桑葚", [
+            mk_skill("hire_spd_cost[100]", "HIRE", efficient={"all": 0.0}),
+        ])
+        delta = _compute_self_mp_cost("桑葚", {"桑葚": op})
+        assert delta == -0.25
+
+    def test_林_特殊渠道_减少消耗(self):
+        """hire_spd_cost[111] = -0.25/h"""
+        op = mk_op("林", [
+            mk_skill("hire_spd_cost[111]", "HIRE", efficient={"all": 0.0}),
+        ])
+        delta = _compute_self_mp_cost("林", {"林": op})
+        assert delta == -0.25
+
+    def test_深律_alpha_减少消耗(self):
+        """hire_spd_cost[101] = -0.25/h"""
+        op = mk_op("深律", [
+            mk_skill("hire_spd_cost[101]", "HIRE", efficient={"all": 0.0}),
+        ])
+        delta = _compute_self_mp_cost("深律", {"深律": op})
+        assert delta == -0.25
+
+    def test_行箸_alpha_减少消耗(self):
+        """hire_spd_cost[112] = -0.25/h"""
+        op = mk_op("行箸", [
+            mk_skill("hire_spd_cost[112]", "HIRE", efficient={"all": 0.0}),
+        ])
+        delta = _compute_self_mp_cost("行箸", {"行箸": op})
+        assert delta == -0.25
+
+    # ── MEETING 自身 buff ───────────────────────────────────────
+
+    def test_见行者_逻辑推理_增加2消耗(self):
+        """meet_spd&cost[100] = +2.0/h（核心用例）"""
+        op = mk_op("见行者", [
+            mk_skill("meet_spd&cost[100]", "MEETING", efficient={"all": 0.0}),
+        ])
+        delta = _compute_self_mp_cost("见行者", {"见行者": op})
+        assert delta == 2.0
+
+    def test_见行者_work_burn_reception(self):
+        """见行者在 Reception 的 work_burn 应显著高于普通干员"""
+        jianxingzhe = mk_op("见行者", [
+            mk_skill("meet_spd&cost[100]", "MEETING", efficient={"all": 0.0}),
+        ])
+        mc = MoodContext(
+            operator_moods={"见行者": 24.0, "阿米娅": 24.0},
+            params=SolverParams(),
+            _op_lookup={"见行者": jianxingzhe},
+        )
+        burn_jx = mc.work_burn("见行者", "Reception", 2)
+        burn_plain = mc.work_burn("阿米娅", "Reception", 2)
+        assert burn_jx > burn_plain + 1.5  # +2.0 差异应显著
+
+    def test_见行者_12h班次_心情耗尽(self):
+        """见行者 +2.0/h 消耗 + 基础 ~0.9 = ~2.9/h，
+        12h 班次消耗 ~35，远超 24h 满心情 → 撑不过一个班次"""
+        jianxingzhe = mk_op("见行者", [
+            mk_skill("meet_spd&cost[100]", "MEETING", efficient={"all": 0.0}),
+        ])
+        mc = MoodContext(
+            operator_moods={"见行者": 24.0},
+            params=SolverParams(),
+            _op_lookup={"见行者": jianxingzhe},
+        )
+        burn = mc.work_burn("见行者", "Reception", 2)
+        assert burn > 2.0, f"预期消耗 >2.0/h，实际 {burn:.2f}"
+        # 12h × burn > 24h → 心情在一班内耗尽
+        assert burn * 12.0 > 24.0, f"见行者应撑不过一个班次，12h × {burn:.2f} = {burn * 12:.1f}"
+
+    def test_提丰_冰原游弋_增加0点5消耗(self):
+        """meet_spd&sami[000] = +0.5/h"""
+        op = mk_op("提丰", [
+            mk_skill("meet_spd&sami[000]", "MEETING", efficient={"all": 0.0}),
+        ])
+        delta = _compute_self_mp_cost("提丰", {"提丰": op})
+        assert delta == 0.5
+
+    def test_凛视_远见_增加0点5消耗(self):
+        """meet_spd&bd[000] = +0.5/h"""
+        op = mk_op("凛视", [
+            mk_skill("meet_spd&bd[000]", "MEETING", efficient={"all": 0.0}),
+        ])
+        delta = _compute_self_mp_cost("凛视", {"凛视": op})
+        assert delta == 0.5
+
+    # ── CONTROL 自身 buff ───────────────────────────────────────
+
+    def test_涤火杰西卡_老友相聚_增加0点5消耗(self):
+        """control_bd_spd[000] = +0.5/h"""
+        op = mk_op("涤火杰西卡", [
+            mk_skill("control_bd_spd[000]", "Control", efficient={"all": 0.0}),
+        ])
+        delta = _compute_self_mp_cost("涤火杰西卡", {"涤火杰西卡": op})
+        assert delta == 0.5
+
+    def test_怒潮凛冬_是团长_增加0点5消耗(self):
+        """control_meeting_bd[000] = +0.5/h"""
+        op = mk_op("怒潮凛冬", [
+            mk_skill("control_meeting_bd[000]", "Control", efficient={"all": 0.0}),
+        ])
+        delta = _compute_self_mp_cost("怒潮凛冬", {"怒潮凛冬": op})
+        assert delta == 0.5
+
+    def test_夕_不以己悲_增加0点5消耗_in_control(self):
+        """control_mp_cost&bd2[000] = +0.5/h"""
+        op = mk_op("夕", [
+            mk_skill("control_mp_cost&bd2[000]", "Control", efficient={"all": 0.0}),
+        ])
+        delta = _compute_self_mp_cost("夕", {"夕": op})
+        assert delta == 0.5
+
+    def test_重岳_知我为我_增加0点5消耗(self):
+        """control_mp_cost&bd_up[000] = +0.5/h"""
+        op = mk_op("重岳", [
+            mk_skill("control_mp_cost&bd_up[000]", "Control", efficient={"all": 0.0}),
+        ])
+        delta = _compute_self_mp_cost("重岳", {"重岳": op})
+        assert delta == 0.5
+
+    def test_麒麟R夜刀_耐力回复_增加0点5消耗(self):
+        """control_mp_cost&bd2[010] = +0.5/h"""
+        op = mk_op("麒麟R夜刀", [
+            mk_skill("control_mp_cost&bd2[010]", "Control", efficient={"all": 0.0}),
+        ])
+        delta = _compute_self_mp_cost("麒麟R夜刀", {"麒麟R夜刀": op})
+        assert delta == 0.5
+
+    def test_艾拉_反抗者_增加0点25消耗(self):
+        """control_clue_cost&faction[990] = +0.25/h"""
+        op = mk_op("艾拉", [
+            mk_skill("control_clue_cost&faction[990]", "Control",
+                     efficient={"all": 0.0}),
+        ])
+        delta = _compute_self_mp_cost("艾拉", {"艾拉": op})
+        assert delta == 0.25
+
+    def test_祐天寺若麦_成效优先_增加0点05消耗(self):
+        """control_mp&meet_spd[000] = +0.05/h"""
+        op = mk_op("祐天寺若麦", [
+            mk_skill("control_mp&meet_spd[000]", "Control", efficient={"all": 0.0}),
+        ])
+        delta = _compute_self_mp_cost("祐天寺若麦", {"祐天寺若麦": op})
+        assert delta == 0.05
+
+
+# ─── 巫恋房间级 mp_cost ───────────────────────────────────────────
+
+class TestWuLianRoomMpCost:
+    """巫恋 trade_ord_vodfox[000] 房间级 +0.25/h"""
+
+    def test_巫恋低语_对同房干员增加消耗(self):
+        """巫恋在 Trade 房间时，同房其他干员心情消耗 +0.25/h"""
+        wulian = mk_op("巫恋", [
+            mk_skill("trade_ord_vodfox[000]", "Trading", efficient={"all": 0.0}),
+        ])
+        amiya = mk_op("阿米娅")
+        lookup = {"巫恋": wulian, "阿米娅": amiya}
+        # 无巫恋时 burn
+        burn_base = _apply_mp_cost(0.70, "阿米娅", ["其他人"], lookup)
+        burn_with_wulian = _apply_mp_cost(0.70, "阿米娅", ["巫恋"], lookup)
+        assert burn_with_wulian == pytest.approx(burn_base + 0.25)
+
+    def test_wulian_not_triggered_if_not_in_room(self):
+        """巫恋不在房间时不触发"""
+        wulian = mk_op("巫恋", [
+            mk_skill("trade_ord_vodfox[000]", "Trading", efficient={"all": 0.0}),
+        ])
+        amiya = mk_op("阿米娅")
+        lookup = {"巫恋": wulian, "阿米娅": amiya}
+        burn = _apply_mp_cost(0.70, "阿米娅", ["泡泡"], lookup)
+        assert burn == 0.70  # 巫恋不在 co_workers 中，不触发
