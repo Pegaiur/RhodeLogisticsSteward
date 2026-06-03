@@ -223,7 +223,7 @@ class ShiftPlan:
     assignments: list[RoomAssignment] = field(default_factory=list)
     period_from: str = "00:00"
     period_to: str = "23:59"
-    drone_room: str = "Trade"
+    drone_room: str = "Mfg"
     drone_index: int = 0
     drone_order: str = "pre"
 

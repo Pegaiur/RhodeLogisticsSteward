@@ -124,6 +124,84 @@ mindmap
 > 典型 6★ 精二干员的隐式加成 = 5 + 11 + 5 + 16 + 15 = **+52%/人**，远超显式技能（如线索搜集·β +20%）。  
 > 星级差异仅 3 个百分点（4★ vs 6★），对排序影响很小。  
 
+### 1.6 发电站与无人机加速
+
+无人机是连接发电站与制造站/贸易站的产出放大器。发电站干员提升无人机充能速度，无人机缩短目标房间的生产/订单耗时。
+
+#### 1.6.1 发电站干员加成
+
+发电站干员的 `power_rec_spd` 系列技能直接提供百分比充能加速：
+
+| buff_id | 加成 | 示例干员 |
+|---------|:---:|------|
+| `power_rec_spd[000]` | +10% | 炎狱炎熔、格雷伊 |
+| `power_rec_spd[010]` | +15% | 烛煌 |
+| `power_rec_spd[020]` | +20% | 承曦格雷伊 |
+| `power_rec_spd[023]` | +20% | 澄闪、雷蛇 |
+| `power_rec_spd[001]` | +10% | 初始型干员 |
+| `power_rec_spd[022]` / `[021]` | +20% | 高级热能充能 |
+
+此外，`power_rec_drone[000]`（承曦格雷伊·巡线框架）为条件型 buff，根据无人机上限提供最高 +25% 加成，当前通过 [`contribution.py` 的 `_DRONE_TO_MFG_RATIO`](file:///d:/Dev/RhodeLogisticsSteward/steward_core/solver/slot/contribution.py#L33) 折算计入制造站估值，未纳入无人机产量计算。
+
+#### 1.6.2 无人机产量公式
+
+\[
+\text{daily\_drones} = 240 \times \left(1 + \frac{\sum \text{bonus}}{100}\right)
+\]
+
+| 参数 | 值 | 来源 |
+|------|-----|------|
+| 基础充能速度 | 6 min/架 → **240 架/天** | 游戏机制（PRTS Wiki） |
+| bonus | 发电站干员 `efficient` 百分比值 | `buffs_infrastructure.json` → `power_rec_spd[*]` |
+
+**计算示例**（3 间 Lv3 发电站满员）：
+
+| 配置 | bonus 合计 | 日产 | 相当于加速时间 |
+|------|:---:|:---:|:---:|
+| 无干员（空发电站） | 0% | **240** | 12h/天 |
+| 炎狱炎熔 + 格雷伊 + 烛煌 | +35% | **324** | 16.2h/天 |
+| 承曦格雷伊 + 炎狱炎熔 + 烛煌 | +45% | **348** | 17.4h/天 |
+| 承曦格雷伊 + 澄闪 + 雷蛇 | +60% | **384** | 19.2h/天 |
+
+> **实现**：[`_calc_drone_daily()`](file:///d:/Dev/RhodeLogisticsSteward/steward_core/production.py#L409-L427)。效率值从 `operator_estimated_efficiency(op, "Power", "Drone")` 获取——爬升回退后取 `skill.efficient` 最高值。
+
+#### 1.6.3 无人机加速倍率
+
+每架无人机缩短目标房间当前生产/订单耗时 **3 分钟**（制造站与贸易站均相同）。全部无人机集中加速同一间房时，该房间的等效产出倍率为：
+
+\[
+\text{multiplier} = \frac{T \times 60 + \text{drones\_in\_period} \times 3}{T \times 60}
+\]
+
+其中 `drones_in_period = daily_drones × T / 24`，消去 T 后简化为：
+
+\[
+\text{multiplier} = 1 + \frac{\text{daily\_drones}}{480}
+\]
+
+即加速倍率**与班次长度无关**，仅取决于发电站配置。
+
+| daily_drones | multiplier | 加成 | 场景 |
+|:---:|:---:|:---:|------|
+| 240 | 1.500 | +50% | 空发电站基准 |
+| 324 | 1.675 | +67.5% | 3 普通发电干员 |
+| 348 | 1.725 | +72.5% | 含承曦格雷伊 |
+| 384 | 1.800 | +80% | 3 顶级发电干员 |
+
+> **实现**：[`_drone_multiplier()`](file:///d:/Dev/RhodeLogisticsSteward/steward_core/production.py#L430-L437) → [`_drone_boost()`](file:///d:/Dev/RhodeLogisticsSteward/steward_core/production.py#L458-L462) 判断房间是否为加速目标后返回 `multiplier - 1`。
+
+#### 1.6.4 加速目标选择
+
+无人机加速目标由 `ShiftPlan.drone_room` / `drone_index` 指定，当前硬编码为制造站 **Mfg[0]**（CR 作战记录）：
+
+| 目标 | 效果 | 适用场景 |
+|------|------|----------|
+| Mfg (CR) | 加速作战记录产出 | 当前默认；经验为主要目标的场景 |
+| Mfg (PG) | 加速赤金制造 | 赤金短缺时最优——增产赤金直接提升贸易站开工率 |
+| Trade | 加速龙门币产出 | 赤金盈余时最优——套现多余赤金 |
+
+> **已知限制**：加速目标为硬编码，不随赤金供需动态调整。参见 [`inbox.md`](file:///d:/Dev/RhodeLogisticsSteward/docs/inbox.md) "无人机加速目标动态路由"。
+
 ---
 
 ## 2. 约束条件体系
