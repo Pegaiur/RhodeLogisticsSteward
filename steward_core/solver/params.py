@@ -67,6 +67,10 @@ class SolverParams:
     mood_work_threshold: float = 1.0
     """可参与工作的最低心情值（低于此值不可用）。默认 1.0 确保至少留 1 小时缓冲"""
 
+    recovery_damping: float = 0.25
+    """中枢心情恢复贡献阻尼系数（0~1）。用于抑制 recovery 贡献估值偏高。
+    待多班次续航建模后校准为精确值。"""
+
     # === 多班次 ===
     shift_count: int = 1
     """班次数"""

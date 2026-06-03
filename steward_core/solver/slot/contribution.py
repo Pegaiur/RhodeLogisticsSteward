@@ -316,7 +316,8 @@ def _compute_recovery_value(
         eff_weight = max(eff / 30.0, 0.1)
         total += mood_saved_per_op * eff_weight * base_lmd
 
-    return total
+    damping = ctx.params.recovery_damping if ctx.params else 0.25
+    return total * damping
 
 
 def _recovery_marginal(
