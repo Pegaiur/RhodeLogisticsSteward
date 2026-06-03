@@ -110,16 +110,6 @@ def phase_mfg(
         office_names = ctx.ops_of_type(window_idx, "Office")
         office_ops = [ctx.op_lookup[n] for n in office_names if n in ctx.op_lookup]
 
-        base_buff_pool = compute_buff_pool(
-            ctrl_ops,
-            suich_count=params.suich_count if params else 5,
-            dorm_operators=[o for o in dorm_ops_list if o],
-            dorm_level=params.dorm_level if params else 5,
-            layout=ctx.layout if ctx.layout else _LAYOUT_243,
-            office_operators=office_ops,
-            office_perception_base=params.office_perception_base if params else 20,
-        )
-
         evaluated = []
         for combo_ops in combos:
             combo_pool = compute_buff_pool(
