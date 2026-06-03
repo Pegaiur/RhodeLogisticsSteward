@@ -280,8 +280,8 @@ def _compute_recovery_value(
     mood_saved_per_op = recovery_rate × hours
     value = Σ mood_saved × eff_weight × base_LMD_rate
 
-    recovery_rate = len(control) × 0.05（基础减免）
-                  + Σ per-operator global recovery buffs（如玛恩纳 +0.1 + spread）
+    recovery_rate = mp_cost_count × 0.05（仅持有 control_mp_cost* 技能的干员）
+                  + Σ per-operator global recovery buffs（玛恩纳 +0.1 + spread）
     """
     hours = ctx.params.shift_hours if ctx.params else 12.0
     base_lmd = _mfg_base_rate_lmd_avg()
@@ -290,18 +290,21 @@ def _compute_recovery_value(
     if not work_names:
         return 0.0
 
-    n_ctrl = len(control_names)
-    recovery = n_ctrl * 0.05
-
-    # 全局恢复技能（玛恩纳公事公办：+0.1/h + spread）
+    # 仅统计持有 control_mp_cost* 技能的干员（+0.05/h），非全员
+    mp_cost_count = 0
+    has_mlynar = False
     for cname in control_names:
         cop = ctx.op_lookup.get(cname)
         if cop is None:
             continue
-        for sk in cop.skills:
-            if sk.buff_id == "control_mp_lonely[000]":
-                recovery += 0.1 + n_ctrl * 0.05  # global + spread
-                break
+        if any(s.buff_id.startswith("control_mp_cost[") for s in cop.skills):
+            mp_cost_count += 1
+        if any(s.buff_id == "control_mp_lonely[000]" for s in cop.skills):
+            has_mlynar = True
+
+    recovery = mp_cost_count * 0.05
+    if has_mlynar:
+        recovery += 0.1 + mp_cost_count * 0.05  # global + spread
 
     if recovery <= 0:
         return 0.0

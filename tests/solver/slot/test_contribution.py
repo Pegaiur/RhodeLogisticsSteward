@@ -246,21 +246,28 @@ class TestRecoveryContribution:
         """新增中枢干员 → recovery 边际增量正确"""
         from steward_core.solver.slot.contribution import _compute_recovery_value
         mlynar = self._mk_mlynar()
-        amiya = _dummy_op("char_001", "阿米娅")
+        dubin = Operator(
+            char_id="char_130", name="杜宾",
+            skills=[Skill(
+                buff_id="control_mp_cost[000]", buff_name="左膀右臂",
+                skill_icon="test", room_type="CONTROL",
+                efficient=EfficiencyMap(raw={"all": 0.0}),
+            )],
+        )
         w1 = self._mk_work_op("w1", "工作A", 30.0)
-        ops = [mlynar, amiya, w1] + [_dummy_op(f"x{i}", f"填{i}") for i in range(3)]
+        ops = [mlynar, dubin, w1] + [_dummy_op(f"x{i}", f"填{i}") for i in range(3)]
         ctx = SlotContext.from_layout(ops, LayoutConfig.layout_243(), params)
         ctx.place(0, "mfg_0_0", "工作A")
         ctx.op_peak_eff["工作A"] = 30.0
 
         val_without = _compute_recovery_value(ctx, [], 0)
-        val_with_amiya = _compute_recovery_value(ctx, ["阿米娅"], 0)
-        val_with_both = _compute_recovery_value(ctx, ["阿米娅", "玛恩纳"], 0)
+        val_with_dubin = _compute_recovery_value(ctx, ["杜宾"], 0)
+        val_with_both = _compute_recovery_value(ctx, ["杜宾", "玛恩纳"], 0)
 
-        # 每增加一名中枢：control_recovery +0.05/h → mood_saved 递增
-        assert val_with_amiya > val_without
-        assert val_with_both > val_with_amiya
+        # 每增加一名持有 control_mp_cost 的中枢：control_recovery +0.05/h
+        assert val_with_dubin > val_without
+        assert val_with_both > val_with_dubin
         # 玛恩纳额外提供 global_work_recovery +0.1/h + spread
-        delta_mlynar = val_with_both - val_with_amiya
-        delta_amiya = val_with_amiya - val_without
-        assert delta_mlynar > delta_amiya, f"玛恩纳增量{delta_mlynar}应 > 阿米娅增量{delta_amiya}"
+        delta_mlynar = val_with_both - val_with_dubin
+        delta_dubin = val_with_dubin - val_without
+        assert delta_mlynar > delta_dubin, f"玛恩纳增量{delta_mlynar}应 > 杜宾增量{delta_dubin}"

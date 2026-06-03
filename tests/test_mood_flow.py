@@ -177,13 +177,13 @@ class TestComputeMoodModifiers:
         assert mods.mlynar_spread is False
 
     def test_single_control_op(self):
-        ops = [mk_op("中枢A", [mk_skill("ctrl", "Control", efficient={"all": 0.0})])]
+        ops = [mk_op("中枢A", [mk_skill("control_mp_cost[000]", "Control", efficient={"all": 0.0})])]
         mods = compute_mood_modifiers(ops, None)
         assert mods.control_recovery == 0.05
 
     def test_five_control_ops(self):
         ops = [
-            mk_op(f"中枢{i}", [mk_skill("ctrl", "Control", efficient={"all": 0.0})])
+            mk_op(f"中枢{i}", [mk_skill(f"control_mp_cost[{i:03d}]", "Control", efficient={"all": 0.0})])
             for i in range(5)
         ]
         mods = compute_mood_modifiers(ops, None)

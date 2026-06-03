@@ -82,7 +82,7 @@ def compute_mood_modifiers(
     mods = MoodModifiers()
     names = {op.name for op in control_operators}
 
-    mods.control_recovery = len(control_operators) * control_recovery_per_op
+    mods.control_recovery = count_control_mp_cost(control_operators) * control_recovery_per_op
 
     if any(
         s.buff_id == "control_mp_lonely[000]"

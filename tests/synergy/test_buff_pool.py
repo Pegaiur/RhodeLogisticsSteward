@@ -129,14 +129,16 @@ class TestBLayer:
         assert pool.wushu_crystal == 8   # 40//5
 
     def test_c2_global_burn_固定中枢(self):
-        """C2: 3人工位 burn = 0.75 - 中枢减免(5×0.05) - 重岳孤光共照(0.05)"""
+        """C2: 3人工位 burn = base(0.90) - recovery(0.05+0.15) - spread(0) < 0.75"""
         from steward_core.synergy import compute_global_burn, compute_buff_pool
 
-        control = [_mk_ling(), _mk_chongyue(), _mk_xi(), _mk_op("凯尔希"), _mk_op("焰尾")]
+        # 杜宾持有 control_mp_cost[000] → +0.05 control_recovery
+        dubin = _mk_op("杜宾", [_mk_skill("control_mp_cost[000]", "Control", "左膀右臂")])
+        control = [_mk_ling(), _mk_chongyue(), _mk_xi(), _mk_op("凯尔希"), dubin]
         buff_pool = compute_buff_pool(control, suich_count=5)
         burn = compute_global_burn(control, buff_pool, worker_count=3)
 
-        assert burn < 0.75  # 中枢减免生效
+        assert burn < 0.75  # 中枢减免生效（1人=0.05）
         assert burn >= 0    # 不低于 0
 
 
