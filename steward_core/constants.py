@@ -15,7 +15,7 @@ FACILITY_SLOTS: dict[str, int] = {
     "Mfg": 3,
     "Trade": 3,
     "Power": 1,
-    "Reception": 1,
+    "Reception": 2,
     "Office": 1,
 }
 

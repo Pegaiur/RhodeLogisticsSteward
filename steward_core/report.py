@@ -1,7 +1,7 @@
 """统一排班报告格式化模块
 
-将 PipelineResult 渲染为结构化控制台报告，覆盖参数摘要、各班次概览、
-换班分析、产能汇总、心情验证，一站式满足多班次（如 7 天 14x12h）测试需求。
+将 PipelineResult 渲染为 Markdown 报告，覆盖参数摘要、换班分析、
+产能汇总、心情验证，一站式满足多班次（如 7 天 14x12h）测试需求。
 """
 
 from __future__ import annotations
@@ -55,15 +55,24 @@ def format_params(params: "SolverParams") -> str:
     """求解参数摘要"""
     total_h = params.shift_count * params.shift_hours
     days = total_h / 24.0
-    inner = params.summary()
     lines = [
         "## 求解参数",
         "",
-        inner.strip(),
-        "",
-        f"**周期**: {params.shift_count}x{params.shift_hours:.0f}h = {total_h:.0f}h ({days:.1f}天)",
-        "",
+        f"- **排班**: {params.shift_count}班 × {params.shift_hours:.0f}h = {total_h:.0f}h ({days:.1f}天)",
+        f"- **心情**: 消耗率 {params.base_burn_rate3:.2f} (3人房), "
+        f"满 {params.mood_full:.0f}h, 工作阈值 {params.mood_work_threshold:.1f}h",
+        f"- **设施**: 中枢 {params.control_max_slots}槽, "
+        f"发电 {params.base_power_count}间, "
+        f"宿舍 {params.dorm_room_count}×{params.dorm_room_size}=Lv{params.dorm_levels_sum}",
+        f"- **外部**: 日常任务 {params.daily_task_lmd:,.0f} LMD/天",
     ]
+    solver_parts = [f"槽位迭代 ≤{params.slot_max_rounds}轮"]
+    if params.slot_cold_start:
+        solver_parts.append("冷启动=是")
+    solver_parts.append(f"局部搜索 ≤{params.local_search_max_rounds}轮")
+    solver_parts.append(f"剪枝阈值 {params.combo_upper_bound_threshold:.2f}")
+    lines.append(f"- **求解**: {', '.join(solver_parts)}")
+    lines.append("")
     return "\n".join(lines)
 
 
@@ -132,58 +141,6 @@ def _compute_chained_mood_reports(
 _PRODUCT_ABBR: dict[str, str] = {"CombatRecord": "CR", "PureGold": "PG"}
 
 
-def format_shift_overview(
-    plans: list["ShiftPlan"],
-    operators: list["Operator"],
-    shift_hours: float,
-    params: "SolverParams | None" = None,
-) -> tuple[str, list["MoodReport"]]:
-    """各班次紧凑概览表 — 每班一行，含心情状态"""
-    mood_reports = _compute_chained_mood_reports(plans, operators, shift_hours, params=params)
-
-    tracked = [
-        ("Control", 0, "Ctl"),
-        ("Trade", 0, "Tr0"),
-        ("Trade", 1, "Tr1"),
-        ("Mfg", 0, "Mf0"),
-        ("Mfg", 1, "Mf1"),
-        ("Mfg", 2, "Mf2"),
-        ("Mfg", 3, "Mf3"),
-    ]
-
-    header_cols = ["班次"] + [abbr for _, _, abbr in tracked] + ["心情"]
-    ml_header = "| " + " | ".join(header_cols) + " |"
-    ml_sep = "|" + "|".join(["------" for _ in header_cols]) + "|"
-    lines = [
-        "## 各班次概览",
-        "",
-        ml_header,
-        ml_sep,
-    ]
-
-    for pi, plan in enumerate(plans):
-        mr = mood_reports[pi]
-        col_values = [f"W{pi}"]
-        for rt, ri, _ in tracked:
-            found = ""
-            for a in plan.assignments:
-                if a.room_type == rt and a.room_index == ri:
-                    p = a.product or ""
-                    abbr = _PRODUCT_ABBR.get(p, p[:2]) if p else ""
-                    product_tag = f"({abbr})" if abbr else ""
-                    found = f"{len(a.operators)}人{product_tag}"
-                    break
-            col_values.append(found)
-        if mr.red_face_count == 0:
-            col_values.append("OK")
-        else:
-            col_values.append(f"!{mr.red_face_count}")
-        lines.append("| " + " | ".join(col_values) + " |")
-
-    lines.append("")
-    return "\n".join(lines), mood_reports
-
-
 def _plan_names(plan: "ShiftPlan") -> set[str]:
     names: set[str] = set()
     for a in plan.assignments:
@@ -192,52 +149,42 @@ def _plan_names(plan: "ShiftPlan") -> set[str]:
     return names
 
 
-def _bar(v: float, ref: float, w: int = 10) -> str:
-    n = round(v / max(ref, 1) * w)
-    return "#" * n + "-" * (w - n)
-
-
-def format_overlap_matrix(plans: list["ShiftPlan"]) -> str:
-    """重叠矩阵 — NxN 显示每两班间共有干员数"""
+def format_swaps(plans: list["ShiftPlan"]) -> str:
+    """换班分析 — 相邻重叠统计 + 逐设施换班表"""
     n = len(plans)
-    cols = ["W"] + [f"W{w}" for w in range(n)] + ["变化"]
-    ml_header = "| " + " | ".join(cols) + " |"
-    ml_sep = "|" + "|".join(["---" for _ in cols]) + "|"
-    lines = [
-        "## 换班分析",
-        "",
-        "重叠矩阵 (x,y) = Wx 与 Wy 共有干员数",
-        "",
-        ml_header,
-        ml_sep,
-    ]
-    for wi in range(n):
-        ni = _plan_names(plans[wi])
-        row = f"| W{wi} |"
-        for wj in range(n):
-            nj = _plan_names(plans[wj])
-            row += f" {len(ni & nj)} |"
-        if wi == 0:
-            row += " -- |"
-        else:
-            prev = _plan_names(plans[wi - 1])
-            diff = len(ni) - len(ni & prev)
-            row += f" 换{diff}人 |"
-        lines.append(row)
-    return "\n".join(lines)
+    lines = ["## 换班分析", ""]
 
+    # 相邻重叠摘要
+    if n >= 2:
+        diffs: list[int] = []
+        overlaps: list[int] = []
+        for wi in range(1, n):
+            ni = _plan_names(plans[wi])
+            nj = _plan_names(plans[wi - 1])
+            overlaps.append(len(ni & nj))
+            diffs.append(len(ni) - len(ni & nj))
+        avg_o = sum(overlaps) / len(overlaps)
+        avg_d = sum(diffs) / len(diffs)
 
-def format_facility_swaps(plans: list["ShiftPlan"]) -> str:
-    """设施换班统计"""
+        diff_parts = []
+        overlap_parts = []
+        for wi in range(1, n):
+            diff_parts.append(f"W{wi - 1}→{wi}:{diffs[wi - 1]}")
+            overlap_parts.append(f"W{wi - 1}→{wi}:{overlaps[wi - 1]}")
+        lines.append(f"班间换人: {' '.join(diff_parts)}  (均值 {avg_d:.1f})")
+        lines.append(f"相邻重叠: {' '.join(overlap_parts)}  (均值 {avg_o:.1f}, 范围 {min(overlaps)}-{max(overlaps)})")
+        lines.append("")
+
+    # 逐设施换班表
     tracked = [
         ("Control", 0), ("Trade", 0), ("Trade", 1),
         ("Mfg", 0), ("Mfg", 1), ("Mfg", 2), ("Mfg", 3),
     ]
-    lines = [
-        "## 换班统计",
-        "",
-    ]
-    shifts_n = max(len(plans) - 1, 1)
+    lines.extend([
+        "| 设施 | 换班 | 比例 |",
+        "|------|------|------|",
+    ])
+    shifts_n = max(n - 1, 1)
     for ft, ri in tracked:
         prev_ops: set[str] = set()
         swaps = 0
@@ -250,22 +197,8 @@ def format_facility_swaps(plans: list["ShiftPlan"]) -> str:
                     prev_ops = cur
                     break
         rate = swaps / shifts_n * 100
-        b = _bar(swaps, 7, 7)
-        if swaps >= 7:
-            b = "█" * 7
-        lines.append(f"- {ft}[{ri}]: {swaps}/{shifts_n} 换班 ({rate:.0f}%)  `{b}`")
+        lines.append(f"| {ft}[{ri}] | {swaps}/{shifts_n} | {rate:.0f}% |")
 
-    overlaps = []
-    for wi in range(1, len(plans)):
-        ni = _plan_names(plans[wi])
-        nj = _plan_names(plans[wi - 1])
-        overlaps.append(len(ni & nj))
-    if overlaps:
-        avg_o = sum(overlaps) / len(overlaps)
-        lines.append("")
-        lines.append(f"- 相邻重叠: {avg_o:.1f} 人  "
-                     f"(范围 {min(overlaps)}-{max(overlaps)})")
-        lines.append(f"- 平均换人: {len(_plan_names(plans[0])) - avg_o:.1f} 人/班")
     lines.append("")
     return "\n".join(lines)
 
@@ -375,7 +308,7 @@ def _group_shift_assignments(
             continue
         parts = []
         for ri, names in groups[key]:
-            parts.append(f"{key}[{ri}]: {names}")
+            parts.append(f"{key}[{ri}]: {' '.join(names)}")
         result.append((key, parts))
     return result
 
@@ -398,6 +331,21 @@ def format_detail(
         for _label, parts in groups:
             lines.append(f"- {'  '.join(parts)}")
 
+        # 不满员警告
+        warnings = []
+        for a in plan.assignments:
+            if a.room_type in NON_WORK_FACILITIES:
+                continue
+            expected = FACILITY_SLOTS.get(a.room_type, 3)
+            actual = len(a.operators)
+            if actual < expected:
+                label = a.room_type
+                if a.room_type == "Mfg" and a.product:
+                    label = _PRODUCT_ABBR.get(a.product, a.product[:2])
+                warnings.append(f"- ⚠ {label}[{a.room_index}] 缺人: {actual}/{expected}")
+        if warnings:
+            lines.extend(warnings)
+
         if pi < len(productions):
             dp = productions[pi]
             total_exp = dp.total_records_per_day * _RECORD_EXP_PER_UNIT
@@ -413,7 +361,7 @@ def format_detail(
                 parts.append(f"赤金+{surplus:.1f}")
             else:
                 parts.append(f"赤金{surplus:.1f}")
-            lines.append(f"- >> 产出: {' | '.join(parts)} /{shift_hours:.0f}h")
+            lines.append(f"- 产出: {' | '.join(parts)} /{shift_hours:.0f}h")
 
         if pi < len(mood_reports):
             lines.append("")
@@ -448,14 +396,12 @@ def format_report(
     operators = pipe.operators
     shift_hours = params.shift_hours
 
-    overview_str, mood_reports = format_shift_overview(plans, operators, shift_hours, params=params)
+    mood_reports = _compute_chained_mood_reports(plans, operators, shift_hours, params=params)
 
     parts = [
         format_header(pipe, output_path),
         format_params(params),
-        overview_str,
-        format_overlap_matrix(plans),
-        format_facility_swaps(plans),
+        format_swaps(plans),
         format_production_table(productions, shift_hours, mood_reports),
         format_24h_summary(productions, params.shift_count * shift_hours),
     ]
@@ -476,7 +422,7 @@ def save_report_md(
 
     Args:
         pipe: 管道执行结果
-        output_path: JSON 输出路径（显示在报告末尾）
+        output_path: JSON 输出路径（显示在报告头部）
         brief: 简洁模式，跳过详细排班与产出明细
         output_dir: 输出目录，默认项目根目录下的 output/
 

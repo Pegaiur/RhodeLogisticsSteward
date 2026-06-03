@@ -12,11 +12,12 @@ from typing import TYPE_CHECKING
 from steward_core.models import LayoutConfig
 from steward_core.synergy import compute_control_global_bonus, control_per_operator_bonus, compute_control_reception_bonus
 from steward_core.synergy import _OP_PLATFORM_NAMES, compute_facility_group_bonus, operator_estimated_efficiency
-from .context import STATE_DIMS
+from .context import STATE_DIMS, mood_is_viable
 from .partials import _product_base_rate, _product_lmd_per_unit
 
 if TYPE_CHECKING:
     from steward_core.models import Operator
+    from steward_core.mood_flow import MoodContext
     from .context import SlotContext
 
 _LAYOUT_243 = LayoutConfig.layout_243()
@@ -336,12 +337,15 @@ _FACTION_NATION_MAP: dict[str, str] = {
 def _build_reception_pool(
     ctx: "SlotContext",
     window_idx: int,
+    mood_ctx: "MoodContext | None" = None,
+    mood_threshold: float = 0.0,
 ) -> list["Operator"]:
     """构建会客室候选池，含使能者（无 Reception 技能但被 pair 条件引用的干员）"""
     assigned_ids = ctx.assigned_ids(window_idx)
     pool = [op for op in ctx.operators
             if op.char_id not in assigned_ids
-            and op.has_skill_for("Reception", "General")]
+            and op.has_skill_for("Reception", "General")
+            and mood_is_viable(op.name, mood_ctx, mood_threshold)]
 
     existing = {op.name for op in pool}
     for op in pool:
@@ -350,7 +354,8 @@ def _build_reception_pool(
             if entry and entry.cond_type == "pair" and entry.target:
                 enabler = ctx.op_lookup.get(entry.target)
                 if enabler and enabler.name not in existing \
-                        and enabler.char_id not in assigned_ids:
+                        and enabler.char_id not in assigned_ids \
+                        and mood_is_viable(enabler.name, mood_ctx, mood_threshold):
                     pool.append(enabler)
                     existing.add(enabler.name)
 
@@ -371,6 +376,8 @@ def _select_reception_combo(
     ctx: "SlotContext",
     window_idx: int,
     D: dict[str, float],
+    mood_ctx: "MoodContext | None" = None,
+    mood_threshold: float = 0.0,
 ) -> list[str]:
     """枚举会客室组合 (C(N,1)+C(N,2))，取总分最高的组合
 
@@ -380,7 +387,7 @@ def _select_reception_combo(
     """
     import itertools
 
-    pool = _build_reception_pool(ctx, window_idx)
+    pool = _build_reception_pool(ctx, window_idx, mood_ctx, mood_threshold)
     if not pool:
         return []
 

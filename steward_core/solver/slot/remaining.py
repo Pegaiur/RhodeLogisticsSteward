@@ -62,7 +62,9 @@ def phase_remaining(
         if facility_type == "Reception" and filled == 0:
             from .contribution import _select_reception_combo
 
-            combo = _select_reception_combo(ctx, window_idx, D)
+            combo = _select_reception_combo(ctx, window_idx, D,
+                                              mood_ctx=mood_ctx,
+                                              mood_threshold=mood_threshold)
             for name in combo:
                 room_idx = _find_room_with_space(
                     ctx, window_idx, facility_type, room_count,
