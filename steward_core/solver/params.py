@@ -87,10 +87,6 @@ class SolverParams:
     combo_upper_bound_threshold: float = 0.95
     """穷举上界预判阈值（规则 3：总效率 ≥ best_known × threshold）"""
 
-    # === 局部搜索 ===
-    local_search_max_rounds: int = 3
-    """局部搜索最大轮次"""
-
     # === 槽位迭代 ===
     slot_max_rounds: int = 5
     """槽位迭代最大轮次"""
@@ -174,8 +170,6 @@ class SolverParams:
             errors.append("base_power_count 必须在 [1, 5] 范围内")
         if self.combo_upper_bound_threshold < 0 or self.combo_upper_bound_threshold > 1:
             errors.append("combo_upper_bound_threshold 必须在 [0, 1] 区间")
-        if self.local_search_max_rounds < 1:
-            errors.append("local_search_max_rounds 必须 >= 1")
         if self.slot_max_rounds < 1:
             errors.append("slot_max_rounds 必须 >= 1")
         if self.rotation_penalty_weight < 0:
@@ -210,7 +204,6 @@ class SolverParams:
         solver_parts = [f"槽位迭代 <= {self.slot_max_rounds}轮"]
         if self.slot_cold_start:
             solver_parts.append("冷启动=是")
-        solver_parts.append(f"局部搜索 <= {self.local_search_max_rounds}轮")
         solver_parts.append(f"剪枝阈值 {self.combo_upper_bound_threshold:.2f}")
         lines.append(f"  求解: {', '.join(solver_parts)}")
 

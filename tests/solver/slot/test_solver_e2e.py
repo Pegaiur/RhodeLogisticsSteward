@@ -84,7 +84,7 @@ class TestSolveSlotSingleWindow:
         assert len(result.plans) >= 1
 
     def test_single_window_no_refine_crash(self):
-        """单窗口 → 执行 local_search_refine 后处理"""
+        """单窗口 → 求解不崩溃"""
         ops = _make_minimal_ops()
         params = SolverParams(shift_count=1, shift_hours=12)
         result = solve_slot(ops, params)

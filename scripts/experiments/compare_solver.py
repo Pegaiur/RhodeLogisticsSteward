@@ -12,24 +12,23 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent))
 from steward_core.data_loader import load_operators_v2
 from steward_core.solver import solve_mvp
 from steward_core.solver.config import SolverConfig
-from steward_core.solver.refine import evaluate_full_plan
 from steward_core.solver.params import SolverParams
 from steward_core.solver.strategies import KBeamStrategy
 from steward_core import production
+from steward_core.production import _RECORD_EXP_PER_UNIT
 
 
 def run_and_score(operators, config, label):
     """运行求解器并计算全量效率积分 + 产出"""
     result = solve_mvp(operators, config=config)
     plan = result.plans[0]
-    score = evaluate_full_plan(plan, operators, config.params)
     dp = production.calculate(
         plan, operators, hours=config.params.shift_hours,
         external_gold_per_day=config.params.daily_task_lmd / 500.0,
     )
     return {
         "label": label,
-        "score": score,
+        "score": dp.effective_lmd_per_day + dp.total_records_per_day * _RECORD_EXP_PER_UNIT,
         "autofill": result.autofill_count,
         "total_exp": dp.total_records_per_day * 1000,
         "total_lmd": dp.effective_lmd_per_day,
@@ -63,15 +62,7 @@ def main():
         (SolverConfig.baseline(), "baseline (全部关闭)"),
         (SolverConfig(exclusive_support_check=True),
          "独占冲突检查 (exclusive_support_check)"),
-        (SolverConfig(local_search_enabled=True),
-         "局部搜索 (local_search_enabled)"),
-        (SolverConfig(global_state_scoring=True),
-         "全局状态评分 (global_state_scoring)"),
-        (SolverConfig(
-            exclusive_support_check=True,
-            local_search_enabled=True,
-         ), "独占检查 + 局部搜索"),
-        (SolverConfig.all_on(), "all_on (三项全开)"),
+        (SolverConfig.all_on(), "all_on (全部开关)"),
         (SolverConfig(strategy=KBeamStrategy(beam_width=3)), "K-Beam K=3"),
         (SolverConfig(strategy=KBeamStrategy(beam_width=5)), "K-Beam K=5"),
     ]

@@ -1,4 +1,4 @@
-﻿# AGENTS.md
+# AGENTS.md
 
 ## 项目概述
 
@@ -70,7 +70,6 @@ RhodeLogisticsSteward/
 │   │   ├── fill_remaining.py     #   ─ 剩余设施贪心（Power/Reception/Office）
 │   │   ├── fill_dorm.py          #   ─ 宿舍填充 + 多班次恢复调度
 │   │   ├── global_state.py       #   ─ 包级稀缺度评分注入（Step 3 全局状态注入）
-│   │   ├── refine.py             #   ─ 局部搜索后处理（单房间替换 + 干员交换）
 │   │   ├── support.py            #   ─ 支撑干员计算
 │   │   ├── greed.py              #   ─ 贪心分配/组合评估/条件验证
 │   │   └── strategies/           #   ─ 策略实现子包
@@ -161,7 +160,7 @@ RhodeLogisticsSteward/
 2. **读取 `docs/slot-processing-model.md`** → 理解当前策略与算法骨架
 3. **按需深入到子包**：
    - 联动体系逻辑 → `steward_core/synergy/`：先读 `__init__.py` 了解公开 API，再按需进入对应模块（A层→`mfg_linkages`/`trade_linkages`/`facility_linkages`，B层→`buff_pool`/`global_linkages`，C层→`control_linkages`/`mood`）
-   - 求解/排班逻辑 → `steward_core/solver/`：先读 `__init__.py` 的 `solve_mvp()` / `solve_multi_shift()`（委托给 Strategy），再按需进入 `strategy.py`（Strategy ABC + PartialSolution）、`strategies/baseline.py`（Pipeline 流水线编排）、各 `exhaust_*/fill_*` 模块（具体阶段）、`refine.py`（局部搜索）、`global_state.py`（全局状态评分）
+   - 求解/排班逻辑 → `steward_core/solver/`：先读 `__init__.py` 的 `solve_mvp()` / `solve_multi_shift()`（委托给 Strategy），再按需进入 `strategy.py`（Strategy ABC + PartialSolution）、`strategies/baseline.py`（Pipeline 流水线编排）、各 `exhaust_*/fill_*` 模块（具体阶段）、`global_state.py`（全局状态评分）
    - 心情建模 → `steward_core/mood_flow.py`（MoodContext + MoodModifiers） + `steward_core/dorm_recovery.py`（宿舍恢复评估）
    - 数据模型/常量 → `steward_core/models.py` / `constants.py`
    - 表维护/新增 → `synergy/types.py` TABLES 注册器 + `synergy/registry.py` 系统贡献者 + AGENTS.md §人工维护数据

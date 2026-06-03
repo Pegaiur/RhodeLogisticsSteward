@@ -20,7 +20,6 @@ class TestSolverParamsDefaults:
         assert p.dorm_max_operators == 20
         assert p.suich_count == 5
         assert p.combo_upper_bound_threshold == 0.95
-        assert p.local_search_max_rounds == 3
 
     def test_baseline_等价于默认构造(self):
         """baseline() 返回默认参数"""
@@ -90,11 +89,6 @@ class TestSolverParamsValidation:
         """combo_upper_bound_threshold > 1 → 校验失败"""
         errors = SolverParams(combo_upper_bound_threshold=1.5).validate()
         assert any("combo_upper_bound_threshold" in e for e in errors)
-
-    def test_搜索轮次为零_报错(self):
-        """local_search_max_rounds < 1 → 校验失败"""
-        errors = SolverParams(local_search_max_rounds=0).validate()
-        assert any("local_search_max_rounds" in e for e in errors)
 
     def test_宿舍容量小于单间_报错(self):
         """dorm_max_operators < dorm_room_size → 校验失败"""

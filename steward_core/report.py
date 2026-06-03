@@ -69,7 +69,6 @@ def format_params(params: "SolverParams") -> str:
     solver_parts = [f"槽位迭代 ≤{params.slot_max_rounds}轮"]
     if params.slot_cold_start:
         solver_parts.append("冷启动=是")
-    solver_parts.append(f"局部搜索 ≤{params.local_search_max_rounds}轮")
     solver_parts.append(f"剪枝阈值 {params.combo_upper_bound_threshold:.2f}")
     lines.append(f"- **求解**: {', '.join(solver_parts)}")
     lines.append("")

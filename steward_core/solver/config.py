@@ -31,9 +31,6 @@ class SolverConfig:
     # Step 1b: 独占支撑冲突检查 — 仅检查独占支撑（Trade/Office），共享支撑不冲突
     exclusive_support_check: bool = False
 
-    # Step 2: 局部搜索后处理
-    local_search_enabled: bool = False
-
     # 心情上下文（框架层注入）
     mood_ctx: "MoodContext | None" = None
     """多班次心情上下文，通过 Config 传递到 Phase 层，避免修改 Strategy 签名"""
@@ -51,7 +48,6 @@ class SolverConfig:
         """全开配置：启用所有可选功能"""
         return cls(
             exclusive_support_check=True,
-            local_search_enabled=True,
         )
 
     @classmethod

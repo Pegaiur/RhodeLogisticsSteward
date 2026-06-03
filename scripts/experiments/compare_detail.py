@@ -1,4 +1,8 @@
-"""局部搜索优化详情：对比 baseline vs 局部搜索的每个房间变化"""
+"""策略 A/B 对比：基线 vs 默认配置的排班差异
+
+注：refine.py 已移除，当前 baseline() 与默认 SolverConfig() 等价。
+    保留脚本供后续新增配置项时恢复对比。
+"""
 
 from pathlib import Path
 
@@ -21,7 +25,7 @@ def main():
     all_ops = load_operators_v2(ci_path, bi_path)
 
     bl = solve_mvp(all_ops, config=SolverConfig.baseline())
-    ls = solve_mvp(all_ops, config=SolverConfig(local_search_enabled=True))
+    ls = solve_mvp(all_ops, config=SolverConfig())
 
     bl_plan = bl.plans[0]
     ls_plan = ls.plans[0]
@@ -35,7 +39,7 @@ def main():
         ls_map[(a.room_type, a.room_index)] = a
 
     print("=" * 70)
-    print("基线 (baseline)  →  局部搜索后 (local_search)")
+    print("baseline  →  default")
     print("=" * 70)
 
     for key in bl_map:

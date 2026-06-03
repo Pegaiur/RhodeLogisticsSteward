@@ -13,7 +13,6 @@ class TestSolverConfigDefaults:
         config = SolverConfig()
 
         assert config.exclusive_support_check is False
-        assert config.local_search_enabled is False
 
     def test_baseline预设_等价于默认构造(self):
         """baseline() 返回全部关闭的配置"""
@@ -23,7 +22,6 @@ class TestSolverConfigDefaults:
         default = SolverConfig()
 
         assert baseline.exclusive_support_check == default.exclusive_support_check
-        assert baseline.local_search_enabled == default.local_search_enabled
 
     def test_all_on预设_全部功能启用(self):
         """all_on() 启用所有可选功能"""
@@ -32,7 +30,6 @@ class TestSolverConfigDefaults:
         config = SolverConfig.all_on()
 
         assert config.exclusive_support_check is True
-        assert config.local_search_enabled is True
 
     def test_自定义构造_混合开关(self):
         """可以单独开启任意功能"""
@@ -40,11 +37,9 @@ class TestSolverConfigDefaults:
 
         config = SolverConfig(
             exclusive_support_check=True,
-            local_search_enabled=False,
         )
 
         assert config.exclusive_support_check is True
-        assert config.local_search_enabled is False
 
 
 class TestSolverConfigDiff:
@@ -71,15 +66,15 @@ class TestSolverConfigDiff:
         assert len(diffs) == 1
         assert "exclusive_support_check" in diffs[0]
 
-    def test_diff_全部不同_列出两个布尔开关差异(self):
-        """all_on vs baseline 应列出 2 个 boolean 开关字段差异"""
+    def test_diff_全部不同_列出布尔开关差异(self):
+        """all_on vs baseline 应列出 boolean 开关字段差异"""
         from steward_core.solver.config import SolverConfig
 
         a = SolverConfig.baseline()
         b = SolverConfig.all_on()
 
         diffs = a.diff(b)
-        bool_diff_fields = {"exclusive_support_check", "local_search_enabled"}
+        bool_diff_fields = {"exclusive_support_check"}
         actual = {d.split(":")[0] for d in diffs}
         assert bool_diff_fields.issubset(actual)
 

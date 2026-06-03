@@ -1,7 +1,7 @@
 """全局上下文构造器
 
 统一 buff_pool、global_bonus、effective_power 的构建逻辑，
-消除 support.py / exhaust_trade.py / refine.py / production.py 中的重复实现。
+消除 support.py / exhaust_trade.py / production.py 中的重复实现。
 """
 
 from __future__ import annotations
@@ -116,7 +116,7 @@ class GlobalContext:
         params: "SolverParams",
         mood_ctx: "MoodContext | None" = None,
     ) -> "GlobalContext":
-        """从已完成的排班方案构建上下文（refine/production 评估用）
+        """从已完成的排班方案构建上下文（production 评估用）
 
         从实际 assignment 中提取控制中枢、宿舍、以及 buff 生成者是否在
         工作设施中的布尔状态。

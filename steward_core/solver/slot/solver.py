@@ -11,7 +11,6 @@ from typing import TYPE_CHECKING
 from steward_core.constants import FACILITY_SLOTS, NON_WORK_FACILITIES
 from steward_core.models import LayoutConfig, SolveResult
 from steward_core.solver.config import SolverConfig
-from steward_core.solver.refine import local_search_refine
 from steward_core.solver.slot.context import SlotContext
 from steward_core.solver.slot.mfg import phase_mfg
 from steward_core.solver.slot.trade import phase_trade
@@ -128,11 +127,6 @@ def solve_slot(
         best_ctx = ctx
 
     result = _ctx_to_multi_result(best_ctx, operators, params)
-    if num_windows > 1:
-        return result
-
-    config = SolverConfig(params=params)
-    result = local_search_refine(result, operators, config)
     return result
 
 
