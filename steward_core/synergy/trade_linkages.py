@@ -73,6 +73,7 @@ _ORDER_LIMIT_TABLE: dict[str, OrderLimitEntry] = {
     "trade_ord_spd&limit[001]":    OrderLimitEntry("订单管理·β", 4),
     "trade_ord_spd&limit[010]":    OrderLimitEntry("供应管理", 1),
     "trade_ord_spd&limit[020]":    OrderLimitEntry("喀兰贸易·α", 2),
+    "trade_ord_spd&limit[021]":    OrderLimitEntry("喀兰贸易·β", 4),
     "trade_ord_spd&limit[022]":    OrderLimitEntry("喀兰之主", 4),
     "trade_ord_spd&limit[036]":    OrderLimitEntry("半身人公会代表", 1),
     "trade_ord_limit&cost_P[020]": OrderLimitEntry("未偿还的债务", 2, requires="伺夜"),
@@ -230,7 +231,7 @@ def synergy_jie_order(
         if control_operators:
             ctrl_names = {op.name for op in control_operators}
             if "灵知" in ctrl_names:
-                karlan_count = sum(1 for op in operators if op.group_id == "karlan")
+                karlan_count = sum(1 for op in operators if op.has_group("karlan"))
                 order_limit += karlan_count * 6
 
     ceiling = order_limit * 4.0
@@ -341,7 +342,7 @@ def compute_trade_order_limit(
                 bonus = entry.bonus_e2 if e2_count > 0 else entry.bonus_e0
                 ctx.add(f"{ctrl_name}->{entry.target_name}", bonus)
         if "灵知" in ctrl_names:
-            count = sum(1 for op in operators if op.group_id == "karlan")
+            count = sum(1 for op in operators if op.has_group("karlan"))
             if count > 0:
                 ctx.add("灵知·喀兰贸易", count * 6)
 

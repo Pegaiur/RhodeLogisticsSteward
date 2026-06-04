@@ -102,6 +102,10 @@ def load_operators_v2(
         nation_id = char_data.get("nationId") or None
         group_id = char_data.get("groupId") or None
         team_id = char_data.get("teamId") or None
+        sub_group_ids = frozenset(
+            sp.get("groupId") for sp in char_data.get("subPower", [])
+            if sp.get("groupId")
+        )
 
         if rarity <= 1:
             elite_phase = 0
@@ -118,6 +122,7 @@ def load_operators_v2(
             group_id=group_id,
             nation_id=nation_id,
             team_id=team_id,
+            sub_group_ids=sub_group_ids,
         )
 
         for sk_data in char_data.get("skills", []):

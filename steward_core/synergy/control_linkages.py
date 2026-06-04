@@ -360,7 +360,7 @@ def _eval_per_op(e: ControlPerOpEntry, room_ops: list["Operator"]) -> float:
     if e.scope == "per_op":
         count = 0
         if e.condition_field == "group_id":
-            count = sum(1 for op in room_ops if op.group_id == e.condition_value)
+            count = sum(1 for op in room_ops if op.has_group(e.condition_value))
         elif e.condition_field == "nation_id":
             count = sum(1 for op in room_ops if op.nation_id == e.condition_value)
         elif e.condition_field == "is_knight":
@@ -371,7 +371,7 @@ def _eval_per_op(e: ControlPerOpEntry, room_ops: list["Operator"]) -> float:
     elif e.scope == "per_room":
         if e.condition_field == "count_ge":
             required = int(e.condition_value)
-            karlan_count = sum(1 for op in room_ops if op.group_id == "karlan")
+            karlan_count = sum(1 for op in room_ops if op.has_group("karlan"))
             if karlan_count >= required:
                 return e.bonus_per
         return 0.0

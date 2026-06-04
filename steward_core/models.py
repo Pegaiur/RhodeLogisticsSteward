@@ -97,6 +97,7 @@ class Operator:
     rarity 预留，后续 Step 4 练度过滤时可能需要
     skills 为该干员的所有基建技能（已解析效率值）
     group_id/nation_id/team_id 用于体系联动判定（阵营/势力/队伍）
+    sub_group_ids 来自 character_identity.json subPower[].groupId，用于附属阵营判定
     """
     char_id: str
     name: str
@@ -106,6 +107,11 @@ class Operator:
     group_id: Optional[str] = None
     nation_id: Optional[str] = None
     team_id: Optional[str] = None
+    sub_group_ids: frozenset[str] = field(default_factory=frozenset)
+
+    def has_group(self, group_id: str) -> bool:
+        """检查干员是否属于指定阵营（含主 group_id 和 subPower 附属 group）"""
+        return self.group_id == group_id or group_id in self.sub_group_ids
 
     def has_skill_for(self, room_type: str, product: Optional[str] = None) -> bool:
         """检查该干员是否有适用于指定设施和产物的技能"""

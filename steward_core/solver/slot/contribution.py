@@ -309,7 +309,7 @@ def _indirect_trade_contribution(
 
         karlan_count = sum(
             1 for n in room_names
-            if (t_op := ctx.op_lookup.get(n)) and t_op.group_id == "karlan"
+            if (t_op := ctx.op_lookup.get(n)) and t_op.has_group("karlan")
         )
         if karlan_count == 0:
             continue
