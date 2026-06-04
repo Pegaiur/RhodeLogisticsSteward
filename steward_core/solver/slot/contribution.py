@@ -277,27 +277,22 @@ def _indirect_trade_contribution(
 
     灵知→孑+卡兰贸易：每名卡兰 Trade 干员 +6 订单上限 → 孑 +24% 效率
     仅在 孑 实际分配至 Trade 时生效（Phase C 已确定 Trade 分配）。
+    冷启动阶段 Trade 未分配时返回 0。
     """
     if op.name != "灵知":
         return 0.0
 
     trade_names = ctx.ops_of_type(window_idx, "Trade")
     if not trade_names:
-        # 冷启动：Trade 未分配，孑在干员池中 → 保守假设孑可能入 Trade
-        if "孑" not in ctx.op_lookup:
-            return 0.0
-        karlan_count = sum(
-            1 for o in ctx.operators
-            if o.group_id == "karlan" and o.has_skill_for("Trade")
-        )
-    else:
-        # Phase C：Trade 已分配，仅在孑确实在 Trade 时才计入
-        if "孑" not in trade_names:
-            return 0.0
-        karlan_count = sum(
-            1 for n in trade_names
-            if (t_op := ctx.op_lookup.get(n)) and t_op.group_id == "karlan"
-        )
+        return 0.0
+
+    if "孑" not in trade_names:
+        return 0.0
+
+    karlan_count = sum(
+        1 for n in trade_names
+        if (t_op := ctx.op_lookup.get(n)) and t_op.group_id == "karlan"
+    )
 
     if karlan_count > 0:
         hours = ctx.params.shift_hours if ctx.params else 12.0
