@@ -246,13 +246,7 @@ def format_24h_summary(productions: list["DailyProduction"], total_hours: float)
     sum_gold = sum(p.total_gold_produced_per_day for p in productions) * _GOLD_LMD_PER_UNIT * scale
     sum_lmd = sum(p.total_lmd_per_day for p in productions) * scale
     sum_eff_lmd = sum(p.effective_lmd_per_day for p in productions) * scale
-    sum_gold_consumed = (
-        sum(p.total_gold_consumed_per_day for p in productions) * _GOLD_LMD_PER_UNIT * scale
-    )
-    surplus_gold = (
-        sum(p.total_gold_produced_per_day for p in productions) * scale
-        - sum_gold_consumed / _GOLD_LMD_PER_UNIT
-    )
+    surplus_gold = sum(p.gold_surplus for p in productions) * scale
     surplus_lmd = surplus_gold * _GOLD_LMD_PER_UNIT
 
     lines = [

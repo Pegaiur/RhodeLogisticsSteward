@@ -58,17 +58,14 @@ def run(
 
     productions = []
     t_prod_start = time.perf_counter()
-    for pi, plan in enumerate(solve_result.plans):
-        t_plan = time.perf_counter()
+    for plan in solve_result.plans:
         dp = production.calculate(
             plan, operators,
             hours=params.shift_hours,
             external_gold_per_day=external_gold_per_day,
             mood_ctx=mood_ctx,
         )
-        elapsed = time.perf_counter() - t_plan
         productions.append(dp)
-        print(f"  [计时] production.calculate W{pi}: {elapsed:.3f}s")
     t_prod = time.perf_counter() - t_prod_start
 
     t_total = time.perf_counter() - t0
