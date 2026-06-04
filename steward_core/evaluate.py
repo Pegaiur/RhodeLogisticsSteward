@@ -234,14 +234,14 @@ def evaluate_room(
         operators, room_type, product, layout, T=T,
     ), T)
 
-    total += integrate_segments(synergy_trade_pair(operators, room_type, T), T)
-    total += integrate_segments(synergy_trade_share(operators, room_type, T), T)
+    total += integrate_segments(synergy_trade_pair(non_zero_ops, room_type, T), T)
+    total += integrate_segments(synergy_trade_share(non_zero_ops, room_type, T), T)
     if order_ctx is not None:
         total += integrate_segments(
-            synergy_swires_order_limit(operators, room_type, order_ctx, T), T,
+            synergy_swires_order_limit(non_zero_ops, room_type, order_ctx, T), T,
         )
         total += integrate_segments(
-            synergy_degenbrecher_order_limit(operators, room_type, order_ctx, T), T,
+            synergy_degenbrecher_order_limit(non_zero_ops, room_type, order_ctx, T), T,
         )
 
     # ── 四、归零加成自身效率段 ──
