@@ -266,7 +266,7 @@ def evaluate_room(
     # 因为 total/T 是所有前置效率的平均值。
     if room_type == "Trade":
         total += integrate_segments(
-            synergy_trade_efficiency_amplifier(operators, room_type, total / T, T), T,
+            synergy_trade_efficiency_amplifier(non_zero_ops, room_type, total / T, T), T,
         )
 
     total += integrate_segments(synergy_token_prod(operators, room_type, product, power_platforms, T), T)
