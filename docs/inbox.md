@@ -34,3 +34,5 @@
 
 [x] ~~**心情恢复型中枢干员的 contribution 为零**~~ — 已基本解决。`_compute_recovery_value` + `_recovery_marginal` 纳入中枢心情恢复贡献（commit 3c1330d/159f278)。玛恩纳入选中枢并通过 report 验证。control_mp_cost 技能也已建表精确计数（commit e859473）。剩余问题：recovery 贡献在多班次续航建模前使用阻尼系数 0.25 临时抑制（见下方待办）。 — 2026-06-03 关闭
 [ ] **心情恢复贡献续航校准** — 当前 recovery 用 _compute_recovery_value 估算，乘 `params.recovery_damping=0.25` 临时抑制偏高估值。恢复的实际价值在多班次场景体现（续航+1窗口的等效 LMD），单班次无心情压力时 recovery 应接近 0。需建立 `burn × hours` 预期模型替代 damping 魔法常数。路由到 `contribution.py:_compute_recovery_value` + `params.py:recovery_damping`。 — 2026-06-03 — `contribution.py` + `mood_flow.py` + `params.py`
+
+[ ] **订单上限压缩估计反馈回路** — `compute_trade_order_limit` 用 `operator_estimated_efficiency` 计算孑压缩的 other_eff，该函数只返回独立效率不含 room 级联动（swires/jie/degenbrecher 等订单上限消费者）。当 combo 含多个消费者时，实际 other_eff 远大于估计值，导致压缩不足 → order_limit 高估 → 孑/诗怀雅/锏效率高估。实测 "银灰+孑+诗怀雅(灵知)" 估值 153% vs 实际 ~121%（偏差 32pp），"德+孑+拉" 估值 130% vs 实际 110%（偏差 20pp）。消费者越多偏差越大。需在压缩估计中引入不动点迭代或至少将已知消费者的联动效率纳入 other_eff。 — 2026-06-04 — `trade_linkages.py:compute_trade_order_limit` + `ramping.py:operator_estimated_efficiency`
