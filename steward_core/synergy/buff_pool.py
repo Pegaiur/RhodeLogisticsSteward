@@ -46,7 +46,6 @@ def _derive_pool(pool: BuffPool) -> None:
 
 def compute_buff_pool(
     control_operators: list[Operator],
-    suich_count: int = 5,
     dorm_operators: list[Operator] | None = None,
     dorm_level: int = 5,
     mfg_operators: list[Operator] | None = None,
@@ -72,6 +71,8 @@ def compute_buff_pool(
     silent_resonance = 0
 
     dorm_count = len(dorm_operators)
+    # 岁阵营计数：从 control_operators 实际统计（替代原先硬编码 suich_count=5）
+    sui_count = sum(1 for op in control_operators if op.has_group("sui"))
 
     _office_bases = {
         "perception": office_perception_base,
@@ -96,7 +97,7 @@ def compute_buff_pool(
             continue
 
         office_base = _office_bases.get(e.dimension, 0)
-        amount = _eval_producer_amount(e, dorm_count, dorm_level, suich_count,
+        amount = _eval_producer_amount(e, dorm_count, dorm_level, sui_count,
                                        office_base, perception)
         if amount <= 0:
             continue
@@ -127,7 +128,7 @@ def compute_buff_pool(
             silent_resonance += perception
         else:
             office_base = _office_bases.get(e.dimension, 0)
-            amount = _eval_producer_amount(e, dorm_count, dorm_level, suich_count,
+            amount = _eval_producer_amount(e, dorm_count, dorm_level, sui_count,
                                            office_base, perception)
             silent_resonance += amount
 
@@ -210,7 +211,7 @@ def _eval_producer_amount(
     e: BuffProducerEffect,
     dorm_count: int,
     dorm_level: int,
-    suich_count: int,
+    sui_count: int,
     office_base: int,
     perception: int,
 ) -> int:
@@ -224,7 +225,7 @@ def _eval_producer_amount(
         val = int(dorm_level * e.amount_scale)
         return min(val, e.amount_cap) if e.amount_cap > 0 else val
     if e.amount_source == "suich_scaled":
-        val = int(min(suich_count, e.amount_cap) * e.amount_scale)
+        val = int(min(sui_count, e.amount_cap) * e.amount_scale)
         return val
     if e.amount_source == "office_base":
         return office_base

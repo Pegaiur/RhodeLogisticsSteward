@@ -7,6 +7,7 @@
 from __future__ import annotations
 
 import itertools
+import time
 from typing import TYPE_CHECKING
 
 from steward_core.constants import BASE_POWER_COUNT, MFG_CR_BASE_RATE, MFG_PG_BASE_RATE, CR_EXP_PER_UNIT, PG_LMD_PER_UNIT, XP_LMD_RATIO
@@ -45,6 +46,10 @@ _LAMBDA_EFF_SCALE = {
 }
 """机会成本从 LMD 到效率积分域的换算系数（原用于 lambda 惩罚，现仅用于机会成本）"""
 
+# ─── Mfg 内部计时 ──────────────────────────────────────────────
+
+_MFG_TIMINGS: dict[str, float] = {}
+
 
 def phase_mfg(
     ctx: "SlotContext",
@@ -76,6 +81,7 @@ def phase_mfg(
             power_modifier_names - assigned_names
         )
 
+        t0 = time.perf_counter()
         mfg_ops = [
             op for op in ctx.operators
             if op.char_id not in assigned_ids
@@ -116,9 +122,11 @@ def phase_mfg(
                     pool.append(op)
 
         combos = [list(c) for c in itertools.combinations(pool, min(3, len(pool)))]
+        _MFG_TIMINGS["mfg.pool_build"] = _MFG_TIMINGS.get("mfg.pool_build", 0.0) + (time.perf_counter() - t0)
         if not combos:
             continue
 
+        t0 = time.perf_counter()
         global_bonus = compute_control_global_bonus(ctrl_ops)
 
         dorm_names = ctx.ops_of_type(window_idx, "Dormitory")
@@ -140,12 +148,17 @@ def phase_mfg(
             existing_ops = ctx.room_ops(window_idx, "Mfg", ri)
             if existing_ops:
                 all_mfg_snapshot[ri] = list(existing_ops)
+        _MFG_TIMINGS["mfg.setup"] = _MFG_TIMINGS.get("mfg.setup", 0.0) + (time.perf_counter() - t0)
 
         evaluated = []
+        t_bp = 0.0
+        t_er = 0.0
+        t_opp = 0.0
+        t_co = 0.0
         for combo_ops in combos:
+            t0 = time.perf_counter()
             combo_pool = compute_buff_pool(
                 ctrl_ops,
-                suich_count=params.suich_count if params else 5,
                 dorm_operators=[o for o in dorm_ops_list if o],
                 dorm_level=params.dorm_level if params else 5,
                 layout=ctx.layout if ctx.layout else _LAYOUT_243,
@@ -153,7 +166,9 @@ def phase_mfg(
                 office_operators=office_ops,
                 office_perception_base=params.office_perception_base if params else 20,
             )
+            t_bp += time.perf_counter() - t0
 
+            t0 = time.perf_counter()
             ctrl_bonus = control_per_operator_bonus(
                 ctrl_ops, combo_ops, product, room_type="Mfg",
             )
@@ -165,6 +180,8 @@ def phase_mfg(
                 ch_bonus = _compute_ch_bonus(
                     ctrl_ops, tentative, ctx.op_lookup, mfg_room_indices[0],
                 )
+
+            t0 = time.perf_counter()
             score = evaluate_room(
                 combo_ops, "Mfg", product, effective_power,
                 shift_hours, global_bonus, combo_pool,
@@ -175,11 +192,15 @@ def phase_mfg(
                 all_assignments=ctx.build_all_assignments(window_idx),
                 mood_ctx=mood_ctx,
             )
+            t_er += time.perf_counter() - t0
+
             combo_names = [op.name for op in combo_ops]
+            t0 = time.perf_counter()
             # LMD 往返对消：opportunity.py LMD ÷ _LAMBDA_EFF_SCALE = cost_pct × shift_hours
             score -= compute_opportunity_cost_lmd(
                 combo_ops, "Mfg", product, shift_hours,
             ) / _LAMBDA_EFF_SCALE.get(product, 2.5)
+            t_opp += time.perf_counter() - t0
 
             evaluated.append((score, combo_names))
 
@@ -187,7 +208,14 @@ def phase_mfg(
                 eff_pct = max((sk.efficient.raw.get("all", 0) for sk in combo_op.skills), default=0.0)
                 if eff_pct > 0:
                     ctx.op_peak_eff[combo_op.name] = max(ctx.op_peak_eff.get(combo_op.name, 0.0), eff_pct)
+            t_co += time.perf_counter() - t0
 
+        _MFG_TIMINGS["mfg.buff_pool"] = _MFG_TIMINGS.get("mfg.buff_pool", 0.0) + t_bp
+        _MFG_TIMINGS["mfg.evaluate_room"] = _MFG_TIMINGS.get("mfg.evaluate_room", 0.0) + t_er
+        _MFG_TIMINGS["mfg.opportunity"] = _MFG_TIMINGS.get("mfg.opportunity", 0.0) + t_opp
+        _MFG_TIMINGS["mfg.combo_other"] = _MFG_TIMINGS.get("mfg.combo_other", 0.0) + t_co
+
+        t0 = time.perf_counter()
         evaluated.sort(key=lambda x: -x[0])
 
         allocated_rooms = 0
@@ -210,3 +238,4 @@ def phase_mfg(
             )
             assigned_names.update(names)
             allocated_rooms += 1
+        _MFG_TIMINGS["mfg.allocate"] = _MFG_TIMINGS.get("mfg.allocate", 0.0) + (time.perf_counter() - t0)

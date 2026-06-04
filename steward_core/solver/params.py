@@ -64,7 +64,7 @@ class SolverParams:
     mood_work_threshold: float = 1.0
     """可参与工作的最低心情值（低于此值不可用）。默认 1.0 确保至少留 1 小时缓冲"""
 
-    recovery_damping: float = 0
+    recovery_damping: float = 0.01
     """中枢心情恢复贡献阻尼系数（0~1）。用于抑制 recovery 贡献估值偏高。
     待多班次续航建模后校准为精确值。"""
 
@@ -75,8 +75,6 @@ class SolverParams:
     """是否启用菲亚梅塔心情交换（交换决策算法待实现）"""
 
     # === Buff 池 ===
-    suich_count: int = 5
-    """岁阵营默认计数（重岳烟火生成用）"""
     office_perception_base: int = 20
     """絮雨办公室感知信息基础值（243 Lv3: 2额外招募位 × 10）"""
 

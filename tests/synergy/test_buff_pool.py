@@ -34,7 +34,7 @@ def _mk_xi() -> Operator:
     return _mk_op("夕", [
         _mk_skill("control_mp_cost&bd1[000]", "Control", "不以物喜"),
         _mk_skill("control_mp_cost&bd2[000]", "Control", "不以己悲"),
-    ])
+    ], group_id="sui")
 
 
 def _mk_sangshen() -> Operator:
@@ -52,13 +52,13 @@ def _mk_shenlv() -> Operator:
 def _mk_ling() -> Operator:
     return _mk_op("令", [
         _mk_skill("control_costToBD[000]", "Control", "山河远阔"),
-    ])
+    ], group_id="sui")
 
 
 def _mk_chongyue() -> Operator:
     return _mk_op("重岳", [
         _mk_skill("control_mp_cost&bd_up[000]", "Control", "知我为我"),
-    ])
+    ], group_id="sui")
 
 
 def _mk_suxin() -> Operator:
@@ -121,12 +121,12 @@ class TestBLayer:
         from steward_core.synergy import compute_buff_pool
 
         control = [_mk_ling(), _mk_chongyue(), _mk_xi()]
-        pool = compute_buff_pool(control, suich_count=5)
+        pool = compute_buff_pool(control)
 
-        assert pool.yanhuo == 40
+        assert pool.yanhuo == 30  # 令(15)+重岳3岁(15), 夕mood≥12→感知
         assert pool.perception == 10
         assert pool.thought_chains == 10  # 1:1
-        assert pool.wushu_crystal == 8   # 40//5
+        assert pool.wushu_crystal == 6   # 30//5
 
     def test_c2_global_burn_固定中枢(self):
         """C2: 3人工位 burn = base(0.90) - recovery(0.05+0.15) - spread(0) < 0.75"""
@@ -135,7 +135,7 @@ class TestBLayer:
         # 杜宾持有 control_mp_cost[000] → +0.05 control_recovery
         dubin = _mk_op("杜宾", [_mk_skill("control_mp_cost[000]", "Control", "左膀右臂")])
         control = [_mk_ling(), _mk_chongyue(), _mk_xi(), _mk_op("凯尔希"), dubin]
-        buff_pool = compute_buff_pool(control, suich_count=5)
+        buff_pool = compute_buff_pool(control)
         burn = compute_global_burn(control, buff_pool, worker_count=3)
 
         assert burn < 0.75  # 中枢减免生效（1人=0.05）
@@ -148,13 +148,13 @@ class TestBuffPool:
     """B1: compute_buff_pool + synergy_buff_pool_consumer"""
 
     def test_固定中枢_产生烟火(self):
-        """令+重岳+夕+凯尔希+焰尾 → 烟火=15(令)+25(重岳5岁)=40"""
+        """令+重岳+夕+凯尔希+焰尾 → 烟火=15(令)+15(重岳3岁)=30, 夕mood≥12→感知"""
         from steward_core.synergy import compute_buff_pool
 
         control = [_mk_ling(), _mk_chongyue(), _mk_xi(), _mk_op("凯尔希"), _mk_op("焰尾")]
-        pool = compute_buff_pool(control, suich_count=5)
+        pool = compute_buff_pool(control)
 
-        assert pool.yanhuo == 40
+        assert pool.yanhuo == 30  # 令(15)+重岳3岁(15), 夕mood≥12→感知
         assert pool.perception == 10  # 夕 mood>12
 
     def test_empty_control(self):
@@ -523,12 +523,12 @@ class TestB1OfficeTradeGeneration:
         dorm = [_mk_op(f"填位{i}") for i in range(20)]
 
         pool = compute_buff_pool(
-            control, suich_count=5, dorm_operators=dorm,
+            control, dorm_operators=dorm,
             trade_operators=[_mk_op("乌有", [_mk_skill("trade_ord_spd_bd_n2[000]", "TRADING", "愿者上钩")])],
         )
 
-        assert pool.yanhuo == 15 + 25 + 20  # 令(15) + 重岳5岁(25) + 乌有(20)
-        assert pool.wushu_crystal == 60 // 5  # 60 烟火 → 12 巫术结晶
+        assert pool.yanhuo == 15 + 10 + 20  # 令(15) + 重岳2岁(10) + 乌有(20)
+        assert pool.wushu_crystal == 45 // 5  # 45 烟火 → 9 巫术结晶
 
     def test_乌有_未在贸易站_不产生烟火(self):
         """乌有不在贸易站 → 无额外烟火"""
@@ -537,9 +537,10 @@ class TestB1OfficeTradeGeneration:
         control = [_mk_ling(), _mk_chongyue()]
         dorm = [_mk_op(f"填位{i}") for i in range(20)]
 
-        pool = compute_buff_pool(control, suich_count=5, dorm_operators=dorm)
+        pool = compute_buff_pool(control, dorm_operators=dorm)
 
-        assert pool.yanhuo == 15 + 25  # 仅令(15) + 重岳(25)，无乌有
+        assert pool.yanhuo == 15 + 10  # 仅令(15) + 重岳2岁(10)，无乌有
+        assert pool.wushu_crystal == 25 // 5
 
     def test_絮雨_零招募位_不产生感知(self):
         """perception_from_office=0 → 无额外感知（边界）"""
@@ -557,11 +558,11 @@ class TestB1OfficeTradeGeneration:
         control = [_mk_ling(), _mk_chongyue()]
         office_op = _mk_sangshen()
         pool = compute_buff_pool(
-            control, suich_count=5,
+            control, 
             office_operators=[office_op], office_yanhuo_base=20,
         )
 
-        assert pool.yanhuo == 15 + 25 + 20  # 令(15) + 重岳(25) + 桑葚(20)
+        assert pool.yanhuo == 15 + 10 + 20  # 令(15) + 重岳2岁(10) + 桑葚(20)
 
     def test_深律_office_无声共鸣(self):
         """深律在 Office，office_silent_base=30 → 无声共鸣+30"""

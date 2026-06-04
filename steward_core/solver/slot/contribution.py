@@ -201,7 +201,6 @@ def _compute_state_snapshot(
     from steward_core.synergy import compute_engineering_robots
 
     params = ctx.params
-    suich_count = params.suich_count if params else 5
     dorm_level = params.dorm_level if params else 5
     layout = ctx.layout if ctx.layout else _LAYOUT_243
 
@@ -222,7 +221,7 @@ def _compute_state_snapshot(
     trade_ops = [ctx.op_lookup[n] for n in trade_names_list if n in ctx.op_lookup]
 
     bp = compute_buff_pool(
-        ctrl_ops, suich_count=suich_count,
+        ctrl_ops,
         dorm_operators=[o for o in dorm_ops if o],
         dorm_level=dorm_level, layout=layout,
         mfg_operators=mfg_ops,

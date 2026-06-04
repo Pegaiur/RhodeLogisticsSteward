@@ -31,7 +31,7 @@ class TestEvaluateTradeCombo:
             _mk_op("C", [_mk_mfg_skill("高效生产", 30.0, "generic", "Trade")]),
         ]
         from steward_core.solver.greed import _evaluate_trade_combo
-        lmd = _evaluate_trade_combo(ops, 3, 12.0, GlobalBonus(), compute_buff_pool([], suich_count=0), 0.0)
+        lmd = _evaluate_trade_combo(ops, 3, 12.0, GlobalBonus(), compute_buff_pool([]), 0.0)
         assert lmd > 5000, f"预期 >5000, 实际 {lmd:.0f}"
 
     def test_但书_产出高于基准(self):
@@ -40,7 +40,7 @@ class TestEvaluateTradeCombo:
         fa = _mk_op("A", [_mk_mfg_skill("高效生产", 30.0, "generic", "Trade")])
         fb = _mk_op("B", [_mk_mfg_skill("高效生产", 30.0, "generic", "Trade")])
         from steward_core.solver.greed import _evaluate_trade_combo
-        lmd = _evaluate_trade_combo([but, fa, fb], 3, 12.0, GlobalBonus(), compute_buff_pool([], suich_count=0), 0.0)
+        lmd = _evaluate_trade_combo([but, fa, fb], 3, 12.0, GlobalBonus(), compute_buff_pool([]), 0.0)
         assert lmd > 7000, f"但书应大幅高于基准, 实际 {lmd:.0f}"
 
 

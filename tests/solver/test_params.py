@@ -18,7 +18,7 @@ class TestSolverParamsDefaults:
         assert p.shift_hours == 12.0
         assert p.control_max_slots == 5
         assert p.dorm_max_operators == 20
-        assert p.suich_count == 5
+        assert p.office_perception_base == 20
         assert p.combo_upper_bound_threshold == 0.95
 
     def test_baseline_等价于默认构造(self):

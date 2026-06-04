@@ -76,7 +76,6 @@ class GlobalContext:
 
         buff_pool = compute_buff_pool(
             control_operators,
-            suich_count=params.suich_count,
             dorm_operators=dorm_operators,
             dorm_level=params.dorm_level,
             mfg_operators=mfg_operators,
@@ -154,7 +153,6 @@ class GlobalContext:
 
         buff_pool = compute_buff_pool(
             control_ops,
-            suich_count=params.suich_count,
             dorm_operators=dorm_ops,
             dorm_level=params.dorm_level,
             mfg_operators=mfg_ops,

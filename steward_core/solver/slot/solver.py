@@ -5,6 +5,8 @@
 
 from __future__ import annotations
 
+import sys
+import time
 from dataclasses import replace
 from typing import TYPE_CHECKING
 
@@ -26,6 +28,55 @@ if TYPE_CHECKING:
 
 _MAX_ITERATIONS = 10
 """默认最大迭代轮数"""
+
+# ─── 求解器内部计时 ────────────────────────────────────────────
+
+_SOLVER_TIMINGS: dict[str, float] = {}
+
+
+def _dump_solver_timings(num_iterations: int, num_windows: int):
+    """打印求解器各阶段累计耗时到 stderr"""
+    global _SOLVER_TIMINGS
+    # 合并 mfg/trade 子阶段计时
+    from .mfg import _MFG_TIMINGS
+    from .trade import _TRADE_TIMINGS
+    merged = dict(_SOLVER_TIMINGS)
+    for k, v in _MFG_TIMINGS.items():
+        merged[k] = merged.get(k, 0.0) + v
+    for k, v in _TRADE_TIMINGS.items():
+        merged[k] = merged.get(k, 0.0) + v
+
+    if not merged:
+        return
+
+    # 分两级输出：Top-level phases 和 Sub-phase breakdown
+    top_labels = ["init", "phase_mfg", "phase_trade", "partials",
+                   "phase_control", "phase_remaining", "mood_update",
+                   "convergence", "ctx_to_result"]
+    sub_labels = [
+        "mfg.pool_build", "mfg.setup", "mfg.buff_pool", "mfg.evaluate_room",
+        "mfg.opportunity", "mfg.combo_other", "mfg.allocate",
+        "trade.pool_build", "trade.setup", "trade.buff_pool",
+        "trade.evaluate_room", "trade.order_lmd", "trade.combo_other", "trade.allocate",
+    ]
+
+    total = sum(merged.values())
+    print(f"\n[计时] solve_slot 各阶段耗时 ({num_iterations}轮 × {num_windows}窗):", file=sys.stderr)
+    for label in top_labels:
+        elapsed = merged.get(label, 0.0)
+        pct = elapsed / total * 100 if total > 0 else 0
+        print(f"  {label:25s} {elapsed:8.3f}s ({pct:5.1f}%)", file=sys.stderr)
+    print(f"  {'─' * 25}", file=sys.stderr)
+    print(f"  {'-- 细分 (mfg/trade) --':25s}", file=sys.stderr)
+    for label in sub_labels:
+        elapsed = merged.get(label, 0.0)
+        pct = elapsed / total * 100 if total > 0 else 0
+        print(f"  {label:25s} {elapsed:8.3f}s ({pct:5.1f}%)", file=sys.stderr)
+    print(f"  {'─' * 25}", file=sys.stderr)
+    print(f"  {'合计':25s} {total:8.3f}s", file=sys.stderr)
+    _SOLVER_TIMINGS.clear()
+    _MFG_TIMINGS.clear()
+    _TRADE_TIMINGS.clear()
 
 
 def solve_slot(
@@ -53,7 +104,9 @@ def solve_slot(
         from steward_core.mood_flow import MoodContext
         mood_ctx = MoodContext.fresh(operators, params)
 
+    t_init_start = time.perf_counter()
     ctx = SlotContext.from_layout(operators, layout, params, num_windows=num_windows)
+    _SOLVER_TIMINGS["init"] = _SOLVER_TIMINGS.get("init", 0.0) + (time.perf_counter() - t_init_start)
 
     shift_hours = params.shift_hours if params else 12.0
 
@@ -61,20 +114,35 @@ def solve_slot(
     best_ctx = None
     best_P = 0.0
 
+    completed_iterations = 0
     for iteration in range(max_iterations):
+        completed_iterations = iteration + 1
         if iteration > 0:
             _reset_ctx(ctx)
         mc = mood_ctx
         for w in range(num_windows):
+            t0 = time.perf_counter()
             phase_mfg(ctx, w, mood_ctx=mc)
-            phase_trade(ctx, w, mood_ctx=mc)
+            _SOLVER_TIMINGS["phase_mfg"] = _SOLVER_TIMINGS.get("phase_mfg", 0.0) + (time.perf_counter() - t0)
 
+            t0 = time.perf_counter()
+            phase_trade(ctx, w, mood_ctx=mc)
+            _SOLVER_TIMINGS["phase_trade"] = _SOLVER_TIMINGS.get("phase_trade", 0.0) + (time.perf_counter() - t0)
+
+            t0 = time.perf_counter()
             D = compute_partial_derivatives(ctx, w)
+            _SOLVER_TIMINGS["partials"] = _SOLVER_TIMINGS.get("partials", 0.0) + (time.perf_counter() - t0)
             ctx.windows[w].D = D
 
+            t0 = time.perf_counter()
             phase_control(ctx, w, D, mood_ctx=mc)
-            phase_remaining(ctx, w, D, mood_ctx=mc)
+            _SOLVER_TIMINGS["phase_control"] = _SOLVER_TIMINGS.get("phase_control", 0.0) + (time.perf_counter() - t0)
 
+            t0 = time.perf_counter()
+            phase_remaining(ctx, w, D, mood_ctx=mc)
+            _SOLVER_TIMINGS["phase_remaining"] = _SOLVER_TIMINGS.get("phase_remaining", 0.0) + (time.perf_counter() - t0)
+
+            t0 = time.perf_counter()
             if mc is not None:
                 mc.control_operators = ctx.ops_of_type(w, "Control")
                 ctx.control_operators = list(mc.control_operators)
@@ -106,9 +174,12 @@ def solve_slot(
                         if rate > 0:
                             new_moods[name] = min(24.0, new_moods.get(name, 24.0) + rate * shift_hours)
                     mc = replace(mc, operator_moods=new_moods)
+            _SOLVER_TIMINGS["mood_update"] = _SOLVER_TIMINGS.get("mood_update", 0.0) + (time.perf_counter() - t0)
 
+        t0 = time.perf_counter()
         sig = "||".join(ctx.signature(w) for w in range(ctx.num_windows))
         if sig in visited:
+            _SOLVER_TIMINGS["convergence"] = _SOLVER_TIMINGS.get("convergence", 0.0) + (time.perf_counter() - t0)
             break
         visited.add(sig)
 
@@ -122,11 +193,16 @@ def solve_slot(
             best_P = P
             best_ctx = ctx.clone()
         ctx.prev_P = P
+        _SOLVER_TIMINGS["convergence"] = _SOLVER_TIMINGS.get("convergence", 0.0) + (time.perf_counter() - t0)
 
     if best_ctx is None:
         best_ctx = ctx
 
+    t0 = time.perf_counter()
     result = _ctx_to_multi_result(best_ctx, operators, params)
+    _SOLVER_TIMINGS["ctx_to_result"] = _SOLVER_TIMINGS.get("ctx_to_result", 0.0) + (time.perf_counter() - t0)
+
+    _dump_solver_timings(completed_iterations, num_windows)
     return result
 
 
@@ -162,7 +238,6 @@ def _estimate_total_production(
     total = 0.0
     params = ctx.params
     hours = params.shift_hours if params else 12.0
-    suich_count = params.suich_count if params else 5
     dorm_level = params.dorm_level if params else 5
     base_power = params.base_power_count if params else 3
     layout = ctx.layout if ctx.layout else LayoutConfig.layout_243()
@@ -191,7 +266,6 @@ def _estimate_total_production(
 
         pool = compute_buff_pool(
             ctrl_ops,
-            suich_count=suich_count,
             dorm_operators=[o for o in dorm_ops if o],
             dorm_level=dorm_level,
             layout=layout,

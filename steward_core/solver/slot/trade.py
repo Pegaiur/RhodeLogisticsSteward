@@ -7,6 +7,7 @@ whisper 机会成本修正已迁移至 opportunity.py，在评分循环内联调
 from __future__ import annotations
 
 import itertools
+import time
 from typing import TYPE_CHECKING
 
 from steward_core.constants import BASE_POWER_COUNT
@@ -40,6 +41,10 @@ _ORDER_MECHANISM_PREFIXES = (
     "trade_ord_pepe",
 )
 
+# ─── Trade 内部计时 ────────────────────────────────────────────
+
+_TRADE_TIMINGS: dict[str, float] = {}
+
 
 def _compute_spillover(D: dict[str, float], delta: BuffPool) -> float:
     """Trade combo 对 Mfg 的外溢收益 = Σ D[d] × delta[d]
@@ -68,6 +73,7 @@ def phase_trade(
     params = ctx.params
     mood_threshold = params.mood_work_threshold if params else 0.0
 
+    t0 = time.perf_counter()
     trade_ops = [
         op for op in ctx.operators
         if op.char_id not in assigned_ids
@@ -102,11 +108,13 @@ def phase_trade(
         return
 
     combos = [list(c) for c in itertools.combinations(pool, min(3, len(pool)))]
+    _TRADE_TIMINGS["trade.pool_build"] = _TRADE_TIMINGS.get("trade.pool_build", 0.0) + (time.perf_counter() - t0)
     if not combos:
         return
 
     shift_hours = params.shift_hours if params else 12.0
 
+    t0 = time.perf_counter()
     ctrl_names = ctx.ops_of_type(window_idx, "Control")
     ctrl_ops = [ctx.op_lookup[n] for n in ctrl_names if n in ctx.op_lookup]
     if not ctrl_ops:
@@ -135,7 +143,6 @@ def phase_trade(
     D_mfg = compute_partial_derivatives(ctx, window_idx)
     base_pool = compute_buff_pool(
         ctrl_ops,
-        suich_count=params.suich_count if params else 5,
         dorm_operators=[o for o in dorm_ops_list if o],
         dorm_level=params.dorm_level if params else 5,
         layout=ctx.layout if ctx.layout else _LAYOUT_243,
@@ -143,14 +150,19 @@ def phase_trade(
         office_operators=office_ops,
         office_perception_base=params.office_perception_base if params else 20,
     )
+    _TRADE_TIMINGS["trade.setup"] = _TRADE_TIMINGS.get("trade.setup", 0.0) + (time.perf_counter() - t0)
 
     evaluated = []
+    t_bp = 0.0
+    t_er = 0.0
+    t_order = 0.0
+    t_co = 0.0
 
     for combo_ops in combos:
         combo_names = [op.name for op in combo_ops]
+        t0 = time.perf_counter()
         combo_pool = compute_buff_pool(
             ctrl_ops,
-            suich_count=params.suich_count if params else 5,
             dorm_operators=[o for o in dorm_ops_list if o],
             dorm_level=params.dorm_level if params else 5,
             layout=ctx.layout if ctx.layout else _LAYOUT_243,
@@ -159,10 +171,14 @@ def phase_trade(
             office_operators=office_ops,
             office_perception_base=params.office_perception_base if params else 20,
         )
+        t_bp += time.perf_counter() - t0
 
+        t_co_start = time.perf_counter()
         ctrl_bonus = control_per_operator_bonus(
             ctrl_ops, combo_ops, "Money", room_type="Trade",
         )
+
+        t0 = time.perf_counter()
         eff_int = evaluate_room(
             combo_ops, "Trade", "Money", effective_power,
             shift_hours, global_bonus, combo_pool,
@@ -172,8 +188,12 @@ def phase_trade(
             all_assignments=ctx.build_all_assignments(window_idx),
             mood_ctx=mood_ctx,
         )
+        t_er += time.perf_counter() - t0
+
         n = len(combo_ops)
         efficiency_integrated = shift_hours * (1.0 + 0.01 * n) + eff_int / 100.0
+
+        t0 = time.perf_counter()
         lmd_per_day, _gold, _equiv = _get_trade_order_multiplier(
             combo_ops, shift_hours,
         )
@@ -190,17 +210,27 @@ def phase_trade(
 
         spillover = _compute_spillover(D_mfg, combo_pool - base_pool)
         lmd += spillover
+        t_order += time.perf_counter() - t0
 
+        t1 = time.perf_counter()
         evaluated.append((lmd, combo_names))
 
         for combo_op in combo_ops:
             eff_pct = max((sk.efficient.raw.get("all", 0) for sk in combo_op.skills), default=0.0)
             if eff_pct > 0:
                 ctx.op_peak_eff[combo_op.name] = max(ctx.op_peak_eff.get(combo_op.name, 0.0), eff_pct)
+        t_co += time.perf_counter() - t1
+
+    _TRADE_TIMINGS["trade.buff_pool"] = _TRADE_TIMINGS.get("trade.buff_pool", 0.0) + t_bp
+    _TRADE_TIMINGS["trade.evaluate_room"] = _TRADE_TIMINGS.get("trade.evaluate_room", 0.0) + t_er
+    _TRADE_TIMINGS["trade.order_lmd"] = _TRADE_TIMINGS.get("trade.order_lmd", 0.0) + t_order
+    _TRADE_TIMINGS["trade.combo_other"] = _TRADE_TIMINGS.get("trade.combo_other", 0.0) + t_co
 
     evaluated.sort(key=lambda x: -x[0])
 
+    t0 = time.perf_counter()
     allocated = _joint_allocate(evaluated, room_count=2)
+    _TRADE_TIMINGS["trade.allocate"] = _TRADE_TIMINGS.get("trade.allocate", 0.0) + (time.perf_counter() - t0)
 
     trade_room_indices = [
         room.room_index
