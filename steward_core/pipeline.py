@@ -6,6 +6,7 @@
 
 from __future__ import annotations
 
+import time
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
@@ -45,21 +46,36 @@ def run(
     Returns:
         PipelineResult 包含求解结果、每日产出和所有上下文
     """
+    t0 = time.perf_counter()
     mood_ctx = MoodContext.fresh(operators, params)
     config = SolverConfig(params=params, mood_ctx=mood_ctx)
+
+    t_solve_start = time.perf_counter()
     solve_result = solve_mvp(operators, config=config)
+    t_solve = time.perf_counter() - t_solve_start
 
     external_gold_per_day = params.daily_task_lmd / _GOLD_LMD_PER_UNIT
 
     productions = []
-    for plan in solve_result.plans:
+    t_prod_start = time.perf_counter()
+    for pi, plan in enumerate(solve_result.plans):
+        t_plan = time.perf_counter()
         dp = production.calculate(
             plan, operators,
             hours=params.shift_hours,
             external_gold_per_day=external_gold_per_day,
             mood_ctx=mood_ctx,
         )
+        elapsed = time.perf_counter() - t_plan
         productions.append(dp)
+        print(f"  [计时] production.calculate W{pi}: {elapsed:.3f}s")
+    t_prod = time.perf_counter() - t_prod_start
+
+    t_total = time.perf_counter() - t0
+    print(f"\n[计时] pipeline 各阶段耗时:")
+    print(f"  {'solver.solve_mvp':40s} {t_solve:8.3f}s")
+    print(f"  {'production.calculate (' + str(len(solve_result.plans)) + '班)':40s} {t_prod:8.3f}s")
+    print(f"  {'pipeline 合计':40s} {t_total:8.3f}s")
 
     return PipelineResult(
         solve_result=solve_result,

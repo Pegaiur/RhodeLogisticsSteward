@@ -7,7 +7,6 @@
 from __future__ import annotations
 
 import itertools
-import time
 from typing import TYPE_CHECKING
 
 from steward_core.constants import BASE_POWER_COUNT, MFG_CR_BASE_RATE, MFG_PG_BASE_RATE, CR_EXP_PER_UNIT, PG_LMD_PER_UNIT, XP_LMD_RATIO
@@ -30,6 +29,7 @@ from steward_core.evaluate import evaluate_room
 from .context import SlotContext, mood_is_viable
 from ._cold_start import cold_start_ctrl_ops, cold_start_dorm_ops
 from .opportunity import compute_opportunity_cost_lmd
+from ._timing import timed
 
 if TYPE_CHECKING:
     from steward_core.models import Operator
@@ -45,10 +45,6 @@ _LAMBDA_EFF_SCALE = {
     "PureGold": MFG_PG_BASE_RATE * _PG_LMD_PER_UNIT / 100.0,
 }
 """机会成本从 LMD 到效率积分域的换算系数（原用于 lambda 惩罚，现仅用于机会成本）"""
-
-# ─── Mfg 内部计时 ──────────────────────────────────────────────
-
-_MFG_TIMINGS: dict[str, float] = {}
 
 
 def phase_mfg(
@@ -81,161 +77,145 @@ def phase_mfg(
             power_modifier_names - assigned_names
         )
 
-        t0 = time.perf_counter()
-        mfg_ops = [
-            op for op in ctx.operators
-            if op.char_id not in assigned_ids
-            and (
-                op.has_skill_for("Mfg", product)
-                or (op.name in MFG_ANCHORS and op.has_skill_for("Mfg"))
+        with timed("mfg.pool_build"):
+            mfg_ops = [
+                op for op in ctx.operators
+                if op.char_id not in assigned_ids
+                and (
+                    op.has_skill_for("Mfg", product)
+                    or (op.name in MFG_ANCHORS and op.has_skill_for("Mfg"))
+                )
+                and mood_is_viable(op.name, mood_ctx, mood_threshold)
+            ]
+            if not mfg_ops:
+                continue
+
+            classification = classify_mfg_operators(mfg_ops, product, MFG_ANCHORS)
+            pool = build_candidate_pool(
+                mfg_ops, classification, room_type="Mfg", product=product,
             )
-            and mood_is_viable(op.name, mood_ctx, mood_threshold)
-        ]
-        if not mfg_ops:
-            continue
+            pool = [op for op in pool if op.char_id not in assigned_ids]
 
-        classification = classify_mfg_operators(mfg_ops, product, MFG_ANCHORS)
-        pool = build_candidate_pool(
-            mfg_ops, classification, room_type="Mfg", product=product,
-        )
-        pool = [op for op in pool if op.char_id not in assigned_ids]
+            existing = {op.char_id for op in pool}
+            for enabler in get_synergy_enablers(ctx.operators, "Mfg", product):
+                if enabler.char_id not in existing and enabler.char_id not in assigned_ids:
+                    pool.append(enabler)
 
-        existing = {op.char_id for op in pool}
-        for enabler in get_synergy_enablers(ctx.operators, "Mfg", product):
-            if enabler.char_id not in existing and enabler.char_id not in assigned_ids:
-                pool.append(enabler)
+            # 中枢信息（供集群狩猎注入 + 后续计算用）
+            ctrl_names = ctx.ops_of_type(window_idx, "Control")
+            ctrl_ops = [ctx.op_lookup[n] for n in ctrl_names if n in ctx.op_lookup]
+            if not ctrl_ops:
+                ctrl_ops = cold_start_ctrl_ops(ctx, window_idx)
 
-        # 中枢信息（供集群狩猎注入 + 后续计算用）
-        ctrl_names = ctx.ops_of_type(window_idx, "Control")
-        ctrl_ops = [ctx.op_lookup[n] for n in ctrl_names if n in ctx.op_lookup]
-        if not ctrl_ops:
-            ctrl_ops = cold_start_ctrl_ops(ctx, window_idx)
+            # 集群狩猎：注入深海猎人干员进入 Mfg 候选池
+            ch_active = _has_cluster_hunting(ctrl_ops)
+            if ch_active:
+                existing_pool = {op.char_id for op in pool}
+                for op in ctx.operators:
+                    if op.char_id in assigned_ids or op.char_id in existing_pool:
+                        continue
+                    if op.has_group("abyssal"):
+                        pool.append(op)
 
-        # 集群狩猎：注入深海猎人干员进入 Mfg 候选池
-        ch_active = _has_cluster_hunting(ctrl_ops)
-        if ch_active:
-            existing_pool = {op.char_id for op in pool}
-            for op in ctx.operators:
-                if op.char_id in assigned_ids or op.char_id in existing_pool:
-                    continue
-                if op.has_group("abyssal"):
-                    pool.append(op)
-
-        combos = [list(c) for c in itertools.combinations(pool, min(3, len(pool)))]
-        _MFG_TIMINGS["mfg.pool_build"] = _MFG_TIMINGS.get("mfg.pool_build", 0.0) + (time.perf_counter() - t0)
+            combos = [list(c) for c in itertools.combinations(pool, min(3, len(pool)))]
         if not combos:
             continue
 
-        t0 = time.perf_counter()
-        global_bonus = compute_control_global_bonus(ctrl_ops)
+        with timed("mfg.setup"):
+            global_bonus = compute_control_global_bonus(ctrl_ops)
 
-        dorm_names = ctx.ops_of_type(window_idx, "Dormitory")
-        dorm_ops_list = [ctx.op_lookup[n] for n in dorm_names if n in ctx.op_lookup]
-        if not dorm_ops_list:
-            dorm_ops_list = cold_start_dorm_ops(ctx, window_idx)
+            dorm_names = ctx.ops_of_type(window_idx, "Dormitory")
+            dorm_ops_list = [ctx.op_lookup[n] for n in dorm_names if n in ctx.op_lookup]
+            if not dorm_ops_list:
+                dorm_ops_list = cold_start_dorm_ops(ctx, window_idx)
 
-        office_names = ctx.ops_of_type(window_idx, "Office")
-        office_ops = [ctx.op_lookup[n] for n in office_names if n in ctx.op_lookup]
+            office_names = ctx.ops_of_type(window_idx, "Office")
+            office_ops = [ctx.op_lookup[n] for n in office_names if n in ctx.op_lookup]
 
-        # Mfg 房间索引 + 已分配快照（供集群狩猎计算用）
-        mfg_room_indices = [
-            room.room_index
-            for room in ctx.layout.rooms
-            if room.room_type == "Mfg" and room.product == product
-        ]
-        all_mfg_snapshot: dict[int, list[str]] = {}
-        for ri in mfg_room_indices:
-            existing_ops = ctx.room_ops(window_idx, "Mfg", ri)
-            if existing_ops:
-                all_mfg_snapshot[ri] = list(existing_ops)
-        _MFG_TIMINGS["mfg.setup"] = _MFG_TIMINGS.get("mfg.setup", 0.0) + (time.perf_counter() - t0)
+            # Mfg 房间索引 + 已分配快照（供集群狩猎计算用）
+            mfg_room_indices = [
+                room.room_index
+                for room in ctx.layout.rooms
+                if room.room_type == "Mfg" and room.product == product
+            ]
+            all_mfg_snapshot: dict[int, list[str]] = {}
+            for ri in mfg_room_indices:
+                existing_ops = ctx.room_ops(window_idx, "Mfg", ri)
+                if existing_ops:
+                    all_mfg_snapshot[ri] = list(existing_ops)
 
         evaluated = []
-        t_bp = 0.0
-        t_er = 0.0
-        t_opp = 0.0
-        t_co = 0.0
         for combo_ops in combos:
-            t0 = time.perf_counter()
-            combo_pool = compute_buff_pool(
-                ctrl_ops,
-                dorm_operators=[o for o in dorm_ops_list if o],
-                dorm_level=params.dorm_level if params else 5,
-                layout=ctx.layout if ctx.layout else _LAYOUT_243,
-                mfg_operators=combo_ops,
-                office_operators=office_ops,
-                office_perception_base=params.office_perception_base if params else 20,
-            )
-            t_bp += time.perf_counter() - t0
-
-            t0 = time.perf_counter()
-            ctrl_bonus = control_per_operator_bonus(
-                ctrl_ops, combo_ops, product, room_type="Mfg",
-            )
-            # 集群狩猎：暂定分配快照计算加成（影响评分排序）
-            ch_bonus = 0.0
-            if ch_active and mfg_room_indices:
-                tentative = dict(all_mfg_snapshot)
-                tentative[mfg_room_indices[0]] = [op.name for op in combo_ops]
-                ch_bonus = _compute_ch_bonus(
-                    ctrl_ops, tentative, ctx.op_lookup, mfg_room_indices[0],
+            with timed("mfg.buff_pool"):
+                combo_pool = compute_buff_pool(
+                    ctrl_ops,
+                    dorm_operators=[o for o in dorm_ops_list if o],
+                    dorm_level=params.dorm_level if params else 5,
+                    layout=ctx.layout if ctx.layout else _LAYOUT_243,
+                    mfg_operators=combo_ops,
+                    office_operators=office_ops,
+                    office_perception_base=params.office_perception_base if params else 20,
                 )
 
-            t0 = time.perf_counter()
-            score = evaluate_room(
-                combo_ops, "Mfg", product, effective_power,
-                shift_hours, global_bonus, combo_pool,
-                ctrl_per_op_bonus=ctrl_bonus,
-                cluster_hunting_bonus=ch_bonus,
-                all_operators=ctx.operators,
-                control_operators=ctrl_ops,
-                all_assignments=ctx.build_all_assignments(window_idx),
-                mood_ctx=mood_ctx,
-            )
-            t_er += time.perf_counter() - t0
+            with timed("mfg.combo_other"):
+                ctrl_bonus = control_per_operator_bonus(
+                    ctrl_ops, combo_ops, product, room_type="Mfg",
+                )
+                # 集群狩猎：暂定分配快照计算加成（影响评分排序）
+                ch_bonus = 0.0
+                if ch_active and mfg_room_indices:
+                    tentative = dict(all_mfg_snapshot)
+                    tentative[mfg_room_indices[0]] = [op.name for op in combo_ops]
+                    ch_bonus = _compute_ch_bonus(
+                        ctrl_ops, tentative, ctx.op_lookup, mfg_room_indices[0],
+                    )
+
+            with timed("mfg.evaluate_room"):
+                score = evaluate_room(
+                    combo_ops, "Mfg", product, effective_power,
+                    shift_hours, global_bonus, combo_pool,
+                    ctrl_per_op_bonus=ctrl_bonus,
+                    cluster_hunting_bonus=ch_bonus,
+                    all_operators=ctx.operators,
+                    control_operators=ctrl_ops,
+                    all_assignments=ctx.build_all_assignments(window_idx),
+                    mood_ctx=mood_ctx,
+                )
 
             combo_names = [op.name for op in combo_ops]
-            t0 = time.perf_counter()
-            # LMD 往返对消：opportunity.py LMD ÷ _LAMBDA_EFF_SCALE = cost_pct × shift_hours
-            score -= compute_opportunity_cost_lmd(
-                combo_ops, "Mfg", product, shift_hours,
-            ) / _LAMBDA_EFF_SCALE.get(product, 2.5)
-            t_opp += time.perf_counter() - t0
+            with timed("mfg.opportunity"):
+                # LMD 往返对消：opportunity.py LMD ÷ _LAMBDA_EFF_SCALE = cost_pct × shift_hours
+                score -= compute_opportunity_cost_lmd(
+                    combo_ops, "Mfg", product, shift_hours,
+                ) / _LAMBDA_EFF_SCALE.get(product, 2.5)
 
-            evaluated.append((score, combo_names))
+            with timed("mfg.combo_other"):
+                evaluated.append((score, combo_names))
+                for combo_op in combo_ops:
+                    eff_pct = max((sk.efficient.raw.get("all", 0) for sk in combo_op.skills), default=0.0)
+                    if eff_pct > 0:
+                        ctx.op_peak_eff[combo_op.name] = max(ctx.op_peak_eff.get(combo_op.name, 0.0), eff_pct)
 
-            for combo_op in combo_ops:
-                eff_pct = max((sk.efficient.raw.get("all", 0) for sk in combo_op.skills), default=0.0)
-                if eff_pct > 0:
-                    ctx.op_peak_eff[combo_op.name] = max(ctx.op_peak_eff.get(combo_op.name, 0.0), eff_pct)
-            t_co += time.perf_counter() - t0
+        with timed("mfg.allocate"):
+            evaluated.sort(key=lambda x: -x[0])
 
-        _MFG_TIMINGS["mfg.buff_pool"] = _MFG_TIMINGS.get("mfg.buff_pool", 0.0) + t_bp
-        _MFG_TIMINGS["mfg.evaluate_room"] = _MFG_TIMINGS.get("mfg.evaluate_room", 0.0) + t_er
-        _MFG_TIMINGS["mfg.opportunity"] = _MFG_TIMINGS.get("mfg.opportunity", 0.0) + t_opp
-        _MFG_TIMINGS["mfg.combo_other"] = _MFG_TIMINGS.get("mfg.combo_other", 0.0) + t_co
+            allocated_rooms = 0
+            taken_names: set[str] = set()
 
-        t0 = time.perf_counter()
-        evaluated.sort(key=lambda x: -x[0])
+            for _score, names in evaluated:
+                if any(n in taken_names for n in names):
+                    continue
+                if allocated_rooms >= count:
+                    break
 
-        allocated_rooms = 0
-        taken_names: set[str] = set()
+                room_idx = mfg_room_indices[allocated_rooms]
+                for i, name in enumerate(names):
+                    slot_id = f"mfg_{room_idx}_{i}"
+                    ctx.place(window_idx, slot_id, name)
 
-        for _score, names in evaluated:
-            if any(n in taken_names for n in names):
-                continue
-            if allocated_rooms >= count:
-                break
-
-            room_idx = mfg_room_indices[allocated_rooms]
-            for i, name in enumerate(names):
-                slot_id = f"mfg_{room_idx}_{i}"
-                ctx.place(window_idx, slot_id, name)
-
-            taken_names.update(names)
-            assigned_ids.update(
-                ctx.op_lookup[n].char_id for n in names if n in ctx.op_lookup
-            )
-            assigned_names.update(names)
-            allocated_rooms += 1
-        _MFG_TIMINGS["mfg.allocate"] = _MFG_TIMINGS.get("mfg.allocate", 0.0) + (time.perf_counter() - t0)
+                taken_names.update(names)
+                assigned_ids.update(
+                    ctx.op_lookup[n].char_id for n in names if n in ctx.op_lookup
+                )
+                assigned_names.update(names)
+                allocated_rooms += 1
