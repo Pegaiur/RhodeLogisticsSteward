@@ -247,7 +247,7 @@ def _control_contribution(
     window_idx: int,
     D: dict[str, float],
 ) -> float:
-    """中枢贡献 = type2状态写入*D + type3全局注入 + per-op条件"""
+    """中枢贡献 = type2状态写入*D + type3全局注入 + per-op条件 + 间接联动价值"""
     total = 0.0
     existing_names = ctx.ops_of_type(window_idx, "Control")
 
@@ -264,7 +264,45 @@ def _control_contribution(
     total += _type3_contribution(ctx, op, window_idx)
     total += _per_operator_contribution(ctx, op, window_idx)
     total += _recovery_marginal(ctx, op.name, existing_names, window_idx)
+    total += _indirect_trade_contribution(ctx, op, window_idx)
     return total
+
+
+def _indirect_trade_contribution(
+    ctx: "SlotContext",
+    op: "Operator",
+    window_idx: int,
+) -> float:
+    """控制中枢干员通过 Trade 联动提供的间接价值
+
+    灵知→孑+卡兰贸易：每名卡兰 Trade 干员 +6 订单上限 → 孑 +24% 效率
+    仅在 孑 实际分配至 Trade 时生效（Phase C 已确定 Trade 分配）。
+    """
+    if op.name != "灵知":
+        return 0.0
+
+    trade_names = ctx.ops_of_type(window_idx, "Trade")
+    if not trade_names:
+        # 冷启动：Trade 未分配，孑在干员池中 → 保守假设孑可能入 Trade
+        if "孑" not in ctx.op_lookup:
+            return 0.0
+        karlan_count = sum(
+            1 for o in ctx.operators
+            if o.group_id == "karlan" and o.has_skill_for("Trade")
+        )
+    else:
+        # Phase C：Trade 已分配，仅在孑确实在 Trade 时才计入
+        if "孑" not in trade_names:
+            return 0.0
+        karlan_count = sum(
+            1 for n in trade_names
+            if (t_op := ctx.op_lookup.get(n)) and t_op.group_id == "karlan"
+        )
+
+    if karlan_count > 0:
+        hours = ctx.params.shift_hours if ctx.params else 12.0
+        return karlan_count * 6 * 4.0 / 100.0 * _TRADE_BASE_LMD_PER_HOUR * hours
+    return 0.0
 
 
 _WORK_FACILITIES = ("Mfg", "Trade", "Office", "Power", "Reception")
