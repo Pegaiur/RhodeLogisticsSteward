@@ -10,7 +10,7 @@ if TYPE_CHECKING:
     from steward_core.solver.config import SolverConfig
 
 
-@dataclass
+@dataclass(slots=True)
 class LinearSegment:
     """e(t) 的一个线性片段: e(t) = a + b·t, t ∈ [t_start, t_start + dt]
 

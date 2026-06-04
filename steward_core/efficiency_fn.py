@@ -12,7 +12,14 @@ def integrate_segments(segments: list[LinearSegment], T: float) -> float:
     """对段列表在 [0, T] 上积分求和
 
     超过 T 的段尾会被裁剪。
+    单段常数快速路径：消除 integrate() 方法调用和循环开销。
     """
+    # ── 单段常数快速路径 ──
+    if len(segments) == 1:
+        seg = segments[0]
+        if seg.b == 0.0 and seg.t_start == 0.0:
+            return seg.a * min(seg.dt, T)
+
     total = 0.0
     for seg in segments:
         end = seg.t_start + seg.dt
