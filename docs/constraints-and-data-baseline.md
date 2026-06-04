@@ -14,7 +14,7 @@ flowchart LR
     end
     subgraph 本项目["RhodeLogisticsSteward"]
         C["steward_core/data_loader.py<br/>解析数据 → Operator / Skill 模型"]
-        D["steward_core/solver/<br/>四阶段穷举+支撑+贪心求解"]
+        D["steward_core/solver/slot/<br/>槽位加工模型求解"]
         E["output/custom_infrast/*.json<br/>供 MAA 执行排班"]
     end
     A -->|"charId → buffId → phase"| C
@@ -163,7 +163,7 @@ mindmap
 | 承曦格雷伊 + 炎狱炎熔 + 烛煌 | +45% | **348** | 17.4h/天 |
 | 承曦格雷伊 + 澄闪 + 雷蛇 | +60% | **384** | 19.2h/天 |
 
-> **实现**：[`_calc_drone_daily()`](file:///d:/Dev/RhodeLogisticsSteward/steward_core/production.py#L409-L427)。效率值从 `operator_estimated_efficiency(op, "Power", "Drone")` 获取——爬升回退后取 `skill.efficient` 最高值。
+> **实现**：[`_calc_drone_daily()`](file:///d:/Dev/RhodeLogisticsSteward/steward_core/production.py#L410-L427)。效率值从 `operator_estimated_efficiency(op, "Power", "Drone")` 获取——爬升回退后取 `skill.efficient` 最高值。
 
 #### 1.6.3 无人机加速产出
 
@@ -192,8 +192,8 @@ mindmap
 
 **最终产出** = 含人头和技能 buff 的产出 + 基础产率 × drone_fraction。
 
-> **实现**：[`_calc_mfg_record()`](file:///d:/Dev/RhodeLogisticsSteward/steward_core/production.py#L456-L493) / [`_calc_mfg_gold()`](file:///d:/Dev/RhodeLogisticsSteward/steward_core/production.py#L496-L543) / [`_calc_trade()`](file:///d:/Dev/RhodeLogisticsSteward/steward_core/production.py#L546-L596)。
-> [`_is_drone_target()`](file:///d:/Dev/RhodeLogisticsSteward/steward_core/production.py#L450-L453) 判断房间是否为加速目标，仅目标房间获得无人机加成。
+> **实现**：[`_calc_mfg_record()`](file:///d:/Dev/RhodeLogisticsSteward/steward_core/production.py#L490-L527) / [`_calc_mfg_gold()`](file:///d:/Dev/RhodeLogisticsSteward/steward_core/production.py#L530-L565) / [`_calc_trade()`](file:///d:/Dev/RhodeLogisticsSteward/steward_core/production.py#L570-L603)。
+> [`_is_drone_target()`](file:///d:/Dev/RhodeLogisticsSteward/steward_core/production.py#L484-L487) 判断房间是否为加速目标，仅目标房间获得无人机加成。
 
 #### 1.6.4 加速目标选择
 
@@ -230,7 +230,7 @@ mindmap
 |---|------|------|
 | S1 | 效率最大化 | 在合规前提下追求最高综合产出效率 |
 | S2 | 心情平衡 | 控制同一设施干员的心情消耗节奏，避免集中耗尽。由 H6（跨周期可持续性）的形式化约束 + MoodContext 心情流转引擎共同保证 |
-| S3 | 宿舍恢复 | 宿舍恢复是独立资源，通过 mood-driven 恢复估值（`mood_deficit × recovery_rate × eff_weight`，详见 `slot-processing-model.md` §8.5），不纳入 H6 的池容计算 |
+| S3 | 宿舍恢复 | 宿舍恢复是独立资源，通过 mood-driven 恢复估值（`mood_deficit × recovery_rate × eff_weight`，详见 `slot-processing-model.md` §8.4），不纳入 H6 的池容计算 |
 | S4 | 会客室线索轮换 | 会客室只需凑齐线索，非效率优先场景可降低优先级 |
 
 > **注意**：技能联动体系的详细分类见 [`synergy-systems.md`](./synergy-systems.md)。
@@ -241,8 +241,8 @@ mindmap
 
 心情是排班问题的核心资源维度——每个干员拥有上限 24 点心情，工作时消耗、休息时恢复。心情耗尽（红脸 ≤ 0）时干员的基建技能和进驻效率全部失效（制造/贸易每人 -1%，发电/会客/办公室 -5%）。本模型将游戏机制转化为排班求解器的形式化约束。
 
-> **实现对应**：[`MoodContext`](file:///d:/Dev/RhodeLogisticsSteward/steward_core/mood_flow.py#L195)（心情流转引擎）、[`SolverParams`](file:///d:/Dev/RhodeLogisticsSteward/steward_core/solver/params.py#L44)（心情参数集中管理）、[`evaluate_dorm_recovery()`](file:///d:/Dev/RhodeLogisticsSteward/steward_core/dorm_recovery.py#L9)（宿舍恢复聚合）。
-> **心情联动技能**（BuffPool 生成/消费、中枢全局修正）见 [`synergy-systems.md`](./synergy-systems.md) §C2-§C3。
+> **实现对应**：[`MoodContext`](file:///d:/Dev/RhodeLogisticsSteward/steward_core/mood_flow.py#L436)（心情流转引擎）、[`SolverParams`](file:///d:/Dev/RhodeLogisticsSteward/steward_core/solver/params.py#L14)（心情参数集中管理）、[`evaluate_dorm_recovery()`](file:///d:/Dev/RhodeLogisticsSteward/steward_core/dorm_recovery.py#L9)（宿舍恢复聚合）。
+> **心情联动技能**（BuffPool 生成/消费、中枢全局修正）见 [`synergy-systems.md`](./synergy-systems.md) §B1, §C2。
 
 ### 3.1 工作时长池
 
@@ -301,7 +301,7 @@ mood_burn = max(0.0, base_burn - recovery)      ← 最终净消耗
 | Power/Office/Reception + 5中枢 | 0 | 0.25 | — | 0.25 | **0.75** |
 | Power/Office/Reception + 5中枢 + 玛恩纳 | 0 | 0.25 | +0.35 | 0.60 | **0.40** |
 
-> **注意**：中枢内部干员的消耗计算不同——他们天然享受 5 人减免（-0.25），不受设施减免。详见 [`MoodContext._control_burn()`](file:///d:/Dev/RhodeLogisticsSteward/steward_core/mood_flow.py#L382)。
+> **注意**：中枢内部干员的消耗计算不同——他们天然享受 5 人减免（-0.25），不受设施减免。详见 [`MoodContext._control_burn()`](file:///d:/Dev/RhodeLogisticsSteward/steward_core/mood_flow.py#L633)。
 
 #### 3.2.2 干员自身技能修正
 
@@ -319,7 +319,7 @@ mood_burn = max(0.0, base_burn - recovery)      ← 最终净消耗
 | **消除** | 槐琥 | `manu_cost_all[000]` | **归零** | 同房间全员自身效果 |
 | **消除** | 令 | `control_facCostReset[000]` | **归零** | 同中枢岁阵营干员 |
 
-> **实现状态**：房间级 buff（黍/火哨/巫恋/槐琥/令）已通过 [`_MP_COST_ROOM_*` 表](file:///d:/Dev/RhodeLogisticsSteward/steward_core/mood_flow.py#L145) 接入 `work_burn()`。干员自身级 buff（泡泡/火神/斥罪等）当前未接入——mp_cost buff 数据存在于 `buffs_infrastructure.json` 中，尚未在 `work_burn()` 中扫描干员自身技能。
+> **实现状态**：房间级 buff（黍/火哨/巫恋/槐琥/令）通过 [`_MP_COST_ROOM_*` / `_MP_COST_FACTION_ZERO` 表](file:///d:/Dev/RhodeLogisticsSteward/steward_core/mood_flow.py#L162) 接入。干员自身级 buff（65+ 条目，覆盖 Mfg/Trade/Power/Hire/Meeting/Control）通过 [`_SELF_MP_COST` 表](file:///d:/Dev/RhodeLogisticsSteward/steward_core/mood_flow.py#L202) 接入。P1 条件型配对 5 条通过 [`_MP_COST_SELF_PAIR` 表](file:///d:/Dev/RhodeLogisticsSteward/steward_core/mood_flow.py#L187) 接入。
 
 #### 3.2.3 消除类技能的精确语义
 
@@ -356,7 +356,7 @@ ctx.is_below("令", 12.0)  # 心情 < 12.0 时返回 True（对应游戏内显�
 | 氛围加成 | `0.0004 × ambiance_per_room` | **绿字（氛围部分）** | 0.0004 × 5000 = **2.0** |
 | **合计** | — | — | **4.0/h** |
 
-> **实现**：[`evaluate_dorm_recovery()`](file:///d:/Dev/RhodeLogisticsSteward/steward_core/dorm_recovery.py#L47-L49) Rule 0。参数由 [`SolverParams`](file:///d:/Dev/RhodeLogisticsSteward/steward_core/solver/params.py#L35) `dorm_level`（默认 5）和 `dorm_ambiance_per_room`（默认 5000）控制。
+> **实现**：[`evaluate_dorm_recovery()`](file:///d:/Dev/RhodeLogisticsSteward/steward_core/dorm_recovery.py#L47-L51) Rule 0。参数由 [`SolverParams`](file:///d:/Dev/RhodeLogisticsSteward/steward_core/solver/params.py#L14) `dorm_level`（默认 5）和 `dorm_ambiance_per_room`（默认 5000）控制。
 
 #### 3.3.2 干员恢复技能分类
 
