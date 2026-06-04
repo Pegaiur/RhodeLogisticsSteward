@@ -57,6 +57,10 @@ def solve_slot(
     with timed("init"):
         ctx = SlotContext.from_layout(operators, layout, params, num_windows=num_windows)
 
+    # 清空 evaluate 预计算缓存，避免跨求解运行 id() 碰撞
+    from steward_core.evaluate import _PRECOMPUTED_CACHE
+    _PRECOMPUTED_CACHE.clear()
+
     shift_hours = params.shift_hours if params else 12.0
 
     visited = set()

@@ -31,9 +31,16 @@ from steward_core.synergy import (
     compute_trade_order_limit,
     GlobalBonus,
     operator_estimated_efficiency,
+    _WORKSPACE_FACILITIES,
+    _FACILITY_GROUP_TABLE,
+    count_facilities_with_group,
 )
 
 _LAYOUT_243 = LayoutConfig.layout_243()
+
+# ── all_assignments 预计算缓存 ──
+# 键: id(all_assignments)，值: 预计算的查询结果集合
+_PRECOMPUTED_CACHE: dict[int, dict] = {}
 
 
 def _resolve_zeroing(
@@ -132,21 +139,66 @@ def _eval_cross_room_effects(
     all_assignments: dict[str, list[Operator]] | None,
     all_operators: list[Operator] | None,
 ) -> float:
-    """B 层跨房间效果：B6(全局阵营) + B7(跨房间配对) + B8(设施 group) + BuffPool 消费"""
+    """B 层跨房间效果：B6(全局阵营) + B7(跨房间配对) + B8(设施 group) + BuffPool 消费
+
+    all_assignments 预计算结果通过模块级缓存 _PRECOMPUTED_CACHE 懒加载，
+    首次遇到给定 all_assignments 时计算 all_names / facility_names / workspace_names /
+    facility_group_counts，后续 combo 直接复用。
+    """
     total = 0.0
+
+    # ── 预计算缓存 ──
+    pre = None
+    if all_assignments is not None:
+        cache_key = id(all_assignments)
+        pre = _PRECOMPUTED_CACHE.get(cache_key)
+        if pre is None:
+            all_names = {op.name for ops in all_assignments.values() for op in ops}
+            facility_names = {
+                fac: {op.name for op in ops}
+                for fac, ops in all_assignments.items()
+            }
+            workspace_names = set().union(*(
+                facility_names.get(f, set()) for f in _WORKSPACE_FACILITIES
+            ))
+
+            group_ids = {entry.group_id for entry in _FACILITY_GROUP_TABLE.values()}
+            facility_group_counts = {
+                gid: count_facilities_with_group(all_assignments, gid)
+                for gid in group_ids
+            }
+
+            pre = {
+                "all_names": all_names,
+                "facility_names": facility_names,
+                "workspace_names": workspace_names,
+                "facility_group_counts": facility_group_counts,
+            }
+            _PRECOMPUTED_CACHE[cache_key] = pre
 
     if all_assignments is not None:
         total += integrate_segments(
-            synergy_cross_room_pair(non_zero_ops, room_type, product, all_assignments, T), T,
+            synergy_cross_room_pair(
+                non_zero_ops, room_type, product, all_assignments, T,
+                _all_names=pre["all_names"] if pre else None,
+                _facility_names=pre["facility_names"] if pre else None,
+            ), T,
         )
         if room_type == "Trade":
             total += integrate_segments(
-                synergy_trade_conditional_eff(operators, room_type, all_assignments, T), T,
+                synergy_trade_conditional_eff(
+                    operators, room_type, all_assignments, T,
+                    _all_names=pre["all_names"] if pre else None,
+                    _workspace_names=pre["workspace_names"] if pre else None,
+                ), T,
             )
 
     if all_assignments is not None:
         total += integrate_segments(
-            synergy_facility_group(non_zero_ops, room_type, all_assignments, T), T,
+            synergy_facility_group(
+                non_zero_ops, room_type, all_assignments, T,
+                _facility_group_counts=pre["facility_group_counts"] if pre else None,
+            ), T,
         )
 
     if all_operators is not None:

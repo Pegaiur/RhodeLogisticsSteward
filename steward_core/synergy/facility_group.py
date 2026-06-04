@@ -70,11 +70,16 @@ def synergy_facility_group(
     room_type: str,
     all_assignments: dict[str, list["Operator"]],
     T: float = 12.0,
+    *,
+    _facility_group_counts: dict[str, int] | None = None,
 ) -> list[LinearSegment]:
     """评估房间的 facility_group 加成段
 
     供 evaluate.py 使用。遍历房间中每个干员，匹配 _FACILITY_GROUP_TABLE，
     按 target_room 过滤，返回常数加成段。
+
+    _facility_group_counts 为可选的预计算结果（group_id → facility_count），
+    传入时跳过 count_facilities_with_group 遍历。
     """
     segments: list[LinearSegment] = []
     for op in operators:
@@ -85,7 +90,10 @@ def synergy_facility_group(
                 continue
             if entry.target_room and entry.target_room != room_type:
                 continue
-            n = count_facilities_with_group(all_assignments, entry.group_id)
+            if _facility_group_counts is not None:
+                n = _facility_group_counts.get(entry.group_id, 0)
+            else:
+                n = count_facilities_with_group(all_assignments, entry.group_id)
             bonus += min(n, entry.cap_facilities) * entry.bonus_per_facility
         if bonus > 0:
             segments.append(LinearSegment(a=bonus, b=0.0, t_start=0.0, dt=T))

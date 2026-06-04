@@ -17,10 +17,16 @@ def synergy_cross_room_pair(
     product: str,
     all_assignments: dict[str, list[Operator]],
     T: float,
+    *,
+    _all_names: set[str] | None = None,
+    _facility_names: dict[str, set[str]] | None = None,
 ) -> list[LinearSegment]:
     """检查跨设施干员条件配对，为持有者提供效率加成
 
     B7 体系：干员 A 在某设施时，若干员 B 在另一设施则触发加成。
+
+    _all_names / _facility_names 为可选的预计算结果，
+    传入时跳过 all_assignments 遍历。
     """
     names = {op.name for op in operators}
     segments = []
@@ -34,12 +40,18 @@ def synergy_cross_room_pair(
             continue
 
         if e.target_facility is None:
-            target_names: set[str] = set()
-            for ops in all_assignments.values():
-                target_names.update(op.name for op in ops)
+            if _all_names is not None:
+                target_names = _all_names
+            else:
+                target_names = set()
+                for ops in all_assignments.values():
+                    target_names.update(op.name for op in ops)
         else:
-            target_ops = all_assignments.get(e.target_facility, [])
-            target_names = {op.name for op in target_ops}
+            if _facility_names is not None:
+                target_names = _facility_names.get(e.target_facility, set())
+            else:
+                target_ops = all_assignments.get(e.target_facility, [])
+                target_names = {op.name for op in target_ops}
 
         if e.target_name in target_names:
             segments.append(LinearSegment(a=e.bonus_per, b=0.0, t_start=0.0, dt=T))

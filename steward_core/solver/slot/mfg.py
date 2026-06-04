@@ -145,6 +145,7 @@ def phase_mfg(
                     all_mfg_snapshot[ri] = list(existing_ops)
 
         evaluated = []
+        all_assignments = ctx.build_all_assignments(window_idx)
         for combo_ops in combos:
             with timed("mfg.buff_pool"):
                 combo_pool = compute_buff_pool(
@@ -178,7 +179,7 @@ def phase_mfg(
                     cluster_hunting_bonus=ch_bonus,
                     all_operators=ctx.operators,
                     control_operators=ctrl_ops,
-                    all_assignments=ctx.build_all_assignments(window_idx),
+                    all_assignments=all_assignments,
                     mood_ctx=mood_ctx,
                 )
 

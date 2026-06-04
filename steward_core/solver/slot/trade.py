@@ -147,6 +147,7 @@ def phase_trade(
         )
 
     evaluated = []
+    all_assignments = ctx.build_all_assignments(window_idx)
 
     for combo_ops in combos:
         combo_names = [op.name for op in combo_ops]
@@ -174,7 +175,7 @@ def phase_trade(
                 ctrl_per_op_bonus=ctrl_bonus,
                 all_operators=ctx.operators,
                 control_operators=ctrl_ops,
-                all_assignments=ctx.build_all_assignments(window_idx),
+                all_assignments=all_assignments,
                 mood_ctx=mood_ctx,
             )
 

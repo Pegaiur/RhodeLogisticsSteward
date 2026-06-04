@@ -117,6 +117,7 @@ from steward_core.synergy.trade_linkages import (
     _TRADE_SHARE_TABLE,
     _TRADE_EFF_AMPLIFIER_TABLE,
     _TRADE_CONDITIONAL_EFF_TABLE,
+    _WORKSPACE_FACILITIES,
 )
 
 from steward_core.synergy.facility_linkages import (

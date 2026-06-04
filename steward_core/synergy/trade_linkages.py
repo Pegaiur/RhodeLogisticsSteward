@@ -463,11 +463,18 @@ def synergy_trade_efficiency_amplifier(
     return [LinearSegment(a=bonus, b=0.0, t_start=0.0, dt=T)] if bonus > 0 else []
 
 
+_WORKSPACE_FACILITIES = ("Control", "Mfg", "Trade")
+"""workspace 范围预计算用设施元组，与 synergy_trade_conditional_eff 保持一致"""
+
+
 def synergy_trade_conditional_eff(
     operators: list[Operator],
     room_type: str,
     all_assignments: dict[str, list[Operator]],
     T: float,
+    *,
+    _all_names: set[str] | None = None,
+    _workspace_names: set[str] | None = None,
 ) -> list[LinearSegment]:
     """贸易站条件型 per-operator 效率加成：贝洛内家族经营、赫德雷白手起家
 
@@ -475,6 +482,9 @@ def synergy_trade_conditional_eff(
     target_scope 枚举:
       "base"    — 基建任意位置（遍历 all_assignments 全量）
       "workspace" — 工作设施 Control/Mfg/Trade
+
+    _all_names / _workspace_names 为可选的预计算结果，
+    传入时跳过 all_assignments 遍历。
     """
     if room_type != "Trade":
         return []
@@ -486,15 +496,21 @@ def synergy_trade_conditional_eff(
                 continue
             for target in entry.target_names:
                 if entry.target_scope == "base":
-                    target_found = any(
-                        any(o.name == target for o in ops)
-                        for ops in all_assignments.values()
-                    )
+                    if _all_names is not None:
+                        target_found = target in _all_names
+                    else:
+                        target_found = any(
+                            any(o.name == target for o in ops)
+                            for ops in all_assignments.values()
+                        )
                 else:
-                    target_found = any(
-                        any(o.name == target for o in all_assignments.get(fac, []))
-                        for fac in ("Control", "Mfg", "Trade")
-                    )
+                    if _workspace_names is not None:
+                        target_found = target in _workspace_names
+                    else:
+                        target_found = any(
+                            any(o.name == target for o in all_assignments.get(fac, []))
+                            for fac in _WORKSPACE_FACILITIES
+                        )
                 if target_found:
                     bonus += entry.bonus_per
     return [LinearSegment(a=bonus, b=0.0, t_start=0.0, dt=T)] if bonus > 0 else []
