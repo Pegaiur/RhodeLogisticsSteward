@@ -9,7 +9,7 @@ from .mfg_linkages import skill_class, _ZEROING_VARIANT_TABLE
 from .ramping import operator_estimated_efficiency
 from .buff_pool import _B_BUFF_CONSUMER_TABLE
 from .facility_linkages import _A_FACILITY_LINK_TABLE
-from .trade_linkages import _ORDER_LIMIT_TABLE
+from .trade_linkages import _ORDER_LIMIT_TABLE, _TRADE_TRIGGER_TABLE, _TRADE_PAIR_TABLE
 
 
 def _detect_unregistered_contributors(op_name: str, room_type: str) -> bool:
@@ -112,7 +112,10 @@ def build_candidate_pool(
                 continue
             for sk in op.skills:
                 if (sk.buff_id.startswith("trade_ord_wt")
-                        or (sk.room_type == "Trade" and sk.buff_id in _ORDER_LIMIT_TABLE)):
+                        or (sk.room_type == "Trade" and (
+                            sk.buff_id in _ORDER_LIMIT_TABLE
+                            or sk.buff_id in _TRADE_TRIGGER_TABLE
+                            or sk.buff_id in _TRADE_PAIR_TABLE))):
                     seen.add(op.char_id)
                     pool.append(op)
                     break
