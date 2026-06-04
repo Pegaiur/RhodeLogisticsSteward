@@ -385,15 +385,17 @@ def synergy_swires_order_limit(
     order_ctx: OrderLimitContext | None,
     T: float,
 ) -> list[LinearSegment]:
-    """招商引资：琳琅诗怀雅 每订单上限 +4% 效率
+    """招商引资：琳琅诗怀雅 每提升的订单上限 +4% 效率
 
-    消费 OrderLimitContext.total，无效率上限。
+    消费 OrderLimitContext.total，"提升的" = total - 10（超出基础 10 的部分）。
+    (total-10) × 4%，无效率上限。
     """
     if room_type != "Trade" or order_ctx is None:
         return []
     if "swires_limit" not in _collect_mechs(operators, _TRADE_TRIGGER_TABLE):
         return []
-    bonus = order_ctx.total * 4.0
+    extra = max(0, order_ctx.total - 10)
+    bonus = extra * 4.0
     return [LinearSegment(a=bonus, b=0.0, t_start=0.0, dt=T)] if bonus > 0 else []
 
 

@@ -534,10 +534,10 @@ class TestTradePairSynergy:
 # ─── 琳琅诗怀雅 招商引资（每订单上限 4%） ─────────────────────────
 
 class TestSwiresOrderLimit:
-    """A层·招商引资 — 琳琅诗怀雅 每订单上限 +4%"""
+    """A层·招商引资 — 琳琅诗怀雅 每提升的订单上限 +4%"""
 
-    def test_招商引资_基础10订单_40percent(self):
-        """order_ctx.total=10 → 10×4% = 40%"""
+    def test_招商引资_基础10订单_0percent(self):
+        """order_ctx.total=10 → extra=0 → 0%（基础10不算"提升的"）"""
         from steward_core.synergy.trade_linkages import (
             synergy_swires_order_limit, OrderLimitContext,
         )
@@ -546,11 +546,23 @@ class TestSwiresOrderLimit:
         swires.skills.append(_mk_skill("trade_ord_spd_variable[000]", "Trade", "招商引资"))
         ctx = OrderLimitContext()
         segs = synergy_swires_order_limit([swires], "Trade", ctx, 12.0)
-        assert len(segs) == 1
-        assert segs[0].a == 40.0
+        assert segs == []
 
-    def test_招商引资_5订单_20percent(self):
-        """order_ctx.total=5 → 5×4% = 20%"""
+    def test_招商引资_15订单_20percent(self):
+        """order_ctx.total=15 → extra=5 → 5×4% = 20%"""
+        from steward_core.synergy.trade_linkages import (
+            synergy_swires_order_limit, OrderLimitContext,
+        )
+
+        swires = _mk_op("琳琅诗怀雅")
+        swires.skills.append(_mk_skill("trade_ord_spd_variable[000]", "Trade", "招商引资"))
+        ctx = OrderLimitContext()
+        ctx.add("谈判", 5)
+        segs = synergy_swires_order_limit([swires], "Trade", ctx, 12.0)
+        assert segs[0].a == 20.0
+
+    def test_招商引资_5订单_0percent(self):
+        """order_ctx.total=5 → extra=0 → 0%"""
         from steward_core.synergy.trade_linkages import (
             synergy_swires_order_limit, OrderLimitContext,
         )
@@ -560,7 +572,7 @@ class TestSwiresOrderLimit:
         ctx = OrderLimitContext()
         ctx.add("孑·订单压缩", -5)
         segs = synergy_swires_order_limit([swires], "Trade", ctx, 12.0)
-        assert segs[0].a == 20.0
+        assert segs == []
 
     def test_招商引资_无buff_返回空(self):
         """无人持有 trade_ord_spd_variable[000] → 空"""
