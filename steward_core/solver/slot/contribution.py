@@ -568,7 +568,7 @@ def _select_reception_combo(
     best_combo: list[str] = []
 
     reception_level = ctx.params.reception_level if ctx.params else 3
-    dorm_ambiance = ctx.params.dorm_ambiance if ctx.params else 5000
+    dorm_ambiance = ctx.params.dorm_ambiance_per_room if ctx.params else 5000
     hours = ctx.params.shift_hours if ctx.params else 12.0
     base_lmd = _mfg_base_rate_lmd_avg()
 
@@ -857,7 +857,7 @@ def _reception_contribution(
     total = 0.0
 
     reception_level = ctx.params.reception_level if ctx.params else 3
-    dorm_ambiance = ctx.params.dorm_ambiance if ctx.params else 5000
+    dorm_ambiance = ctx.params.dorm_ambiance_per_room if ctx.params else 5000
     implicit = _reception_implicit_bonus(op, reception_level, dorm_ambiance)
     skill_eff = max(operator_estimated_efficiency(op, "Reception", "General"), 0.0)
     dynamic = _reception_individual_bonus(op, ctx, window_idx)

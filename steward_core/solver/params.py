@@ -46,11 +46,8 @@ class SolverParams:
     """办公室等级（1-3），衍生额外招募位数量（level-1）。
     Lv3=2额外位，影响 hire_spd_cost&extra[000]（林用人唯才）
     和 meet_spd&clue[000]（维荻广交义友）。"""
-    dorm_ambiance: int = 5000
-    """宿舍氛围累计值，影响隐式线索搜集加成。默认 5000 对应 >4000 档位（+15%）"""
-
     dorm_ambiance_per_room: int = 5000
-    """每间宿舍氛围值，用于宿舍基础恢复公式: 0.0004 × ambiance"""
+    """每间宿舍氛围值，用于宿舍基础恢复公式(0.0004×ambiance)和会客室隐式加成阈值"""
     drone_cap: int = 235
     """无人机上限，影响 power_rec_drone[000]（Greyy2 巡线框架）。
     可通过外部 JSON 覆盖。243 布局满级中枢默认 235。"""
@@ -67,7 +64,7 @@ class SolverParams:
     mood_work_threshold: float = 1.0
     """可参与工作的最低心情值（低于此值不可用）。默认 1.0 确保至少留 1 小时缓冲"""
 
-    recovery_damping: float = 0.25
+    recovery_damping: float = 0
     """中枢心情恢复贡献阻尼系数（0~1）。用于抑制 recovery 贡献估值偏高。
     待多班次续航建模后校准为精确值。"""
 
