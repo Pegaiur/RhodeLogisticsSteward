@@ -238,6 +238,8 @@ master ────────────────────────�
 | JSON 输出协议对齐 | 0.5.1 | 输出符合 MAA 基建排班协议 v5.x、README、文档归档合并 |
 | 槽位加工模型重构 | — (dev) | SlotSolver 统一求解器（`slot/` 子包，13 模块）+ D[d] 偏导数反馈迭代 + 四阶段编排（phase_mfg/trade/control/remaining）。当前 feat/slot-iteration 分支，已合并至 master，因轮换调度不完整未打 tag |
 | 心情建模与多班次基础 | — (dev) | MoodContext + MoodModifiers + dorm_recovery + solve_multi_shift() 编排器。已合并至 master，后续由槽位加工模型替代 |
+| 槽位加工模型正式 | 0.6.0 | SlotSolver + D[d] 偏导数迭代 + 四阶段编排，轮换调度完整，打 tag |
+| 求解器热路径性能优化 | 0.6.1 | build_all_assignments提升，B7/B8预计算缓存，buff_pool增量计算，LinearSegment slots，integrate_segments快速路径。总耗时 206s→143s（-30%） |
 | 首个正式版 | 1.0.0 | 全验证通过 |
 | MAA 发版需适配 | PATCH +1 | 0.5.1 |
 
@@ -262,7 +264,8 @@ v0.3.0  → M3: Step 3 验证通过
 v0.4.0  → M4: 求解器三件套优化（支撑包+局部搜索+全局状态）
 v0.5.0  → M5: Strategy 策略层重构（3 条策略 + Phase 重命名 + BuffPool 迭代 + CLI）
 v0.5.1  → M5.1: JSON 输出协议对齐 + README + 文档归档
-—      → M6: 槽位加工模型（SlotSolver + D[d] 迭代），心情建模与多班次基础（已合并，未打 tag）
+v0.6.0  → M6: 槽位加工模型正式（SlotSolver + D[d] 迭代 + 四阶段编排）
+v0.6.1  → M6.1: 求解器热路径性能优化（build_all_assignments提升，B7/B8缓存，buff_pool增量，slots，快速路径，-30%耗时）
 v1.0.0  → 首个正式版
 ```
 
