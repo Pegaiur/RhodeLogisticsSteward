@@ -70,9 +70,9 @@ def classify_mfg_operators(
     return result
 
 
-def prune_equivalent(pure_ops: list, top_k: int = 3) -> list:
+def prune_equivalent(pure_ops: list, room_type: str, product: str | None = None, top_k: int = 3) -> list:
     """等价类合并 — 纯效率只保留 top_k 名"""
-    sorted_ops = sorted(pure_ops, key=lambda op: -operator_estimated_efficiency(op, "Mfg"))
+    sorted_ops = sorted(pure_ops, key=lambda op: -operator_estimated_efficiency(op, room_type, product))
     return sorted_ops[:top_k]
 
 
@@ -97,7 +97,7 @@ def build_candidate_pool(
             seen.add(op.char_id)
             pool.append(op)
 
-    top_pure = prune_equivalent(classification.pure_efficiency, top_k=5)
+    top_pure = prune_equivalent(classification.pure_efficiency, room_type or "Mfg", product, top_k=5)
     for op in top_pure:
         if op.char_id not in seen:
             seen.add(op.char_id)
@@ -111,6 +111,18 @@ def build_candidate_pool(
                 continue
             for sk in op.skills:
                 if sk.buff_id.startswith("trade_ord_wt"):
+                    seen.add(op.char_id)
+                    pool.append(op)
+                    break
+
+    # Mfg: 容量加成干员 (capacity_bonus > 0) —— efficient=0 但提供仓库容量/降本等非效率价值，
+    # top_k=5 按效率排序会排除。纳入全部有 capacity_bonus 的 pure_efficiency 干员。
+    if room_type == "Mfg":
+        for op in classification.pure_efficiency:
+            if op.char_id in seen:
+                continue
+            for sk in op.skills:
+                if sk.room_type == "Mfg" and sk.capacity_bonus > 0:
                     seen.add(op.char_id)
                     pool.append(op)
                     break

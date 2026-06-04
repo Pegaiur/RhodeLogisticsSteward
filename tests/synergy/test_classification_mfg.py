@@ -185,7 +185,7 @@ class TestPruning:
         ]
 
         # Act: 等价类合并后，纯效率仅保留 Top-3
-        pure_pool = prune_equivalent(ops, top_k=3)
+        pure_pool = prune_equivalent(ops, "Mfg", top_k=3)
 
         # Assert: 只保留前3名
         assert len(pure_pool) == 3
