@@ -72,7 +72,7 @@ class SolverParams:
     待多班次续航建模后校准为精确值。"""
 
     # === 多班次 ===
-    shift_count: int = 1
+    shift_count: int = 6
     """班次数"""
     fiammetta_enabled: bool = False
     """是否启用菲亚梅塔心情交换（交换决策算法待实现）"""
@@ -96,17 +96,6 @@ class SolverParams:
     """槽位迭代最大轮次"""
     slot_cold_start: bool = False
     """槽位迭代是否使用冷启动（S₀_max 初始化）"""
-    lambda_damping: float = 0.5
-    """已废弃——全局移除 lambda 后不再使用，保留字段向后兼容"""
-    backpressure_damping: float = 0.5
-    """已废弃——全局移除 lambda 后不再使用，保留字段向后兼容"""
-    lambda_jump_ratio: float = 0.25
-    """已废弃——全局移除 lambda 后不再使用，保留字段向后兼容"""
-    rotation_penalty_weight: float = 0.0
-    """轮换惩罚权重（已废弃——由 MoodContext 心情约束替代）。0=关闭, >0=遗留兼容"""
-    rotation_max_shifts: int = 0
-    """单干员在同一设施类型的最多班次数（已废弃——由 MoodContext 心情约束替代）。0=不限制"""
-
     @classmethod
     def baseline(cls) -> "SolverParams":
         """基线参数（默认值）"""
@@ -176,10 +165,6 @@ class SolverParams:
             errors.append("combo_upper_bound_threshold 必须在 [0, 1] 区间")
         if self.slot_max_rounds < 1:
             errors.append("slot_max_rounds 必须 >= 1")
-        if self.rotation_penalty_weight < 0:
-            errors.append("rotation_penalty_weight 必须 >= 0")
-        if self.rotation_max_shifts < 0:
-            errors.append("rotation_max_shifts 必须 >= 0")
         if self.dorm_max_operators < self.dorm_room_size:
             errors.append("dorm_max_operators 应 >= dorm_room_size")
         if self.daily_task_lmd < 0:
@@ -210,13 +195,5 @@ class SolverParams:
             solver_parts.append("冷启动=是")
         solver_parts.append(f"剪枝阈值 {self.combo_upper_bound_threshold:.2f}")
         lines.append(f"  求解: {', '.join(solver_parts)}")
-
-        contrib_parts = []
-        if self.rotation_penalty_weight > 0:
-            contrib_parts.append(f"轮换惩罚(已废弃) {self.rotation_penalty_weight:.2f}")
-        if self.rotation_max_shifts > 0:
-            contrib_parts.append(f"轮换上限(已废弃) {self.rotation_max_shifts}")
-        if contrib_parts:
-            lines.append(f"  贡献体系: {', '.join(contrib_parts)}")
 
         return "\n".join(lines)

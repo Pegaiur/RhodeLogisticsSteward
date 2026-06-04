@@ -129,7 +129,7 @@ class TestNoLambdaE2E:
         ops.append(mk_op("C", [mk_simple_skill("Control", 0.0)]))
         for i in range(4):
             ops.append(mk_op(f"D{i:02d}", [mk_simple_skill("Dormitory", 10.0)]))
-        params = SolverParams(shift_count=1, shift_hours=12, backpressure_damping=0.0)
+        params = SolverParams(shift_count=1, shift_hours=12)
         result = solve_slot(ops, params)
         assert isinstance(result, SolveResult)
         assert len(result.plans) >= 1
@@ -146,7 +146,7 @@ class TestNoLambdaE2E:
         ops.append(mk_op("C2", [mk_simple_skill("Control", 0.0)]))
         for i in range(4):
             ops.append(mk_op(f"D{i:02d}", [mk_simple_skill("Dormitory", 10.0)]))
-        params = SolverParams(shift_count=3, shift_hours=12, backpressure_damping=0.0)
+        params = SolverParams(shift_count=3, shift_hours=12)
         result = solve_slot(ops, params)
         assert isinstance(result, SolveResult)
         assert len(result.plans) == 3
