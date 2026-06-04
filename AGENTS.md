@@ -132,24 +132,28 @@ RhodeLogisticsSteward/
 
 | 标签 | 游戏 ref | 判定逻辑 | 维护位置 | 更新触发条件 |
 |------|---------|----------|----------|-------------|
-| 骑士 | `tag.knight` | name 集合 + `nationId=="kazimierz"` + `groupId=="pinus"` | `synergy/helpers.py` `_KNIGHT_NAMES` | 新增卡西米尔骑士干员 |
+| 骑士 | `tag.knight` | name 集合 + `nationId=="kazimierz"` + `groupId=="pinus"` | `helpers.py` `_KNIGHT_NAMES` | 新增卡西米尔骑士干员 |
 | 杜林族 | `tag.durin` | `raceId == "DURIN"` | 由 `character_table.json` 自动推导 | — |
-| 作业平台 | `tag.op` | 特定 profession | `synergy/helpers.py` `_OP_PLATFORM_NAMES` 硬编码 4 台 | 新增机器人/作业平台干员 |
-| 莱茵生命 | `cc.g.rh` | 名称集合 | `synergy/helpers.py` `_RHINE_LAB_NAMES` 硬编码 10 人（不含异格） | 新增莱茵生命势力干员 |
-| 怪物猎人小队 | `tag.mh` | 联动限定干员 | 尚未建模 | — |
+| 作业平台 | `tag.op` | 特定 profession | `helpers.py` `_OP_PLATFORM_NAMES` | 新增机器人/作业平台干员 |
+| 莱茵生命 | `cc.g.rh` | 名称集合 | `helpers.py` `_RHINE_LAB_NAMES` | 新增莱茵生命势力干员 |
+| 龙门近卫局 | — | 名称集合 | `helpers.py` `_LUNG_MEN_GUARD_NAMES` | 新增龙门近卫局干员 |
+| 黑钢国际 | — | 名称集合 | `helpers.py` `_BLACKSTEEL_HOLDERS` | 新增黑钢国际干员 |
+| 怪物猎人小队 | `tag.mh` | 名称集合 | `helpers.py` `_MH_NAMES` | 新增 MH 联动干员 |
 | 莱欧斯小队 | `tag.dungeon` | 联动限定干员 | 尚未建模 | — |
 
 ### 硬编码数据清单
 
-以下硬编码数据不受 ArknightsGameData 驱动，每次游戏版本更新需人工审查。**详情以源码为准，本文档不重复列出：**
+以下数据不受 ArknightsGameData 驱动，每次游戏版本更新需人工审查。**详情以源码为准：**
 
-| 数据类别 | 权威来源 | 说明 |
-|----------|----------|------|
-| 系统贡献者 | [`registry.py`](file:///d:/Dev/RhodeLogisticsSteward/steward_core/synergy/registry.py) `_SYSTEM_CONTRIBUTORS` | 效率为0但有系统贡献的干员，按 `contribution_type` 分类标注 |
-| 联动映射表 | [`types.py`](file:///d:/Dev/RhodeLogisticsSteward/steward_core/synergy/types.py) `TABLES` 注册器 | 13 张 dict 表，含消费者函数和更新触发条件 |
-| 名称集合 | [`helpers.py`](file:///d:/Dev/RhodeLogisticsSteward/steward_core/synergy/helpers.py) | `_KNIGHT_NAMES`、`_OP_PLATFORM_NAMES`、`_RHINE_LAB_NAMES`、`_MH_NAMES` 等 11 个集合/常量 |
-| 辅助常量 | [`helpers.py`](#) | `_PINUS_GROUP`、`_ORDER_ANCHOR_PREFIXES`、`_B_ROSEMARY` 等 |
-| 效率冲突禁用表 | [`conflicts.py`](file:///d:/Dev/RhodeLogisticsSteward/steward_core/synergy/conflicts.py) `_EFF_MECH_DISABLERS` | 订单机制 buff 前缀 → 被禁用的效率机制名映射。消费者：`resolve_efficiency_conflicts`（evaluate.py + opportunity.py）。更新触发：新增覆盖型订单机制 buff |
+| 文件 | 类别 | 说明 |
+|------|------|------|
+| `synergy/types.py` | `TABLES` 注册器 | 28 张联动映射表，含消费者函数与更新触发条件 |
+| `synergy/helpers.py` | 名称集合 / 组常量 | 7 个名称集合（骑士/作业平台/莱茵生命/杜林/黑钢/龙门近卫局/MH）+ 组 ID、设施常量等 |
+| `synergy/conflicts.py` | `_EFF_MECH_DISABLERS` | 订单机制 buff 前缀 → 被禁用的效率机制名映射 |
+| `synergy/registry.py` | `_SYSTEM_CONTRIBUTORS` | 效率为 0 但有系统贡献的干员 |
+| `mood_flow.py` | `_SELF_MP_COST` 等 5 张表 | 百余条心情消耗修正 buff（房间级 / 自身级 / 阵营归零 / 配对条件） |
+| `synergy/facility_group.py` | `_FACILITY_GROUP_TABLE` | 设施 group 计数型 buff（精英 / 岁干员） |
+| `synergy/ramping.py` | `_RAMPING_SKILL_TABLE` | 爬升型技能参数（5 mfg + 1 meet） |
 
 ### 维护流程
 
