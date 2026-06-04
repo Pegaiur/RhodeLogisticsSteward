@@ -103,6 +103,18 @@ def build_candidate_pool(
             seen.add(op.char_id)
             pool.append(op)
 
+    # Trade: 裁缝类干员 (trade_ord_wt&cost) 订单质量加成——efficient=0 但真实价值高，
+    # top_k=5 按效率排序会排除。纳入全部有订单质量技能的 pure_efficiency 干员。
+    if room_type == "Trade" and product == "Money":
+        for op in classification.pure_efficiency:
+            if op.char_id in seen:
+                continue
+            for sk in op.skills:
+                if sk.buff_id.startswith("trade_ord_wt"):
+                    seen.add(op.char_id)
+                    pool.append(op)
+                    break
+
     return pool
 
 
