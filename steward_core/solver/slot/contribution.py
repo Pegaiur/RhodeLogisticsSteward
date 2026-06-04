@@ -269,6 +269,40 @@ def _control_contribution(
     return total
 
 
+def _cold_start_jie_estimate(ctx: "SlotContext") -> float:
+    """冷启动：检查池中是否存在消费者+喀兰配对可能，给灵知保守估值
+
+    灵知的双元门特性导致冷启动死锁：灵知不进冷启动 Control → 孑组合被低估 →
+    孑不进 Trade → phase_control 看不到灵知价值 → 灵知不进中枢 → 死循环。
+
+    BuffPool 是连续体可以渐进收敛，但灵知必须在此处接受一个保守估值才能打破死锁。
+    """
+    # 检查池中是否有订单上限消费者（任意类型）
+    pool_ops = ctx.operators
+    has_consumer = any(
+        _collect_mechs([op], _JIE_MECH_TABLE)
+        or (
+            _collect_mechs([op], _TRADE_TRIGGER_TABLE) & {"swires_limit", "degenbrecher_limit"}
+        )
+        for op in pool_ops
+        if op.has_skill_for("Trade")
+    )
+    if not has_consumer:
+        return 0.0
+
+    # 检查池中是否有喀兰 Trade 干员
+    has_karlan = any(
+        op.has_group("karlan") and op.has_skill_for("Trade")
+        for op in pool_ops
+    )
+    if not has_karlan:
+        return 0.0
+
+    # 保守假设：至少 1 个喀兰干员能与消费者同房 → 灵知 +6 订单上限 → +24% 效率
+    hours = ctx.params.shift_hours if ctx.params else 12.0
+    return 6 * 4.0 / 100.0 * _TRADE_BASE_LMD_PER_HOUR * hours
+
+
 def _indirect_trade_contribution(
     ctx: "SlotContext",
     op: "Operator",
@@ -290,7 +324,11 @@ def _indirect_trade_contribution(
 
     trade_names = ctx.ops_of_type(window_idx, "Trade")
     if not trade_names:
-        return 0.0
+        # 冷启动：Trade 未分配，检查池中是否存在消费者+喀兰配对可能性
+        # 与 BuffPool 不同，灵知→孑是二元门——灵知不进中枢则孑组合完全得不到订单上限增益。
+        # 若池中同时有消费者和喀兰 Trade 干员，保守假设至少 1 个喀兰会与消费者同房，
+        # 以此打破"冷启动无灵知→孑组合被低估→孑不进 Trade→灵知贡献为零"的死锁。
+        return _cold_start_jie_estimate(ctx)
 
     total = 0.0
     hours = ctx.params.shift_hours if ctx.params else 12.0
