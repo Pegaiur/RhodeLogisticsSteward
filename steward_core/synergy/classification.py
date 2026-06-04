@@ -9,6 +9,7 @@ from .mfg_linkages import skill_class, _ZEROING_VARIANT_TABLE
 from .ramping import operator_estimated_efficiency
 from .buff_pool import _B_BUFF_CONSUMER_TABLE
 from .facility_linkages import _A_FACILITY_LINK_TABLE
+from .trade_linkages import _ORDER_LIMIT_TABLE
 
 
 def _detect_unregistered_contributors(op_name: str, room_type: str) -> bool:
@@ -103,17 +104,23 @@ def build_candidate_pool(
             seen.add(op.char_id)
             pool.append(op)
 
-    # Trade: 裁缝类干员 (trade_ord_wt&cost) 订单质量加成——efficient=0 但真实价值高，
-    # top_k=5 按效率排序会排除。纳入全部有订单质量技能的 pure_efficiency 干员。
+    # Trade: 表驱动连接件 — efficient=0 但通过订单质量/订单上限/设施联动提供非效率价值，
+    # top_k=5 按效率排序会排除。纳入全部有 Trade 表驱动技能的 pure_efficiency 干员。
     if room_type == "Trade" and product == "Money":
         for op in classification.pure_efficiency:
             if op.char_id in seen:
                 continue
             for sk in op.skills:
-                if sk.buff_id.startswith("trade_ord_wt"):
+                if (sk.buff_id.startswith("trade_ord_wt")
+                        or (sk.room_type == "Trade" and sk.buff_id in _ORDER_LIMIT_TABLE)):
                     seen.add(op.char_id)
                     pool.append(op)
                     break
+            else:
+                entry = _A_FACILITY_LINK_TABLE.get(op.name)
+                if entry is not None and entry.target_room == "Trade":
+                    seen.add(op.char_id)
+                    pool.append(op)
 
     # Mfg: 容量加成干员 (capacity_bonus > 0) —— efficient=0 但提供仓库容量/降本等非效率价值，
     # top_k=5 按效率排序会排除。纳入全部有 capacity_bonus 的 pure_efficiency 干员。
