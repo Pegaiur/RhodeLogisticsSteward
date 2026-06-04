@@ -151,7 +151,7 @@ RhodeLogisticsSteward/
 | `synergy/helpers.py` | 名称集合 / 组常量 | 7 个名称集合（骑士/作业平台/莱茵生命/杜林/黑钢/龙门近卫局/MH）+ 组 ID、设施常量等 |
 | `synergy/conflicts.py` | `_EFF_MECH_DISABLERS` | 订单机制 buff 前缀 → 被禁用的效率机制名映射 |
 | `synergy/registry.py` | `_SYSTEM_CONTRIBUTORS` | 效率为 0 但有系统贡献的干员 |
-| `mood_flow.py` | `_SELF_MP_COST` 等 5 张表 | 百余条心情消耗修正 buff（房间级 / 自身级 / 阵营归零 / 配对条件） |
+| `mood_flow.py` | `_SELF_MP_COST` 等 5 张表 | 约 75 条心情消耗修正 buff（房间级 / 自身级 / 阵营归零 / 配对条件） |
 | `synergy/facility_group.py` | `_FACILITY_GROUP_TABLE` | 设施 group 计数型 buff（精英 / 岁干员） |
 | `synergy/ramping.py` | `_RAMPING_SKILL_TABLE` | 爬升型技能参数（5 mfg + 1 meet） |
 
@@ -234,7 +234,7 @@ master ────────────────────────�
 | 通过 Step 1 验证 | 0.2.0 | 核心算法验证 |
 | 通过 Step 2 验证 | 0.3.0 | 横向重构完成 |
 | 求解器三件套优化 | 0.4.0 | 支撑包+局部搜索+全局状态 |
-| Strategy 策略层重构 | 0.5.0 | Baseline/KBeam/Iterative 三条策略 + Phase 重命名 + BuffPool 迭代 + CLI 策略选择 |
+| Strategy 策略层重构 | 0.5.0 | Baseline/KBeam/Iterative 三条策略（v0.6.0 已统一为 SlotStrategy）+ Phase 重命名 + BuffPool 迭代 + CLI 策略选择 |
 | JSON 输出协议对齐 | 0.5.1 | 输出符合 MAA 基建排班协议 v5.x、README、文档归档合并 |
 | 槽位加工模型重构 | — (dev) | SlotSolver 统一求解器（`slot/` 子包，13 模块）+ D[d] 偏导数反馈迭代 + 四阶段编排（phase_mfg/trade/control/remaining）。当前 feat/slot-iteration 分支，已合并至 master，因轮换调度不完整未打 tag |
 | 心情建模与多班次基础 | — (dev) | MoodContext + MoodModifiers + dorm_recovery + solve_multi_shift() 编排器。已合并至 master，后续由槽位加工模型替代 |
