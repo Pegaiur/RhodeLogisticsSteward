@@ -7,7 +7,7 @@
 from dataclasses import dataclass
 
 from steward_core.models import Operator
-from .types import ControlConditionalEntry, ControlPerOpEntry, ControlReceptionEntry, ControlTradeLimitEntry, GlobalBonusEntry
+from .types import ControlConditionalEntry, ControlPerOpEntry, ControlReceptionEntry, ControlTradeLimitEntry, ClusterHuntingEntry, GlobalBonusEntry
 from .helpers import _OP_PLATFORM_NAMES, _is_knight
 
 # ─── 表 A: 无条件全局效率 ─────────────────────────────────────────
@@ -82,6 +82,118 @@ _CONTROL_PER_OP_TABLE: dict[str, list[ControlPerOpEntry]] = {
     ],
 }
 """per-operator 条件加成 — 中枢干员名 → 加成条目列表"""
+
+# ─── 表 E: 集群狩猎 ──────────────────────────────────────────────
+
+_CLUSTER_HUNTING_TABLE: dict[str, ClusterHuntingEntry] = {
+    "歌蕾蒂娅": ClusterHuntingEntry(
+        buff_ids=frozenset({"control_mp_aegir2[000]", "control_mp_aegir2[010]"}),
+        bonus_per=10.0,
+        max_bonus=90.0,
+        group_id="abyssal",
+    ),
+}
+"""集群狩猎加成表 — 中枢干员名 → (buff_ids, bonus_per, max_bonus, group_id)
+
+每有 1 个 group_id 干员进驻 Mfg 站，每个有该 group_id 的 Mfg 站 +bonus_per%，
+上限 max_bonus%，与其他归零自动化互斥。
+"""
+
+
+def compute_cluster_hunting_bonus(
+    control_ops: list["Operator"],
+    all_mfg_assignments: dict[int, list[str]],
+    op_lookup: dict[str, "Operator"],
+    this_room_index: int,
+) -> float:
+    """计算集群狩猎对该 Mfg 站的加成（百分值）
+
+    Args:
+        control_ops: 中枢干员列表
+        all_mfg_assignments: {room_index: [operator_names]} 全 Mfg 站分配
+        op_lookup: 干员名 → Operator 查找表
+        this_room_index: 当前房间索引
+
+    Returns:
+        百分加成值（0 表示该站无深海猎人或中枢无集群狩猎提供者）
+    """
+    if not all_mfg_assignments:
+        return 0.0
+
+    # 该房间无深海猎人 → 0
+    this_room_ops = all_mfg_assignments.get(this_room_index, [])
+    if not any(op_lookup.get(n) and op_lookup[n].group_id == "abyssal" for n in this_room_ops):
+        return 0.0
+
+    # 检测中枢是否有集群狩猎提供者
+    ctrl_names = {op.name for op in control_ops}
+    bonus_per = 0.0
+    max_bonus = 0.0
+    found = False
+
+    for name in ctrl_names:
+        entry = _CLUSTER_HUNTING_TABLE.get(name)
+        if entry is None:
+            continue
+        op = op_lookup.get(name)
+        if op is None:
+            continue
+        if not any(sk.buff_id in entry.buff_ids for sk in op.skills):
+            continue
+        bonus_per = entry.bonus_per
+        max_bonus = entry.max_bonus
+        found = True
+        break
+
+    if not found:
+        return 0.0
+
+    # 全基建 Mfg 站统计深海猎人数
+    total_abyssal = 0
+    for room_idx, names in all_mfg_assignments.items():
+        for n in names:
+            op = op_lookup.get(n)
+            if op and op.group_id == "abyssal":
+                total_abyssal += 1
+
+    return min(total_abyssal * bonus_per, max_bonus)
+
+
+def has_cluster_hunting(control_ops: list["Operator"]) -> bool:
+    """中枢是否存在集群狩猎提供者"""
+    for op in control_ops:
+        entry = _CLUSTER_HUNTING_TABLE.get(op.name)
+        if entry is None:
+            continue
+        if any(sk.buff_id in entry.buff_ids for sk in op.skills):
+            return True
+    return False
+
+
+def get_disabled_mfg_mechs(control_ops: list["Operator"]) -> "frozenset[str]":
+    """返回因中枢 buff 存在而被禁用的 Mfg 效率机制名集合
+
+    当前: 集群狩猎激活 → 配合意识 (combo_amplify) 被禁用
+    """
+    disabled: set[str] = set()
+    if has_cluster_hunting(control_ops):
+        disabled.add("combo_amplify")
+    return frozenset(disabled)
+
+
+def is_cluster_hunting_zeroed(room_ops: list["Operator"], room_type: str) -> bool:
+    """检测房间内是否存在归零者（自动化/仿生海龙）清零集群狩猎
+
+    manu_prod_spd&power[*] buff 持有者在房间内 → 集群狩猎加成归零。
+    """
+    if room_type != "Mfg":
+        return False
+    from .mfg_linkages import _POWER_BUFF_BONUS
+    for op in room_ops:
+        for sk in op.skills:
+            if sk.buff_id in _POWER_BUFF_BONUS:
+                return True
+    return False
 
 
 _CONTROL_TRADE_LIMIT_TABLE: dict[str, ControlTradeLimitEntry] = {

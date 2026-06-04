@@ -171,6 +171,7 @@ def evaluate_room(
     global_bonus: GlobalBonus | None = None,
     buff_pool = None,
     ctrl_per_op_bonus: float = 0.0,
+    cluster_hunting_bonus: float = 0.0,
     layout: LayoutConfig | None = None,
     power_platforms: dict[str, bool] | None = None,
     all_assignments: dict[str, list[Operator]] | None = None,
@@ -250,6 +251,15 @@ def evaluate_room(
     total += integrate_segments(zero_segs, T)
     total += ctrl_per_op_bonus * T
 
+    # 集群狩猎加成（C4）— 受自动化/仿生海龙清零
+    if room_type == "Mfg" and cluster_hunting_bonus > 0:
+        from .synergy.control_linkages import is_cluster_hunting_zeroed, has_cluster_hunting as _has_ch
+        if not is_cluster_hunting_zeroed(operators, room_type):
+            total += cluster_hunting_bonus * T
+        ch_active = control_operators and _has_ch(control_operators)
+    else:
+        ch_active = False
+
     # ── 五、逐干员个人效率 ──
     total += _eval_per_operator_efficiency(
         operators, room_type, product, T,
@@ -259,8 +269,10 @@ def evaluate_room(
     )
 
     # ── 六、房间属性加成 ──
+    # 配合意识：集群狩猎激活时禁用
     total += integrate_segments(synergy_capacity_to_eff(operators, room_type, product, T), T)
-    total += integrate_segments(synergy_efficiency_amplifier(non_zero_ops, room_type, product, T), T)
+    if not ch_active:
+        total += integrate_segments(synergy_efficiency_amplifier(non_zero_ops, room_type, product, T), T)
 
     # 贸易站效率→效率放大器（雪雉天道酬勤）— 必须在 per-operator + 房间属性之后，
     # 因为 total/T 是所有前置效率的平均值。

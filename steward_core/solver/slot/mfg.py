@@ -18,6 +18,10 @@ from steward_core.synergy import (
     compute_control_global_bonus,
     control_per_operator_bonus,
 )
+from steward_core.synergy.control_linkages import (
+    has_cluster_hunting as _has_cluster_hunting,
+    compute_cluster_hunting_bonus as _compute_ch_bonus,
+)
 from steward_core.synergy._derived import MFG_ANCHORS
 from steward_core.synergy.facility_linkages import _has_power_count_modifier
 from steward_core.synergy.buff_pool import compute_buff_pool
@@ -92,14 +96,26 @@ def phase_mfg(
             if enabler.char_id not in existing and enabler.char_id not in assigned_ids:
                 pool.append(enabler)
 
-        combos = [list(c) for c in itertools.combinations(pool, min(3, len(pool)))]
-        if not combos:
-            continue
-
+        # 中枢信息（供集群狩猎注入 + 后续计算用）
         ctrl_names = ctx.ops_of_type(window_idx, "Control")
         ctrl_ops = [ctx.op_lookup[n] for n in ctrl_names if n in ctx.op_lookup]
         if not ctrl_ops:
             ctrl_ops = cold_start_ctrl_ops(ctx, window_idx)
+
+        # 集群狩猎：注入深海猎人干员进入 Mfg 候选池
+        ch_active = _has_cluster_hunting(ctrl_ops)
+        if ch_active:
+            existing_pool = {op.char_id for op in pool}
+            for op in ctx.operators:
+                if op.char_id in assigned_ids or op.char_id in existing_pool:
+                    continue
+                if op.group_id == "abyssal":
+                    pool.append(op)
+
+        combos = [list(c) for c in itertools.combinations(pool, min(3, len(pool)))]
+        if not combos:
+            continue
+
         global_bonus = compute_control_global_bonus(ctrl_ops)
 
         dorm_names = ctx.ops_of_type(window_idx, "Dormitory")
@@ -109,6 +125,18 @@ def phase_mfg(
 
         office_names = ctx.ops_of_type(window_idx, "Office")
         office_ops = [ctx.op_lookup[n] for n in office_names if n in ctx.op_lookup]
+
+        # Mfg 房间索引 + 已分配快照（供集群狩猎计算用）
+        mfg_room_indices = [
+            room.room_index
+            for room in ctx.layout.rooms
+            if room.room_type == "Mfg" and room.product == product
+        ]
+        all_mfg_snapshot: dict[int, list[str]] = {}
+        for ri in mfg_room_indices:
+            existing_ops = ctx.room_ops(window_idx, "Mfg", ri)
+            if existing_ops:
+                all_mfg_snapshot[ri] = list(existing_ops)
 
         evaluated = []
         for combo_ops in combos:
@@ -126,10 +154,19 @@ def phase_mfg(
             ctrl_bonus = control_per_operator_bonus(
                 ctrl_ops, combo_ops, product, room_type="Mfg",
             )
+            # 集群狩猎：暂定分配快照计算加成（影响评分排序）
+            ch_bonus = 0.0
+            if ch_active and mfg_room_indices:
+                tentative = dict(all_mfg_snapshot)
+                tentative[mfg_room_indices[0]] = [op.name for op in combo_ops]
+                ch_bonus = _compute_ch_bonus(
+                    ctrl_ops, tentative, ctx.op_lookup, mfg_room_indices[0],
+                )
             score = evaluate_room(
                 combo_ops, "Mfg", product, effective_power,
                 shift_hours, global_bonus, combo_pool,
                 ctrl_per_op_bonus=ctrl_bonus,
+                cluster_hunting_bonus=ch_bonus,
                 all_operators=ctx.operators,
                 control_operators=ctrl_ops,
                 all_assignments=ctx.build_all_assignments(window_idx),
@@ -150,11 +187,6 @@ def phase_mfg(
 
         evaluated.sort(key=lambda x: -x[0])
 
-        mfg_room_indices = [
-            room.room_index
-            for room in ctx.layout.rooms
-            if room.room_type == "Mfg" and room.product == product
-        ]
         allocated_rooms = 0
         taken_names: set[str] = set()
 

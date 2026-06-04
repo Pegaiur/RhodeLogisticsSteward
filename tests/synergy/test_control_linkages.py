@@ -635,3 +635,210 @@ class TestC3ControlReception:
 
         bonus = compute_control_reception_bonus(ctrl_ops, ctx, 0)
         assert bonus == 20.0
+
+
+# ─── C4 集群狩猎加成 ──────────────────────────────────────────
+
+class TestClusterHuntingBonus:
+    """C4: compute_cluster_hunting_bonus — 歌蕾蒂娅集群狩猎按站加成"""
+
+    def _mk_abyssal(self, name: str) -> Operator:
+        """构造深海猎人干员（group_id="abyssal"）"""
+        return _mk_op(name, group_id="abyssal")
+
+    def _mk_gladiia_ctrl(self) -> Operator:
+        """构造持有集群狩猎 buff 的歌蕾蒂娅"""
+        return Operator(
+            char_id="歌蕾蒂娅", name="歌蕾蒂娅",
+            skills=[_mk_skill("control_mp_aegir2[010]", "Control", "集群狩猎·β")],
+            group_id="abyssal",
+        )
+
+    def test_4abyssal在各Mfg站_该站得40(self):
+        """歌蕾蒂娅在Control + 4深海猎人在4间Mfg → 该站 +40%（4×10）"""
+        from steward_core.synergy.control_linkages import compute_cluster_hunting_bonus
+
+        gladiia = self._mk_gladiia_ctrl()
+        skadi = self._mk_abyssal("斯卡蒂")
+        specter = self._mk_abyssal("幽灵鲨")
+        andreana = self._mk_abyssal("安哲拉")
+        ulpian = self._mk_abyssal("乌尔比安")
+
+        op_lookup = {o.name: o for o in [gladiia, skadi, specter, andreana, ulpian]}
+
+        # 4 间 Mfg 站，每间各 1 个深海猎人
+        all_mfg = {
+            0: ["斯卡蒂"],
+            1: ["幽灵鲨"],
+            2: ["安哲拉"],
+            3: ["乌尔比安"],
+        }
+
+        bonus = compute_cluster_hunting_bonus(
+            control_ops=[gladiia],
+            all_mfg_assignments=all_mfg,
+            op_lookup=op_lookup,
+            this_room_index=0,
+        )
+        assert bonus == 40.0  # 4 abyssal in Mfg × 10
+
+    def test_歌蕾蒂娅不在Control_返回零(self):
+        """歌蕾蒂娅不在 control_ops 中 → 0"""
+        from steward_core.synergy.control_linkages import compute_cluster_hunting_bonus
+
+        gladiia = self._mk_gladiia_ctrl()
+        skadi = self._mk_abyssal("斯卡蒂")
+        op_lookup = {"歌蕾蒂娅": gladiia, "斯卡蒂": skadi}
+        all_mfg = {0: ["斯卡蒂"]}
+
+        bonus = compute_cluster_hunting_bonus(
+            control_ops=[], all_mfg_assignments=all_mfg,
+            op_lookup=op_lookup, this_room_index=0,
+        )
+        assert bonus == 0.0
+
+    def test_无深海猎人在Mfg_返回零(self):
+        """歌蕾蒂娅在Control 但 Mfg 站无深海猎人 → 0"""
+        from steward_core.synergy.control_linkages import compute_cluster_hunting_bonus
+
+        gladiia = self._mk_gladiia_ctrl()
+        op_lookup = {"歌蕾蒂娅": gladiia}
+
+        bonus = compute_cluster_hunting_bonus(
+            control_ops=[gladiia], all_mfg_assignments={},
+            op_lookup=op_lookup, this_room_index=0,
+        )
+        assert bonus == 0.0
+
+    def test_该房间无深海猎人_即使其他房间有(self):
+        """Room 0 无 abyssal → 0，即使 Room 1-3 有"""
+        from steward_core.synergy.control_linkages import compute_cluster_hunting_bonus
+
+        gladiia = self._mk_gladiia_ctrl()
+        skadi = self._mk_abyssal("斯卡蒂")
+        specter = self._mk_abyssal("幽灵鲨")
+        op_lookup = {"歌蕾蒂娅": gladiia, "斯卡蒂": skadi, "幽灵鲨": specter}
+
+        all_mfg = {
+            0: ["普通干员"],  # 该房间无 abyssal
+            1: ["斯卡蒂"],
+            2: ["幽灵鲨"],
+        }
+
+        bonus = compute_cluster_hunting_bonus(
+            control_ops=[gladiia], all_mfg_assignments=all_mfg,
+            op_lookup=op_lookup, this_room_index=0,
+        )
+        assert bonus == 0.0  # 该站无深海猎人 → 不加成
+
+    def test_上限90_10个深海猎人(self):
+        """10 个深海猎人在 Mfg → 上限 90%（不是 100%）"""
+        from steward_core.synergy.control_linkages import compute_cluster_hunting_bonus
+
+        gladiia = self._mk_gladiia_ctrl()
+        ops = [gladiia]
+        all_mfg: dict[int, list[str]] = {}
+        for i in range(10):
+            name = f"深海{i}"
+            ops.append(self._mk_abyssal(name))
+            all_mfg[i] = [name]
+
+        op_lookup = {o.name: o for o in ops}
+
+        bonus = compute_cluster_hunting_bonus(
+            control_ops=[gladiia], all_mfg_assignments=all_mfg,
+            op_lookup=op_lookup, this_room_index=0,
+        )
+        assert bonus == 90.0  # min(10×10, 90)
+
+    def test_歌蕾蒂娅无cluster_hunting_buff_返回零(self):
+        """歌蕾蒂娅在Control 但无 control_mp_aegir2 skill → 0"""
+        from steward_core.synergy.control_linkages import compute_cluster_hunting_bonus
+
+        gladiia = _mk_op("歌蕾蒂娅", group_id="abyssal")
+        skadi = self._mk_abyssal("斯卡蒂")
+        op_lookup = {"歌蕾蒂娅": gladiia, "斯卡蒂": skadi}
+        all_mfg = {0: ["斯卡蒂"]}
+
+        bonus = compute_cluster_hunting_bonus(
+            control_ops=[gladiia], all_mfg_assignments=all_mfg,
+            op_lookup=op_lookup, this_room_index=0,
+        )
+        assert bonus == 0.0
+
+    def test_非深海猎人不受影响(self):
+        """Mfg 站有非 abyssal 干员 → 不计入深海猎人计数"""
+        from steward_core.synergy.control_linkages import compute_cluster_hunting_bonus
+
+        gladiia = self._mk_gladiia_ctrl()
+        skadi = self._mk_abyssal("斯卡蒂")
+        amiya = _mk_op("阿米娅")
+        op_lookup = {"歌蕾蒂娅": gladiia, "斯卡蒂": skadi, "阿米娅": amiya}
+
+        all_mfg = {
+            0: ["斯卡蒂", "阿米娅", "普通干员"],
+        }
+
+        bonus = compute_cluster_hunting_bonus(
+            control_ops=[gladiia], all_mfg_assignments=all_mfg,
+            op_lookup=op_lookup, this_room_index=0,
+        )
+        assert bonus == 10.0  # 仅 斯卡蒂 1 人计入
+
+
+# ─── 集群狩猎冲突检测 ──────────────────────────────────────────
+
+class TestClusterHuntingConflicts:
+    """集群狩猎与配合意识/自动化/仿生海龙的冲突"""
+
+    def test_检测集群狩猎激活(self):
+        """has_cluster_hunting: 歌蕾蒂娅在Control且持有buff → True"""
+        from steward_core.synergy.control_linkages import has_cluster_hunting
+
+        gladiia = Operator(
+            char_id="歌蕾蒂娅", name="歌蕾蒂娅",
+            skills=[_mk_skill("control_mp_aegir2[010]", "Control", "集群狩猎·β")],
+        )
+        assert has_cluster_hunting([gladiia])
+
+    def test_检测无集群狩猎(self):
+        """歌蕾蒂娅无集群狩猎buff → False"""
+        from steward_core.synergy.control_linkages import has_cluster_hunting
+
+        gladiia = _mk_op("歌蕾蒂娅")
+        assert not has_cluster_hunting([gladiia])
+
+    def test_检测空中枢(self):
+        """空 control_ops → False"""
+        from steward_core.synergy.control_linkages import has_cluster_hunting
+
+        assert not has_cluster_hunting([])
+
+    def test_配合意识被集群狩猎禁用(self):
+        """歌蕾蒂娅集群狩猎激活 → 槐琥配合意识失效"""
+        from steward_core.synergy.control_linkages import get_disabled_mfg_mechs
+
+        gladiia = Operator(
+            char_id="歌蕾蒂娅", name="歌蕾蒂娅",
+            skills=[_mk_skill("control_mp_aegir2[010]", "Control", "集群狩猎·β")],
+        )
+        disabled = get_disabled_mfg_mechs([gladiia])
+        assert "combo_amplify" in disabled
+
+    def test_自动化清零集群狩猎_gladiia不在Control(self):
+        """自动化归零者进入房间 → 集群狩猎被清零（无论 歌蕾蒂娅 是否在 Control）"""
+        from steward_core.synergy.control_linkages import is_cluster_hunting_zeroed
+
+        # 自动化归零者（如森蚺）在 Mfg 房间
+        eunectes = Operator(
+            char_id="森蚺", name="森蚺",
+            skills=[_mk_skill("manu_prod_spd&power[000]", "Mfg", "自动化·α")],
+        )
+        assert is_cluster_hunting_zeroed([eunectes], "Mfg")
+
+    def test_无归零者_集群狩猎不清零(self):
+        """普通 Mfg 房间无自动化/仿生海龙 → 集群狩猎正常"""
+        from steward_core.synergy.control_linkages import is_cluster_hunting_zeroed
+
+        generic = _mk_op("普通干员")
+        assert not is_cluster_hunting_zeroed([generic], "Mfg")

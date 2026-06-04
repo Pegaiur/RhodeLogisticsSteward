@@ -135,6 +135,20 @@ class ControlReceptionEntry(NamedTuple):
     bonus_per: float
 
 
+class ClusterHuntingEntry(NamedTuple):
+    """C·集群狩猎加成条目
+
+    buff_ids:      触发用的 buff_id 集合（control_mp_aegir2[000/010]）
+    bonus_per:     每名 Mfg 深海猎人加成 %
+    max_bonus:     单个 Mfg 站加成上限
+    group_id:      被计数干员的 group_id
+    """
+    buff_ids: frozenset[str]
+    bonus_per: float
+    max_bonus: float
+    group_id: str
+
+
 class OrderLimitEntry(NamedTuple):
     """A·贸易站订单上限贡献条目"""
     source: str
@@ -229,7 +243,7 @@ from .ramping import _RAMPING_SKILL_TABLE  # noqa: E402
 from .facility_linkages import _A_FACILITY_LINK_TABLE  # noqa: E402
 from .buff_pool import _B_BUFF_CONSUMER_TABLE, _OPERATOR_BUFF_PRODUCERS  # noqa: E402
 from .global_linkages import _B_CROSS_ROOM_PAIR_TABLE, _B_GLOBAL_FACTION_TABLE  # noqa: E402
-from .control_linkages import _C_CONTROL_GLOBAL_TABLE, _CONTROL_CONDITIONAL_TABLE, _CONTROL_PER_OP_TABLE, _CONTROL_RECEPTION_TABLE  # noqa: E402
+from .control_linkages import _C_CONTROL_GLOBAL_TABLE, _CONTROL_CONDITIONAL_TABLE, _CONTROL_PER_OP_TABLE, _CONTROL_RECEPTION_TABLE, _CLUSTER_HUNTING_TABLE  # noqa: E402
 from .trade_linkages import _ORDER_LIMIT_TABLE, _TRADE_PAIR_TABLE, _JIE_MECH_TABLE, _TRADE_TRIGGER_TABLE, _ORDER_OVERRIDE_TABLE, _TRADE_SHARE_TABLE, _TRADE_EFF_AMPLIFIER_TABLE, _TRADE_CONDITIONAL_EFF_TABLE  # noqa: E402
 from .control_linkages import _CONTROL_TRADE_LIMIT_TABLE  # noqa: E402
 from .facility_group import _FACILITY_GROUP_TABLE  # noqa: E402
@@ -261,5 +275,6 @@ TABLES: dict[str, TableMeta] = {
     "C·中枢条件全局":    TableMeta(_CONTROL_CONDITIONAL_TABLE, ["compute_control_global_bonus"], "新增中枢条件型全局 buff（望/布丁/MH队友等）"),
     "C·中枢PerOp加成":  TableMeta(_CONTROL_PER_OP_TABLE,      ["control_per_operator_bonus"],   "新增中枢 per-operator 条件加成"),
     "C·中枢→会客室":    TableMeta(_CONTROL_RECEPTION_TABLE,    ["compute_control_reception_bonus"], "新增中枢→会客室加成"),
-    "B·设施group计数":   TableMeta(_FACILITY_GROUP_TABLE,    ["synergy_facility_group", "compute_facility_group_bonus"], "新增设施 group 计数型 buff（精英/岁等）"),
+    "C·集群狩猎":       TableMeta(_CLUSTER_HUNTING_TABLE,      ["compute_cluster_hunting_bonus", "has_cluster_hunting"], "新增中枢集群狩猎按站加成"),
+    "B·设施group计数":  TableMeta(_FACILITY_GROUP_TABLE,    ["synergy_facility_group", "compute_facility_group_bonus"], "新增设施 group 计数型 buff（精英/岁等）"),
 }
