@@ -303,9 +303,11 @@ def _indirect_trade_contribution(
 
         # 检查此房间是否含有订单上限消费者（通过技能表驱动检测）
         room_ops_list = [ctx.op_lookup[n] for n in room_names if n in ctx.op_lookup]
+        trade_mechs = _collect_mechs(room_ops_list, _TRADE_TRIGGER_TABLE)
+        # 仅 swires_limit(诗怀雅)/degenbrecher_limit(锏) 消费订单上限；gold_lines(鸿雪) 不消费
+        order_consumers = trade_mechs & {"swires_limit", "degenbrecher_limit"}
         has_consumer = bool(
-            _collect_mechs(room_ops_list, _JIE_MECH_TABLE)
-            or _collect_mechs(room_ops_list, _TRADE_TRIGGER_TABLE)
+            _collect_mechs(room_ops_list, _JIE_MECH_TABLE) or order_consumers
         )
         if not has_consumer:
             continue
