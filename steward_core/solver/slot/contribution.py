@@ -275,9 +275,14 @@ def _indirect_trade_contribution(
 ) -> float:
     """控制中枢干员通过 Trade 联动提供的间接价值
 
-    灵知→孑+卡兰贸易：每名卡兰 Trade 干员 +6 订单上限 → 孑 +24% 效率
-    仅在 孑 实际分配至 Trade 时生效（Phase C 已确定 Trade 分配）。
-    冷启动阶段 Trade 未分配时返回 0。
+    灵知的控制中枢技能 control_tra_limit&spd[000] 对每名喀兰 Trade 干员：
+    - -15% 订单效率（由 _per_operator_contribution / control_per_operator_bonus 处理）
+    - +6 订单上限（由本函数处理）
+
+    订单上限 +6 惠及三类消费者：孑（每订单 +4%）、琳琅诗怀雅（每订单 +4%）、
+    锏（每 5 订单 +25%，+6 足以跨一档）。
+
+    冷启动阶段 Trade 未分配时返回 0——最终 phase_control 有完整信息。
     """
     if op.name != "灵知":
         return 0.0
@@ -286,18 +291,33 @@ def _indirect_trade_contribution(
     if not trade_names:
         return 0.0
 
-    if "孑" not in trade_names:
-        return 0.0
+    total = 0.0
+    hours = ctx.params.shift_hours if ctx.params else 12.0
 
-    karlan_count = sum(
-        1 for n in trade_names
-        if (t_op := ctx.op_lookup.get(n)) and t_op.group_id == "karlan"
-    )
+    # 逐房间计算灵知订单上限增加对各消费者的边际贡献
+    for room_idx in range(2):
+        room_names = ctx.room_ops(window_idx, "Trade", room_idx)
+        if not room_names:
+            continue
 
-    if karlan_count > 0:
-        hours = ctx.params.shift_hours if ctx.params else 12.0
-        return karlan_count * 6 * 4.0 / 100.0 * _TRADE_BASE_LMD_PER_HOUR * hours
-    return 0.0
+        # 检查此房间是否含有订单上限消费者
+        has_consumer = any(
+            n in room_names for n in ("孑", "琳琅诗怀雅", "锏")
+        )
+        if not has_consumer:
+            continue
+
+        karlan_count = sum(
+            1 for n in room_names
+            if (t_op := ctx.op_lookup.get(n)) and t_op.group_id == "karlan"
+        )
+        if karlan_count == 0:
+            continue
+
+        # 每喀兰 +6 订单上限 × 4% 效率/订单（孑、诗怀雅口径；锏的 25%/5单 近似）
+        total += karlan_count * 6 * 4.0 / 100.0 * _TRADE_BASE_LMD_PER_HOUR * hours
+
+    return total
 
 
 _WORK_FACILITIES = ("Mfg", "Trade", "Office", "Power", "Reception")
