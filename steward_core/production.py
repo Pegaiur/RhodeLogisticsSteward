@@ -453,6 +453,8 @@ class _CalcCtx:
     drone_room_index: int
     all_operators: list[Operator] = field(default_factory=list)
     mood_ctx: "MoodContext | None" = None
+    all_mfg_assignments: dict[int, list[str]] = field(default_factory=dict)
+    """全 Mfg 站干员分配快照 {room_index: [operator_names]}，供集群狩猎计算产出一致性"""
 
 
 def _drone_boost(assignment: RoomAssignment, ctx: _CalcCtx, minutes_per_drone: float) -> float:
@@ -468,8 +470,15 @@ def _calc_mfg_record(
     """制造站作战记录产出计算"""
     n = len(ops)
     ctrl_bonus = control_per_operator_bonus(ctx.plan_ctrl_ops, ops, "CombatRecord")
+    # 集群狩猎加成——确保报告与求解器评分口径一致
+    from steward_core.synergy.control_linkages import compute_cluster_hunting_bonus
+    ch_bonus = compute_cluster_hunting_bonus(
+        ctx.plan_ctrl_ops, ctx.all_mfg_assignments, ctx.op_lookup,
+        assignment.room_index,
+    )
     eff_int = evaluate_room(ops, "Mfg", "CombatRecord", ctx.power_count, ctx.hours,
                             ctx.global_bonus, ctx.buff_pool, ctrl_per_op_bonus=ctrl_bonus,
+                            cluster_hunting_bonus=ch_bonus,
                             all_operators=ctx.all_operators,
                             control_operators=ctx.plan_ctrl_ops,
                             mood_ctx=ctx.mood_ctx)
@@ -493,8 +502,15 @@ def _calc_mfg_gold(
     """制造站赤金产出计算"""
     n = len(ops)
     ctrl_bonus = control_per_operator_bonus(ctx.plan_ctrl_ops, ops, "PureGold")
+    # 集群狩猎加成——确保报告与求解器评分口径一致
+    from steward_core.synergy.control_linkages import compute_cluster_hunting_bonus
+    ch_bonus = compute_cluster_hunting_bonus(
+        ctx.plan_ctrl_ops, ctx.all_mfg_assignments, ctx.op_lookup,
+        assignment.room_index,
+    )
     eff_int = evaluate_room(ops, "Mfg", "PureGold", ctx.power_count, ctx.hours,
                             ctx.global_bonus, ctx.buff_pool, ctrl_per_op_bonus=ctrl_bonus,
+                            cluster_hunting_bonus=ch_bonus,
                             all_operators=ctx.all_operators,
                             control_operators=ctx.plan_ctrl_ops,
                             mood_ctx=ctx.mood_ctx)
@@ -612,6 +628,12 @@ def calculate(
 
     # 3. 计算各设施产出（走 efficiency_fn 积分，含联动）
     power_count = compute_effective_power_count(power_ops, BASE_POWER_COUNT)
+    # 构建全 Mfg 站干员分配快照，供集群狩猎产出一致性计算
+    all_mfg: dict[int, list[str]] = {}
+    for assignment in plan.assignments:
+        if assignment.room_type == "Mfg" and assignment.operators:
+            all_mfg[assignment.room_index] = list(assignment.operators)
+
     ctx = _CalcCtx(
         op_lookup=op_lookup,
         plan_ctrl_ops=plan_ctrl_ops,
@@ -624,6 +646,7 @@ def calculate(
         drone_room_index=drone_room_index,
         all_operators=operators,
         mood_ctx=mood_ctx,
+        all_mfg_assignments=all_mfg,
     )
 
     for assignment in plan.assignments:
