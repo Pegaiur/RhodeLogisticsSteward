@@ -37,11 +37,24 @@ class BuffPool:
     def clone(self) -> "BuffPool":
         return replace(self)
 
+    def derive(self) -> None:
+        """原地更新派生字段：烟火→巫术结晶（//5），感知→思维链环（1:1）"""
+        self.wushu_crystal = self.yanhuo // 5
+        self.thought_chains = self.perception
+
+    def apply_delta(self, delta: "BuffPool") -> "BuffPool":
+        """返回 self + delta 的新池（含派生字段更新）
+
+        封装 clone → __add__ → derive 三步，消除调用侧重复代码。
+        """
+        result = self.clone() + delta
+        result.derive()
+        return result
+
 
 def _derive_pool(pool: BuffPool) -> None:
-    """原地更新派生字段：烟火→巫术结晶（//5），感知→思维链环（1:1）"""
-    pool.wushu_crystal = pool.yanhuo // 5
-    pool.thought_chains = pool.perception
+    """原地更新派生字段，委托给 BuffPool.derive()"""
+    pool.derive()
 
 
 def compute_buff_pool(
@@ -140,6 +153,61 @@ def compute_buff_pool(
     )
     _derive_pool(pool)
     return pool
+
+
+def compute_buff_pool_delta(
+    facility: str,
+    operators: list[Operator],
+    dorm_count: int,
+    *,
+    base_perception: int = 0,
+) -> BuffPool:
+    """计算可变设施干员对 buff_pool 的增量贡献
+
+    遍历 _OPERATOR_BUFF_PRODUCERS 表，仅处理 facility 对应的条目（含 cascade）。
+    返回只含增量字段的 BuffPool（其他字段为 0），可与 base_pool 做 __add__ 后 derive()。
+
+    正确性约束：base_pool 必须以相同的 dorm/office/control 干员但 facility 对应的
+    operators 为空列表计算。级联条目（perception_cascade）依赖 base_perception +
+    本轮 delta.perception。
+
+    Args:
+        facility: 设施类型，如 "Trade" / "Mfg"
+        operators: 该设施当前 combo 的干员列表（可为空）
+        dorm_count: 宿舍干员数
+        base_perception: 底池的感知信息值（用于级联项 perception_cascade 的正确计算）
+    """
+    delta = BuffPool()
+
+    # ── 非 cascade 条目 ──
+    for e in _OPERATOR_BUFF_PRODUCERS:
+        if e.cascade or e.facility != facility:
+            continue
+        if not any(_op_has_buff(op, e.buff_id) for op in operators):
+            continue
+        amount = _eval_producer_amount(e, dorm_count, 0, 0, 0, 0)
+        if amount <= 0:
+            continue
+        if e.dimension == "yanhuo":
+            delta.yanhuo += amount
+        elif e.dimension == "perception":
+            delta.perception += amount
+        elif e.dimension == "monster_cuisine":
+            delta.monster_cuisine += amount
+
+    # ── cascade 条目（依赖本轮 delta.perception + base_perception）──
+    for e in _OPERATOR_BUFF_PRODUCERS:
+        if not e.cascade or e.facility != facility:
+            continue
+        if not any(_op_has_buff(op, e.buff_id) for op in operators):
+            continue
+        if e.amount_source == "perception_cascade":
+            delta.silent_resonance += base_perception + delta.perception
+        else:
+            amount = _eval_producer_amount(e, dorm_count, 0, 0, 0, 0)
+            delta.silent_resonance += amount
+
+    return delta
 
 
 def _op_has_buff(op: Operator, buff_id: str) -> bool:

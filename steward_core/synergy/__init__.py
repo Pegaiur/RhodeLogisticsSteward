@@ -156,6 +156,7 @@ from steward_core.synergy.global_linkages import (
 from steward_core.synergy.buff_pool import (
     BuffPool,
     compute_buff_pool,
+    compute_buff_pool_delta,
     synergy_buff_pool_consumer,
     compute_engineering_robots,
     _B_BUFF_CONSUMER_TABLE,

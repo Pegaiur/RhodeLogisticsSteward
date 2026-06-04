@@ -20,7 +20,7 @@ from steward_core.synergy import (
     control_per_operator_bonus,
 )
 from steward_core.synergy.facility_linkages import _has_power_count_modifier
-from steward_core.synergy.buff_pool import compute_buff_pool, BuffPool
+from steward_core.synergy.buff_pool import compute_buff_pool, compute_buff_pool_delta, BuffPool
 from steward_core.evaluate import evaluate_room
 from steward_core.synergy._derived import TRADE_ANCHORS
 from .context import SlotContext, STATE_DIMS, mood_is_viable
@@ -136,15 +136,18 @@ def phase_trade(
 
         # ── Mfg 外溢定价：仅基于当前 Mfg 槽位消费者的边际价值 ──
         D_mfg = compute_partial_derivatives(ctx, window_idx)
+        dorm_ops = [o for o in dorm_ops_list if o]
         base_pool = compute_buff_pool(
             ctrl_ops,
-            dorm_operators=[o for o in dorm_ops_list if o],
+            dorm_operators=dorm_ops,
             dorm_level=params.dorm_level if params else 5,
             layout=ctx.layout if ctx.layout else _LAYOUT_243,
             mfg_operators=mfg_combo_ops,
+            trade_operators=[],  # 底池不含 trade，循环内用 delta 叠加
             office_operators=office_ops,
             office_perception_base=params.office_perception_base if params else 20,
         )
+        dorm_count = len(dorm_ops)
 
     evaluated = []
     all_assignments = ctx.build_all_assignments(window_idx)
@@ -152,16 +155,11 @@ def phase_trade(
     for combo_ops in combos:
         combo_names = [op.name for op in combo_ops]
         with timed("trade.buff_pool"):
-            combo_pool = compute_buff_pool(
-                ctrl_ops,
-                dorm_operators=[o for o in dorm_ops_list if o],
-                dorm_level=params.dorm_level if params else 5,
-                layout=ctx.layout if ctx.layout else _LAYOUT_243,
-                mfg_operators=mfg_combo_ops,
-                trade_operators=combo_ops,
-                office_operators=office_ops,
-                office_perception_base=params.office_perception_base if params else 20,
+            delta = compute_buff_pool_delta(
+                "Trade", combo_ops, dorm_count,
+                base_perception=base_pool.perception,
             )
+            combo_pool = base_pool.apply_delta(delta)
 
         with timed("trade.combo_other"):
             ctrl_bonus = control_per_operator_bonus(

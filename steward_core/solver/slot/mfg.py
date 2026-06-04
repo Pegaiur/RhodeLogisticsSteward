@@ -24,7 +24,7 @@ from steward_core.synergy.control_linkages import (
 )
 from steward_core.synergy._derived import MFG_ANCHORS
 from steward_core.synergy.facility_linkages import _has_power_count_modifier
-from steward_core.synergy.buff_pool import compute_buff_pool
+from steward_core.synergy.buff_pool import compute_buff_pool, compute_buff_pool_delta
 from steward_core.evaluate import evaluate_room
 from .context import SlotContext, mood_is_viable
 from ._cold_start import cold_start_ctrl_ops, cold_start_dorm_ops
@@ -144,19 +144,28 @@ def phase_mfg(
                 if existing_ops:
                     all_mfg_snapshot[ri] = list(existing_ops)
 
+            dorm_ops = [o for o in dorm_ops_list if o]
+            base_pool = compute_buff_pool(
+                ctrl_ops,
+                dorm_operators=dorm_ops,
+                dorm_level=params.dorm_level if params else 5,
+                layout=ctx.layout if ctx.layout else _LAYOUT_243,
+                mfg_operators=[],  # 底池不含 mfg，循环内用 delta 叠加
+                trade_operators=[],  # 底池不含 trade
+                office_operators=office_ops,
+                office_perception_base=params.office_perception_base if params else 20,
+            )
+            dorm_count = len(dorm_ops)
+
         evaluated = []
         all_assignments = ctx.build_all_assignments(window_idx)
         for combo_ops in combos:
             with timed("mfg.buff_pool"):
-                combo_pool = compute_buff_pool(
-                    ctrl_ops,
-                    dorm_operators=[o for o in dorm_ops_list if o],
-                    dorm_level=params.dorm_level if params else 5,
-                    layout=ctx.layout if ctx.layout else _LAYOUT_243,
-                    mfg_operators=combo_ops,
-                    office_operators=office_ops,
-                    office_perception_base=params.office_perception_base if params else 20,
+                delta = compute_buff_pool_delta(
+                    "Mfg", combo_ops, dorm_count,
+                    base_perception=base_pool.perception,
                 )
+                combo_pool = base_pool.apply_delta(delta)
 
             with timed("mfg.combo_other"):
                 ctrl_bonus = control_per_operator_bonus(

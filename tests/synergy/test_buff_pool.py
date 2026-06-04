@@ -783,3 +783,97 @@ class TestBuffPoolComposition:
         assert c.yanhuo == 0
         assert c.perception == 0
         assert c.silent_resonance == 0
+
+
+# ─── compute_buff_pool_delta 增量等价性验证 ──────────────────────
+
+class TestBuffPoolDelta:
+    """compute_buff_pool_delta: base_pool + delta == full compute_buff_pool"""
+
+    def test_trade_黑键产生感知与级联无声共鸣(self):
+        """黑键在 Trade，5 dorm → delta: perception=5, silent_resonance=base_perception+5"""
+        from steward_core.synergy import compute_buff_pool_delta, compute_buff_pool
+
+        control = [_mk_ling(), _mk_xi()]
+        dorm = [_mk_op(f"填位{i}") for i in range(5)]
+        trade_op = _mk_op("黑键", [_mk_skill("trade_ord_spd_bd_n1[000]", "TRADING", "乐感")])
+
+        # 底池：不含 trade
+        base = compute_buff_pool(control, dorm_operators=dorm, trade_operators=[])
+        # 完整：含 trade
+        full = compute_buff_pool(control, dorm_operators=dorm, trade_operators=[trade_op])
+
+        delta = compute_buff_pool_delta(
+            "Trade", [trade_op], len(dorm), base_perception=base.perception,
+        )
+        result = base.apply_delta(delta)
+
+        assert result == full
+
+    def test_trade_乌有产生烟火(self):
+        """乌有在 Trade，20 dorm → delta: yanhuo=20"""
+        from steward_core.synergy import compute_buff_pool_delta, compute_buff_pool
+
+        control = [_mk_ling(), _mk_chongyue()]
+        dorm = [_mk_op(f"填位{i}") for i in range(20)]
+        trade_op = _mk_op("乌有", [_mk_skill("trade_ord_spd_bd_n2[000]", "TRADING", "愿者上钩")])
+
+        base = compute_buff_pool(control, dorm_operators=dorm, trade_operators=[])
+        full = compute_buff_pool(control, dorm_operators=dorm, trade_operators=[trade_op])
+
+        delta = compute_buff_pool_delta(
+            "Trade", [trade_op], len(dorm), base_perception=base.perception,
+        )
+        result = base.apply_delta(delta)
+
+        assert result == full
+
+    def test_mfg_迷迭香产生感知(self):
+        """迷迭香在 Mfg，5 dorm → delta: perception=5"""
+        from steward_core.synergy import compute_buff_pool_delta, compute_buff_pool
+
+        control = [_mk_ling(), _mk_xi()]
+        dorm = [_mk_op(f"填位{i}") for i in range(5)]
+        mfg_op = _mk_op("迷迭香", [_mk_skill("manu_prod_spd_bd_n1[000]", "Mfg", "超感")])
+
+        base = compute_buff_pool(control, dorm_operators=dorm, mfg_operators=[])
+        full = compute_buff_pool(control, dorm_operators=dorm, mfg_operators=[mfg_op])
+
+        delta = compute_buff_pool_delta(
+            "Mfg", [mfg_op], len(dorm), base_perception=base.perception,
+        )
+        result = base.apply_delta(delta)
+
+        assert result == full
+
+    def test_dorm_count_为零_增量全零(self):
+        """dorm_count=0 时即使有 buff 干员，perception/yanhuo 增量也为 0"""
+        from steward_core.synergy import compute_buff_pool_delta
+
+        trade_op = _mk_op("黑键", [_mk_skill("trade_ord_spd_bd_n1[000]", "TRADING", "乐感")])
+        delta = compute_buff_pool_delta("Trade", [trade_op], 0, base_perception=0)
+
+        assert delta.yanhuo == 0
+        assert delta.perception == 0
+        assert delta.silent_resonance == 0
+
+    def test_空operators_增量全零(self):
+        """operators=[] 时无人持有 buff，delta 全零"""
+        from steward_core.synergy import compute_buff_pool_delta
+
+        delta = compute_buff_pool_delta("Trade", [], 5, base_perception=10)
+
+        assert delta.yanhuo == 0
+        assert delta.perception == 0
+        assert delta.silent_resonance == 0
+
+    def test_无人持有目标buff_增量全零(self):
+        """combo 中干员没有 buff_pool 相关技能，delta 全零"""
+        from steward_core.synergy import compute_buff_pool_delta
+
+        ops = [_mk_op("普通干员A"), _mk_op("普通干员B"), _mk_op("普通干员C")]
+        delta = compute_buff_pool_delta("Trade", ops, 5, base_perception=10)
+
+        assert delta.yanhuo == 0
+        assert delta.perception == 0
+        assert delta.silent_resonance == 0
