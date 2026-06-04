@@ -79,7 +79,10 @@ def phase_mfg(
         mfg_ops = [
             op for op in ctx.operators
             if op.char_id not in assigned_ids
-            and op.has_skill_for("Mfg", product)
+            and (
+                op.has_skill_for("Mfg", product)
+                or (op.name in MFG_ANCHORS and op.has_skill_for("Mfg"))
+            )
             and mood_is_viable(op.name, mood_ctx, mood_threshold)
         ]
         if not mfg_ops:
