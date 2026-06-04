@@ -1,20 +1,21 @@
 # 效率函数统一建模
 
-> **版本**: 2026-05-28 · 已实现 — 通过 `efficiency_fn.py` 的 `LinearSegment` + `constant_efficiency`/`ramping_efficiency` 构造器 + `evaluate.py` 的 `evaluate_room()` 统一积分
+> **版本**: 2026-05-28 · 已实现 — 通过 `models.py` 的 `LinearSegment` + `efficiency_fn.py` 的 `constant_efficiency`/`ramping_efficiency` 构造器 + `evaluate.py` 的 `evaluate_room()` 统一积分
 >
-> **简化**：12h 班次内心情截断不触发（`t_red ≥ 16h`），e(t) 在单窗口内退化为全常数段。跨窗口场景下 `mood_burn` 参与工作时长池计算（见 slot-processing-model.md §3.1 / §9.5），但不在 e(t) 中引入截断。
+> **简化**：12h 班次内心情截断不触发（`t_red ≥ 16h`），e(t) 在单窗口内退化为全常数段。跨窗口场景下 `mood_burn` 参与工作时长池计算（见 slot-processing-model.md §3.1 / §8.4），但不在 e(t) 中引入截断。
 
 ## 1. 动机
 
 ### 1.1 为什么需要 e(t)
 
-`buffs_infrastructure.json` 中存在 **7 条随时间变化的技能**，无法用一个标量 `efficiency` 字段描述：
+`buffs_infrastructure.json` 中存在 **6 条随时间变化的技能**（由 `synergy/ramping.py` `_RAMPING_SKILL_TABLE` 建模），无法用一个标量 `efficiency` 字段描述：
 
 | buff_id | 形态 | 描述 |
 |---------|------|------|
-| `power_rec_spd&addition[000]`~`[001]` | 首小时 10~15%, +1%/h, 上限 15~20% | 发电站无人机充能爬升（2条） |
-| `manu_prod_spd_addition[030]`~`[041]` | 首小时 15~20%, +1~2%/h, 上限 25% | 制造站生产力爬升（4条） |
+| `manu_prod_spd_addition[100]` / `[030]`~`[041]` | 首小时 0~20%, +1~2%/h, 上限 20~25% | 制造站生产力爬升（5条） |
 | `meet_spd_hast[000]` | 首小时 20%, +2%/h, 上限 30% | 会客室线索搜集爬升（1条） |
+
+> 发电站爬升（`power_rec_spd&addition[000]`~`[001]`，空构）基础效率部分已覆盖，爬升增量未建模（见 `skill-coverage-gaps.md`）。
 
 此外，~150 条体系联动 buff（"与推进之王同贸易站时+35%"）的 e(t) 不能由单个干员独立求出，需以全房间干员列表为输入。
 
@@ -89,7 +90,7 @@ class LinearSegment:
 | 构造器 | 输入 | 用途 |
 |--------|------|------|
 | `constant_efficiency(value, mood_burn, T)` | 技能值 + 心情消耗率 | 常数技能。mood_burn>0 时在 t_red 截断为两段 |
-| `ramping_efficiency(initial, gain, ceiling, mood_burn, T)` | 起始/增量/上限 | 7 条时变技能，饱和后由 mood_burn 附加截断段 |
+| `ramping_efficiency(k0, r, ceiling, mood_burn, T, t_initial, mood_initial)` | 起始/增量/上限 + 暖机 + 心情 | 6 条时变技能（`synergy/ramping.py`），饱和后由 mood_burn 附加截断段 |
 | `evaluate_room(operators, ...)` | 全房间干员列表 + 全局上下文 | 联动体系聚合 + 个体效率求和 → 积分值 |
 
 ### 3.3 支配偏序排序

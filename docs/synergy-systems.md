@@ -36,15 +36,16 @@ evaluate_room(operators, room_type, product, ...)
   └─ C1 中枢全局加成: global_bonus.mfg_bonus / trade_bonus
 ```
 
-**求解器各阶段如何使用体系函数**：
+**求解器各阶段如何使用体系函数**（SlotSolver，`solver/slot/solver.py`）：
 
 | Phase | 设施 | 如何调用 |
 |-------|------|----------|
-| Phase 1 | Mfg | `_evaluate_with_support()` → `evaluate_room()`（含完整 A+B+C 层） |
-| Phase 3a | Trade | `_evaluate_trade_combo()` → `evaluate_room()`（含 A7 订单机制） |
-| Phase 3b | Power/Reception/Office | `_greedy_remaining()` → 支配偏序排序（个体效率，不含联动） |
+| phase_mfg | Mfg | `phase_mfg()` → `evaluate_room()`（含完整 A+B+C 层） |
+| phase_trade | Trade | `phase_trade()` → `evaluate_room()`（含 A7 订单机制） |
+| phase_control | Control | `contribution()` → D[d] 偏导数驱动的类型 2/3/5a 估值 |
+| phase_remaining | Power/Reception/Office/Dormitory | `contribution()` → 类型 7 + 折算 + mood-driven 恢复估值 |
 
-中枢不再固定预设——Phase 1 通过 `compute_optimal_support()` 动态决定支撑干员，Phase 2 填充中枢后，Phase 3a 直接使用实际中枢计算 global_bonus 和 buff_pool。
+中枢不再固定预设——`phase_control` 遍历所有类型 2/3 干员通过 `contribution()` 估值，按槽位贪心选出最优中枢组合。
 
 ---
 
