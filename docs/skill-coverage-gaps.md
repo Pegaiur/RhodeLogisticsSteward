@@ -1,6 +1,6 @@
 # 技能建模缺口清单
 
-> 基于 `character_identity.json` + `buffs_infrastructure.json` + `buffs_non_production.json` (2026-06-02 逐条核实)。
+> 基于 `character_identity.json` + `buffs_infrastructure.json` + `buffs_non_production.json` (2026-06-04 逐条核实)。
 > 仅列出**产值相关**设施（Mfg/Trade/Control/Power/Reception/Office）。
 > 训练室/加工站/宿舍无产值影响，不在此列。
 
@@ -13,21 +13,6 @@
 | `manu_prod_spd_addition&cost[000]` | 心情落差 >12 → +10% + 仓库+6 | eff=0，需心情上下文 |
 
 - `manu_prod_spd_addition&cost[000]` 的 "仓库+6" 部分已通过 `Skill.capacity_bonus` 自动计入，仅效率部分未建模。
-
----
-
-## 二、贸易站 Trade — 117 条中 ~0 条未建模 (100%)
-
-### 2.2 心情消耗配对（1 条，已接入）
-
-| buff_id | 效果 | 现状 |
-|---------|------|------|
-| `trade_ord_limit&cost_P[020]` | 伺夜同房时 -0.1/h | 已接入 `_MP_COST_SELF_PAIR`（commit `acf78c4`） |
-
-### 2.3 注记
-
-- `trade_ord_spd_bd_n2[100]` **不存在于任何数据文件**。`trade_ord_spd_bd_n2[000]`（乌有）已在 BuffPool 消费者表中。
-- `trade_ord_spd_ext[010]` **不存在**。
 
 ---
 
@@ -101,7 +86,7 @@
 | 干员 | buff_id | 效果 | 现状 |
 |------|---------|------|------|
 | 复奏 | `meet_spd&cost_condChar[021]` | solo → +35% + 心情消耗 +1/h | `_RECEPTION_CONDITIONAL` 表中缺少此条目 |
-| 赫雅克 | `meet_spd&condChar_mustget[000]` | solo → solo +35% + **连续消耗>16 心情后下次必定莱茵** | 基础 solo 效率已被 [000] 覆盖；必定获得机制无追踪 |
+| 霍尔海雅 | `meet_spd&condChar_mustget[000]` | solo → solo +35% + **连续消耗>16 心情后下次必定莱茵** | 基础 solo 效率已被 [000] 覆盖；必定获得机制无追踪 |
 | 奥达 | `meet_spd&condChar_mustget[100]` | 同上 → 罗德岛制药 | 同上；必定获得机制无追踪 |
 | 跃跃 | `meet_spd&exchange[000]` | 线索交流时 +30% | 无交流状态 |
 | 跃跃 | `meet_spd&exchange[001]` | 同上 | 无交流状态 |
