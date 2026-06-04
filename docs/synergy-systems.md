@@ -473,7 +473,7 @@ def compute_buff_pool(
     """
 ```
 
-**对 A 层注入**: BuffPool 在 Phase 1 通过 `_evaluate_with_support()` 按 combo 动态计算——每个制造站组合评估时，用其支撑干员（中枢+宿舍+办公室）实时计算 buff_pool。Phase 3a 贸易站穷举中，中枢已确定，直接用实际中枢 + 满宿舍估计计算 buff_pool。
+**对 A 层注入**: BuffPool 在 `phase_mfg` 中按 combo 动态计算——每个制造站组合评估时，用当前中枢+宿舍+办公室干员实时计算 buff_pool。`phase_trade` 贸易站穷举中，中枢已确定，直接用实际中枢 + 满宿舍估计计算 buff_pool。
 
 ---
 
@@ -726,6 +726,7 @@ def compute_global_burn(
 | A5 | 自动化 | `synergy_automation()` | A | 房间干员 + layout |
 | A6 | 设施数量联动 | `synergy_facility_count()` | A | 房间干员 + layout |
 | A7 | 订单机制 | `synergy_jie_order()` | A | 房间干员 + GlobalContext |
+| A8 | 爬升型效率 | `operator_ramp_segments()` | A | 全设施通用（`ramping.py`） |
 | B1 | 人间烟火/感知信息 | `compute_buff_pool()` | B | 中枢+宿舍+全基建 |
 | B2 | 工程机器人 | `compute_engineering_robots()` | B | layout |
 | B3 | 思维链环 | `compute_thought_chains()` | B | B1(感知信息) |
@@ -733,10 +734,11 @@ def compute_global_burn(
 | B5 | 无声共鸣 | `compute_silent_resonance()` | B | 宿舍+B1(感知信息) |
 | B6 | 全局阵营计数 | `compute_global_faction_counts()` | B | 全基建干员 |
 | B7 | 跨房间配对 | `compute_cross_room_pairs()` | B | 全基建干员 |
+| B8 | 设施 group 计数 | `synergy_facility_group()` | B | 全基建干员（`facility_group.py`） |
 | C1 | 中枢全局效率 | `compute_control_global_bonus()` | C | 中枢干员 + layout |
 | C2 | 中枢全局恢复 | `compute_global_burn()` | C | 中枢干员 + B1 |
 
-**总计**: 16 个独立函数，覆盖 520 条基建 buff 中所有条件型/联动型 buff。
+**总计**: 18 个独立函数，覆盖 520 条基建 buff 中所有条件型/联动型 buff。
 
 ---
 

@@ -53,7 +53,7 @@
 - `recovery_rate` 受类型 5b 技能修正（宿舍 buff、中枢全局宿舍加成）
 - 菲亚梅塔自律：`recovery_rate = 2.0/h`，不依赖他人
 
-**关键区分**：`pool_hard` 是可持续性的硬约束（干员心情不能退化）。效率截断 (`evaluate_room` t_red) 和 `mood_is_viable` 硬卡口共同保障此约束——低 mood combo 自动打折，极低 mood 直接阻止。宿舍恢复是独立资源（由 Phase D 宿舍分配竞争），不纳入 pool_hard 计算。
+**关键区分**：`pool_hard` 是可持续性的硬约束（干员心情不能退化）。效率截断 (`evaluate_room` t_red) 和 `mood_is_viable` 硬卡口共同保障此约束——低 mood combo 自动打折，极低 mood 直接阻止。宿舍恢复是独立资源（由 phase_remaining 宿舍部分竞争），不纳入 pool_hard 计算。
 
 干员将工作时长分配到具体槽位。分配后，该槽位的 `effective_hours = 分配的时长`。
 
@@ -208,7 +208,7 @@ pool_hard[op] = mood_full / mood_burn
   recovery_modifiers = control_recovery + yanhuo_recovery + mlynar_spread
 ```
 
-**含义**：单干员在排班周期内的可持续工作小时数上限。超过此值，干员心情将退化至无法在下个周期正常启动。此为**硬约束**——多窗口求解中，通过效率截断 (`evaluate_room` t_red) 将 mood 不足的 combo 自动打折，`mood_is_viable` 硬卡口阻止极低 mood 干员上工。宿舍恢复的价值由 `mood_deficit × recovery_rate × eff_weight` 独立估值，通过 Phase D 贪心竞争分配。
+**含义**：单干员在排班周期内的可持续工作小时数上限。超过此值，干员心情将退化至无法在下个周期正常启动。此为**硬约束**——多窗口求解中，通过效率截断 (`evaluate_room` t_red) 将 mood 不足的 combo 自动打折，`mood_is_viable` 硬卡口阻止极低 mood 干员上工。宿舍恢复的价值由 `mood_deficit × recovery_rate × eff_weight` 独立估值，通过 phase_remaining 宿舍贪心竞争分配。
 
 ### 3.2 时长修正技能
 
@@ -240,7 +240,7 @@ pool_hard[op] = mood_full / mood_burn
 
 窗口边界只是**重新布置槽位的选择权**——求解器可以在此处改变干员→槽位的映射，也可以保持不变。选择权越多（窗口越多），解空间越大，但理论上限不变。
 
-> **"窗口模型"是本文档定义的求解框架**。基于该框架的 Phase A→D 贪心 + mood 驱动恢复
+> **"窗口模型"是本文档定义的求解框架**。基于该框架的 phase_mfg→phase_trade→phase_control→phase_remaining 贪心 + mood 驱动恢复
 > 构成当前求解器（`solver/slot/solver.py`）的实现骨架。
 
 ### 3.4 宿舍恢复：时长池的补充
@@ -378,7 +378,7 @@ pool_hard[op] = mood_full / mood_burn
 
 ## 8. 决策过程推导
 
-> **实现路线**：§8.5 的混合策略（Mfg/Trade 穷举 + Control/Dorm contribution 贪心）
+> **实现路线**：§8.4 的混合策略（Mfg/Trade 穷举 + Control/Dorm contribution 贪心）
 > 已实施于 `solver/slot/solver.py`。V1 SlotIterationStrategy →
 > V2 SlotSolver 的演进记录见 `archive/slot-iteration-record.md`。
 > Phase 1 归零机会成本（whisper/automation/zeroing）见 [opportunity.py](../steward_core/solver/slot/opportunity.py)。
@@ -479,7 +479,7 @@ D[d] = ∂P / ∂S[d]
 | 硬卡口 | `mood_is_viable`：mood < 1.0 禁止上工 | `context.py` |
 | 恢复激励 | mood-driven dorm scoring：`mood_deficit × recovery_rate × eff_weight` 驱动宿舍分配 | `contribution.py` |
 
-宿舍恢复是独立资源（由 Phase D 宿舍分配竞争），不纳入 pool_hard 计算。
+宿舍恢复是独立资源（由 phase_remaining 宿舍部分竞争），不纳入 pool_hard 计算。
 
 #### 迭代框架
 
@@ -580,7 +580,7 @@ D[d] = ∂P / ∂S[d]
   若 k ≥ K_max: 终止                                      ← 性能上限（可选，非正确性依赖）
   否则 k ← k+1，回到窗口循环
 
-  收敛性保证: 见 §8.10 定理证明
+  收敛性保证: 见 §8.8 定理证明
 
 #### 邻域结构
 
