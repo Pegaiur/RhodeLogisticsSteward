@@ -5,27 +5,21 @@
 ## 快速开始
 
 ```powershell
-# 默认 14×12h (7 天周期)，生成 JSON + 报告
-python run_solver.py
-
-# 自定义班次
-python run_solver.py --shifts 3 --hours 8
-
-# 自定义参数
-python run_solver.py --params custom.json
-
-# 仅控制台报告（暂存第一班 JSON）
-python run_solver.py --brief
-
-# 只出报表，不保存 JSON
-python run_solver.py --report
-
-# 轻量报表工具（复用相同求解器）
-python report.py 12 14      # 14×12h
+# 轻量报表（推荐） — 求解 + 输出 Markdown 报告
+python report.py 12 14      # 14×12h (7 天)
 python report.py 8 3        # 3×8h
+
+# 完整排班 — 同上 + 保存 JSON 排班文件
+python run_solver.py                     # 默认 14×12h
+python run_solver.py --hours 8 --shifts 3
+python run_solver.py --params custom.json  # 自定义参数
+
+# 运行模式
+python run_solver.py --brief             # 精简报告（跳过详细排班明细，JSON 照常保存）
+python run_solver.py --report            # 只出报表，不保存 JSON
 ```
 
-运行过程中自动输出各阶段耗时（`[计时] pipeline` / `[计时] phase_*`），便于性能分析。
+关闭阶段耗时输出（默认开启）：`$env:RHO_TIMING=0`
 
 ## 数据文件
 
@@ -37,6 +31,6 @@ python report.py 8 3        # 3×8h
 | `buffs_infrastructure.json` | 基建 buff 效率值 |
 | `buffs_non_production.json` | 非生产设施 buff（宿舍/会客室等） |
 
-输出目录：`output/custom_infrast/`，将生成的 JSON 放入 MAA `resource/custom_infrast/` 即可使用。
-
-报告默认保存在 `output/` 目录，文件名格式 `report_<shift_hours>h.md`。
+输出：
+- 报告 → `output/report_SlotStrategy_<shifts>x<hours>h_<timestamp>.md`
+- JSON 排班文件 → `output/custom_infrast/`，放入 MAA `resource/custom_infrast/` 即可使用
