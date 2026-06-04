@@ -403,15 +403,17 @@ def synergy_degenbrecher_order_limit(
     order_ctx: OrderLimitContext | None,
     T: float,
 ) -> list[LinearSegment]:
-    """冠军风采：锏 每5订单上限 +25% 效率，最高 100%
+    """冠军风采：锏 每5个提升的订单上限 +25% 效率，最高 100%
 
-    消费 OrderLimitContext.total，floor(total/5) × 25，上限 100%。
+    消费 OrderLimitContext.total，"提升的" = total - 10（超出基础 10 的部分）。
+    floor((total-10)/5) × 25，上限 100%。
     """
     if room_type != "Trade" or order_ctx is None:
         return []
     if "degenbrecher_limit" not in _collect_mechs(operators, _TRADE_TRIGGER_TABLE):
         return []
-    bonus = min(int(order_ctx.total / 5) * 25, 100)
+    extra = max(0, order_ctx.total - 10)
+    bonus = min((extra // 5) * 25, 100)
     return [LinearSegment(a=float(bonus), b=0.0, t_start=0.0, dt=T)] if bonus > 0 else []
 
 

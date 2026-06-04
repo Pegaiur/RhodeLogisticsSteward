@@ -579,8 +579,8 @@ class TestSwiresOrderLimit:
 class TestDegenbrecherOrderLimit:
     """A层·冠军风采 — 锏 每5订单上限 +25%，上限 100%"""
 
-    def test_冠军风采_10订单_50percent(self):
-        """order_ctx.total=10 → int(10/5)×25 = 50%"""
+    def test_冠军风采_10订单_0percent(self):
+        """order_ctx.total=10 → extra=0 → 0%（基础10不算"提升的"）"""
         from steward_core.synergy.trade_linkages import (
             synergy_degenbrecher_order_limit, OrderLimitContext,
         )
@@ -589,11 +589,23 @@ class TestDegenbrecherOrderLimit:
         degen.skills.append(_mk_skill("trade_ord_spd_variable3[000]", "Trade", "冠军风采"))
         ctx = OrderLimitContext()
         segs = synergy_degenbrecher_order_limit([degen], "Trade", ctx, 12.0)
-        assert len(segs) == 1
-        assert segs[0].a == 50.0
+        assert segs == []
 
-    def test_冠军风采_20订单_100percent上限(self):
-        """order_ctx.total=20 → int(20/5)×25=100，但上限 100"""
+    def test_冠军风采_15订单_25percent(self):
+        """order_ctx.total=15 → extra=5 → 25%"""
+        from steward_core.synergy.trade_linkages import (
+            synergy_degenbrecher_order_limit, OrderLimitContext,
+        )
+
+        degen = _mk_op("锏")
+        degen.skills.append(_mk_skill("trade_ord_spd_variable3[000]", "Trade", "冠军风采"))
+        ctx = OrderLimitContext()
+        ctx.add("谈判", 5)
+        segs = synergy_degenbrecher_order_limit([degen], "Trade", ctx, 12.0)
+        assert segs[0].a == 25.0
+
+    def test_冠军风采_27订单_75percent上限(self):
+        """order_ctx.total=27 → extra=17 → floor(17/5)×25=75"""
         from steward_core.synergy.trade_linkages import (
             synergy_degenbrecher_order_limit, OrderLimitContext,
         )
@@ -603,11 +615,10 @@ class TestDegenbrecherOrderLimit:
         ctx = OrderLimitContext()
         ctx.add("谈判", 5)
         ctx.add("未偿还的债务", 2)
-        # total=27, floor(27/5)=5, 5×25=125, cap=100
         for i in range(10):
             ctx.add(f"buf{i}", 1)
         segs = synergy_degenbrecher_order_limit([degen], "Trade", ctx, 12.0)
-        assert segs[0].a == 100.0
+        assert segs[0].a == 75.0
 
     def test_冠军风采_4订单_0percent(self):
         """order_ctx.total=4 → int(4/5)×25 = 0%"""
