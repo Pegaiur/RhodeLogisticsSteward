@@ -128,6 +128,7 @@ RhodeLogisticsSteward/
 | 骑士 | `tag.knight` | name 集合 + `nationId=="kazimierz"` + `groupId=="pinus"` | `synergy/helpers.py` `_KNIGHT_NAMES` | 新增卡西米尔骑士干员 |
 | 杜林族 | `tag.durin` | `raceId == "DURIN"` | 由 `character_table.json` 自动推导 | — |
 | 作业平台 | `tag.op` | 特定 profession | `synergy/helpers.py` `_OP_PLATFORM_NAMES` 硬编码 4 台 | 新增机器人/作业平台干员 |
+| 莱茵生命 | `cc.g.rh` | 名称集合 | `synergy/helpers.py` `_RHINE_LAB_NAMES` 硬编码 10 人（不含异格） | 新增莱茵生命势力干员 |
 | 怪物猎人小队 | `tag.mh` | 联动限定干员 | 尚未建模 | — |
 | 莱欧斯小队 | `tag.dungeon` | 联动限定干员 | 尚未建模 | — |
 
@@ -139,7 +140,7 @@ RhodeLogisticsSteward/
 |----------|----------|------|
 | 系统贡献者 | [`registry.py`](file:///d:/Dev/RhodeLogisticsSteward/steward_core/synergy/registry.py) `_SYSTEM_CONTRIBUTORS` | 效率为0但有系统贡献的干员，按 `contribution_type` 分类标注 |
 | 联动映射表 | [`types.py`](file:///d:/Dev/RhodeLogisticsSteward/steward_core/synergy/types.py) `TABLES` 注册器 | 13 张 dict 表，含消费者函数和更新触发条件 |
-| 名称集合 | [`helpers.py`](file:///d:/Dev/RhodeLogisticsSteward/steward_core/synergy/helpers.py) | `_KNIGHT_NAMES`、`_OP_PLATFORM_NAMES`、`_MH_NAMES` 等 10 个集合/常量 |
+| 名称集合 | [`helpers.py`](file:///d:/Dev/RhodeLogisticsSteward/steward_core/synergy/helpers.py) | `_KNIGHT_NAMES`、`_OP_PLATFORM_NAMES`、`_RHINE_LAB_NAMES`、`_MH_NAMES` 等 11 个集合/常量 |
 | 辅助常量 | [`helpers.py`](#) | `_PINUS_GROUP`、`_ORDER_ANCHOR_PREFIXES`、`_B_ROSEMARY` 等 |
 | 效率冲突禁用表 | [`conflicts.py`](file:///d:/Dev/RhodeLogisticsSteward/steward_core/synergy/conflicts.py) `_EFF_MECH_DISABLERS` | 订单机制 buff 前缀 → 被禁用的效率机制名映射。消费者：`resolve_efficiency_conflicts`（evaluate.py + opportunity.py）。更新触发：新增覆盖型订单机制 buff |
 

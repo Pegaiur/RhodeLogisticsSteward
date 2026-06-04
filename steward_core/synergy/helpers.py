@@ -27,6 +27,12 @@ _OP_PLATFORM_NAMES: set[str] = {
     "Lancet-2", "Castle-3", "THRM-EX", "正义骑士号",
 }
 
+# 莱茵生命干员名（缪尔赛思 power_rec_rhine 计数用，不含异格）
+_RHINE_LAB_NAMES: set[str] = {
+    "赫默", "伊芙利特", "塞雷娅", "白面鸮", "梅尔",
+    "麦哲伦", "多萝西", "星源", "缪尔赛思", "娜斯提",
+}
+
 # 杜林族干员名（硬编码，character_identity.json 无 raceId 字段）
 _DURIN_NAMES: set[str] = {"杜林", "桃金娘", "褐果", "至简"}
 

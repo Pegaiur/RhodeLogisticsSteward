@@ -165,30 +165,35 @@ mindmap
 
 > **实现**：[`_calc_drone_daily()`](file:///d:/Dev/RhodeLogisticsSteward/steward_core/production.py#L409-L427)。效率值从 `operator_estimated_efficiency(op, "Power", "Drone")` 获取——爬升回退后取 `skill.efficient` 最高值。
 
-#### 1.6.3 无人机加速倍率
+#### 1.6.3 无人机加速产出
 
-每架无人机缩短目标房间当前生产/订单耗时 **3 分钟**（制造站与贸易站均相同）。全部无人机集中加速同一间房时，该房间的等效产出倍率为：
-
-\[
-\text{multiplier} = \frac{T \times 60 + \text{drones\_in\_period} \times 3}{T \times 60}
-\]
-
-其中 `drones_in_period = daily_drones × T / 24`，消去 T 后简化为：
+每架无人机缩短目标房间当前生产/订单耗时 **3 分钟**（制造站与贸易站均相同）。**无人机仅使用基础产率，不吃人头加成（+1%/人）和技能效率 buff**：
 
 \[
-\text{multiplier} = 1 + \frac{\text{daily\_drones}}{480}
+\text{drone\_output} = \text{base\_rate} \times \frac{\text{drones\_in\_period} \times 3}{60}
 \]
 
-即加速倍率**与班次长度无关**，仅取决于发电站配置。
+其中 `drones_in_period = daily_drones × T / 24`，即班次内可用无人机数。
 
-| daily_drones | multiplier | 加成 | 场景 |
+无人机贡献的时间占比（相对班次基础工时）：
+
+\[
+\text{drone\_fraction} = \frac{\text{daily\_drones} \times 3}{24 \times 60} = \frac{\text{daily\_drones}}{480}
+\]
+
+**该比例与班次长度无关**，仅取决于发电站配置。
+
+| daily_drones | 加速时间/天 | drone_fraction | 场景 |
 |:---:|:---:|:---:|------|
-| 240 | 1.500 | +50% | 空发电站基准 |
-| 324 | 1.675 | +67.5% | 3 普通发电干员 |
-| 348 | 1.725 | +72.5% | 含承曦格雷伊 |
-| 384 | 1.800 | +80% | 3 顶级发电干员 |
+| 240 | 12h | +50% | 空发电站基准 |
+| 324 | 16.2h | +67.5% | 3 普通发电干员 |
+| 348 | 17.4h | +72.5% | 含承曦格雷伊 |
+| 384 | 19.2h | +80% | 3 顶级发电干员 |
 
-> **实现**：[`_drone_multiplier()`](file:///d:/Dev/RhodeLogisticsSteward/steward_core/production.py#L430-L437) → [`_drone_boost()`](file:///d:/Dev/RhodeLogisticsSteward/steward_core/production.py#L458-L462) 判断房间是否为加速目标后返回 `multiplier - 1`。
+**最终产出** = 含人头和技能 buff 的产出 + 基础产率 × drone_fraction。
+
+> **实现**：[`_calc_mfg_record()`](file:///d:/Dev/RhodeLogisticsSteward/steward_core/production.py#L456-L493) / [`_calc_mfg_gold()`](file:///d:/Dev/RhodeLogisticsSteward/steward_core/production.py#L496-L543) / [`_calc_trade()`](file:///d:/Dev/RhodeLogisticsSteward/steward_core/production.py#L546-L596)。
+> [`_is_drone_target()`](file:///d:/Dev/RhodeLogisticsSteward/steward_core/production.py#L450-L453) 判断房间是否为加速目标，仅目标房间获得无人机加成。
 
 #### 1.6.4 加速目标选择
 

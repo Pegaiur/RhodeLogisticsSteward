@@ -15,7 +15,7 @@ from steward_core.constants import (
     CR_EXP_PER_UNIT, PG_LMD_PER_UNIT,
 )
 from steward_core.synergy import compute_control_global_bonus, control_per_operator_bonus, compute_control_reception_bonus
-from steward_core.synergy import _OP_PLATFORM_NAMES, compute_facility_group_bonus, operator_estimated_efficiency
+from steward_core.synergy import _OP_PLATFORM_NAMES, _RHINE_LAB_NAMES, compute_facility_group_bonus, operator_estimated_efficiency
 from .context import STATE_DIMS, mood_is_viable
 from .partials import _product_base_rate, _product_lmd_per_unit
 
@@ -649,6 +649,12 @@ def _power_conditional_bonus(
             power_ops = ctx.ops_of_type(window_idx, "Power")
             if any(pn in _OP_PLATFORM_NAMES for pn in power_ops if pn != op.name):
                 bonus += 5.0
+        elif sk.buff_id == "power_rec_rhine[000]":
+            # 缪尔赛思·生态科主任：基建内莱茵生命干员数（含自身），+3%/人（上限5名）
+            all_assigned = ctx.assigned_names(window_idx)
+            rhine_count = sum(1 for n in all_assigned if n in _RHINE_LAB_NAMES)
+            rhine_count = min(rhine_count, 5)
+            bonus += rhine_count * 3.0
 
     return bonus
 

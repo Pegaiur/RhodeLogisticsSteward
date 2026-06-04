@@ -50,6 +50,7 @@ from steward_core.synergy.helpers import (
     _LUNG_MEN_GUARD_NAMES,
     _BLACKSTEEL_HOLDERS,
     _OP_PLATFORM_NAMES,
+    _RHINE_LAB_NAMES,
     _DURIN_NAMES,
     _PINUS_GROUP,
     _BLACKSTEEL_GROUP,

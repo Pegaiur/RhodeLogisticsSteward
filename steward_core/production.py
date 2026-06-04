@@ -17,6 +17,7 @@ from steward_core.synergy import (
     compute_effective_power_count,
     control_per_operator_bonus,
     operator_estimated_efficiency,
+    _RHINE_LAB_NAMES,
 )
 from steward_core.constants import (
     FIXED_CONTROL, BASE_POWER_COUNT,
@@ -409,14 +410,21 @@ def _operator_lookup(operators: list[Operator]) -> dict[str, Operator]:
 def _calc_drone_daily(
     power_op_names: list[str],
     op_lookup: dict[str, Operator],
+    *,
+    all_assigned_names: set[str] | None = None,
 ) -> float:
     """计算每日无人机产量
 
     PRTS: 基础 6 min/架 → 240 架/天
     发电站干员 efficient.all 值 ≥1 的为百分比加成
     公式: daily = 240 × (1 + Σ(bonus/100))
+
+    all_assigned_names: 全班次已分配干员名集合，用于计算全局条件型加成
+        （如缪尔赛思的莱茵生命计数）。未提供时仅计入基础效率值。
     """
     bonus_sum = 0.0
+    all_names = all_assigned_names or set()
+
     for name in power_op_names:
         op = op_lookup.get(name)
         if op is None:
@@ -424,17 +432,33 @@ def _calc_drone_daily(
         best = operator_estimated_efficiency(op, "Power", "Drone")
         if best >= 1.0:
             bonus_sum += best
+
+        # 全局条件型加成
+        if all_assigned_names is not None:
+            bonus_sum += _power_conditional_drone_bonus(op, all_names)
+
     return _DRONE_BASE_PER_DAY * (1.0 + bonus_sum / 100.0)
 
 
-def _drone_multiplier(daily_drones: float, minutes_per_drone: float, hours: float) -> float:
-    """无人机加速倍率
+def _power_conditional_drone_bonus(
+    op: Operator,
+    all_assigned_names: set[str],
+) -> float:
+    """发电站干员的条件型无人机充能加成（全局/跨房间）
 
-    公式: (工期分钟 + 无人机加速分钟) / 工期分钟
+    在 _calc_drone_daily 和 contribution.py 中共享逻辑。
+    仅处理全局条件（不依赖同房间组合），同房间组合由 evaluate_room 覆盖。
     """
-    period_minutes = hours * 60.0
-    accelerated_minutes = period_minutes + daily_drones * minutes_per_drone
-    return accelerated_minutes / period_minutes
+    bonus = 0.0
+
+    for sk in op.active_skills_for("Power"):
+        if sk.buff_id == "power_rec_rhine[000]":
+            # 缪尔赛思·生态科主任：基建内莱茵生命干员数（含自身），+3%/人（上限5名）
+            rhine_count = sum(1 for n in all_assigned_names if n in _RHINE_LAB_NAMES)
+            rhine_count = min(rhine_count, 5)
+            bonus += rhine_count * 3.0
+
+    return bonus
 
 
 # ─── 房间产出计算上下文 ──────────────────────────────────────────
@@ -457,11 +481,10 @@ class _CalcCtx:
     """全 Mfg 站干员分配快照 {room_index: [operator_names]}，供集群狩猎计算产出一致性"""
 
 
-def _drone_boost(assignment: RoomAssignment, ctx: _CalcCtx, minutes_per_drone: float) -> float:
-    """计算该房间的无人机加速倍率"""
-    if assignment.room_type == ctx.drone_room_type and assignment.room_index == ctx.drone_room_index:
-        return _drone_multiplier(ctx.daily_drones, minutes_per_drone, ctx.hours) - 1.0
-    return 0.0
+def _is_drone_target(assignment: RoomAssignment, ctx: _CalcCtx) -> bool:
+    """判断该房间是否为无人机加速目标"""
+    return (assignment.room_type == ctx.drone_room_type
+            and assignment.room_index == ctx.drone_room_index)
 
 
 def _calc_mfg_record(
@@ -484,14 +507,22 @@ def _calc_mfg_record(
                             mood_ctx=ctx.mood_ctx)
     productivity_int = ctx.hours * (1.0 + 0.01 * n) + eff_int / 100.0
     display_productivity = 1.0 + eff_int / (100.0 * ctx.hours)
-    drone_boost = _drone_boost(assignment, ctx, _DRONE_MINUTES_MFG)
-    output_per_day = _RECORD_BASE_PER_HOUR * productivity_int * (1.0 + drone_boost)
+    buffed_output = _RECORD_BASE_PER_HOUR * productivity_int
+
+    # 无人机贡献：仅用基础产率（1/3 个/h），不吃人头和技能 buff
+    drone_minutes = 0.0
+    if _is_drone_target(assignment, ctx):
+        drone_minutes = ctx.daily_drones * _DRONE_MINUTES_MFG
+    drone_output = _RECORD_BASE_PER_HOUR * drone_minutes / 60.0
+    drone_pct = drone_minutes / (ctx.hours * 60.0) if ctx.hours > 0 else 0.0
+
+    output_per_day = buffed_output + drone_output
     production.record_rooms.append(RoomOutput(
         room_type="Mfg", room_index=assignment.room_index,
         product="CombatRecord", operators=assignment.operators,
         head_count=n, productivity=display_productivity,
         output_per_day=output_per_day,
-        drone_boost_pct=drone_boost, output_unit="个",
+        drone_boost_pct=drone_pct, output_unit="个",
     ))
     production.total_records_per_day += output_per_day
 
@@ -516,14 +547,22 @@ def _calc_mfg_gold(
                             mood_ctx=ctx.mood_ctx)
     productivity_int = ctx.hours * (1.0 + 0.01 * n) + eff_int / 100.0
     display_productivity = 1.0 + eff_int / (100.0 * ctx.hours)
-    drone_boost = _drone_boost(assignment, ctx, _DRONE_MINUTES_MFG)
-    output_per_day = _GOLD_BASE_PER_HOUR * productivity_int * (1.0 + drone_boost)
+    buffed_output = _GOLD_BASE_PER_HOUR * productivity_int
+
+    # 无人机贡献：仅用基础产率（5/6 个/h），不吃人头和技能 buff
+    drone_minutes = 0.0
+    if _is_drone_target(assignment, ctx):
+        drone_minutes = ctx.daily_drones * _DRONE_MINUTES_MFG
+    drone_output = _GOLD_BASE_PER_HOUR * drone_minutes / 60.0
+    drone_pct = drone_minutes / (ctx.hours * 60.0) if ctx.hours > 0 else 0.0
+
+    output_per_day = buffed_output + drone_output
     production.gold_rooms.append(RoomOutput(
         room_type="Mfg", room_index=assignment.room_index,
         product="PureGold", operators=assignment.operators,
         head_count=n, productivity=display_productivity,
         output_per_day=output_per_day,
-        drone_boost_pct=drone_boost, output_unit="个",
+        drone_boost_pct=drone_pct, output_unit="个",
     ))
     production.total_gold_produced_per_day += output_per_day
 
@@ -533,7 +572,8 @@ def _calc_trade(
 ) -> None:
     """贸易站产出计算（文档倍数法）
 
-    lmd_output = efficiency_factor × hours/24 × lmd_per_day × (1 + drone)
+    lmd_output = efficiency_factor × hours/24 × lmd_per_day + drone_day_fraction × lmd_per_day
+    无人机仅用基础产率（无 buff），与干员效率加成分离。
     """
     n = len(ops)
     ctrl_bonus = control_per_operator_bonus(ctx.plan_ctrl_ops, ops, "Money", room_type="Trade")
@@ -544,7 +584,6 @@ def _calc_trade(
                             mood_ctx=ctx.mood_ctx)
     efficiency_integrated = ctx.hours * (1.0 + 0.01 * n) + eff_int / 100.0
     display_productivity = 1.0 + eff_int / (100.0 * ctx.hours)
-    drone_boost = _drone_boost(assignment, ctx, _DRONE_MINUTES_TRADE)
 
     lmd_per_day, gold_per_day, equiv_gold_per_day = _get_trade_order_multiplier(ops, ctx.hours)
 
@@ -556,20 +595,27 @@ def _calc_trade(
     else:
         base_factor = efficiency_integrated / 24.0
 
-    drone_boost = 0.0 if (override is not None and override.no_drone) else _drone_boost(assignment, ctx, _DRONE_MINUTES_TRADE)
-    lmd_output = base_factor * lmd_per_day * (1.0 + drone_boost)
-    gold_consumed = base_factor * gold_per_day * (1.0 + drone_boost)
+    # 无人机贡献：仅用基础产率，转换为日占比
+    drone_day_frac = 0.0
+    no_drone = override is not None and override.no_drone
+    if not no_drone and _is_drone_target(assignment, ctx):
+        drone_day_frac = ctx.daily_drones * _DRONE_MINUTES_TRADE / (24.0 * 60.0)
+    drone_pct = drone_day_frac * 24.0 / ctx.hours if ctx.hours > 0 else 0.0
+
+    lmd_output = base_factor * lmd_per_day + drone_day_frac * lmd_per_day
+    gold_consumed = base_factor * gold_per_day + drone_day_frac * gold_per_day
+    equiv_from_mechanism = base_factor * equiv_gold_per_day + drone_day_frac * equiv_gold_per_day
 
     production.trade_rooms.append(RoomOutput(
         room_type="Trade", room_index=assignment.room_index,
         product="Money", operators=assignment.operators,
         head_count=n, productivity=display_productivity,
         output_per_day=lmd_output,
-        drone_boost_pct=drone_boost, output_unit="LMD",
+        drone_boost_pct=drone_pct, output_unit="LMD",
     ))
     production.total_gold_consumed_per_day += gold_consumed
     production.total_lmd_per_day += lmd_output
-    production.equivalent_gold_from_mechanism += base_factor * equiv_gold_per_day * (1.0 + drone_boost)
+    production.equivalent_gold_from_mechanism += equiv_from_mechanism
 
 
 def calculate(
@@ -618,7 +664,16 @@ def calculate(
             for n in assignment.operators:
                 if n in op_lookup:
                     power_ops.append(op_lookup[n])
-    daily_drones_full = _calc_drone_daily(production.power_operators, op_lookup)
+
+    # 收集全班次已分配干员名（用于全局条件型加成如莱茵生命计数）
+    all_assigned: set[str] = set()
+    for assignment in plan.assignments:
+        all_assigned.update(assignment.operators)
+
+    daily_drones_full = _calc_drone_daily(
+        production.power_operators, op_lookup,
+        all_assigned_names=all_assigned,
+    )
     production.daily_drones = daily_drones_full * (hours / 24.0)
 
     # 2. 确定无人机加速目标设施
