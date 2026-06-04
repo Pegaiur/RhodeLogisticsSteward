@@ -46,40 +46,46 @@ RhodeLogisticsSteward/
 │   │   ├── __init__.py           #   ─ 全部公开符号重导出
 │   │   ├── types.py              #   ─ NamedTuple类型 + TABLES注册器
 │   │   ├── helpers.py            #   ─ 名称集合/常量/辅助函数
-│   │   ├── mfg_linkages.py       #   ─ A层·制造站联动（配对/阵营/技能/自动化/低语/爬升/归零）
+│   │   ├── mfg_linkages.py       #   ─ A层·制造站联动（配对/阵营/技能/自动化/低语/归零）
 │   │   ├── trade_linkages.py     #   ─ A层·贸易站联动（订单压缩/销路宣发）
 │   │   ├── facility_linkages.py  #   ─ A层·设施数量联动 + 发电站计数
+│   │   ├── facility_group.py     #   ─ B层·设施 group 计数（精英/岁干员）
 │   │   ├── control_linkages.py   #   ─ C层·中枢全局效率 + per-operator条件加成
 │   │   ├── global_linkages.py    #   ─ B层·跨房间配对 + 全局阵营计数
 │   │   ├── buff_pool.py          #   ─ B层·BuffPool生成/消费 + 工程机器人
+│   │   ├── ramping.py            #   ─ 全设施通用爬升效率 + 预估值
 │   │   ├── classification.py     #   ─ 制造站/贸易站干员分类与候选池
 │   │   ├── registry.py           #   ─ SystemContributor注册表
-│   │   ├── conflicts.py           #   ─ 效率机制冲突解析（订单机制→效率联动禁用映射）
-│   │   ├── _derived.py            #   ─ 脚本推导的锚点表+名称集合
-│   │   └── mood.py               #   ─ 中枢心情恢复
-│   ├── solver/                   # 排班求解器子包（15模块）
-│   │   ├── __init__.py           #   ─ solve_mvp() + solve_multi_shift() 入口
-│   │   ├── config.py             #   ─ SolverConfig 开关 + 策略选择
-│   │   ├── params.py             #   ─ SolverParams 参数注册表（数值参数集中管理）
-│   │   ├── strategy.py           #   ─ Strategy ABC + PartialSolution 状态快照
-│   │   ├── context.py            #   ─ GlobalContext 统一上下文构造
-│   │   ├── bundle.py             #   ─ 支撑包数据结构（SupportBundle + SupportResult）
-│   │   ├── exhaust_mfg.py        #   ─ 制造站穷举（CR 2间 + PG 2间）
-│   │   ├── exhaust_trade.py      #   ─ 贸易站穷举 + 订单评估
-│   │   ├── fill_control.py       #   ─ 中枢填充（支撑需求驱动）
-│   │   ├── fill_remaining.py     #   ─ 剩余设施贪心（Power/Reception/Office）
-│   │   ├── fill_dorm.py          #   ─ 宿舍填充 + 多班次恢复调度
-│   │   ├── global_state.py       #   ─ 包级稀缺度评分注入（Step 3 全局状态注入）
-│   │   ├── support.py            #   ─ 支撑干员计算
-│   │   ├── greed.py              #   ─ 贪心分配/组合评估/条件验证
-│   │   └── strategies/           #   ─ 策略实现子包
-│   │       ├── __init__.py       #     ─ STRATEGY_REGISTRY 注册表
-│   │       ├── baseline.py       #     ─ BaselineStrategy + Pipeline 线性流水线
-│   │       ├── kbeam.py          #     ─ KBeamStrategy（top-K 多路径保留）
-│   │       └── iterative.py      #     ─ IterativeStrategy（BuffPool 不动点迭代）
+│   │   ├── conflicts.py          #   ─ 效率机制冲突解析（订单机制→效率联动禁用映射）
+│   │   └── _derived.py           #   ─ 脚本推导的锚点表+名称集合
+│   ├── solver/                   # 排班求解器子包
+│   │   ├── __init__.py           #   ─ solve_mvp() 入口，委托给 SlotStrategy
+│   │   ├── config.py             #   ─ SolverConfig 参数分发
+│   │   ├── params.py             #   ─ SolverParams 参数注册表
+│   │   ├── strategy.py           #   ─ Strategy ABC
+│   │   ├── context.py            #   ─ GlobalContext 统一上下文
+│   │   ├── greed.py              #   ─ 贪心分配辅助
+│   │   ├── slot/                 #   ─ 槽位加工模型（SlotSolver，13模块）
+│   │   │   ├── __init__.py       #     ─ 公开 API
+│   │   │   ├── solver.py         #     ─ solve_slot() 主求解循环
+│   │   │   ├── strategy.py       #     ─ SlotStrategy 入口
+│   │   │   ├── context.py        #     ─ SlotContext 槽位上下文
+│   │   │   ├── mfg.py            #     ─ phase_mfg 制造站穷举
+│   │   │   ├── trade.py          #     ─ phase_trade 贸易站穷举
+│   │   │   ├── control.py        #     ─ phase_control 中枢填充
+│   │   │   ├── remaining.py      #     ─ phase_remaining 剩余设施
+│   │   │   ├── contribution.py   #     ─ contribution() 干员估值
+│   │   │   ├── partials.py       #     ─ D[d] 偏导数计算
+│   │   │   ├── opportunity.py    #     ─ 归零机会成本
+│   │   │   ├── _cold_start.py    #     ─ S₀_max 冷启动
+│   │   │   └── _timing.py        #     ─ 计时埋点
+│   │   └── strategies/           #   ─ 策略注册
+│   │       └── __init__.py       #     ─ STRATEGY_REGISTRY（仅 SlotStrategy）
 │   ├── models.py                 # 核心数据模型
 │   ├── evaluate.py               # 房间效率评估
 │   ├── production.py             # 产出/日产计算
+│   ├── pipeline.py               # 共享求解管道（run_solver.py + report.py 复用）
+│   ├── report.py                 # 排班报告输出
 │   ├── output.py                 # MAA 基建排班协议输出
 │   ├── efficiency_fn.py          # 效率函数（常数/爬升/梯级衰减）
 │   ├── data_loader.py            # 数据加载器（v2）
@@ -99,7 +105,8 @@ RhodeLogisticsSteward/
 │   │   ├── refactor-plan.md       # 重构计划（v0.3.0 已归档）
 │   │   ├── solver-improvement-plan.md  # 求解器优化计划（v0.4.0 已归档）
 │   │   ├── strategy-refactor-plan.md   # Strategy 重构计划 + 实施笔记（v0.5.0 已实施）
-│   │   └── buffpool-iteration-plan.md  # BuffPool 迭代计划（v0.5.0 已实施）
+│   │   ├── buffpool-iteration-plan.md  # BuffPool 迭代计划（v0.5.0 已实施）
+│   │   ├── slot-iteration-record.md    # SlotSolver 迭代记录（v0.6.0-dev 已实施）
 │   │   └── mood-multi-shift-plan.md    # 心情建模与多班次计划（v0.6.0-dev 已实施）
 └── output/                       # 生成的排班文件（不入库）
     └── custom_infrast/
@@ -160,8 +167,8 @@ RhodeLogisticsSteward/
 1. **读取 AGENTS.md**（本文件）→ 理解项目定位、技术栈、规则、包结构
 2. **读取 `docs/slot-processing-model.md`** → 理解当前策略与算法骨架
 3. **按需深入到子包**：
-   - 联动体系逻辑 → `steward_core/synergy/`：先读 `__init__.py` 了解公开 API，再按需进入对应模块（A层→`mfg_linkages`/`trade_linkages`/`facility_linkages`，B层→`buff_pool`/`global_linkages`，C层→`control_linkages`/`mood`）
-   - 求解/排班逻辑 → `steward_core/solver/`：先读 `__init__.py` 的 `solve_mvp()` / `solve_multi_shift()`（委托给 Strategy），再按需进入 `strategy.py`（Strategy ABC + PartialSolution）、`strategies/baseline.py`（Pipeline 流水线编排）、各 `exhaust_*/fill_*` 模块（具体阶段）、`global_state.py`（全局状态评分）
+   - 联动体系逻辑 → `steward_core/synergy/`：先读 `__init__.py` 了解公开 API，再按需进入对应模块（A层→`mfg_linkages`/`trade_linkages`/`facility_linkages`/`facility_group`，B层→`buff_pool`/`global_linkages`，C层→`control_linkages`，通用→`ramping`）
+   - 求解/排班逻辑 → `steward_core/solver/`：先读 `__init__.py` 的 `solve_mvp()`（委托给 SlotStrategy），再进入 `slot/solver.py`（`solve_slot` 主循环）→ `slot/mfg.py`/`trade.py`/`control.py`/`remaining.py`（四阶段实现）→ `slot/partials.py`（D[d] 偏导数）→ `slot/contribution.py`（干员估值）
    - 心情建模 → `steward_core/mood_flow.py`（MoodContext + MoodModifiers） + `steward_core/dorm_recovery.py`（宿舍恢复评估）
    - 数据模型/常量 → `steward_core/models.py` / `constants.py`
    - 表维护/新增 → `synergy/types.py` TABLES 注册器 + `synergy/registry.py` 系统贡献者 + AGENTS.md §人工维护数据
@@ -188,12 +195,13 @@ RhodeLogisticsSteward/
 | 求解器优化/三件套 | `docs/archive/solver-improvement-plan.md`（v0.4.0 已实施） |
 | 远期待办/需求登记 | `docs/inbox.md` |
 | 联动体系代码 | `steward_core/synergy/` → `__init__.py` 重导出一览，`types.py` TABLES 注册器索引全部表 |
-| 求解/排班代码 | `steward_core/solver/` → `__init__.py` solve_mvp()/solve_multi_shift() 入口，`strategy.py` Strategy ABC，`strategies/baseline.py` Pipeline 编排，各 `exhaust_*/fill_*` 模块按阶段独立 |
+| 求解/排班代码 | `steward_core/solver/` → `__init__.py` solve_mvp() 入口 → `slot/solver.py` solve_slot() 主循环 → `slot/` 子包各阶段实现 |
 | 策略实现/CLI | `.trae/rules/strategy-config.md` + `solver/strategies/__init__.py` STRATEGY_REGISTRY |
 | Strategy 重构（已完成） | `docs/archive/strategy-refactor-plan.md`（v0.5.0 已实施） |
 | BuffPool 迭代（已完成） | `docs/archive/buffpool-iteration-plan.md`（v0.5.0 已实施） |
 | 心情建模/多班次（已完成） | `docs/archive/mood-multi-shift-plan.md`（已实施，合并至 master，未打 tag） |
 | 槽位加工模型 | `docs/slot-processing-model.md` |
+| SlotSolver 迭代记录 | `docs/archive/slot-iteration-record.md`（v0.6.0-dev） |
 
 ## 版本管理
 
@@ -224,7 +232,8 @@ master ────────────────────────�
 | 求解器三件套优化 | 0.4.0 | 支撑包+局部搜索+全局状态 |
 | Strategy 策略层重构 | 0.5.0 | Baseline/KBeam/Iterative 三条策略 + Phase 重命名 + BuffPool 迭代 + CLI 策略选择 |
 | JSON 输出协议对齐 | 0.5.1 | 输出符合 MAA 基建排班协议 v5.x、README、文档归档合并 |
-| 心情建模与多班次基础 | — (dev) | MoodContext + MoodModifiers + dorm_recovery + mood_burn/~~蓝脸衰减~~（已于 2026-05-31 撤销——非游戏机制，建模错误） + solve_multi_shift() 编排器。已合并至 master，因轮换调度不完整未打 tag |
+| 槽位加工模型重构 | — (dev) | SlotSolver 统一求解器（`slot/` 子包，13 模块）+ D[d] 偏导数反馈迭代 + 四阶段编排（phase_mfg/trade/control/remaining）。当前 feat/slot-iteration 分支，已合并至 master，因轮换调度不完整未打 tag |
+| 心情建模与多班次基础 | — (dev) | MoodContext + MoodModifiers + dorm_recovery + solve_multi_shift() 编排器。已合并至 master，后续由槽位加工模型替代 |
 | 首个正式版 | 1.0.0 | 全验证通过 |
 | MAA 发版需适配 | PATCH +1 | 0.5.1 |
 
@@ -249,7 +258,7 @@ v0.3.0  → M3: Step 3 验证通过
 v0.4.0  → M4: 求解器三件套优化（支撑包+局部搜索+全局状态）
 v0.5.0  → M5: Strategy 策略层重构（3 条策略 + Phase 重命名 + BuffPool 迭代 + CLI）
 v0.5.1  → M5.1: JSON 输出协议对齐 + README + 文档归档
-—      → 心情建模与多班次基础（已合并，未打 tag，后续由槽位加工模型替代）
+—      → M6: 槽位加工模型（SlotSolver + D[d] 迭代），心情建模与多班次基础（已合并，未打 tag）
 v1.0.0  → 首个正式版
 ```
 
