@@ -38,52 +38,75 @@ class TestOperatorIdentity:
 
         # Assert
         assert op.group_id is None
+
+
+class TestSubPowerIdentity:
+    """subPower 附属阵营/势力/队伍判定"""
+
+    def test_has_group_主group_id(self):
+        """主 group_id 匹配 → True"""
+        op = Operator(char_id="x", name="X", group_id="karlan")
+        assert op.has_group("karlan") is True
+
+    def test_has_group_subPower(self):
+        """sub_group_ids 匹配 → True（如崖心通过 subPower 成为 Karlan）"""
+        op = Operator(char_id="x", name="X", sub_group_ids=frozenset(["karlan"]))
+        assert op.has_group("karlan") is True
+
+    def test_has_group_不匹配(self):
+        """不匹配任一 → False"""
+        op = Operator(char_id="x", name="X", group_id="rhodes")
+        assert op.has_group("karlan") is False
+
+    def test_has_group_边缘_Null主group(self):
+        """主 group_id 为 None，仅 sub 匹配 → True"""
+        op = Operator(char_id="x", name="X", group_id=None, sub_group_ids=frozenset(["abyssal"]))
+        assert op.has_group("abyssal") is True
+
+    def test_has_nation_主nation_id(self):
+        """主 nation_id 匹配 → True"""
+        op = Operator(char_id="x", name="X", nation_id="kjerag")
+        assert op.has_nation("kjerag") is True
+
+    def test_has_nation_subPower(self):
+        """sub_nation_ids 匹配 → True（如阿米娅 subPower.nationId=rim）"""
+        op = Operator(char_id="x", name="X", sub_nation_ids=frozenset(["rim"]))
+        assert op.has_nation("rim") is True
+
+    def test_has_nation_不匹配(self):
+        """不匹配任一 → False"""
+        op = Operator(char_id="x", name="X")
+        assert op.has_nation("kjerag") is False
+
+
+class TestOperatorIdentity:
+    """MV0-1: Operator 新增 group_id / nation_id / team_id"""
+
+    def test_新建干员_默认无身份字段(self):
+        op = Operator(char_id="char_test", name="测试")
+        assert op.group_id is None
         assert op.nation_id is None
         assert op.team_id is None
 
     def test_设置身份字段_可正确读取(self):
-        """显式传入身份字段后，可正确读取"""
-        # Arrange & Act
-        op = Operator(
-            char_id="char_003_kalts",
-            name="凯尔希",
-            rarity=5,
-            group_id="rhodes",
-            nation_id="rhodes",
-            team_id="sweep",
-        )
-
-        # Assert
+        op = Operator(char_id="char_003_kalts", name="凯尔希", rarity=5,
+                      group_id="rhodes", nation_id="rhodes", team_id="sweep")
         assert op.group_id == "rhodes"
         assert op.nation_id == "rhodes"
         assert op.team_id == "sweep"
 
     def test_部分身份字段_其余为None(self):
-        """只传部分身份字段，未传的仍为 None"""
-        # Arrange & Act
-        op = Operator(
-            char_id="char_test",
-            name="测试",
-            group_id="glasgow",
-        )
-
-        # Assert
+        op = Operator(char_id="char_test", name="测试", group_id="glasgow")
         assert op.group_id == "glasgow"
         assert op.nation_id is None
         assert op.team_id is None
 
     def test_向后兼容_原有代码不传身份字段仍可运行(self):
-        """不传新字段时，operator_estimated_efficiency 和 has_skill_for 仍正常工作"""
         from steward_core.synergy import operator_estimated_efficiency
-        # Arrange
         sk = _mk_skill("Mfg", {"all": 30})
         op = Operator(char_id="op1", name="万能工", skills=[sk])
-
-        # Act
         eff = operator_estimated_efficiency(op, "Mfg", "PureGold")
         has = op.has_skill_for("Mfg", "PureGold")
-
-        # Assert
         assert eff == 30.0
         assert has is True
         assert op.group_id is None

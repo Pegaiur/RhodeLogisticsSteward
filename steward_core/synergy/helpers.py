@@ -71,4 +71,4 @@ def _is_glasgow(op: "Operator") -> bool:
 
 def _is_knight(op: "Operator") -> bool:
     """游戏内骑士 = kazimierz 势力 + 红松骑士团 + 硬编码补全"""
-    return op.name in _KNIGHT_NAMES or op.nation_id == "kazimierz" or op.group_id == _PINUS_GROUP
+    return op.name in _KNIGHT_NAMES or op.has_nation("kazimierz") or op.has_group(_PINUS_GROUP)

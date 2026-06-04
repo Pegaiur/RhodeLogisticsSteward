@@ -32,7 +32,7 @@ class OrderLimitContext:
 
     @property
     def total(self) -> int:
-        return self.base + sum(self.contributions.values())
+        return max(1, self.base + sum(self.contributions.values()))
 
     def add(self, source: str, delta: int) -> None:
         if delta != 0:
@@ -75,7 +75,13 @@ _ORDER_LIMIT_TABLE: dict[str, OrderLimitEntry] = {
     "trade_ord_spd&limit[020]":    OrderLimitEntry("喀兰贸易·α", 2),
     "trade_ord_spd&limit[021]":    OrderLimitEntry("喀兰贸易·β", 4),
     "trade_ord_spd&limit[022]":    OrderLimitEntry("喀兰之主", 4),
+    "trade_ord_spd&limit[031]":    OrderLimitEntry("使命必达", 1),
+    "trade_ord_spd&limit[033]":    OrderLimitEntry("少当家", 1),
+    "trade_ord_spd&limit[035]":    OrderLimitEntry("大巴扎管理学", 1),
     "trade_ord_spd&limit[036]":    OrderLimitEntry("半身人公会代表", 1),
+    "trade_ord_spd&limit[100]":    OrderLimitEntry("威压", -2),
+    "trade_ord_spd&limit[101]":    OrderLimitEntry("不怒自威", -6),
+    "trade_ord_spd&limit&bd[000]": OrderLimitEntry("可爱的艾露猫", 2),
     "trade_ord_limit&cost_P[020]": OrderLimitEntry("未偿还的债务", 2, requires="伺夜"),
 }
 """订单上限贡献表

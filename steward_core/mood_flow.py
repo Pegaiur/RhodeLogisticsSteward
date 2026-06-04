@@ -82,7 +82,7 @@ def compute_mood_modifiers(
     mods = MoodModifiers()
     names = {op.name for op in control_operators}
 
-    mods.control_recovery = count_control_mp_cost(control_operators) * control_recovery_per_op
+    mods.control_recovery = len(control_operators) * control_recovery_per_op
 
     if any(
         s.buff_id == "control_mp_lonely[000]"
@@ -105,20 +105,6 @@ def compute_mood_modifiers(
     mods.dorm_bonus_all, mods.dorm_bonus_elite = _extract_dorm_ctrl_bonuses(control_operators)
 
     return mods
-
-
-_CONTROL_MP_COST_PREFIX = "control_mp_cost["
-"""控制中枢心情恢复技能前缀 — 每技能 +0.05/h 内部恢复。
-由 control_mp_cost[000]~[014] 共 15 个技能组成，效果相同。
-玛恩纳的公事公办 control_mp_lonely[000] 是独立技能（+0.1/h + spread），不在此前缀内。"""
-
-
-def count_control_mp_cost(control_operators: list) -> int:
-    """统计中枢中持有 control_mp_cost* 技能的干员数"""
-    return sum(
-        1 for op in control_operators
-        if any(s.buff_id.startswith(_CONTROL_MP_COST_PREFIX) for s in op.skills)
-    )
 
 
 def _extract_dorm_ctrl_bonuses(
@@ -427,7 +413,7 @@ def _apply_mp_cost(
                 burn = max(0.0, burn - self_cost_delta)
                 continue
             if sk.buff_id in _MP_COST_FACTION_ZERO:
-                if op is not None and op.group_id == _MP_COST_FACTION_ZERO[sk.buff_id]:
+                if op is not None and op.has_group(_MP_COST_FACTION_ZERO[sk.buff_id]):
                     burn = max(0.0, burn - self_cost_delta)
                     continue
             if sk.buff_id in _MP_COST_ROOM_REDUCE:

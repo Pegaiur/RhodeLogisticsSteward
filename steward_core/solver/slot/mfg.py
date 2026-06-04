@@ -112,7 +112,7 @@ def phase_mfg(
             for op in ctx.operators:
                 if op.char_id in assigned_ids or op.char_id in existing_pool:
                     continue
-                if op.group_id == "abyssal":
+                if op.has_group("abyssal"):
                     pool.append(op)
 
         combos = [list(c) for c in itertools.combinations(pool, min(3, len(pool)))]

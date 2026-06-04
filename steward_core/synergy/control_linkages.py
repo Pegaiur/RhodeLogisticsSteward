@@ -122,7 +122,7 @@ def compute_cluster_hunting_bonus(
 
     # 该房间无深海猎人 → 0
     this_room_ops = all_mfg_assignments.get(this_room_index, [])
-    if not any(op_lookup.get(n) and op_lookup[n].group_id == "abyssal" for n in this_room_ops):
+    if not any(op_lookup.get(n) and op_lookup[n].has_group("abyssal") for n in this_room_ops):
         return 0.0
 
     # 检测中枢是否有集群狩猎提供者
@@ -153,7 +153,7 @@ def compute_cluster_hunting_bonus(
     for room_idx, names in all_mfg_assignments.items():
         for n in names:
             op = op_lookup.get(n)
-            if op and op.group_id == "abyssal":
+            if op and op.has_group("abyssal"):
                 total_abyssal += 1
 
     return min(total_abyssal * bonus_per, max_bonus)
@@ -362,7 +362,7 @@ def _eval_per_op(e: ControlPerOpEntry, room_ops: list["Operator"]) -> float:
         if e.condition_field == "group_id":
             count = sum(1 for op in room_ops if op.has_group(e.condition_value))
         elif e.condition_field == "nation_id":
-            count = sum(1 for op in room_ops if op.nation_id == e.condition_value)
+            count = sum(1 for op in room_ops if op.has_nation(e.condition_value))
         elif e.condition_field == "is_knight":
             count = sum(1 for op in room_ops if _is_knight(op))
         else:

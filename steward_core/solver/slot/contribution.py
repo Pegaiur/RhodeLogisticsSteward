@@ -16,6 +16,7 @@ from steward_core.constants import (
 )
 from steward_core.synergy import compute_control_global_bonus, control_per_operator_bonus, compute_control_reception_bonus
 from steward_core.synergy import _OP_PLATFORM_NAMES, _RHINE_LAB_NAMES, compute_facility_group_bonus, operator_estimated_efficiency
+from steward_core.synergy.trade_linkages import _collect_mechs, _TRADE_TRIGGER_TABLE, _JIE_MECH_TABLE
 from .context import STATE_DIMS, mood_is_viable
 from .partials import _product_base_rate, _product_lmd_per_unit
 
@@ -300,9 +301,11 @@ def _indirect_trade_contribution(
         if not room_names:
             continue
 
-        # 检查此房间是否含有订单上限消费者
-        has_consumer = any(
-            n in room_names for n in ("孑", "琳琅诗怀雅", "锏")
+        # 检查此房间是否含有订单上限消费者（通过技能表驱动检测）
+        room_ops_list = [ctx.op_lookup[n] for n in room_names if n in ctx.op_lookup]
+        has_consumer = bool(
+            _collect_mechs(room_ops_list, _JIE_MECH_TABLE)
+            or _collect_mechs(room_ops_list, _TRADE_TRIGGER_TABLE)
         )
         if not has_consumer:
             continue

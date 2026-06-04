@@ -38,7 +38,7 @@ def count_facilities_with_group(
     """统计至少有一名 group_id 干员进驻的设施数量"""
     count = 0
     for ops in all_assignments.values():
-        if any(op.group_id == group_id for op in ops):
+        if any(op.has_group(group_id) for op in ops):
             count += 1
     return count
 

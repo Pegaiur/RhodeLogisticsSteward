@@ -1133,3 +1133,85 @@ class TestGoldLineKirara:
 
         segs = synergy_trade_gold_lines([kirara], "Trade", "Money", layout, T=12.0)
         assert segs == []
+
+
+# ─── 数据完整性 ────────────────────────────────────────────────
+
+class TestOrderLimitTableCompleteness:
+    """验证 _ORDER_LIMIT_TABLE 覆盖所有含订单上限效果的 buff"""
+
+    @pytest.fixture(scope="class")
+    def _missing_buffs(self):
+        """扫描 buffs_infrastructure.json 找出缺失的订单上限 buff"""
+        import json
+        from pathlib import Path
+        from steward_core.synergy.trade_linkages import _ORDER_LIMIT_TABLE
+
+        bi_path = Path(__file__).parent.parent.parent / "buffs_infrastructure.json"
+        bi = json.loads(bi_path.read_text(encoding="utf-8"))
+
+        # 排除由 _JIE_MECH_TABLE 处理的孑技能（不走 _ORDER_LIMIT_TABLE 路径）
+        _JIE_SKIP = frozenset({
+            "trade_ord_limit_count[000]", "trade_ord_limit_diff[000]",
+        })
+
+        missing = {}
+        for buff_id, data in bi.items():
+            if not buff_id.startswith("trade_ord_spd&limit") and not buff_id.startswith("trade_ord_limit"):
+                continue
+            if buff_id in _JIE_SKIP:
+                continue
+            desc = data.get("description", "")
+            if "订单上限" not in desc:
+                continue
+            if buff_id not in _ORDER_LIMIT_TABLE:
+                # 从描述中提取数值: "订单上限<@cc.vup>+2</>" 或 "订单上限<@cc.vdown>-2</>"
+                import re
+                m = re.search(r"订单上限[^+\-]*?([+\-]\d+)", desc)
+                value = int(m.group(1)) if m else None
+                missing[buff_id] = {
+                    "name": data.get("buffName", ""),
+                    "value": value,
+                    "chars": data.get("charId", []),
+                }
+        return missing
+
+    def test_所有含订单上限效果的buff均已在_ORDER_LIMIT_TABLE中(self, _missing_buffs):
+        """buffs_infrastructure.json 中含'订单上限'关键词的 buff 应在表中"""
+        assert _missing_buffs == {}, (
+            f"_ORDER_LIMIT_TABLE 缺失 {len(_missing_buffs)} 条含订单上限效果的 buff:\n"
+            + "\n".join(
+                f"  {bid}: {info['name']} ({info['value']:+d}) 持有者: {info['chars']}"
+                for bid, info in _missing_buffs.items()
+            )
+        )
+
+
+class TestOrderLimitContextBounds:
+    """验证 OrderLimitContext.total 的下限保护"""
+
+    def test_负贡献不使total低于1(self):
+        """大量负订单上限贡献 → total 不低于 1"""
+        from steward_core.synergy.trade_linkages import OrderLimitContext
+
+        ctx = OrderLimitContext()
+        ctx.add("威压", -2)
+        ctx.add("不怒自威", -6)
+        ctx.add("孑·订单压缩", -9)
+        assert ctx.total >= 1, f"total={ctx.total} 低于下限 1"
+
+    def test_纯正贡献_正常累加(self):
+        """正订单上限贡献 → total 正确"""
+        from steward_core.synergy.trade_linkages import OrderLimitContext
+
+        ctx = OrderLimitContext()
+        ctx.add("谈判", 5)
+        ctx.add("喀兰之主", 4)
+        assert ctx.total == 19
+
+    def test_基准total为10(self):
+        """无贡献时 total = base = 10"""
+        from steward_core.synergy.trade_linkages import OrderLimitContext
+
+        ctx = OrderLimitContext()
+        assert ctx.total == 10
