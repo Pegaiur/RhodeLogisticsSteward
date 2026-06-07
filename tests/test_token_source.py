@@ -473,4 +473,143 @@ class TestFindByCharId:
         assert found is None
 
 
-# ─── Phase A4: TokenSource 注册（A 层同房阵营 3 + PerOp 7） ─────────
+# ─── Phase A4: TokenSource 注册（A 层同房阵营 3 + PerOp 8） ─────────
+
+
+class TestPhaseASources:
+    """PHASE_A_SOURCES 11 条注册的覆盖测试"""
+
+    def test_all_sources_evaluable(self):
+        """所有 11 条注册均可被 evaluate_tokens 成功计算"""
+        from steward_core.token_source import PHASE_A_SOURCES, evaluate_tokens
+
+        # 构造覆盖全部条件的干员池
+        ops = [
+            _mk_op("芬", team_id="reserve1"),
+            _mk_op("摩根", group_id="glasgow"),
+            _mk_op("能天使", nation_id="laterano"),
+            _mk_op("焰尾", group_id="pinus", nation_id="kazimierz"),
+            _mk_op("野鬃", group_id="pinus", nation_id="kazimierz"),
+            _mk_op("野鬃2", group_id="pinus", nation_id="kazimierz"),
+            _mk_op("野鬃3", group_id="pinus", nation_id="kazimierz"),
+            _mk_op("薇薇安娜", group_id="pinus", nation_id="kazimierz"),
+            _mk_op("涤火杰西卡", group_id="blacksteel"),
+            _mk_op("八幡海铃", nation_id="siracusa"),
+            _mk_op("银灰", group_id="karlan"),
+            _mk_op("初雪", group_id="karlan"),
+            _mk_op("崖心", group_id="karlan"),
+            _mk_op("戴菲恩", group_id="glasgow"),
+            _mk_op("灵知", group_id="karlan"),
+        ]
+
+        result = evaluate_tokens(PHASE_A_SOURCES, ops)
+        assert len(result) == 11
+
+    def test_reserve1_mfg_counts_team(self):
+        """team_id=reserve1 → 计数 1"""
+        from steward_core.token_source import TokenSource, evaluate_tokens
+
+        ops = [_mk_op("芬", team_id="reserve1"), _mk_op("其他", team_id="other")]
+        result = evaluate_tokens([TokenSource(token="t", condition="team_id=reserve1")], ops)
+        assert result["t"] == 1.0
+
+    def test_glasgow_trade_counts_group(self):
+        """group_id=glasgow → 计数"""
+        from steward_core.token_source import TokenSource, evaluate_tokens
+
+        ops = [_mk_op("摩根", group_id="glasgow"), _mk_op("戴菲恩", group_id="glasgow")]
+        result = evaluate_tokens([TokenSource(token="t", condition="group_id=glasgow")], ops)
+        assert result["t"] == 2.0
+
+    def test_laterano_trade_counts_nation(self):
+        """nation_id=laterano → 计数"""
+        from steward_core.token_source import TokenSource, evaluate_tokens
+
+        ops = [_mk_op("能天使", nation_id="laterano")]
+        result = evaluate_tokens([TokenSource(token="t", condition="nation_id=laterano")], ops)
+        assert result["t"] == 1.0
+
+    def test_pinus_cr_counts_four(self):
+        """4 名 pinus → pinus_cr = 4"""
+        from steward_core.token_source import TokenSource, evaluate_tokens
+
+        ops = [
+            _mk_op("A", group_id="pinus", nation_id="kazimierz") for _ in range(4)
+        ]
+        result = evaluate_tokens([TokenSource(token="pinus_cr", condition="group_id=pinus")], ops)
+        assert result["pinus_cr"] == 4.0
+
+    def test_knight_mfg_counts_knights(self):
+        """is_knight → 匹配 pinus + kazimierz"""
+        from steward_core.token_source import TokenSource, evaluate_tokens
+
+        ops = [
+            _mk_op("焰尾", group_id="pinus", nation_id="kazimierz"),
+            _mk_op("野鬃", group_id="pinus", nation_id="kazimierz"),
+            _mk_op("普通", group_id="other", nation_id="other"),
+        ]
+        result = evaluate_tokens([TokenSource(token="t", condition="is_knight")], ops)
+        assert result["t"] == 2.0
+
+    def test_blacksteel_mfg_counts(self):
+        """group_id=blacksteel → 计数"""
+        from steward_core.token_source import TokenSource, evaluate_tokens
+
+        ops = [_mk_op("涤火杰西卡", group_id="blacksteel")]
+        result = evaluate_tokens([TokenSource(token="t", condition="group_id=blacksteel")], ops)
+        assert result["t"] == 1.0
+
+    def test_siracusa_trade_counts(self):
+        """nation_id=siracusa → 计数"""
+        from steward_core.token_source import TokenSource, evaluate_tokens
+
+        ops = [_mk_op("八幡海铃", nation_id="siracusa")]
+        result = evaluate_tokens([TokenSource(token="t", condition="nation_id=siracusa")], ops)
+        assert result["t"] == 1.0
+
+    def test_karlan3_threshold_met(self):
+        """3 名 karlan → karlan3_trade = 1"""
+        from steward_core.token_source import TokenSource, evaluate_tokens
+
+        ops = [
+            _mk_op("银灰", group_id="karlan"),
+            _mk_op("初雪", group_id="karlan"),
+            _mk_op("崖心", group_id="karlan"),
+        ]
+        result = evaluate_tokens([TokenSource(token="t", condition="count_ge:karlan=3")], ops)
+        assert result["t"] == 1.0
+
+    def test_karlan3_threshold_not_met(self):
+        """2 名 karlan → karlan3_trade = 0"""
+        from steward_core.token_source import TokenSource, evaluate_tokens
+
+        ops = [
+            _mk_op("银灰", group_id="karlan"),
+            _mk_op("初雪", group_id="karlan"),
+        ]
+        result = evaluate_tokens([TokenSource(token="t", condition="count_ge:karlan=3")], ops)
+        assert result["t"] == 0.0
+
+    def test_glasgow_trade_bonus(self):
+        """group_id=glasgow → 戴菲恩另开 token"""
+        from steward_core.token_source import TokenSource, evaluate_tokens
+
+        ops = [_mk_op("戴菲恩", group_id="glasgow")]
+        result = evaluate_tokens([TokenSource(token="t", condition="group_id=glasgow")], ops)
+        assert result["t"] == 1.0
+
+    def test_karlan_trade_penalty(self):
+        """karlan 惩罚 token（灵知）"""
+        from steward_core.token_source import TokenSource, evaluate_tokens
+
+        ops = [_mk_op("灵知", group_id="karlan")]
+        result = evaluate_tokens([TokenSource(token="t", condition="group_id=karlan")], ops)
+        assert result["t"] == 1.0
+
+    def test_team_id_match(self):
+        """team_id 条件语法独立测试"""
+        from steward_core.token_source import _build_matcher
+
+        m = _build_matcher("team_id=reserve1")
+        assert m(_mk_op("芬", team_id="reserve1"))
+        assert not m(_mk_op("其他", team_id="other"))

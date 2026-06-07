@@ -278,6 +278,8 @@ def _build_matcher(condition: str) -> ConditionMatcher:
         return lambda op, v=value: _match_group_id(op, v)
     elif key == "nation_id":
         return lambda op, v=value: _match_nation_id(op, v)
+    elif key == "team_id":
+        return lambda op, v=value: _match_team_id(op, v)
     elif key == "char_id":
         return lambda op, v=value: op.char_id == v
     elif key == "pair":
@@ -306,6 +308,11 @@ def _match_nation_id(op, nation_id: str) -> bool:
     return op.has_nation(nation_id)
 
 
+def _match_team_id(op, team_id: str) -> bool:
+    """匹配 team_id（兼容 has_team 方法）"""
+    return op.has_team(team_id)
+
+
 def _parse_count_ge(condition: str) -> tuple[str, str, str, str]:
     """解析 count_ge 条件字符串
 
@@ -319,4 +326,27 @@ def _parse_count_ge(condition: str) -> tuple[str, str, str, str]:
         )
     group_id, n_str = after_prefix.split("=", 1)
     return ("count_ge", group_id, "=", n_str)
+
+
+# ─── Phase A TokenSource 注册列表 ────────────────────────────────────────
+
+# 以下 11 条覆盖 A 层同房阵营 3 + C 层 per-operator 条件加成 8，
+# 用于 Phase A 原型验证：与旧函数 synergy_faction_room / _eval_per_op 输出对齐。
+
+PHASE_A_SOURCES: list[TokenSource] = [
+    # ── A 层同房阵营 ──
+    TokenSource(token="reserve1_mfg", condition="team_id=reserve1"),
+    TokenSource(token="glasgow_trade", condition="group_id=glasgow"),
+    TokenSource(token="laterano_trade", condition="nation_id=laterano"),
+
+    # ── C 层 per-operator ──
+    TokenSource(token="pinus_cr", condition="group_id=pinus"),
+    TokenSource(token="pinus_pg_penalty", condition="group_id=pinus"),
+    TokenSource(token="knight_mfg", condition="is_knight"),
+    TokenSource(token="blacksteel_mfg", condition="group_id=blacksteel"),
+    TokenSource(token="siracusa_trade", condition="nation_id=siracusa"),
+    TokenSource(token="karlan3_trade", condition="count_ge:karlan=3"),
+    TokenSource(token="glasgow_trade_bonus", condition="group_id=glasgow"),
+    TokenSource(token="karlan_trade_penalty", condition="group_id=karlan"),
+]
 
