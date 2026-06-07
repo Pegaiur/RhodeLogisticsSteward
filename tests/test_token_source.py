@@ -613,3 +613,92 @@ class TestPhaseASources:
         m = _build_matcher("team_id=reserve1")
         assert m(_mk_op("芬", team_id="reserve1"))
         assert not m(_mk_op("其他", team_id="other"))
+
+
+# ─── Phase A6: 集成测试 — TokenSource vs 旧函数输出对齐 ─────────────────
+
+
+class TestIntegrationFactionRoom:
+    """TokenSource 与 synergy_faction_room 计数对齐"""
+
+    def _token(self, ops, token_name):
+        from steward_core.token_source import PHASE_A_SOURCES, evaluate_tokens
+        result = evaluate_tokens(PHASE_A_SOURCES, ops)
+        return result.get(token_name, 0.0)
+
+    def test_reserve1_计数一致(self):
+        ops = [
+            _mk_op("芬", team_id="reserve1"),
+            _mk_op("克洛丝", team_id="reserve1"),
+            _mk_op("其他", team_id="other"),
+        ]
+        assert self._token(ops, "reserve1_mfg") == 2.0
+
+    def test_glasgow_计数一致(self):
+        ops = [
+            _mk_op("摩根", group_id="glasgow"),
+            _mk_op("因陀罗", group_id="glasgow"),
+            _mk_op("戴菲恩", group_id="glasgow"),
+        ]
+        assert self._token(ops, "glasgow_trade") == 3.0
+
+    def test_laterano_计数一致(self):
+        ops = [
+            _mk_op("新约能天使", nation_id="laterano"),
+            _mk_op("安比尔", nation_id="laterano"),
+        ]
+        assert self._token(ops, "laterano_trade") == 2.0
+
+
+class TestIntegrationPerOp:
+    """TokenSource 与 _eval_per_op 计数对齐"""
+
+    def test_pinus_四骑士计数一致(self):
+        from steward_core.token_source import TokenSource, evaluate_tokens
+        ops = [
+            _mk_op("焰尾", group_id="pinus", nation_id="kazimierz"),
+            _mk_op("野鬃", group_id="pinus", nation_id="kazimierz"),
+            _mk_op("灰毫", group_id="pinus", nation_id="kazimierz"),
+            _mk_op("远牙", group_id="pinus", nation_id="kazimierz"),
+        ]
+        sources = [
+            TokenSource(token="pinus", condition="group_id=pinus"),
+            TokenSource(token="knight", condition="is_knight"),
+        ]
+        result = evaluate_tokens(sources, ops)
+        assert result["pinus"] == 4.0
+        assert result["knight"] == 4.0
+
+    def test_黑钢计数一致(self):
+        from steward_core.token_source import TokenSource, evaluate_tokens
+        ops = [_mk_op("涤火杰西卡", group_id="blacksteel")]
+        result = evaluate_tokens([TokenSource(token="t", condition="group_id=blacksteel")], ops)
+        assert result["t"] == 1.0
+
+    def test_叙拉古计数一致(self):
+        from steward_core.token_source import TokenSource, evaluate_tokens
+        ops = [_mk_op("八幡海铃", nation_id="siracusa")]
+        result = evaluate_tokens([TokenSource(token="t", condition="nation_id=siracusa")], ops)
+        assert result["t"] == 1.0
+
+    def test_karlan3_阈值达成(self):
+        from steward_core.token_source import TokenSource, evaluate_tokens
+        ops = [
+            _mk_op("银灰", group_id="karlan"),
+            _mk_op("初雪", group_id="karlan"),
+            _mk_op("崖心", group_id="karlan"),
+        ]
+        result = evaluate_tokens([TokenSource(token="t", condition="count_ge:karlan=3")], ops)
+        assert result["t"] == 1.0
+
+    def test_glasgow_戴菲恩计数一致(self):
+        from steward_core.token_source import TokenSource, evaluate_tokens
+        ops = [_mk_op("戴菲恩", group_id="glasgow")]
+        result = evaluate_tokens([TokenSource(token="t", condition="group_id=glasgow")], ops)
+        assert result["t"] == 1.0
+
+    def test_karlan_灵知惩罚计数一致(self):
+        from steward_core.token_source import TokenSource, evaluate_tokens
+        ops = [_mk_op("灵知", group_id="karlan"), _mk_op("银灰", group_id="karlan")]
+        result = evaluate_tokens([TokenSource(token="t", condition="group_id=karlan")], ops)
+        assert result["t"] == 2.0
