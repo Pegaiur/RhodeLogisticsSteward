@@ -178,6 +178,37 @@ def _evaluate_count(
     ctx: "SlotContext | None",
 ) -> float:
     """count aggregate：统计符合条件的干员数"""
+    condition = source.condition
+
+    # count_ge 特殊处理：统计后做阈值判定，返回 0 或 1
+    if condition.startswith("count_ge:"):
+        _, group_id, _, n_str = _parse_count_ge(condition)
+        try:
+            threshold = int(n_str)
+        except ValueError:
+            raise ValueError(
+                f"count_ge 阈值必须是整数，收到 'count_ge:{group_id}={n_str}'"
+            ) from None
+        count = sum(1 for op in operators if op.has_group(group_id))
+        result = 1.0 if count >= threshold else 0.0
+        if source.cap is not None:
+            result = min(result, source.cap)
+        return result
+
+    # pair 特殊处理：双方都在 → 1，否则 → 0
+    if condition.startswith("pair="):
+        _, value = _parse_condition(condition)
+        if ":" not in value:
+            raise ValueError(
+                f"pair 期望格式 char_id_A:char_id_B，收到 'pair={value}'"
+            )
+        a, b = value.split(":", 1)
+        char_ids = {op.char_id for op in operators}
+        result = 1.0 if (a in char_ids and b in char_ids) else 0.0
+        if source.cap is not None:
+            result = min(result, source.cap)
+        return result
+
     matcher = _build_matcher(source.condition)
     count = sum(1 for op in operators if matcher(op))
     if source.cap is not None:
@@ -187,13 +218,144 @@ def _evaluate_count(
 
 # ─── 条件匹配器构建 ────────────────────────────────────────────────────
 
+# 派生布尔函数注册表（条件 key → 判定函数）
+_FN_CONDITIONS: dict[str, ConditionMatcher] = {}
+
+# ── 初始注册 is_knight ──
+from steward_core.synergy.helpers import _is_knight
+_FN_CONDITIONS["is_knight"] = lambda op: _is_knight(op)
+
+
+def _parse_condition(condition: str) -> tuple[str, str] | tuple[str]:
+    """解析 condition 字符串
+
+    Returns:
+        ("field", "value")   — key=value 格式
+        ("fn_name",)          — 无值格式（如 "is_knight"）
+    """
+    if "=" not in condition:
+        return (condition,)
+
+    key, _, value = condition.partition("=")
+    return (key, value)
+
 
 def _build_matcher(condition: str) -> ConditionMatcher:
     """解析 condition 字符串 → 条件匹配器
 
-    Phase A1 仅实现 * 通配，后续 Phase A2 扩展 8 种语法。
+    支持的语法（Phase A2 覆盖前 7 种，skill_class 留 Phase B）：
+
+    | 格式 | 匹配方式 |
+    |------|---------|
+    | `*` | 无条件通过 |
+    | `group_id=v` | op.has_group(v) |
+    | `nation_id=v` | op.has_nation(v) |
+    | `char_id=v` | op.char_id == v |
+    | `is_knight` | _FN_CONDITIONS["is_knight"](op) |
+    | `pair=A:B` | 双方 char_id 均在 operators 内 |
+    | `count_ge:g=N` | ≥N 个 has_group(g) → 1.0，否则 0.0 |
+    | `skill_class=v` | 暂未实现（Phase B） |
     """
     if condition == "*":
         return lambda _op: True
 
-    raise NotImplementedError(f"条件 '{condition}' 尚未实现（Phase A2 待完成）")
+    parsed = _parse_condition(condition)
+
+    if len(parsed) == 1:
+        # 无值格式
+        fn_name = parsed[0]
+        if fn_name in _FN_CONDITIONS:
+            return _FN_CONDITIONS[fn_name]
+        raise ValueError(f"未知的条件函数 '{fn_name}'")
+
+    key, value = parsed
+
+    if key == "group_id":
+        return lambda op, v=value: _match_group_id(op, v)
+    elif key == "nation_id":
+        return lambda op, v=value: _match_nation_id(op, v)
+    elif key == "char_id":
+        return lambda op, v=value: op.char_id == v
+    elif key == "pair":
+        return _build_pair_matcher(value)
+    elif key == "count_ge":
+        return _build_count_ge_matcher(value)
+    elif key == "skill_class":
+        raise NotImplementedError("skill_class 条件将在 Phase B 实现")
+
+    raise ValueError(f"未知的条件 key '{key}'")
+
+
+def _match_group_id(op, group_id: str) -> bool:
+    """匹配 group_id（兼容 has_group 方法）"""
+    return op.has_group(group_id)
+
+
+def _match_nation_id(op, nation_id: str) -> bool:
+    """匹配 nation_id（兼容 has_nation 方法）"""
+    return op.has_nation(nation_id)
+
+
+def _build_pair_matcher(pair_str: str) -> ConditionMatcher:
+    """构建 pair 匹配器
+
+    格式: char_id_A:char_id_B（双方均为 char_id）
+    双方都在当前 operators 集合内 → True
+    """
+    if ":" not in pair_str:
+        raise ValueError(f"pair 期望格式 char_id_A:char_id_B，收到 '{pair_str}'")
+    a, b = pair_str.split(":", 1)
+    return lambda op, _a=a, _b=b: _match_pair(op, _a, _b)
+
+
+def _match_pair(op, a: str, b: str) -> bool:
+    """成对存在性检查（任一方的 Operator 实例均返回 True，对外表现为 count=1）"""
+    return op.char_id == a or op.char_id == b
+
+
+def _build_count_ge_matcher(count_ge_str: str) -> ConditionMatcher:
+    """构建 count_ge 阈值匹配器
+
+    格式: group_id=N
+    """
+    if "=" not in count_ge_str:
+        raise ValueError(
+            f"count_ge 期望格式 count_ge:group_id=N，收到 'count_ge:{count_ge_str}'"
+        )
+    group_id, _, n_str = count_ge_str.partition("=")
+    if not group_id:
+        raise ValueError(
+            f"count_ge 缺少 group_id，期望格式 count_ge:group_id=N"
+        )
+    try:
+        threshold = int(n_str)
+    except ValueError:
+        raise ValueError(
+            f"count_ge 阈值必须是整数，收到 '{n_str}'"
+        )
+
+    # count_ge 需要知道"同 scope 内有多少匹配干员"，因此通过闭包延迟计算
+    # 实际计数在 evaluate_tokens 的 operators 参数中由 _evaluate_count 完成，
+    # 这里返回一个标记匹配器——实际计数逻辑在 _evaluate_count_ge 中。
+    return lambda op, g=group_id, t=threshold: _match_count_ge(op, g, t)
+
+
+def _parse_count_ge(condition: str) -> tuple[str, str, str, str]:
+    """解析 count_ge 条件字符串
+
+    'count_ge:karlan=3' → ('count_ge', 'karlan', '=', '3')
+    """
+    # condition 格式: "count_ge:group_id=N"
+    after_prefix = condition[len("count_ge:"):]
+    if "=" not in after_prefix:
+        raise ValueError(
+            f"count_ge 期望格式 count_ge:group_id=N，收到 '{condition}'"
+        )
+    group_id, n_str = after_prefix.split("=", 1)
+    return ("count_ge", group_id, "=", n_str)
+
+
+def _match_count_ge(op, group_id: str, threshold: int) -> bool:
+    """单干员匹配：仅标记是否属于该 group"""
+    return op.has_group(group_id)
+
