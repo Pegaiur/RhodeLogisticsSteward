@@ -160,6 +160,19 @@ class SlotContext:
             windows=windows,
         )
 
+    def find_by_char_id(self, char_id: str):
+        """通过 char_id 查找 Operator；未找到返回 None"""
+        for op in self.operators:
+            if op.char_id == char_id:
+                return op
+        return None
+
+    def op_lookup_by_char_id(self) -> dict[str, "Operator"]:
+        """构建 {char_id: Operator} 反向映射（首次调用后缓存）"""
+        if not hasattr(self, "_char_id_lookup"):
+            self._char_id_lookup = {op.char_id: op for op in self.operators}
+        return self._char_id_lookup
+
     # ── 槽位读写 ──────────────────────────────────────────
 
     def place(self, window_idx: int, slot_id: str, op_name: str) -> None:

@@ -333,6 +333,52 @@ class TestConditionErrors:
         with pytest.raises(ValueError, match="未知"):
             evaluate_tokens(sources, ops)
 
+
+# ─── Phase A3: SlotContext.find_by_char_id ──────────────────────
+
+
+class TestFindByCharId:
+    """SlotContext 和 GlobalContext 的 find_by_char_id 方法"""
+
+    def test_slot_context_find_existing(self):
+        from steward_core.solver.slot.context import SlotContext
+
+        ops = [
+            _mk_op("焰尾", char_id="char_140_white"),
+            _mk_op("野鬃", char_id="char_141_nights"),
+        ]
+        ctx = SlotContext(operators=ops, op_lookup={op.name: op for op in ops})
+
+        found = ctx.find_by_char_id("char_140_white")
+        assert found is not None
+        assert found.name == "焰尾"
+
+    def test_slot_context_find_nonexistent(self):
+        from steward_core.solver.slot.context import SlotContext
+
+        ops = [_mk_op("A", char_id="char_001")]
+        ctx = SlotContext(operators=ops, op_lookup={op.name: op for op in ops})
+
+        found = ctx.find_by_char_id("nonexistent")
+        assert found is None
+
+    def test_global_context_find_existing(self):
+        from steward_core.solver.context import GlobalContext
+
+        ops = [_mk_op("令", char_id="char_201_ling")]
+        gctx = GlobalContext(control_operators=ops)
+
+        found = gctx.find_by_char_id("char_201_ling")
+        assert found is not None
+        assert found.name == "令"
+
+    def test_global_context_find_nonexistent(self):
+        from steward_core.solver.context import GlobalContext
+
+        gctx = GlobalContext()
+        found = gctx.find_by_char_id("nonexistent")
+        assert found is None
+
     def test_malformed_pair_raises(self):
         """pair 格式错误（无冒号分隔）"""
         from steward_core.token_source import TokenSource, evaluate_tokens

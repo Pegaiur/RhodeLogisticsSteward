@@ -107,6 +107,20 @@ class GlobalContext:
             dorm_operators=dorm_operators,
         )
 
+    def find_by_char_id(self, char_id: str) -> "Operator | None":
+        """通过 char_id 查找 Operator（遍历已知的干员来源）"""
+        for op in self.control_operators:
+            if op.char_id == char_id:
+                return op
+        for op in self.dorm_operators:
+            if op.char_id == char_id:
+                return op
+        for ops in self.all_assignments.values():
+            for op in ops:
+                if op.char_id == char_id:
+                    return op
+        return None
+
     @classmethod
     def from_plan(
         cls,
