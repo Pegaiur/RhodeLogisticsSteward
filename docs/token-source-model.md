@@ -209,32 +209,127 @@ TokenSource 只负责第二层：将"符合条件的干员数"、"房间效率�
 
 ## 实施计划
 
-### Phase A: 原型验证（~300 行）
+> 符号约定：每个步骤末尾标注 `{Est}` 为估算新增代码行数，`{+N}` 为修改行数。
 
-1. **新建 `steward_core/token_source.py`** — TokenSource dataclass + 执行引擎
-2. **选取 10 条 TokenSource 注册**（A层同房阵营 3 + PerOp 7）
-3. **实现拓扑排序执行引擎**：`evaluate_tokens(sources, ctx) → dict[str, float]`
-4. **单元测试**：每个 aggregate 模式至少 1 个测试
+### Phase A: 原型验证（~350 行）
 
-### Phase B: 全量映射（~200 行）
+**目标**：TokenSource 执行引擎可用，10 条注册通过单元测试，与旧函数输出对齐。
 
-5. **补齐 ~46 条 TokenSource 注册**
-6. **buff_id → token 1:N 映射表**（~40 条）
-7. **条件解析器**：`parse_condition(condition_str) → matcher`
-8. **集成测试**：TokenSource 输出与现有 5 个计数函数的输出对齐
+| 步骤 | 内容 | 产出文件 | 行数 |
+|:---:|------|---------|:---:|
+| A1 | 新建 `steward_core/token_source.py`：`TokenSource` dataclass（9 字段）、`ConditionMatcher` Callable 类型别名、`evaluate_tokens(sources, ctx) → dict[str, float]` 拓扑排序执行引擎 | `token_source.py` | ~120 |
+| A2 | 实现 `parse_condition(condition_str) → tuple` 条件解析器，覆盖全部 8 种语法（group_id / nation_id / char_id / is_knight / pair / skill_class / count_ge / `*`） | `token_source.py` | ~50 |
+| A3 | 向 `SlotContext` 新增 `find_by_char_id(char_id) → Operator | None` 方法；`GlobalContext` 同步新增 | `slot/context.py`, `context.py` | ~15 |
+| A4 | 注册 10 条 TokenSource：A 层同房阵营 3（`_A_ROOM_FACTION_TABLE` 映射）+ C 层 PerOp 7（`_CONTROL_PER_OP_TABLE` 映射）——作为先行探针验证 `condition=char_id`/`group_id`/`nation_id`/`is_knight`/`count_ge` 五种语法 | `token_source.py` | ~50 |
+| A5 | 单元测试：每种 aggregate 模式 ≥1 个测试（count / efficiency_sum / max_efficiency / attribute_sum / passthrough / distinct）+ 拓扑排序依赖正确性 + `*` 无条件通配 | `tests/test_token_source.py` | ~100 |
+| A6 | 集成测试：TokenSource 输出与旧函数（`synergy_faction_room` / `_eval_per_op`）的 **全量干员池** 输出逐条对齐 | `tests/test_token_source.py` | ~30 |
 
-### Phase C: 接入求解器
+**验收条件**：
+- [ ] `evaluate_tokens()` 是纯函数，零副作用
+- [ ] 拓扑排序：`depends_on` 引用的 token 一定先于依赖方计算
+- [ ] 循环依赖检测（`a depends_on b, b depends_on a`）抛出明确异常
+- [ ] 10 条注册的输出与旧函数输出在 `pytest tests/ -v -k token_source` 下**逐条一致**（允许浮点误差 ±1e-6）
+- [ ] 不会破坏现有 783 测试（`pytest tests/ -v` 全绿）
 
-9. **warm_start 接入**：替代 `compute_consumer_driven_D0` 和 `_estimate_per_op_pool_value` 的计数部分
-10. **坐标下降接入**：替换 `_eval_per_op`、`synergy_skill_count` 等逐函数计数
-11. **回归验证**：全量 793 测试通过
-12. **性能基准**：图与现有方式的耗时对比
+---
 
-### Phase D: 文档与清理
+### Phase B: 全量映射（~280 行）
 
-13. 更新 `AGENTS.md` 项目结构索引
-14. 标记旧计数函数为 deprecated
-15. 合并到 master → 单向合并到 feat/market-iteration
+**目标**：~75 条 TokenSource 全部注册，buff_id→token 映射表就绪，条件解析器完善。
+
+| 步骤 | 内容 | 产出文件 | 行数 |
+|:---:|------|---------|:---:|
+| B1 | 补齐 TokenSource 注册：A 层配对 9 + 技能标签 3 + 自动化 6 + 工厂数量 8 + 贸易分享/放大/条件 11 + B 层全局阵营 3 + 跨房间配对 3 + 深海猎人 1 + 设施 group 3 | `token_source.py` | ~150 |
+| B2 | 新增 `_BUFF_TO_TOKENS: dict[str, list[str]]` 映射表（~40 条），替代 `_OPERATOR_BUFF_PRODUCERS` 的 `dimension + cascade` 字段组合。执行引擎支持 `depends_on="token"` 级联时通过此表查找上游 buff 的生产 token | `token_source.py` | ~60 |
+| B3 | 新增 `_FN_CONDITIONS` 注册表：`is_knight`（已有）+ 预留 `is_abyssal_hunter`（深海猎人派生）等扩展槽位 | `token_source.py` | ~20 |
+| B4 | 条件解析器补充 `pair` 配对解析（冒号分隔 → char_id 对）、`count_ge` 阈值解析（冒号分隔 → group_id + N） | `token_source.py` | ~30 |
+| B5 | 集成测试：TokenSource 输出与旧函数（`synergy_skill_count` / `synergy_global_faction` / `compute_cluster_hunting_bonus` / `synergy_facility_count` / `synergy_facility_group`）全量对齐 | `tests/test_token_source.py` | ~50 |
+| B6 | `buff_id → token` 级联正确性测试（黑键 perception→silent_resonance、令 yanhuo→wushu_crystal） | `tests/test_token_source.py` | ~30 |
+
+**验收条件**：
+- [ ] 全部 ~75 条 TokenSource 注册完成，无遗漏（对照 `types.py` TABLES 注册器逐项核对）
+- [ ] `_BUFF_TO_TOKENS` 覆盖 `_OPERATOR_BUFF_PRODUCERS` 的全部 14 条记录
+- [ ] 条件解析器对所有语法抛出明确错误（未知 key、格式错误等）而非静默失败
+- [ ] TokenSource 输出与 **全部 5 个旧计数函数**（含级联场景）输出对齐
+- [ ] `pytest tests/ -v -k token_source` 覆盖 ≥80 个测试用例
+
+---
+
+### Phase C: 接入求解器（~150 行）
+
+**目标**：TokenSource 替代求解器中的旧计数函数，回归测试全绿，性能不低于旧方式。
+
+| 步骤 | 内容 | 产出文件 | 行数 |
+|:---:|------|---------|:---:|
+| C1 | `warm_start` 接入：替代 `compute_consumer_driven_D0` 中的逐函数计数调用和 `_estimate_per_op_pool_value` 中的 `_count_pool_matching` 遍历——两处均替换为单次 `evaluate_tokens()` 调用 | `slot/rooms.py`, `slot/partials.py` | ~30 |
+| C2 | 坐标下降接入：`_dispatch_optimize` → `optimize_mfg_room` / `optimize_trade_room` 中的 `synergy_pair` / `synergy_skill_count` / `synergy_automation` / `synergy_faction_room` 逐函数计数，替换为 TokenSource + 消费层保留 | `slot/mfg.py`, `slot/trade.py` | ~60 |
+| C3 | Control 层接入：`compute_control_global_bonus` 中 `_eval_per_op` / `compute_cluster_hunting_bonus` 替换为 TokenSource；per-operator 条件加成的**消费侧**（线性公式）保留在 control_linkages | `synergy/control_linkages.py` | ~40 |
+| C4 | 不做替换的声明：爬升 `e(t)`、菲亚梅塔自律、冲突互斥、订单覆盖、裁缝豁免 —— 在接入点加注释标注"非计数层，保留旧路径" | 各相关文件 | ~10 |
+| C5 | 回归验证：`pytest tests/ -v` 全量 783 测试通过；`python run_solver.py` 端到端无异常 | — | — |
+| C6 | 性能基准：`_timing.py` 埋点对比 `evaluate_tokens()` 总耗时 vs 旧 5 个计数函数耗时之和，确认无退化（允许 ±5% 内） | `_timing.py` | ~10 |
+
+**验收条件**：
+- [ ] `pytest tests/ -v` **全量 783 测试通过**（零回归）
+- [ ] `python run_solver.py` 产出 JSON 与 Phase B 完成时的产出 **差异 ≤ 3 条干员**（允许因浮点排序边界导致的微小差异）
+- [ ] `evaluate_tokens()` 总耗时 ≤ 旧 5 个函数耗时之和 × 1.05
+- [ ] 所有未替换的旧路径有明确注释标注原因
+
+---
+
+### Phase D: 文档与清理（~50 行）
+
+**目标**：旧代码标记 deprecated，文档索引更新，知识传递完整。
+
+| 步骤 | 内容 | 产出文件 | 行数 |
+|:---:|------|---------|:---:|
+| D1 | 旧计数函数标注 `@deprecated` 装饰器 + docstring 迁移指引 → 新函数对照表 | 各 `synergy/*.py` | ~30 |
+| D2 | `synergy/__init__.py` 新增 `evaluate_tokens` / `TokenSource` / `parse_condition` / `_BUFF_TO_TOKENS` 重导出 | `synergy/__init__.py` | ~5 |
+| D3 | 更新 `AGENTS.md` 项目结构索引：新增 `token_source.py` 文件描述 + 发现流程补充 | `AGENTS.md` | ~10 |
+| D4 | 更新 `synergy-systems.md` §体系函数总清单：标注已被 TokenSource 替代的旧函数为 deprecated，追加 `evaluate_tokens()` 新条目 | `synergy-systems.md` | ~5 |
+| D5 | 合并：`feat/token-source` → `master`（CR + squash merge），然后 `master` 单向合并到 `feat/market-iteration` | — | — |
+
+**验收条件**：
+- [ ] 所有 deprecated 函数有 `"""<deprecated> 使用 TokenSource.evaluate_tokens() 替代"""` 格式的 docstring
+- [ ] `AGENTS.md` 索引新增 `token_source.py` 条目，发现流程第 4 步包含"Token 计数层"
+- [ ] `feat/token-source` squash merge 到一个 commit，message 格式 `feat(core): TokenSource 统一计数层`
+
+---
+
+### Phase E: 全量 char_id 迁移（独立阶段，~550 行）
+
+**目标**：项目内全部干员标识符从 `op.name` 迁移到 `op.char_id`。本阶段在 TokenSource 接入后独立执行（变更面大、涉及 synergy 全子包，与计数层正交）。TokenSource 的 `char_id` 条件和 `find_by_char_id` 方法为先行探针。
+
+| 步骤 | 内容 | 产出文件 | 行数 |
+|:---:|------|---------|:---:|
+| E1 | `helpers.py` 7 个名称集合新增 char_id 版本（`_KNIGHT_CHAR_IDS` 等），`_is_knight()` 等判定函数内部同时兼容名称和 char_id 查询 | `synergy/helpers.py` | ~60 |
+| E2 | `control_linkages.py` 6 张 C 层表键从干员名迁移到 char_id；`compute_control_global_bonus()` 等消费者查表逻辑从 `names = {op.name}` 改为 `ids = {op.char_id}` | `synergy/control_linkages.py` | ~120 |
+| E3 | A/B 层 5 张干员名键表迁移（`_A_ROOM_FACTION_TABLE` / `_A_SKILL_COUNT_TABLE` / `_A_AUTOMATION_FALLBACK` / `_A_FACILITY_LINK_TABLE` / `_B_GLOBAL_FACTION_TABLE` / `_B_CROSS_ROOM_PAIR_TABLE` / `_B_BUFF_CONSUMER_TABLE`），同步更新消费方查表逻辑 | `mfg_linkages.py`, `global_linkages.py`, `buff_pool.py`, `facility_linkages.py` | ~100 |
+| E4 | `mood_flow.py` 心情消耗修正表中名称键条目（~35 条）迁移到 char_id | `mood_flow.py` | ~40 |
+| E5 | `registry.py` `_SYSTEM_CONTRIBUTORS` 键迁移到 char_id | `synergy/registry.py` | ~10 |
+| E6 | `classification.py` Mfg/Trade 分类器内 `seen` 去重集合和名称匹配逻辑改为 `op.char_id` | `synergy/classification.py` | ~20 |
+| E7 | `derive.py` 新增 `--output-char-id` 模式，`_derived.py` 新增 char_id 版本集合输出 | `scripts/derive.py`, `_derived.py` | ~100 |
+| E8 | 测试 fixture 适配：`Operator(char_id=..., name=...)` 构造确保 char_id 正确；名称集合类断言更新 | `tests/synergy/test_*.py`, `tests/solver/slot/test_*.py` | ~100 |
+| E9 | 非 synergy 审查：`evaluate.py` / `report.py` / `output.py` / `production.py` 中的干员名使用确认不需要迁移（输出层保留人类可读名称） | 各文件 | ~0 |
+
+**验收条件**：
+- [ ] `grep -r "op\.name" steward_core/synergy/` 零匹配（除 deprecated/docstring 引用）
+- [ ] `grep -r "op\.name" steward_core/solver/` 仅允许 `report.py` / `output.py` 中的报告输出用
+- [ ] `pytest tests/ -v` 全量测试通过（零回归）
+- [ ] `python run_solver.py` 产出 JSON 与迁移前一致（同一干员池，仅标识符内部变换）
+- [ ] `derive.py --output-char-id` 产出与现有 `_derived.py` 名称集合项数一致
+
+---
+
+### 各阶段代码量预估
+
+| Phase | 新增 | 修改 | 核心产出 |
+|:---:|:---:|:---:|------|
+| A | ~355 | ~10 | 执行引擎 + 10 条注册 + 测试 |
+| B | ~340 | 0 | 全量注册 + buff 映射 |
+| C | ~80 | ~70 | 求解器接入 |
+| D | ~10 | ~40 | 文档/标注 |
+| E | ~450 | ~100 | 全量 char_id 迁移 |
+| **合计** | **~1235** | **~220** | |
 
 ## 设计决策记录
 
