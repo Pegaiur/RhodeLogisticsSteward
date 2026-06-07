@@ -729,11 +729,11 @@ def compute_global_burn(
 | A8 | 爬升型效率 | `operator_ramp_segments()` | A | 全设施通用（`ramping.py`） |
 | B1 | 人间烟火/感知信息 | `compute_buff_pool()` | B | 中枢+宿舍+全基建 |
 | B2 | 工程机器人 | `compute_engineering_robots()` | B | layout |
-| B3 | 思维链环 | `compute_thought_chains()` | B | B1(感知信息) |
-| B4 | 魔物料理 | `compute_monster_cuisine()` | B | 宿舍干员 |
-| B5 | 无声共鸣 | `compute_silent_resonance()` | B | 宿舍+B1(感知信息) |
-| B6 | 全局阵营计数 | `compute_global_faction_counts()` | B | 全基建干员 |
-| B7 | 跨房间配对 | `compute_cross_room_pairs()` | B | 全基建干员 |
+| B3 | 思维链环 | `BuffPool.derive()` | B | B1(perception) — 已内化至 BuffPool |
+| B4 | 魔物料理 | `compute_buff_pool()` | B | 宿舍干员 — 已内化至 compute_buff_pool |
+| B5 | 无声共鸣 | `compute_buff_pool()` cascade | B | 宿舍+B1(perception) — 已内化至 compute_buff_pool 二遍 |
+| B6 | 全局阵营计数 | `synergy_global_faction()` | B | 全基建干员 |
+| B7 | 跨房间配对 | `synergy_cross_room_pair()` | B | 全基建干员 |
 | B8 | 设施 group 计数 | `synergy_facility_group()` | B | 全基建干员（`facility_group.py`） |
 | C1 | 中枢全局效率 | `compute_control_global_bonus()` | C | 中枢干员 + layout |
 | C2 | 中枢全局恢复 | `compute_global_burn()` | C | 中枢干员 + B1 |

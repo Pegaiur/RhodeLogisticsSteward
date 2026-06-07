@@ -37,6 +37,6 @@
 
 \[ ] **订单上限压缩估计反馈回路** — `compute_trade_order_limit` 用 `operator_estimated_efficiency` 计算孑压缩的 other\_eff，该函数只返回独立效率不含 room 级联动（swires/jie/degenbrecher 等订单上限消费者）。当 combo 含多个消费者时，实际 other\_eff 远大于估计值，导致压缩不足 → order\_limit 高估 → 孑/诗怀雅/锏效率高估。实测 "银灰+孑+诗怀雅(灵知)" 估值 153% vs 实际 \~121%（偏差 32pp），"德+孑+拉" 估值 130% vs 实际 110%（偏差 20pp）。消费者越多偏差越大。需在压缩估计中引入不动点迭代或至少将已知消费者的联动效率纳入 other\_eff。 — 2026-06-04 — `trade_linkages.py:compute_trade_order_limit` + `ramping.py:operator_estimated_efficiency`
 
-\[ ] **synergy-systems.md B3-B7 函数名与代码不一致** — 文档声称 `compute_thought_chains()`(B3)、`compute_monster_cuisine()`(B4)、`compute_silent_resonance()`(B5) 为独立导出函数，实际三个维度均内嵌于 `buff_pool.py` 的 `compute_buff_pool()` 中，无独立函数。`compute_global_faction_counts()`(B6) / `compute_cross_room_pairs()`(B7) 实际名为 `synergy_global_faction()` / `synergy_cross_room_pair()`。需对齐文档函数名或从 buff_pool 提取子函数。 — 2026-06-04 — `synergy-systems.md` + `buff_pool.py` + `global_linkages.py`
+\[x] **synergy-systems.md B3-B7 函数名与代码不一致** — ✅ 已修复。文档 B3/B4/B5 标注为已内化至 `BuffPool`/`compute_buff_pool`，B6 修正为 `synergy_global_faction()`，B7 修正为 `synergy_cross_room_pair()`。 — 2026-06-04 → 2026-06-07 关闭 — `synergy-systems.md` + `buff_pool.py` + `global_linkages.py`
 
-\[ ] **ramping_efficiency docstring 遗漏 meet 条目** — `efficiency_fn.py` L61 注释写"5 条 manu_prod_spd_addition[*] + 发电站爬升预留"，但 `_RAMPING_SKILL_TABLE` 实际含 6 条目（5 mfg + 1 meet `meet_spd_hast[000]`），未提及会客室爬升技能。 — 2026-06-04 — `efficiency_fn.py`
+\[x] **ramping_efficiency docstring 遗漏 meet 条目** — ✅ 已修复。`efficiency_fn.py` L68 docstring 从"5 条 manu_prod_spd_addition[*] + 发电站爬升预留"修正为"6 条目：5 mfg + 1 meet `meet_spd_hast[000]`"。 — 2026-06-04 → 2026-06-07 关闭 — `efficiency_fn.py`
