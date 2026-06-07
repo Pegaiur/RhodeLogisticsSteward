@@ -157,7 +157,7 @@ TokenSource 是项目从"干员名键"迁移到"char_id 键"的**桥接层**：
 4. 执行引擎通过 `ctx.find_by_char_id(char_id) → Operator` 解析 char_id 到干员实例
 5. 名称集合类条件（`is_knight`）通过 `_FN_CONDITIONS` 注册表封装，内部实现逐步从名称集合迁移到解包数据字段
 
-**不纳入 TokenSource 的部分**：旧 synergy 表不必立即迁移键类型 —— TokenSource 层新建后，旧表逐步标记 deprecated 即可。详见 inbox "synergy 子系统全量 char_id 迁移"。
+**不纳入 TokenSource 的部分**：旧 synergy 表的键迁移（11 张干员名键表 + 7 个名称集合 + 心情表）是独立工程，TokenSource 层新建后旧表逐步标记 deprecated，全量迁移作为 Phase E 独立执行。详见实施计划 §Phase E。
 
 ## 覆盖范围
 
@@ -211,7 +211,7 @@ TokenSource 只负责第二层：将"符合条件的干员数"、"房间效率�
 
 > 符号约定：每个步骤末尾标注 `{Est}` 为估算新增代码行数，`{+N}` 为修改行数。
 
-### Phase A: 原型验证（~350 行）
+### Phase A: 原型验证（~365 行）
 
 **目标**：TokenSource 执行引擎可用，10 条注册通过单元测试，与旧函数输出对齐。
 
@@ -233,7 +233,7 @@ TokenSource 只负责第二层：将"符合条件的干员数"、"房间效率�
 
 ---
 
-### Phase B: 全量映射（~280 行）
+### Phase B: 全量映射（~340 行）
 
 **目标**：~75 条 TokenSource 全部注册，buff_id→token 映射表就绪，条件解析器完善。
 
@@ -243,7 +243,7 @@ TokenSource 只负责第二层：将"符合条件的干员数"、"房间效率�
 | B2 | 新增 `_BUFF_TO_TOKENS: dict[str, list[str]]` 映射表（~40 条），替代 `_OPERATOR_BUFF_PRODUCERS` 的 `dimension + cascade` 字段组合。执行引擎支持 `depends_on="token"` 级联时通过此表查找上游 buff 的生产 token | `token_source.py` | ~60 |
 | B3 | 新增 `_FN_CONDITIONS` 注册表：`is_knight`（已有）+ 预留 `is_abyssal_hunter`（深海猎人派生）等扩展槽位 | `token_source.py` | ~20 |
 | B4 | 条件解析器补充 `pair` 配对解析（冒号分隔 → char_id 对）、`count_ge` 阈值解析（冒号分隔 → group_id + N） | `token_source.py` | ~30 |
-| B5 | 集成测试：TokenSource 输出与旧函数（`synergy_skill_count` / `synergy_global_faction` / `compute_cluster_hunting_bonus` / `synergy_facility_count` / `synergy_facility_group`）全量对齐 | `tests/test_token_source.py` | ~50 |
+| B5 | 集成测试：TokenSource 输出与旧函数（`synergy_skill_count` / `synergy_global_faction` / `compute_cluster_hunting_bonus` / `synergy_facility_count` / `synergy_facility_group`）全量对齐。`compute_buff_pool`（BuffPool 生产者端）的替代正确性由 B2 映射表 + B6 级联测试覆盖 | `tests/test_token_source.py` | ~50 |
 | B6 | `buff_id → token` 级联正确性测试（黑键 perception→silent_resonance、令 yanhuo→wushu_crystal） | `tests/test_token_source.py` | ~30 |
 
 **验收条件**：
@@ -295,15 +295,15 @@ TokenSource 只负责第二层：将"符合条件的干员数"、"房间效率�
 
 ---
 
-### Phase E: 全量 char_id 迁移（独立阶段，~550 行）
+### Phase E: 全量 char_id 迁移（正交阶段，~550 行）
 
-**目标**：项目内全部干员标识符从 `op.name` 迁移到 `op.char_id`。本阶段在 TokenSource 接入后独立执行（变更面大、涉及 synergy 全子包，与计数层正交）。TokenSource 的 `char_id` 条件和 `find_by_char_id` 方法为先行探针。
+**目标**：项目内全部干员标识符从 `op.name` 迁移到 `op.char_id`。本阶段依赖 Phase A（`find_by_char_id` 方法 + `char_id` 条件语法），但与 Phase B/C 变更面不重叠——可在 Phase A 完成后并行启动。TokenSource 的 `char_id` 条件和 `find_by_char_id` 方法为先行探针。
 
 | 步骤 | 内容 | 产出文件 | 行数 |
 |:---:|------|---------|:---:|
 | E1 | `helpers.py` 7 个名称集合新增 char_id 版本（`_KNIGHT_CHAR_IDS` 等），`_is_knight()` 等判定函数内部同时兼容名称和 char_id 查询 | `synergy/helpers.py` | ~60 |
 | E2 | `control_linkages.py` 6 张 C 层表键从干员名迁移到 char_id；`compute_control_global_bonus()` 等消费者查表逻辑从 `names = {op.name}` 改为 `ids = {op.char_id}` | `synergy/control_linkages.py` | ~120 |
-| E3 | A/B 层 5 张干员名键表迁移（`_A_ROOM_FACTION_TABLE` / `_A_SKILL_COUNT_TABLE` / `_A_AUTOMATION_FALLBACK` / `_A_FACILITY_LINK_TABLE` / `_B_GLOBAL_FACTION_TABLE` / `_B_CROSS_ROOM_PAIR_TABLE` / `_B_BUFF_CONSUMER_TABLE`），同步更新消费方查表逻辑 | `mfg_linkages.py`, `global_linkages.py`, `buff_pool.py`, `facility_linkages.py` | ~100 |
+| E3 | A/B 层 7 张干员名键表迁移（A 层 4：`_A_ROOM_FACTION_TABLE` / `_A_SKILL_COUNT_TABLE` / `_A_AUTOMATION_FALLBACK` / `_A_FACILITY_LINK_TABLE`；B 层 3：`_B_GLOBAL_FACTION_TABLE` / `_B_CROSS_ROOM_PAIR_TABLE` / `_B_BUFF_CONSUMER_TABLE`），同步更新消费方查表逻辑 | `mfg_linkages.py`, `global_linkages.py`, `buff_pool.py`, `facility_linkages.py` | ~100 |
 | E4 | `mood_flow.py` 心情消耗修正表中名称键条目（~35 条）迁移到 char_id | `mood_flow.py` | ~40 |
 | E5 | `registry.py` `_SYSTEM_CONTRIBUTORS` 键迁移到 char_id | `synergy/registry.py` | ~10 |
 | E6 | `classification.py` Mfg/Trade 分类器内 `seen` 去重集合和名称匹配逻辑改为 `op.char_id` | `synergy/classification.py` | ~20 |
@@ -312,8 +312,9 @@ TokenSource 只负责第二层：将"符合条件的干员数"、"房间效率�
 | E9 | 非 synergy 审查：`evaluate.py` / `report.py` / `output.py` / `production.py` 中的干员名使用确认不需要迁移（输出层保留人类可读名称） | 各文件 | ~0 |
 
 **验收条件**：
-- [ ] `grep -r "op\.name" steward_core/synergy/` 零匹配（除 deprecated/docstring 引用）
-- [ ] `grep -r "op\.name" steward_core/solver/` 仅允许 `report.py` / `output.py` 中的报告输出用
+- [ ] `grep -rE "op\[.name.\]|\.name\b" steward_core/synergy/` 零匹配（除 deprecated/docstring 引用）
+- [ ] `grep -rE "op\[.name.\]|\.name\b" steward_core/solver/` 仅允许 `report.py` / `output.py` 中的报告输出用
+- [ ] `conflicts.py` `_EFF_MECH_DISABLERS` 以 buff 前缀为键，确认不受迁移影响（审查通过即可，无需代码改动）
 - [ ] `pytest tests/ -v` 全量测试通过（零回归）
 - [ ] `python run_solver.py` 产出 JSON 与迁移前一致（同一干员池，仅标识符内部变换）
 - [ ] `derive.py --output-char-id` 产出与现有 `_derived.py` 名称集合项数一致
