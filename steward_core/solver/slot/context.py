@@ -168,7 +168,11 @@ class SlotContext:
         return None
 
     def op_lookup_by_char_id(self) -> dict[str, "Operator"]:
-        """构建 {char_id: Operator} 反向映射（首次调用后缓存）"""
+        """构建 {char_id: Operator} 反向映射（首次调用后缓存）
+
+        为 Phase B TokenSource 批量条件匹配预留；
+        避免每次 token 评估都线性扫描 operators 列表。
+        """
         if not hasattr(self, "_char_id_lookup"):
             self._char_id_lookup = {op.char_id: op for op in self.operators}
         return self._char_id_lookup

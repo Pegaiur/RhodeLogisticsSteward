@@ -333,6 +333,99 @@ class TestConditionErrors:
         with pytest.raises(ValueError, match="未知"):
             evaluate_tokens(sources, ops)
 
+    def test_malformed_pair_raises(self):
+        """pair 格式错误（无冒号分隔）"""
+        from steward_core.token_source import TokenSource, evaluate_tokens
+
+        ops = [_mk_op("A")]
+        sources = [TokenSource(token="bad", condition="pair=only_one")]
+
+        with pytest.raises(ValueError, match="期望格式"):
+            evaluate_tokens(sources, ops)
+
+    def test_count_ge_no_group_raises(self):
+        """count_ge 缺少 group 参数"""
+        from steward_core.token_source import TokenSource, evaluate_tokens
+
+        ops = [_mk_op("A")]
+        sources = [TokenSource(token="bad", condition="count_ge=3")]
+
+        with pytest.raises(ValueError, match="count_ge"):
+            evaluate_tokens(sources, ops)
+
+    def test_count_ge_non_integer_raises(self):
+        """count_ge N 不是整数"""
+        from steward_core.token_source import TokenSource, evaluate_tokens
+
+        ops = [_mk_op("A")]
+        sources = [TokenSource(token="bad", condition="count_ge:karlan=abc")]
+
+        with pytest.raises(ValueError, match="count_ge"):
+            evaluate_tokens(sources, ops)
+
+
+# ─── _build_matcher 独立测试 ────────────────────────────────────
+
+
+class TestBuildMatcher:
+    """_build_matcher 的直接调用路径（绕过 evaluate_tokens）"""
+
+    def test_build_wildcard(self):
+        from steward_core.token_source import _build_matcher
+
+        m = _build_matcher("*")
+        assert m(_mk_op("任意"))
+
+    def test_build_group_id(self):
+        from steward_core.token_source import _build_matcher
+
+        m = _build_matcher("group_id=pinus")
+        assert m(_mk_op("A", group_id="pinus"))
+        assert not m(_mk_op("B", group_id="other"))
+
+    def test_build_nation_id(self):
+        from steward_core.token_source import _build_matcher
+
+        m = _build_matcher("nation_id=siracusa")
+        assert m(_mk_op("A", nation_id="siracusa"))
+        assert not m(_mk_op("B", nation_id="other"))
+
+    def test_build_char_id(self):
+        from steward_core.token_source import _build_matcher
+
+        m = _build_matcher("char_id=char_140_white")
+        assert m(_mk_op("焰尾", char_id="char_140_white"))
+        assert not m(_mk_op("其他", char_id="other"))
+
+    def test_build_is_knight(self):
+        from steward_core.token_source import _build_matcher
+
+        m = _build_matcher("is_knight")
+        # Kazimierz 势力 + pinus 阵营
+        assert m(_mk_op("焰尾", group_id="pinus", nation_id="kazimierz"))
+        assert not m(_mk_op("普通", group_id="other", nation_id="other"))
+
+    def test_build_unknown_key_raises(self):
+        from steward_core.token_source import _build_matcher
+        import pytest
+
+        with pytest.raises(ValueError, match="未知"):
+            _build_matcher("unknown_key=value")
+
+    def test_build_pair_raises_not_implemented(self):
+        from steward_core.token_source import _build_matcher
+        import pytest
+
+        with pytest.raises(NotImplementedError, match="直接处理"):
+            _build_matcher("pair=A:B")
+
+    def test_build_count_ge_raises_not_implemented(self):
+        from steward_core.token_source import _build_matcher
+        import pytest
+
+        with pytest.raises(NotImplementedError, match="直接处理"):
+            _build_matcher("count_ge:karlan=3")
+
 
 # ─── Phase A3: SlotContext.find_by_char_id ──────────────────────
 
@@ -379,32 +472,5 @@ class TestFindByCharId:
         found = gctx.find_by_char_id("nonexistent")
         assert found is None
 
-    def test_malformed_pair_raises(self):
-        """pair 格式错误（无冒号分隔）"""
-        from steward_core.token_source import TokenSource, evaluate_tokens
 
-        ops = [_mk_op("A")]
-        sources = [TokenSource(token="bad", condition="pair=only_one")]
-
-        with pytest.raises(ValueError, match="期望格式"):
-            evaluate_tokens(sources, ops)
-
-    def test_count_ge_no_group_raises(self):
-        """count_ge 缺少 group 参数"""
-        from steward_core.token_source import TokenSource, evaluate_tokens
-
-        ops = [_mk_op("A")]
-        sources = [TokenSource(token="bad", condition="count_ge=3")]
-
-        with pytest.raises(ValueError, match="count_ge"):
-            evaluate_tokens(sources, ops)
-
-    def test_count_ge_non_integer_raises(self):
-        """count_ge N 不是整数"""
-        from steward_core.token_source import TokenSource, evaluate_tokens
-
-        ops = [_mk_op("A")]
-        sources = [TokenSource(token="bad", condition="count_ge:karlan=abc")]
-
-        with pytest.raises(ValueError, match="count_ge"):
-            evaluate_tokens(sources, ops)
+# ─── Phase A4: TokenSource 注册（A 层同房阵营 3 + PerOp 7） ─────────
