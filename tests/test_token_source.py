@@ -545,6 +545,91 @@ class TestPhaseASources:
         assert result["t"] == 2.0
 
 
+# ─── A5 补充测试：cap 截断 + attr=None 边界 ────────────────────────────
+
+
+class TestAggregateCap:
+    """四种聚合模式的 cap 截断行为"""
+
+    def test_efficiency_sum_cap(self):
+        from steward_core.token_source import TokenSource, evaluate_tokens
+        ops = [_mk_op("A", skills=[_mk_trade_skill(100.0)]) for _ in range(3)]
+        sources = [TokenSource(
+            token="t", condition="*",
+            aggregate="efficiency_sum", aggregate_unit=1.0,
+            target_room="Trade", cap=50.0,
+        )]
+        result = evaluate_tokens(sources, ops)
+        assert result["t"] == 50.0  # 300 → cap 50
+
+    def test_max_efficiency_cap(self):
+        from steward_core.token_source import TokenSource, evaluate_tokens
+        ops = [
+            _mk_op("A", skills=[_mk_trade_skill(30.0)]),
+            _mk_op("B", skills=[_mk_trade_skill(90.0)]),
+        ]
+        sources = [TokenSource(
+            token="t", condition="*",
+            aggregate="max_efficiency", target_room="Trade", cap=50.0,
+        )]
+        result = evaluate_tokens(sources, ops)
+        assert result["t"] == 50.0  # max=90 → cap 50
+
+    def test_attribute_sum_cap(self):
+        from steward_core.token_source import TokenSource, evaluate_tokens
+        ops = [_mk_op("A", skills=[_mk_mfg_skill_with_eff(capacity=4)]) for _ in range(3)]
+        sources = [TokenSource(
+            token="t", condition="*",
+            aggregate="attribute_sum", target_room="Mfg",
+            attr="capacity_bonus", cap=8.0,
+        )]
+        result = evaluate_tokens(sources, ops)
+        assert result["t"] == 8.0  # 12 → cap 8
+
+    def test_distinct_cap(self):
+        from steward_core.token_source import TokenSource, evaluate_tokens
+        from steward_core.models import Skill, EfficiencyMap
+        skills = [
+            Skill("b1", "s1", "icon_A", "Mfg", EfficiencyMap(raw={"all": 10.0})),
+            Skill("b2", "s2", "icon_B", "Mfg", EfficiencyMap(raw={"all": 20.0})),
+            Skill("b3", "s3", "icon_C", "Mfg", EfficiencyMap(raw={"all": 30.0})),
+        ]
+        ops = [_mk_op("A", skills=[skills[0]]), _mk_op("B", skills=[skills[1]]), _mk_op("C", skills=[skills[2]])]
+        sources = [TokenSource(
+            token="t", condition="*",
+            aggregate="distinct", target_room="Mfg",
+            attr="skill_icon", cap=2.0,
+        )]
+        result = evaluate_tokens(sources, ops)
+        assert result["t"] == 2.0  # 3 unique → cap 2
+
+
+class TestAggregateBoundary:
+    """边界条件"""
+
+    def test_attribute_sum_attr_none_returns_zero(self):
+        from steward_core.token_source import TokenSource, evaluate_tokens
+        ops = [_mk_op("A", skills=[_mk_mfg_skill_with_eff(capacity=2)])]
+        sources = [TokenSource(
+            token="t", condition="*",
+            aggregate="attribute_sum", target_room="Mfg",
+            attr=None,
+        )]
+        result = evaluate_tokens(sources, ops)
+        assert result["t"] == 0.0
+
+    def test_distinct_attr_none_returns_zero(self):
+        from steward_core.token_source import TokenSource, evaluate_tokens
+        ops = [_mk_op("A")]
+        sources = [TokenSource(
+            token="t", condition="*",
+            aggregate="distinct", target_room="Mfg",
+            attr=None,
+        )]
+        result = evaluate_tokens(sources, ops)
+        assert result["t"] == 0.0
+
+
 # ─── Phase A5: 聚合模式单元测试 ─────────────────────────────────────
 
 

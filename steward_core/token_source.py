@@ -169,13 +169,13 @@ def _evaluate_single(
 
     # ── 效率/属性类 aggregate ──
     if aggregate == "efficiency_sum":
-        return _evaluate_efficiency_sum(source, operators)
+        return _evaluate_efficiency_sum(source, operators, tokens, ctx)
     if aggregate == "max_efficiency":
-        return _evaluate_max_efficiency(source, operators)
+        return _evaluate_max_efficiency(source, operators, tokens, ctx)
     if aggregate == "attribute_sum":
-        return _evaluate_attribute_sum(source, operators)
+        return _evaluate_attribute_sum(source, operators, tokens, ctx)
     if aggregate == "distinct":
-        return _evaluate_distinct(source, operators)
+        return _evaluate_distinct(source, operators, tokens, ctx)
 
     # 其他 aggregate 暂未实现
     raise NotImplementedError(f"aggregate '{aggregate}' 尚未实现")
@@ -233,6 +233,8 @@ def _evaluate_count(
 def _evaluate_efficiency_sum(
     source: TokenSource,
     operators: list["Operator"],
+    _tokens: dict[str, float] | None = None,
+    _ctx: "SlotContext | None" = None,
 ) -> float:
     """efficiency_sum aggregate：匹配干员的目标房间效率值之和 ÷ unit"""
     room = source.target_room or "Mfg"
@@ -243,7 +245,9 @@ def _evaluate_efficiency_sum(
             continue
         active = op.active_skills_for(room)
         if active:
-            total += max(s.efficient.get("all") for s in active)
+            # 使用 raw.get("all", 0) 而非 efficient.get("all")，
+            # 后者在无 "all" 键时返回哨兵值 -999.0（仅产品专属技能场景）
+            total += max(s.efficient.raw.get("all", 0.0) for s in active)
     unit = source.aggregate_unit if source.aggregate_unit != 0 else 1.0
     result = total / unit
     if source.cap is not None:
@@ -254,19 +258,23 @@ def _evaluate_efficiency_sum(
 def _evaluate_max_efficiency(
     source: TokenSource,
     operators: list["Operator"],
+    _tokens: dict[str, float] | None = None,
+    _ctx: "SlotContext | None" = None,
 ) -> float:
     """max_efficiency aggregate：匹配干员中的最高效率值"""
     room = source.target_room or "Mfg"
     matcher = _build_matcher(source.condition)
-    best = 0.0
+    best = float("-inf")
     for op in operators:
         if not matcher(op):
             continue
         active = op.active_skills_for(room)
         if active:
-            eff = max(s.efficient.get("all") for s in active)
+            eff = max(s.efficient.raw.get("all", 0.0) for s in active)
             if eff > best:
                 best = eff
+    if best == float("-inf"):
+        best = 0.0
     if source.cap is not None:
         best = min(best, source.cap)
     return best
@@ -275,6 +283,8 @@ def _evaluate_max_efficiency(
 def _evaluate_attribute_sum(
     source: TokenSource,
     operators: list["Operator"],
+    _tokens: dict[str, float] | None = None,
+    _ctx: "SlotContext | None" = None,
 ) -> float:
     """attribute_sum aggregate：匹配干员的指定属性值之和"""
     attr = source.attr
@@ -300,6 +310,8 @@ def _evaluate_attribute_sum(
 def _evaluate_distinct(
     source: TokenSource,
     operators: list["Operator"],
+    _tokens: dict[str, float] | None = None,
+    _ctx: "SlotContext | None" = None,
 ) -> float:
     """distinct aggregate：匹配干员的指定属性去重计数"""
     attr = source.attr
