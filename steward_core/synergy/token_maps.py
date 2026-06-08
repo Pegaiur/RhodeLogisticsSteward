@@ -152,6 +152,9 @@ PHASE_B_EFF_AMPLIFIER: list[TokenSource] = [
 # 贝洛内家族经营：伺夜在 base 则 +5%/+10%
 PHASE_B_CONDITIONAL_EFF: list[TokenSource] = [
     TokenSource(token="siye_in_base", condition="char_id=伺夜", scope="global"),
+    # workspace scope: 伊内丝在 Control+Mfg+Trade 中
+    TokenSource(token="inez_in_workspace", condition="char_id=伊内丝", scope="workspace"),
+    TokenSource(token="inez_w_in_workspace", condition="pair=伊内丝:W", scope="workspace"),
 ]
 
 

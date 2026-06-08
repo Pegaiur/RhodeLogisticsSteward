@@ -1875,3 +1875,56 @@ class TestAutomationZeroingConditions:
         ops = [_mk_op("A", skills=[s])]
         tokens = evaluate_tokens(PHASE_B_ZEROING_VARIANT, ops)
         assert tokens["zeroing_variant_count"] == 1.0
+
+
+# ─── Phase B7 收尾：workspace scope ────────────────────────────────
+
+
+class TestWorkspaceScope:
+    """scope=workspace 跨 Control+Mfg+Trade 设施计数"""
+
+    def test_workspace_char_id(self):
+        from steward_core.token_source import TokenSource, evaluate_tokens
+        from steward_core.solver.slot.context import SlotContext, SlotAssignment, WindowState
+        from steward_core.models import RoomConfig, LayoutConfig
+
+        layout = LayoutConfig(rooms=[
+            RoomConfig("Control", 0, 5),
+            RoomConfig("Trade", 0, 3, "Money"),
+            RoomConfig("Mfg", 0, 3, "CombatRecord"),
+        ])
+        op = _mk_op("伊内丝")
+        ctx = SlotContext(
+            operators=[op], op_lookup={"伊内丝": op}, layout=layout,
+            windows=[WindowState(assignments=[
+                SlotAssignment("ctrl", "Control", "", "伊内丝", 0),
+            ])],
+        )
+        tokens = evaluate_tokens(
+            [TokenSource(token="inez", condition="char_id=伊内丝", scope="workspace")],
+            [], ctx,
+        )
+        assert tokens["inez"] == 1.0  # 伊内丝在 Control 中
+
+    def test_workspace_pair(self):
+        from steward_core.token_source import TokenSource, evaluate_tokens
+        from steward_core.solver.slot.context import SlotContext, SlotAssignment, WindowState
+        from steward_core.models import RoomConfig, LayoutConfig
+
+        layout = LayoutConfig(rooms=[
+            RoomConfig("Control", 0, 5),
+            RoomConfig("Trade", 0, 3, "Money"),
+        ])
+        op1 = _mk_op("伊内丝"); op2 = _mk_op("W")
+        ctx = SlotContext(
+            operators=[op1, op2], op_lookup={"伊内丝": op1, "W": op2}, layout=layout,
+            windows=[WindowState(assignments=[
+                SlotAssignment("ctrl", "Control", "", "伊内丝", 0),
+                SlotAssignment("t1", "Trade", "Money", "W", 0),
+            ])],
+        )
+        tokens = evaluate_tokens(
+            [TokenSource(token="inez_w", condition="pair=伊内丝:W", scope="workspace")],
+            [], ctx,
+        )
+        assert tokens["inez_w"] == 1.0  # 伊内丝在 Control + W 在 Trade

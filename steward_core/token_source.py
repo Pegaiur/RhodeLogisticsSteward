@@ -266,11 +266,30 @@ def _evaluate_count(
 ) -> float:
     """count aggregate：统计符合条件的干员数
 
-    当前 scope 仅区分 pair/count_ge 特殊处理，尚未实现 room/facility/global 的三级过滤。
-    所有干员均参与计数（等同于 scope="global" 语义）。
-    scope="room" 限制将在求解器接入（Phase C）时通过调用方传入子集干员列表实现。
+    当前 scope 支持 room（默认 operators 列表）、facility（ctx build_all_assignments）、
+    workspace（Control+Mfg+Trade 三设施组合）、global（所有 operators 无过滤）。
     """
     condition = source.condition
+
+    # scope 处理：workspace / facility 从 ctx 获取跨设施干员
+    if source.scope == "workspace":
+        if ctx is not None:
+            try:
+                assignments = ctx.build_all_assignments(window_idx=0)
+                workspace_facilities = ("Control", "Mfg", "Trade")
+                workspace_ops: list["Operator"] = []
+                seen: set[str] = set()
+                for ft in workspace_facilities:
+                    for op in assignments.get(ft, []):
+                        if op.char_id not in seen:
+                            seen.add(op.char_id)
+                            workspace_ops.append(op)
+                operators = workspace_ops
+            except Exception:
+                operators = operators  # 降级：ctx 不可用时回退到原始列表
+    elif source.scope == "global":
+        pass  # 使用传入的 operators（已是全局列表）
+    # scope="room" 隐含在传入的 operators 列表中，无需特殊处理
 
     # count_ge 特殊处理：统计后做阈值判定，返回 0 或 1
     if condition.startswith("count_ge"):
