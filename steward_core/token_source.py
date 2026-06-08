@@ -187,7 +187,12 @@ def _evaluate_count(
     tokens: dict[str, float],
     ctx: "SlotContext | None",
 ) -> float:
-    """count aggregate：统计符合条件的干员数"""
+    """count aggregate：统计符合条件的干员数
+
+    当前 scope 仅区分 pair/count_ge 特殊处理，尚未实现 room/facility/global 的三级过滤。
+    所有干员均参与计数（等同于 scope="global" 语义）。
+    scope="room" 限制将在求解器接入（Phase C）时通过调用方传入子集干员列表实现。
+    """
     condition = source.condition
 
     # count_ge 特殊处理：统计后做阈值判定，返回 0 或 1
@@ -432,7 +437,13 @@ def _match_team_id(op, team_id: str) -> bool:
 
 
 def _match_skill_class(op, class_name: str) -> bool:
-    """匹配 skill_class：干员任一技能的 buff_name 包含指定类别名"""
+    """匹配 skill_class：干员任一技能的 buff_name 包含指定类别名
+
+    使用子串匹配（如 "标准化" 可匹配 "标准化·α"/"标准化·β"）。
+    假设 buff_name 中类别名字面唯一（当前游戏数据成立）。
+    若未来出现歧义（如 "莱茵" 同时匹配 "莱茵科技" 和 "莱茵生命"），
+    需改为精确前缀匹配。
+    """
     for sk in op.skills:
         if class_name in sk.buff_name:
             return True
@@ -497,6 +508,7 @@ PHASE_B_GLOBAL_FACTION: list[TokenSource] = [
 
 # B 层跨房间配对（B7）
 # 烈夏↔古米 / 深巡↔乌尔比安 / 贝洛内↔伺夜 — 跨设施配对
+# 注：当前 pair 值使用干员名作为 char_id 占位符（Phase E 全量 char_id 迁移时替换为真实 char_id）
 PHASE_B_CROSS_PAIRS: list[TokenSource] = [
     TokenSource(token="liexia_gumi", condition="pair=烈夏:古米"),
     TokenSource(token="shenxun_wuerbian", condition="pair=深巡:乌尔比安"),
