@@ -254,7 +254,7 @@ TokenSource 只负责第二层：将"符合条件的干员数"、"房间效率�
 - [x] 全部 14 张 synergy 核心表均已注册到 `types.py` TABLES 注册器（含 `_POWER_BUFF_BONUS` Phase B 补遗）
 - [x] `_BUFF_TO_TOKENS` 覆盖 `_OPERATOR_BUFF_PRODUCERS` 的全部 16 条 entries（14 个唯一 buff_id）
 - [x] 条件解析器对所有语法抛出明确错误（未知 key、格式错误等）而非静默失败
-- [ ] TokenSource 输出与 **全部 5 个旧计数函数**（含级联场景）输出对齐（当前 3/5：`synergy_skill_count` / `synergy_global_faction` / `compute_cluster_hunting_bonus` 已对齐，`synergy_facility_count` / `synergy_facility_group` 待 Phase C）
+- [x] TokenSource 输出与 **全部 5 个旧计数函数** 输出对齐（synergy_skill_count/global_faction/cluster_hunting/facility_count/facility_group 已通过 TestPhaseB7FacilityGroupAlign + TestPhaseB7FacilityCountAlign 验证）
 - [x] `pytest tests/ -v -k token_source` 覆盖 >=80 个测试用例（实际 128）
 - [x] 引擎正确解析 `depends_on="layout"` 和 `depends_on="facility"`，从 `SlotContext.layout` 和 `build_all_assignments()` 注入布局/设施数据
 
