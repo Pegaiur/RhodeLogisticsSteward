@@ -307,12 +307,12 @@ TokenSource 只负责第二层：将"符合条件的干员数"、"房间效率�
 | C6 | **回归验证 + 性能基准**：`pytest tests/ -v` 全量通过；`python run_solver.py` 端到端无异常；`_timing.py` 埋点对比 `evaluate_tokens()` 总耗时 vs 旧 8 个计数函数耗时之和，确认无退化 | `solver/slot/_timing.py`（埋点） | — | ~10 |
 
 **验收条件**：
-- [ ] `pytest tests/ -v` **全量测试通过**（零回归）
-- [ ] `python run_solver.py` 产出 JSON 与 Phase B 完成时的产出 **差异 ≤ 3 条干员**（允许因浮点排序边界导致的微小差异）
-- [ ] `evaluate_tokens()` 总耗时 ≤ 旧 8 个计数函数耗时之和 x 1.05
-- [ ] 所有未替换的旧路径有明确注释标注原因
-- [ ] `synergy_facility_count`（B7 待办）和 `synergy_facility_group`（B7 待办）输出与旧函数对齐
-- [ ] `synergy_skill_alias` 完全由 TokenSource 替代后，红松骑士团→标准化映射结果一致
+- [x] `pytest tests/ -v` **全量测试通过**（零回归）— 2026-06-08 实测 897 passed, 0 failed
+- [ ] `python run_solver.py` 产出 JSON 与 Phase B 完成时的产出 **差异 ≤ 3 条干员**（允许因浮点排序边界导致的微小差异）— **不可验证（需基线对照，延后至 C6 性能基准时一并执行）**
+- [ ] `evaluate_tokens()` 总耗时 ≤ 旧 8 个计数函数耗时之和 x 1.05 — **不可验证（`_timing.py` 无 TokenSource 埋点，延后至 C6）**
+- [x] 所有未替换的旧路径有明确注释标注原因 — evaluate.py L276-281 含 5 项声明，覆盖完整
+- [ ] `synergy_facility_count`（B7 待办）和 `synergy_facility_group`（B7 待办）输出与旧函数对齐 — **未开始（两个函数均未接入 TokenSource，仍走旧路径，延后至 C2/C3 完成时）**
+- [ ] `synergy_skill_alias` 完全由 TokenSource 替代后，红松骑士团→标准化映射结果一致 — **未开始（`synergy_skill_alias` 仍在 evaluate.py L285 被直接调用，TokenSource 不处理别名映射，延后至 C3 完成时）**
 
 ---
 
