@@ -255,7 +255,7 @@ TokenSource 只负责第二层：将"符合条件的干员数"、"房间效率�
 - [x] `_BUFF_TO_TOKENS` 覆盖 `_OPERATOR_BUFF_PRODUCERS` 的全部 16 条 entries（14 个唯一 buff_id）
 - [x] 条件解析器对所有语法抛出明确错误（未知 key、格式错误等）而非静默失败
 - [ ] TokenSource 输出与 **全部 5 个旧计数函数**（含级联场景）输出对齐（当前 3/5：`synergy_skill_count` / `synergy_global_faction` / `compute_cluster_hunting_bonus` 已对齐，`synergy_facility_count` / `synergy_facility_group` 待 Phase C）
-- [x] `pytest tests/ -v -k token_source` 覆盖 ≥80 个测试用例（实际 100）
+- [x] `pytest tests/ -v -k token_source` 覆盖 ≥80 个测试用例（实际 106）
 - [x] 引擎正确解析 `depends_on="layout"` 和 `depends_on="facility"`，从 `SlotContext.layout` 和 `build_all_assignments()` 注入布局/设施数据
 
 **B7 完成后待办（延后至 Phase C）**：
@@ -269,6 +269,19 @@ TokenSource 只负责第二层：将"符合条件的干员数"、"房间效率�
 | `compute_cluster_hunting` 完整集成 | 需 control_ops + per-room buff_id 检查上下文 | C |
 | 剩余 ~28 条注册补齐 | 工厂联动/自动化/贸易条件等复杂条目 | C |
 | B8 `buff_id→token` 级联测试 | 已提前完成（提交 47b7212） | ✅ |
+| **阻塞 18 条需引擎能力** | 见下表 | |
+
+**阻塞性延期的引擎能力需求**：
+
+| 引擎能力 | 影响条目数 | 说明 |
+|------|:---:|------|
+| `depends_on="layout"` + `attr` 属性聚合 | 5 | `_evaluate_layout` 需支持 `aggregate="attribute_sum"` + `attr="level"`（dorm/meeting/train level 求和） |
+| `depends_on="layout"` + `distinct` 聚合 | 1 | `_evaluate_layout` 需支持 `aggregate="distinct"` + `attr="product"`（mfg_recipe_types 去重） |
+| `exclude_self` 计数排除 | 3 | `_evaluate_count` 需消费 `TokenSource.exclude_self` 字段（贸易分享 3 条） |
+| `scope="workspace"` 跨设施组合 | 2 | 需 Control+Mfg+Trade 三种设施类型的组合 scope（贸易条件效率 2 条） |
+| `_FN_CONDITIONS` 派生函数 | 5 | 自动化/归零变体需 `has_automation`/`has_zeroing_variant` 派生布尔（5 条） |
+| `partner_facility` 跨设施 pair | 1 | 中枢→贸易上限（维什戴尔→赫德雷）需跨房间配对 |
+| `per-op` 属性提取 | 5 | 自动化干员 bonus 各不相同（5/5/5/15/10），消费侧需持有者属性查表 |
 
 ---
 
