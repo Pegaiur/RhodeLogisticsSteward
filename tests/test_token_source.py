@@ -743,6 +743,68 @@ class TestPhaseC3EvaluateRoom:
         assert segs[0].a == pytest.approx(10.0)  # 2 * 5%
 
 
+# ─── Phase C4: Control 层计数替换 ────────────────────────────────
+
+
+class TestPhaseC4Control:
+    """TokenSource 替代 _eval_per_op / control_per_operator_bonus 计数"""
+
+    def test_tokens_match_eval_per_op_group_id(self):
+        """room_tokens pinus_cr 与 _eval_per_op group_id 计数一致"""
+        from steward_core.token_source import compute_room_tokens
+        from steward_core.synergy.control_linkages import _eval_per_op, ControlPerOpEntry
+
+        ops = [_mk_op("A", group_id="pinus"), _mk_op("B", group_id="pinus"), _mk_op("C")]
+        room_tokens = compute_room_tokens(ops)
+
+        # TokenSource: 2 名 pinus → pinus_cr = 2
+        assert room_tokens["pinus_cr"] == 2.0
+
+        # 旧函数
+        entry = ControlPerOpEntry(
+            scope="per_op", condition_field="group_id", condition_value="pinus",
+            room_type="Mfg", bonus_per=5.0, product=None,
+        )
+        bonus = _eval_per_op(entry, ops)
+        assert bonus == pytest.approx(10.0)  # 2 * 5%
+
+    def test_tokens_match_eval_per_op_knights(self):
+        """room_tokens knight_mfg 与 _eval_per_op is_knight 计数一致"""
+        from steward_core.token_source import compute_room_tokens
+        from steward_core.synergy.control_linkages import _eval_per_op, ControlPerOpEntry
+
+        # kazimierz → is_knight = True
+        ops = [_mk_op("A", nation_id="kazimierz"), _mk_op("B", nation_id="kazimierz")]
+        room_tokens = compute_room_tokens(ops)
+
+        assert room_tokens["knight_mfg"] == 2.0
+
+        entry = ControlPerOpEntry(
+            scope="per_op", condition_field="is_knight", condition_value="",
+            room_type="Mfg", bonus_per=5.0, product=None,
+        )
+        bonus = _eval_per_op(entry, ops)
+        assert bonus == pytest.approx(10.0)  # 2 * 5%
+
+    def test_tokens_match_count_ge(self):
+        """room_tokens karlan3_trade 与 _eval_per_op count_ge 计数一致"""
+        from steward_core.token_source import compute_room_tokens
+        from steward_core.synergy.control_linkages import _eval_per_op, ControlPerOpEntry
+
+        ops = [_mk_op("A", group_id="karlan"), _mk_op("B", group_id="karlan"), _mk_op("C", group_id="karlan")]
+        room_tokens = compute_room_tokens(ops)
+
+        # 3 名 karlan → count_ge:karlan=3 → karlan3_trade = 1
+        assert room_tokens["karlan3_trade"] == 1.0
+
+        entry = ControlPerOpEntry(
+            scope="per_room", condition_field="count_ge", condition_value="3",
+            room_type="Trade", bonus_per=5.0, product=None,
+        )
+        bonus = _eval_per_op(entry, ops)
+        assert bonus == pytest.approx(5.0)  # 满足阈值 → 5%
+
+
 # ─── Phase B7: 旧函数集成对齐 ───────────────────────────────────
 
 

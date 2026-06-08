@@ -273,6 +273,13 @@ def evaluate_room(
     # 注：ctx 传入 None 因 evaluate_room() 参数尚未包含 SlotContext；layout 等
     # 属性在 synergy_facility_count 内部通过参数单独传入，后续 Phase C2-C3 逐步迁移
 
+    # ── 不替换声明（C5）：以下路径保留旧函数，非计数层 ──
+    # - 爬升 e(t)：operator_ramp_segments 是时间函数，非计数
+    # - 菲亚梅塔自律：非计数，经 contribution.py 独立计算
+    # - 冲突互斥：resolve_efficiency_conflicts 是消费侧逻辑
+    # - 订单覆盖/裁缝豁免：trade_linkages 内部机制，非计数
+    # - compute_buff_pool：级联逻辑复杂，B2 映射表已就位但暂不接入
+
     # ── 二、房间组成型联动 ──
     total = integrate_segments(synergy_pair(operators, room_type, product, T), T)
     alias = synergy_skill_alias(operators)
