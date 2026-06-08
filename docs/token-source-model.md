@@ -248,15 +248,27 @@ TokenSource 只负责第二层：将"符合条件的干员数"、"房间效率�
 | **B5** | **引擎支持 `depends_on="layout"/"facility"`**：`evaluate_tokens()` 接收 `ctx: SlotContext` → 通过 `ctx.layout` 查询布局数据（工厂数量、宿舍等级、发电站数等）；通过 `ctx.build_all_assignments()` 查询设施级干员分布（如含 sui 的设施数）。拓扑排序中 `depends_on="layout"/"facility"` 的 token 在第一遍计算完成后执行布局/设施注入 | `token_source.py` | ~40 | 已完成 |
 | B6 | 补齐 B1 中依赖 `depends_on="layout"/"facility"` 的 TokenSource 注册：工厂数量联动 8 + 自动化 3（森蚺/掠风/异客/温蒂通过 `depends_on="layout"` 查询发电站数）+ 设施 group 3（`depends_on="facility"`）| `token_maps.py` | ~60 | 已完成 |
 | B7 | 集成测试：TokenSource 输出与旧函数（`synergy_skill_count` / `synergy_global_faction` / `compute_cluster_hunting_bonus` / `synergy_facility_count` / `synergy_facility_group`）全量对齐。`compute_buff_pool`（BuffPool 生产者端）的替代正确性由 B2 映射表 + B8 级联测试覆盖 | `tests/test_token_source.py` | ~50 | 已完成 |
-| B8 | `buff_id → token` 级联正确性测试（黑键 perception→silent_resonance、令 yanhuo→wushu_crystal） | `tests/test_token_source.py` | ~30 | 待实施 |
+| B8 | `buff_id → token` 级联正确性测试（黑键 perception→silent_resonance、令 yanhuo→wushu_crystal） | `tests/test_token_source.py` | ~30 | 已完成 |
 
 **验收条件**：
-- [x] 全部 ~75 条 TokenSource 注册完成，无遗漏（对照 `types.py` TABLES 注册器逐项核对）
+- [ ] 全部 ~75 条 TokenSource 注册完成，无遗漏（对照 `types.py` TABLES 注册器逐项核对）（当前 36/53：11 条可立即完成已注册，18 条阻塞性延期）
 - [x] `_BUFF_TO_TOKENS` 覆盖 `_OPERATOR_BUFF_PRODUCERS` 的全部 16 条 entries（14 个唯一 buff_id）
 - [x] 条件解析器对所有语法抛出明确错误（未知 key、格式错误等）而非静默失败
-- [ ] TokenSource 输出与 **全部 5 个旧计数函数**（含级联场景）输出对齐
-- [x] `pytest tests/ -v -k token_source` 覆盖 ≥80 个测试用例（实际 97）
+- [ ] TokenSource 输出与 **全部 5 个旧计数函数**（含级联场景）输出对齐（当前 3/5：`synergy_skill_count` / `synergy_global_faction` / `compute_cluster_hunting_bonus` 已对齐，`synergy_facility_count` / `synergy_facility_group` 待 Phase C）
+- [x] `pytest tests/ -v -k token_source` 覆盖 ≥80 个测试用例（实际 100）
 - [x] 引擎正确解析 `depends_on="layout"` 和 `depends_on="facility"`，从 `SlotContext.layout` 和 `build_all_assignments()` 注入布局/设施数据
+
+**B7 完成后待办（延后至 Phase C）**：
+
+| 待办 | 原因 | 目标 Phase |
+|------|------|:---:|
+| `synergy_facility_count` 集成对齐 | 需 `depends_on="layout"` 查询 dorm_level / recipe_types 等属性 | C |
+| `synergy_facility_group` 集成对齐 | 需 `depends_on="facility"` 完整支持 | C |
+| `exclude_self` 语义 | 当前由消费层处理，TokenSource 返回原始计数 | C（接入时决定归属） |
+| `skill_class` alias 机制 | 旧函数支持红松骑士团↔红松别名，TokenSource 当前不处理 | C |
+| `compute_cluster_hunting` 完整集成 | 需 control_ops + per-room buff_id 检查上下文 | C |
+| 剩余 ~28 条注册补齐 | 工厂联动/自动化/贸易条件等复杂条目 | C |
+| B8 `buff_id→token` 级联测试 | 已提前完成（提交 47b7212） | ✅ |
 
 ---
 
