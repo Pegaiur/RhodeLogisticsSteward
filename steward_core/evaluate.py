@@ -287,6 +287,17 @@ def evaluate_room(
         mfg_products = {r.product for r in mfg_rooms_list if r.product is not None}
         room_tokens["mfg_recipe_types"] = float(len(mfg_products))
 
+    # 补充 global scope 令牌（compute_room_tokens 只接收 room operators，
+    # scope="global" 的源在 ctx=None 下统计 room ops 而非全基建 ops——用 all_operators 修正）
+    if all_operators is not None:
+        from steward_core.synergy.token_maps import (
+            PHASE_B_GLOBAL_FACTION, PHASE_B_CONDITIONAL_EFF,
+        )
+        from steward_core.token_source import evaluate_tokens
+        global_sources = PHASE_B_GLOBAL_FACTION + [s for s in PHASE_B_CONDITIONAL_EFF if s.scope == "global"]
+        global_tokens = evaluate_tokens(global_sources, all_operators)
+        room_tokens.update(global_tokens)
+
     # ── 不替换声明（C5）：以下路径保留旧函数，非计数层 ──
     # - 爬升 e(t)：operator_ramp_segments 是时间函数，非计数
     # - synergy_automation：per-op buff_id 扫描 + 归零集合语义，不适合纯计数 token 化

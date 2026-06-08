@@ -66,6 +66,12 @@ class TokenSource:
 # ─── 执行引擎 ──────────────────────────────────────────────────────────
 
 
+# ─── 拓扑排序缓存 ────────────────────────────────────────────────
+# sources 列表不变时拓扑序复用，消除每次 evaluate_tokens 的
+# Kahn 算法 O(V+E) 初始化开销
+_TOPOSORT_CACHE: dict[int, list[str]] = {}
+
+
 def evaluate_tokens(
     sources: list[TokenSource],
     operators: list["Operator"],
@@ -89,8 +95,11 @@ def evaluate_tokens(
     for s in sources:
         source_by_token[s.token] = s
 
-    # 拓扑排序
-    order = _topological_sort(sources, source_by_token)
+    # 拓扑排序（结果缓存：相同 token+depends_on 组合复用）
+    cache_key = tuple((s.token, s.depends_on or "") for s in sources)
+    if cache_key not in _TOPOSORT_CACHE:
+        _TOPOSORT_CACHE[cache_key] = _topological_sort(sources, source_by_token)
+    order = _TOPOSORT_CACHE[cache_key]
 
     # 按序执行
     tokens: dict[str, float] = {}
@@ -477,24 +486,18 @@ def _parse_condition(condition: str) -> tuple[str, str] | tuple[str]:
     return (key, value)
 
 
+# 条件匹配器缓存：避免每次 evaluate_tokens 调用重复创建 lambda
+_MATCHER_CACHE: dict[str, ConditionMatcher] = {}
+
 def _build_matcher(condition: str) -> ConditionMatcher:
-    """解析 condition 字符串 → 条件匹配器
+    """解析 condition 字符串 → 条件匹配器（结果缓存于 _MATCHER_CACHE）"""
+    if condition in _MATCHER_CACHE:
+        return _MATCHER_CACHE[condition]
 
-    支持的语法（Phase A2 覆盖前 7 种，skill_class 留 Phase B）：
-
-    | 格式 | 匹配方式 |
-    |------|---------|
-    | `*` | 无条件通过 |
-    | `group_id=v` | op.has_group(v) |
-    | `nation_id=v` | op.has_nation(v) |
-    | `char_id=v` | op.char_id == v |
-    | `is_knight` | _FN_CONDITIONS["is_knight"](op) |
-    | `pair=A:B` | 双方 char_id 均在 operators 内 |
-    | `count_ge:g=N` | ≥N 个 has_group(g) → 1.0，否则 0.0 |
-    | `skill_class=v` | 暂未实现（Phase B） |
-    """
     if condition == "*":
-        return lambda _op: True
+        matcher = lambda _op: True
+        _MATCHER_CACHE[condition] = matcher
+        return matcher
 
     parsed = _parse_condition(condition)
 
@@ -508,27 +511,22 @@ def _build_matcher(condition: str) -> ConditionMatcher:
     key, value = parsed
 
     if key == "group_id":
-        return lambda op, v=value: _match_group_id(op, v)
+        matcher = lambda op, v=value: _match_group_id(op, v)
     elif key == "nation_id":
-        return lambda op, v=value: _match_nation_id(op, v)
+        matcher = lambda op, v=value: _match_nation_id(op, v)
     elif key == "team_id":
-        return lambda op, v=value: _match_team_id(op, v)
+        matcher = lambda op, v=value: _match_team_id(op, v)
     elif key == "char_id":
-        return lambda op, v=value: op.char_id == v
-    elif key == "pair":
-        # pair 由 _evaluate_count 直接处理（需要 scope 级知识：双方均在才返回 1）
-        raise NotImplementedError("pair 条件由 _evaluate_count 直接处理，不应通过 _build_matcher 调用")
-    elif key == "count_ge":
-        # count_ge 由 _evaluate_count 直接处理（需要全量计数 + 阈值判定）
-        raise NotImplementedError("count_ge 条件由 _evaluate_count 直接处理，不应通过 _build_matcher 调用")
+        matcher = lambda op, v=value: op.char_id == v
     elif key == "skill_class":
-        return lambda op, v=value: _match_skill_class(op, v)
+        matcher = lambda op, v=value: _match_skill_class(op, v)
+    elif key in ("pair", "count_ge") or key.startswith("count_ge:"):
+        raise NotImplementedError(f"{key} 条件由 _evaluate_count 直接处理")
+    else:
+        raise ValueError(f"未知的条件 key '{key}'")
 
-    # count_ge 作为 key 前缀处理（"count_ge:karlan"）
-    if key.startswith("count_ge:"):
-        raise NotImplementedError("count_ge 条件由 _evaluate_count 直接处理，不应通过 _build_matcher 调用")
-
-    raise ValueError(f"未知的条件 key '{key}'")
+    _MATCHER_CACHE[condition] = matcher
+    return matcher
 
 
 def _match_group_id(op, group_id: str) -> bool:
