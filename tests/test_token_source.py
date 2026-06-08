@@ -1,4 +1,4 @@
-"""TokenSource 统一计数层单元测试 — Phase A 原型验证"""
+﻿"""TokenSource 统一计数层单元测试 — Phase A 原型验证"""
 
 import pytest
 
@@ -511,7 +511,8 @@ class TestPhaseASources:
 
     def test_all_sources_evaluable(self):
         """所有 11 条注册均可被 evaluate_tokens 成功计算"""
-        from steward_core.token_source import PHASE_A_SOURCES, evaluate_tokens
+        from steward_core.synergy.token_maps import PHASE_A_SOURCES
+        from steward_core.token_source import evaluate_tokens
 
         # 构造覆盖全部条件的干员池
         ops = [
@@ -633,7 +634,8 @@ class TestPhaseBSkillClass:
     """A 层技能标签计数"""
 
     def test_skill_class_all_evaluable(self):
-        from steward_core.token_source import PHASE_B_SKILL_CLASS, evaluate_tokens
+        from steward_core.synergy.token_maps import PHASE_B_SKILL_CLASS
+        from steward_core.token_source import evaluate_tokens
 
         s1 = _mk_mfg_skill(); s1.buff_name = "标准化·α"
         s2 = _mk_mfg_skill(); s2.buff_name = "莱茵科技·β"
@@ -653,7 +655,8 @@ class TestPhaseBGlobalFaction:
     """B 层全局阵营计数"""
 
     def test_rhine_global_count(self):
-        from steward_core.token_source import PHASE_B_GLOBAL_FACTION, evaluate_tokens
+        from steward_core.synergy.token_maps import PHASE_B_GLOBAL_FACTION
+        from steward_core.token_source import evaluate_tokens
 
         ops = [
             _mk_op("A", group_id="rhine"),
@@ -664,7 +667,8 @@ class TestPhaseBGlobalFaction:
         assert result["rhine_global"] == 2.0
 
     def test_rhine_global_cap(self):
-        from steward_core.token_source import PHASE_B_GLOBAL_FACTION, evaluate_tokens
+        from steward_core.synergy.token_maps import PHASE_B_GLOBAL_FACTION
+        from steward_core.token_source import evaluate_tokens
 
         ops = [_mk_op("X", group_id="rhine") for _ in range(10)]
         result = evaluate_tokens(PHASE_B_GLOBAL_FACTION, ops)
@@ -675,7 +679,8 @@ class TestPhaseBCrossPairs:
     """B 层跨房间配对"""
 
     def test_liexia_gumi_pair(self):
-        from steward_core.token_source import PHASE_B_CROSS_PAIRS, evaluate_tokens
+        from steward_core.synergy.token_maps import PHASE_B_CROSS_PAIRS
+        from steward_core.token_source import evaluate_tokens
 
         ops = [
             _mk_op("烈夏"),
@@ -685,7 +690,8 @@ class TestPhaseBCrossPairs:
         assert result["liexia_gumi"] == 1.0
 
     def test_liexia_gumi_missing(self):
-        from steward_core.token_source import PHASE_B_CROSS_PAIRS, evaluate_tokens
+        from steward_core.synergy.token_maps import PHASE_B_CROSS_PAIRS
+        from steward_core.token_source import evaluate_tokens
 
         ops = [_mk_op("烈夏")]
         result = evaluate_tokens(PHASE_B_CROSS_PAIRS, ops)
@@ -696,7 +702,8 @@ class TestPhaseBCluster:
     """C 层集群狩猎"""
 
     def test_abyssal_mfg_count(self):
-        from steward_core.token_source import PHASE_B_CLUSTER, evaluate_tokens
+        from steward_core.synergy.token_maps import PHASE_B_CLUSTER
+        from steward_core.token_source import evaluate_tokens
 
         ops = [
             _mk_op("A", group_id="abyssal"),
@@ -714,13 +721,13 @@ class TestBuffToTokens:
     """_BUFF_TO_TOKENS 映射表"""
 
     def test_covers_all_14_producer_entries(self):
-        from steward_core.token_source import _BUFF_TO_TOKENS
+        from steward_core.synergy.token_maps import _BUFF_TO_TOKENS
 
         assert len(_BUFF_TO_TOKENS) == 14
 
     def test_black_key_cascade(self):
         """黑键 trade_ord_spd_bd_n1[000] 同时产出 perception + silent_resonance"""
-        from steward_core.token_source import _BUFF_TO_TOKENS
+        from steward_core.synergy.token_maps import _BUFF_TO_TOKENS
 
         tokens = _BUFF_TO_TOKENS["trade_ord_spd_bd_n1[000]"]
         assert "perception" in tokens
@@ -792,7 +799,7 @@ class TestBuffCascade:
 
     def test_all_tokens_known_dimensions(self):
         """所有产出 token 属于已知维度"""
-        from steward_core.token_source import _BUFF_TO_TOKENS
+        from steward_core.synergy.token_maps import _BUFF_TO_TOKENS
 
         known = {"yanhuo", "perception", "monster_cuisine", "silent_resonance"}
         for buff_id, tokens in _BUFF_TO_TOKENS.items():
@@ -1119,7 +1126,8 @@ class TestIntegrationFactionRoom:
     """TokenSource 与 synergy_faction_room 计数对齐"""
 
     def _token(self, ops, token_name):
-        from steward_core.token_source import PHASE_A_SOURCES, evaluate_tokens
+        from steward_core.synergy.token_maps import PHASE_A_SOURCES
+        from steward_core.token_source import evaluate_tokens
         result = evaluate_tokens(PHASE_A_SOURCES, ops)
         return result.get(token_name, 0.0)
 
