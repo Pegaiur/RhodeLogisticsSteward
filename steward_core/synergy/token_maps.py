@@ -96,3 +96,21 @@ _BUFF_TO_TOKENS: dict[str, list[str]] = {
     "dorm_bd_num[000]": ["silent_resonance"],
     "hire_spd_bd_n1_n1[300]": ["silent_resonance"],
 }
+
+
+# ─── Phase B6: layout/facility 依赖的 TokenSource 注册 ──────────────────
+
+# 工厂数量联动（A5）
+# 依赖 depends_on="layout" 查询 ctx.layout.rooms
+PHASE_B_FACTORY_COUNT: list[TokenSource] = [
+    TokenSource(token="trade_rooms", depends_on="layout", target_room="Trade"),
+    TokenSource(token="mfg_rooms", depends_on="layout", target_room="Mfg"),
+    TokenSource(token="power_rooms", depends_on="layout", target_room="Power"),
+]
+
+# 设施 group 计数（B4）
+# 依赖 depends_on="facility" 查询 ctx.build_all_assignments()
+# 注：当前按 facility_type 分组（非按房间），与 SlotContext 接口一致
+PHASE_B_FACILITY_GROUP: list[TokenSource] = [
+    TokenSource(token="sui_facilities", depends_on="facility", condition="group_id=sui"),
+]

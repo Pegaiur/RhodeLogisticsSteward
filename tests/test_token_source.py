@@ -1,4 +1,4 @@
-﻿"""TokenSource 统一计数层单元测试 — Phase A 原型验证"""
+"""TokenSource 统一计数层单元测试 — Phase A 原型验证"""
 
 import pytest
 
@@ -625,6 +625,111 @@ class TestConditionSkillClass:
         ops = [_mk_op("摩根", group_id="glasgow"), _mk_op("戴菲恩", group_id="glasgow")]
         result = evaluate_tokens([TokenSource(token="t", condition="group_id=glasgow")], ops)
         assert result["t"] == 2.0
+
+
+# ─── Phase B5: 引擎 layout/facility 依赖 ─────────────────────────
+
+
+class TestLayoutDependency:
+    """TokenSource depends_on='layout' — 从 SlotContext.layout 查询"""
+
+    def test_layout_trade_room_count(self):
+        from steward_core.token_source import TokenSource, evaluate_tokens
+        from steward_core.solver.slot.context import SlotContext
+        from steward_core.models import RoomConfig, LayoutConfig
+
+        layout = LayoutConfig(rooms=[
+            RoomConfig("Trade", 0, 3, "Money"),
+            RoomConfig("Trade", 1, 3, "Money"),
+            RoomConfig("Mfg", 0, 3, "CombatRecord"),
+        ])
+        ctx = SlotContext(operators=[], op_lookup={}, layout=layout)
+
+        sources = [TokenSource(token="trade_rooms", depends_on="layout", target_room="Trade")]
+        result = evaluate_tokens(sources, [], ctx)
+        assert result["trade_rooms"] == 2.0
+
+
+class TestFacilityDependency:
+    """TokenSource depends_on='facility' — 从 ctx.build_all_assignments() 查询"""
+
+    def test_facility_sui_count(self):
+        from steward_core.token_source import TokenSource, evaluate_tokens
+        from steward_core.solver.slot.context import SlotContext, SlotAssignment, WindowState
+        from steward_core.models import RoomConfig, LayoutConfig
+
+        layout = LayoutConfig(rooms=[
+            RoomConfig("Trade", 0, 3, "Money"),
+            RoomConfig("Trade", 1, 3, "Money"),
+        ])
+        op_ling = _mk_op("令", group_id="sui")
+        op_xi = _mk_op("夕", group_id="sui")
+        ctx = SlotContext(
+            operators=[op_ling, op_xi],
+            op_lookup={"令": op_ling, "夕": op_xi},
+            layout=layout,
+            windows=[
+                WindowState(assignments=[
+                    SlotAssignment("trade_0_0", "Trade", "Money", "令", 0),
+                    SlotAssignment("trade_0_1", "Trade", "Money", "夕", 0),
+                    SlotAssignment("trade_1_0", "Trade", "Money", "", 1),
+                ])
+            ],
+        )
+
+        sources = [TokenSource(
+            token="sui_facilities",
+            depends_on="facility",
+            condition="group_id=sui",
+        )]
+        result = evaluate_tokens(sources, [], ctx)
+        assert result["sui_facilities"] == 1.0  # 只有 Trade 0 含 sui
+
+
+# ─── Phase B6: layout/facility 注册测试 ───────────────────────────
+
+
+class TestPhaseBFactoryCount:
+    """工厂数量联动 TokenSource"""
+
+    def test_trade_room_count(self):
+        from steward_core.synergy.token_maps import PHASE_B_FACTORY_COUNT
+        from steward_core.token_source import evaluate_tokens
+        from steward_core.solver.slot.context import SlotContext
+        from steward_core.models import RoomConfig, LayoutConfig
+
+        layout = LayoutConfig(rooms=[
+            RoomConfig("Trade", 0, 3, "Money"),
+            RoomConfig("Trade", 1, 3, "Money"),
+            RoomConfig("Mfg", 0, 3, "CombatRecord"),
+        ])
+        ctx = SlotContext(operators=[], op_lookup={}, layout=layout)
+        result = evaluate_tokens(PHASE_B_FACTORY_COUNT, [], ctx)
+        assert result["trade_rooms"] == 2.0
+        assert result["mfg_rooms"] == 1.0
+
+
+class TestPhaseBFacilityGroup:
+    """设施 group 计数 TokenSource"""
+
+    def test_sui_facility_count(self):
+        from steward_core.synergy.token_maps import PHASE_B_FACILITY_GROUP
+        from steward_core.token_source import evaluate_tokens
+        from steward_core.solver.slot.context import SlotContext, SlotAssignment, WindowState
+        from steward_core.models import RoomConfig, LayoutConfig
+
+        layout = LayoutConfig(rooms=[RoomConfig("Trade", 0, 3, "Money")])
+        op = _mk_op("令", group_id="sui")
+        ctx = SlotContext(
+            operators=[op],
+            op_lookup={"令": op},
+            layout=layout,
+            windows=[WindowState(assignments=[
+                SlotAssignment("trade_0_0", "Trade", "Money", "令", 0),
+            ])],
+        )
+        result = evaluate_tokens(PHASE_B_FACILITY_GROUP, [], ctx)
+        assert result["sui_facilities"] == 1.0
 
 
 # ─── Phase B1: 新增 TokenSource 注册 ──────────────────────────────

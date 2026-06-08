@@ -99,6 +99,11 @@ def evaluate_tokens(
         value = _evaluate_single(source, operators, tokens, ctx)
         tokens[token_name] = value
 
+    # 第二遍：layout/facility 依赖（在常规 token 之后计算）
+    for s in sources:
+        if s.depends_on in ("layout", "facility"):
+            tokens[s.token] = _evaluate_context_dependent(s, operators, ctx)
+
     return tokens
 
 
@@ -179,6 +184,57 @@ def _evaluate_single(
 
     # 其他 aggregate 暂未实现
     raise NotImplementedError(f"aggregate '{aggregate}' 尚未实现")
+
+
+def _evaluate_context_dependent(
+    source: TokenSource,
+    operators: list["Operator"],
+    ctx: "SlotContext | None",
+) -> float:
+    """处理 depends_on="layout" 或 "facility" 的 TokenSource
+
+    layout: 从 ctx.layout 查询布局属性
+    facility: 从 ctx.build_all_assignments() 查询设施级干员分布
+    """
+    if source.depends_on == "layout":
+        return _evaluate_layout(source, ctx)
+
+    if source.depends_on == "facility":
+        return _evaluate_facility(source, ctx)
+
+    return 0.0
+
+
+def _evaluate_layout(source: TokenSource, ctx: "SlotContext | None") -> float:
+    """布局依赖：统计目标设施类型的房间数"""
+    if ctx is None or ctx.layout is None:
+        return 0.0
+
+    room_type = source.target_room or ""
+    count = sum(1 for r in ctx.layout.rooms if r.room_type == room_type)
+    result = float(count)
+    if source.cap is not None:
+        result = min(result, source.cap)
+    return result
+
+
+def _evaluate_facility(source: TokenSource, ctx: "SlotContext | None") -> float:
+    """设施依赖：统计含匹配干员的设施数"""
+    if ctx is None:
+        return 0.0
+
+    assignments = ctx.build_all_assignments(window_idx=0)
+    matcher = _build_matcher(source.condition)
+
+    count = 0
+    for facility_type, ops in assignments.items():
+        if any(matcher(op) for op in ops):
+            count += 1
+
+    result = float(count)
+    if source.cap is not None:
+        result = min(result, source.cap)
+    return result
 
 
 def _evaluate_count(
