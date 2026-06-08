@@ -543,6 +543,80 @@ class TestPhaseASources:
         result = evaluate_tokens([TokenSource(token="t", condition="team_id=reserve1")], ops)
         assert result["t"] == 1.0
 
+
+# ─── Phase B3: is_abyssal_hunter ────────────────────────────────────
+
+
+class TestConditionAbyssalHunter:
+    """condition='is_abyssal_hunter' 派生布尔"""
+
+    def test_abyssal_hunter_match(self):
+        from steward_core.token_source import TokenSource, evaluate_tokens
+
+        ops = [
+            _mk_op("歌蕾蒂娅", group_id="abyssal"),
+            _mk_op("普通", group_id="other"),
+        ]
+        sources = [TokenSource(token="t", condition="is_abyssal_hunter")]
+        result = evaluate_tokens(sources, ops)
+        assert result["t"] == 1.0
+
+    def test_abyssal_hunter_no_match(self):
+        from steward_core.token_source import TokenSource, evaluate_tokens
+
+        ops = [_mk_op("A", group_id="other")]
+        sources = [TokenSource(token="t", condition="is_abyssal_hunter")]
+        result = evaluate_tokens(sources, ops)
+        assert result["t"] == 0.0
+
+
+# ─── Phase B4: skill_class 条件 ─────────────────────────────────────
+
+
+class TestConditionSkillClass:
+    """condition='skill_class=v' 技能类别标签匹配"""
+
+    def test_skill_class_match(self):
+        from steward_core.token_source import TokenSource, evaluate_tokens
+
+        s1 = _mk_mfg_skill("manu_spd_rhine[001]")
+        s1.buff_name = "莱茵科技·α"
+        s2 = _mk_mfg_skill("manu_spd_pinus[001]")
+        s2.buff_name = "红松骑士团·α"
+
+        ops = [
+            _mk_op("A", skills=[s1]),
+            _mk_op("B", skills=[s2]),
+            _mk_op("C"),
+        ]
+        sources = [TokenSource(token="t", condition="skill_class=红松骑士团")]
+        result = evaluate_tokens(sources, ops)
+        assert result["t"] == 1.0
+
+    def test_skill_class_no_match(self):
+        from steward_core.token_source import TokenSource, evaluate_tokens
+
+        s = _mk_mfg_skill()
+        s.buff_name = "标准化·β"
+        ops = [_mk_op("A", skills=[s])]
+        sources = [TokenSource(token="t", condition="skill_class=红松骑士团")]
+        result = evaluate_tokens(sources, ops)
+        assert result["t"] == 0.0
+
+    def test_skill_class_multiple_skills(self):
+        """干员有多个技能，其中一个匹配"""
+        from steward_core.token_source import TokenSource, evaluate_tokens
+
+        s1 = _mk_mfg_skill()
+        s1.buff_name = "标准化·α"
+        s2 = _mk_mfg_skill()
+        s2.buff_name = "红松骑士团·α"
+
+        ops = [_mk_op("A", skills=[s1, s2])]
+        sources = [TokenSource(token="t", condition="skill_class=红松骑士团")]
+        result = evaluate_tokens(sources, ops)
+        assert result["t"] == 1.0
+
     def test_glasgow_trade_counts_group(self):
         """group_id=glasgow → 计数"""
         from steward_core.token_source import TokenSource, evaluate_tokens

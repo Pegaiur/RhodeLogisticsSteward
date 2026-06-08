@@ -342,9 +342,10 @@ def _evaluate_distinct(
 # 派生布尔函数注册表（条件 key → 判定函数）
 _FN_CONDITIONS: dict[str, ConditionMatcher] = {}
 
-# ── 初始注册 is_knight ──
+# ── 初始注册 is_knight + is_abyssal_hunter ──
 from steward_core.synergy.helpers import _is_knight
 _FN_CONDITIONS["is_knight"] = lambda op: _is_knight(op)
+_FN_CONDITIONS["is_abyssal_hunter"] = lambda op: op.has_group("abyssal")
 
 
 def _parse_condition(condition: str) -> tuple[str, str] | tuple[str]:
@@ -406,7 +407,7 @@ def _build_matcher(condition: str) -> ConditionMatcher:
         # count_ge 由 _evaluate_count 直接处理（需要全量计数 + 阈值判定）
         raise NotImplementedError("count_ge 条件由 _evaluate_count 直接处理，不应通过 _build_matcher 调用")
     elif key == "skill_class":
-        raise NotImplementedError("skill_class 条件将在 Phase B 实现")
+        return lambda op, v=value: _match_skill_class(op, v)
 
     # count_ge 作为 key 前缀处理（"count_ge:karlan"）
     if key.startswith("count_ge:"):
@@ -428,6 +429,14 @@ def _match_nation_id(op, nation_id: str) -> bool:
 def _match_team_id(op, team_id: str) -> bool:
     """匹配 team_id（兼容 has_team 方法）"""
     return op.has_team(team_id)
+
+
+def _match_skill_class(op, class_name: str) -> bool:
+    """匹配 skill_class：干员任一技能的 buff_name 包含指定类别名"""
+    for sk in op.skills:
+        if class_name in sk.buff_name:
+            return True
+    return False
 
 
 def _parse_count_ge(condition: str) -> tuple[str, str, str, str]:
