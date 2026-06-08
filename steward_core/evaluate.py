@@ -267,6 +267,12 @@ def evaluate_room(
         operators, room_type, product, power_count, T,
     )
 
+    # ── TokenSource 接入（Phase C1）：预计算全部 token 值 ──
+    from steward_core.token_source import compute_room_tokens
+    room_tokens = compute_room_tokens(operators)
+    # 注：ctx 传入 None 因 evaluate_room() 参数尚未包含 SlotContext；layout 等
+    # 属性在 synergy_facility_count 内部通过参数单独传入，后续 Phase C2-C3 逐步迁移
+
     # ── 二、房间组成型联动 ──
     total = integrate_segments(synergy_pair(operators, room_type, product, T), T)
     alias = synergy_skill_alias(operators)
