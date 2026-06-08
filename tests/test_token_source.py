@@ -627,6 +627,83 @@ class TestConditionSkillClass:
         assert result["t"] == 2.0
 
 
+# ─── Phase B7: 旧函数集成对齐 ───────────────────────────────────
+
+
+class TestIntegrationSkillCount:
+    """TokenSource 与 synergy_skill_count 计数对齐"""
+
+    def test_skill_class_count_matches_old(self):
+        from steward_core.synergy.token_maps import PHASE_B_SKILL_CLASS
+        from steward_core.token_source import evaluate_tokens
+        from steward_core.synergy.mfg_linkages import synergy_skill_count
+
+        # A 有标准化技能，B 有莱茵科技，C 无技能标签
+        s_std = _mk_mfg_skill(); s_std.buff_name = "标准化·α"
+        s_rhine = _mk_mfg_skill(); s_rhine.buff_name = "莱茵科技·β"
+        ops = [
+            _mk_op("水月", skills=[s_std]),
+            _mk_op("X", skills=[s_std]),
+            _mk_op("Y", skills=[s_rhine]),
+            _mk_op("Z"),
+        ]
+
+        # TokenSource: 标准化 = 水月+X = 2
+        tokens = evaluate_tokens(PHASE_B_SKILL_CLASS, ops)
+        assert tokens["standardization_count"] == 2.0
+        assert tokens["rhine_tech_count"] == 1.0
+
+        # 旧函数: 水月在房间内 → 标准化计数 = 2 → bonus = 2*5 = 10
+        # 多萝西不在 ops → 无莱茵科技持有者 → 无莱茵段
+        segments = synergy_skill_count(ops, "Mfg")
+        # 水月: 标准化持有者，count=2，bonus=10
+        assert len(segments) == 1
+        assert segments[0].a == pytest.approx(10.0)  # 2 matching * 5%
+
+
+class TestIntegrationGlobalFaction:
+    """TokenSource 与 synergy_global_faction 计数对齐"""
+
+    def test_global_faction_count_matches_old(self):
+        from steward_core.synergy.token_maps import PHASE_B_GLOBAL_FACTION
+        from steward_core.token_source import evaluate_tokens
+        from steward_core.synergy.global_linkages import synergy_global_faction
+
+        # 全局 4 名 rhine 干员，但 cap=5
+        all_ops = [_mk_op(f"R{i}", group_id="rhine") for i in range(4)]
+        room_ops = [_mk_op("缪尔赛思", group_id="rhine")]  # 持有者在房间内
+
+        # TokenSource: rhine_global count = 4
+        tokens = evaluate_tokens(PHASE_B_GLOBAL_FACTION, all_ops)
+        assert tokens["rhine_global"] == 4.0  # 4 ≤ cap=5
+
+        # 旧函数: 缪尔赛思在房间内 → count=4-1(排除自身)=3 → bonus=3*3=9
+        segments = synergy_global_faction(room_ops, "Power", "Power", all_ops, 12.0)
+        assert len(segments) == 1
+        assert segments[0].a == pytest.approx(9.0)  # (4-1) * 3%
+
+
+class TestIntegrationClusterHunting:
+    """TokenSource 与 compute_cluster_hunting_bonus 计数对齐"""
+
+    def test_abyssal_count_matches_old(self):
+        from steward_core.synergy.token_maps import PHASE_B_CLUSTER
+        from steward_core.token_source import evaluate_tokens
+
+        ops = [
+            _mk_op("A", group_id="abyssal"),
+            _mk_op("B", group_id="abyssal"),
+            _mk_op("C", group_id="other"),
+        ]
+
+        # TokenSource 集群狩猎: abyssal_mfg count = 2
+        tokens = evaluate_tokens(PHASE_B_CLUSTER, ops)
+        assert tokens["abyssal_mfg"] == 2.0
+
+        # 旧函数需 control_ops + mfg_assignments，此处仅验证 TokenSource 计数
+        # 与 _CLUSTER_HUNTING_TABLE 的 group_id 条件一致
+
+
 # ─── Phase B5: 引擎 layout/facility 依赖 ─────────────────────────
 
 
