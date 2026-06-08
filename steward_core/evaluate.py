@@ -292,7 +292,7 @@ def evaluate_room(
 
     # ── 三、效率加成型联动 ──
     total += integrate_segments(synergy_faction_room(non_zero_ops, room_type, product, T), T)
-    total += integrate_segments(synergy_skill_count(non_zero_ops, room_type, alias, T), T)
+    total += integrate_segments(synergy_skill_count(non_zero_ops, room_type, alias, T, room_tokens=room_tokens), T)
     total += integrate_segments(synergy_trade_gold_lines(
         operators, room_type, product, layout, T=T,
     ), T)

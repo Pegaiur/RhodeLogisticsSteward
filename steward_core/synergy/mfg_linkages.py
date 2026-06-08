@@ -217,10 +217,36 @@ def synergy_skill_count(
     room_type: str,
     alias: dict[str, list[str]] | None = None,
     T: float = 12.0,
+    room_tokens: dict[str, float] | None = None,
 ) -> list[LinearSegment]:
-    """统计同房间内技能类型数量，为持有者提供效率加成"""
+    """统计同房间内技能类型数量，为持有者提供效率加成
+
+    room_tokens 非 None 时从 TokenSource 预计算值读取计数，跳过 operator 遍历。
+    """
     if room_type != "Mfg":
         return []
+
+    if room_tokens is not None:
+        # TokenSource 快速路径：从预计算字典中读取技能类计数
+        segments = []
+        for op in operators:
+            target_cls = _A_SKILL_COUNT_TABLE.get(op.name)
+            if target_cls is None:
+                continue
+            # 映射 A_SKILL_COUNT 类别 → TokenSource token 名
+            cls_token_map = {
+                "标准化": "standardization_count",
+                "莱茵科技": "rhine_tech_count",
+                "金属工艺": "metal_craft_count",
+            }
+            token_name = cls_token_map.get(target_cls)
+            if token_name is None:
+                continue
+            count = int(room_tokens.get(token_name, 0))
+            if count > 0:
+                bonus = count * _A_SKILL_COUNT_BONUS
+                segments.append(LinearSegment(a=bonus, b=0.0, t_start=0.0, dt=T))
+        return segments
 
     if alias is None:
         alias = {}
