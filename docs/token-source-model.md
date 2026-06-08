@@ -307,7 +307,7 @@ TokenSource 只负责第二层：将"符合条件的干员数"、"房间效率�
 | C6 | **回归验证 + 性能基准**：`pytest tests/ -v` 全量通过；`python run_solver.py` 端到端无异常；`_timing.py` 埋点对比 `evaluate_tokens()` 总耗时 vs 旧 8 个计数函数耗时之和，确认无退化 | `solver/slot/_timing.py`（埋点） | — | ~10 |
 
 **验收条件**：
-- [x] `pytest tests/ -v` **全量测试通过**（零回归）— 2026-06-08 实测 897 passed, 0 failed
+- [x] `pytest tests/ -v` **全量测试通过**（零回归）— 2026-06-08 实测 897 passed in 0.83s
 - [ ] `python run_solver.py` 产出 JSON 与 Phase B 完成时的产出 **差异 ≤ 3 条干员**（允许因浮点排序边界导致的微小差异）— **不可验证（需基线对照，延后至 C6 性能基准时一并执行）**
 - [ ] `evaluate_tokens()` 总耗时 ≤ 旧 8 个计数函数耗时之和 x 1.05 — **不可验证（`_timing.py` 无 TokenSource 埋点，延后至 C6）**
 - [x] 所有未替换的旧路径有明确注释标注原因 — evaluate.py L276-281 含 5 项声明，覆盖完整
