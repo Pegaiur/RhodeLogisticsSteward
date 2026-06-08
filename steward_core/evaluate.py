@@ -289,6 +289,7 @@ def evaluate_room(
 
     # 补充 global scope 令牌（compute_room_tokens 只接收 room operators，
     # scope="global" 的源在 ctx=None 下统计 room ops 而非全基建 ops——用 all_operators 修正）
+    # TODO(Phase D): 将 all_operators 传入 compute_room_tokens 统一处理
     if all_operators is not None:
         from steward_core.synergy.token_maps import (
             PHASE_B_GLOBAL_FACTION, PHASE_B_CONDITIONAL_EFF,

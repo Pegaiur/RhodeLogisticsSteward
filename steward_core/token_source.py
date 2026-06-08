@@ -69,7 +69,7 @@ class TokenSource:
 # ─── 拓扑排序缓存 ────────────────────────────────────────────────
 # sources 列表不变时拓扑序复用，消除每次 evaluate_tokens 的
 # Kahn 算法 O(V+E) 初始化开销
-_TOPOSORT_CACHE: dict[int, list[str]] = {}
+_TOPOSORT_CACHE: dict[tuple, list[str]] = {}
 
 
 def evaluate_tokens(
