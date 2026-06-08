@@ -255,8 +255,8 @@ TokenSource 只负责第二层：将"符合条件的干员数"、"房间效率�
 - [x] `_BUFF_TO_TOKENS` 覆盖 `_OPERATOR_BUFF_PRODUCERS` 的全部 16 条 entries（14 个唯一 buff_id）
 - [x] 条件解析器对所有语法抛出明确错误（未知 key、格式错误等）而非静默失败
 - [ ] TokenSource 输出与 **全部 5 个旧计数函数**（含级联场景）输出对齐
-- [x] `pytest tests/ -v -k token_source` 覆盖 ≥80 个测试用例（实际 91）
-- [ ] 引擎正确解析 `depends_on="layout"` 和 `depends_on="facility"`，从 `SlotContext.layout` 和 `build_all_assignments()` 注入布局/设施数据
+- [x] `pytest tests/ -v -k token_source` 覆盖 ≥80 个测试用例（实际 97）
+- [x] 引擎正确解析 `depends_on="layout"` 和 `depends_on="facility"`，从 `SlotContext.layout` 和 `build_all_assignments()` 注入布局/设施数据
 
 ---
 
