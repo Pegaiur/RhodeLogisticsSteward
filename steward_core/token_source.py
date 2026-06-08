@@ -527,3 +527,30 @@ def _parse_count_ge(condition: str) -> tuple[str, str, str, str]:
     group_id, n_str = after_prefix.split("=", 1)
     return ("count_ge", group_id, "=", n_str)
 
+
+# ─── 求解器接入：Token 预计算 ──────────────────────────────────────────
+
+
+def compute_room_tokens(
+    operators: list["Operator"],
+    ctx: "SlotContext | None" = None,
+) -> dict[str, float]:
+    """单次调用计算全部已注册 TokenSource 的 token 值（含 layout/facility 依赖）
+
+    evaluate_room() 的接入点：在 room 级评估开始时调用一次，后续所有计数函数
+    直接读取 token 值，避免重复遍历 operators。
+
+    Args:
+        operators: 房间内干员列表
+        ctx: 求解器上下文（含 layout 用于 depends_on="layout" 查询）
+
+    Returns:
+        {token_name: value} 字典
+    """
+    from steward_core.synergy.token_maps import (
+        PHASE_A_SOURCES, PHASE_B_SOURCES,
+    )
+
+    all_sources = PHASE_A_SOURCES + PHASE_B_SOURCES
+    return evaluate_tokens(all_sources, operators, ctx)
+

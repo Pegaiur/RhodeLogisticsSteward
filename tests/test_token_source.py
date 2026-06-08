@@ -627,6 +627,74 @@ class TestConditionSkillClass:
         assert result["t"] == 2.0
 
 
+# ─── Phase C1: evaluate_room() 接入框架 ────────────────────────────
+
+
+class TestPhaseC1RoomIntegration:
+    """TokenSource 接入 evaluate_room() — 计数对齐验证"""
+
+    def test_facility_count_tokens_match_layout(self):
+        """synergy_facility_count 的内部布局计数 + per-op 计数与 TokenSource 一致"""
+        from steward_core.token_source import evaluate_tokens
+        from steward_core.synergy.token_maps import PHASE_B_FACTORY_COUNT
+        from steward_core.models import RoomConfig, LayoutConfig
+        from steward_core.solver.slot.context import SlotContext
+
+        # 243 布局模拟
+        layout = LayoutConfig(rooms=[
+            RoomConfig("Trade", 0, 3, "Money"),
+            RoomConfig("Trade", 1, 3, "Money"),
+            RoomConfig("Mfg", 0, 3, "CombatRecord"),
+            RoomConfig("Mfg", 1, 3, "PureGold"),
+            RoomConfig("Dormitory", 0, 5, level=3),
+            RoomConfig("Dormitory", 1, 5, level=3),
+            RoomConfig("Dormitory", 2, 5, level=2),
+            RoomConfig("Dormitory", 3, 5, level=2),
+        ])
+
+        # 清流（A_FACILITY_LINK 条目：每贸易站 +20%）
+        op = _mk_op("清流")
+        ctx = SlotContext(operators=[op], op_lookup={"清流": op}, layout=layout)
+
+        # TokenSource 工厂计数
+        tokens = evaluate_tokens(PHASE_B_FACTORY_COUNT, [], ctx)
+        assert tokens["trade_rooms"] == 2.0
+        assert tokens["mfg_rooms"] == 2.0
+        assert tokens["power_rooms"] == 0.0
+
+    def test_tokens_equal_synergy_facility_count_internals(self):
+        """TokenSource 计数值与 synergy_facility_count 内部计算一致"""
+        from steward_core.token_source import TokenSource, evaluate_tokens
+        from steward_core.models import RoomConfig, LayoutConfig
+        from steward_core.solver.slot.context import SlotContext
+
+        layout = LayoutConfig(rooms=[
+            RoomConfig("Trade", 0, 3, "Money"),
+            RoomConfig("Trade", 1, 3, "Money"),
+            RoomConfig("Mfg", 0, 3, "CombatRecord"),
+            RoomConfig("Mfg", 1, 3, "PureGold"),
+            RoomConfig("Mfg", 2, 3, "PureGold"),
+            RoomConfig("Dormitory", 0, 5, level=3),
+            RoomConfig("Dormitory", 1, 5, level=3),
+        ])
+
+        ctx = SlotContext(operators=[], op_lookup={}, layout=layout)
+
+        # TokenSource 计数
+        sources = [
+            TokenSource(token="trade_rooms", depends_on="layout", target_room="Trade"),
+            TokenSource(token="mfg_rooms", depends_on="layout", target_room="Mfg"),
+        ]
+        tokens = evaluate_tokens(sources, [], ctx)
+
+        # synergy_facility_count 内部: trade_count = sum(1 for r in layout.rooms if r.room_type == "Trade")
+        expected_trade = sum(1 for r in layout.rooms if r.room_type == "Trade")
+        expected_mfg = sum(1 for r in layout.rooms if r.room_type == "Mfg")
+
+        assert tokens["trade_rooms"] == float(expected_trade)
+        assert tokens["mfg_rooms"] == float(expected_mfg)
+
+
 # ─── Phase B7: 旧函数集成对齐 ───────────────────────────────────
 
 
