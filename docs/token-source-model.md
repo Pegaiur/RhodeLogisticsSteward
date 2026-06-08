@@ -248,10 +248,10 @@ TokenSource 只负责第二层：将"符合条件的干员数"、"房间效率�
 
 **验收条件**：
 - [ ] 全部 ~75 条 TokenSource 注册完成，无遗漏（对照 `types.py` TABLES 注册器逐项核对）
-- [ ] `_BUFF_TO_TOKENS` 覆盖 `_OPERATOR_BUFF_PRODUCERS` 的全部 14 条记录
-- [ ] 条件解析器对所有语法抛出明确错误（未知 key、格式错误等）而非静默失败
+- [x] `_BUFF_TO_TOKENS` 覆盖 `_OPERATOR_BUFF_PRODUCERS` 的全部 14 条记录
+- [x] 条件解析器对所有语法抛出明确错误（未知 key、格式错误等）而非静默失败
 - [ ] TokenSource 输出与 **全部 5 个旧计数函数**（含级联场景）输出对齐
-- [ ] `pytest tests/ -v -k token_source` 覆盖 ≥80 个测试用例
+- [x] `pytest tests/ -v -k token_source` 覆盖 ≥80 个测试用例
 
 ---
 
