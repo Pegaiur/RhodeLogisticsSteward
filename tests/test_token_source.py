@@ -1729,3 +1729,94 @@ class TestPhaseB7FacilityCountAlign:
         assert tokens["trade_rooms"] == 1.0
         assert tokens["mfg_rooms"] == 2.0
         assert tokens["power_rooms"] == 2.0
+
+
+# ─── Phase B7 收尾：FACILITY_ATTRS + TRADE_SHARE + 全量纳入 ───────
+
+
+class TestPhaseB7FacilityAttrs:
+    """attribute_sum + distinct 布局聚合"""
+
+    def test_dorm_levels_sum(self):
+        from steward_core.synergy.token_maps import PHASE_B_FACILITY_ATTRS
+        from steward_core.token_source import evaluate_tokens
+        from steward_core.models import RoomConfig, LayoutConfig
+        from steward_core.solver.slot.context import SlotContext
+
+        layout = LayoutConfig(rooms=[
+            RoomConfig("Dormitory", 0, 5, level=3),
+            RoomConfig("Dormitory", 1, 5, level=3),
+            RoomConfig("Dormitory", 2, 5, level=2),
+        ])
+        ctx = SlotContext(operators=[], op_lookup={}, layout=layout)
+        tokens = evaluate_tokens(PHASE_B_FACILITY_ATTRS, [], ctx)
+        assert tokens["dorm_levels"] == 8.0  # 3 + 3 + 2
+
+    def test_meeting_level(self):
+        from steward_core.synergy.token_maps import PHASE_B_FACILITY_ATTRS
+        from steward_core.token_source import evaluate_tokens
+        from steward_core.models import RoomConfig, LayoutConfig
+        from steward_core.solver.slot.context import SlotContext
+
+        layout = LayoutConfig(rooms=[RoomConfig("Reception", 0, 3, level=3)])
+        ctx = SlotContext(operators=[], op_lookup={}, layout=layout)
+        tokens = evaluate_tokens(PHASE_B_FACILITY_ATTRS, [], ctx)
+        assert tokens["meeting_level"] == 3.0
+
+    def test_mfg_recipe_types_distinct(self):
+        from steward_core.synergy.token_maps import PHASE_B_FACILITY_ATTRS
+        from steward_core.token_source import evaluate_tokens
+        from steward_core.models import RoomConfig, LayoutConfig
+        from steward_core.solver.slot.context import SlotContext
+
+        layout = LayoutConfig(rooms=[
+            RoomConfig("Mfg", 0, 3, "CombatRecord"),
+            RoomConfig("Mfg", 1, 3, "PureGold"),
+            RoomConfig("Mfg", 2, 3, "CombatRecord"),
+        ])
+        ctx = SlotContext(operators=[], op_lookup={}, layout=layout)
+        tokens = evaluate_tokens(PHASE_B_FACILITY_ATTRS, [], ctx)
+        assert tokens["mfg_recipe_types"] == 2.0  # CR + PG, 去重
+
+    def test_train_level(self):
+        from steward_core.synergy.token_maps import PHASE_B_FACILITY_ATTRS
+        from steward_core.token_source import evaluate_tokens
+        from steward_core.models import RoomConfig, LayoutConfig
+        from steward_core.solver.slot.context import SlotContext
+
+        layout = LayoutConfig(rooms=[RoomConfig("Training", 0, 3, level=3)])
+        ctx = SlotContext(operators=[], op_lookup={}, layout=layout)
+        tokens = evaluate_tokens(PHASE_B_FACILITY_ATTRS, [], ctx)
+        assert tokens["train_level"] == 3.0
+
+
+class TestPhaseB7TradeShare:
+    """exclude_self 贸易分享"""
+
+    def test_exclude_self_effect(self):
+        from steward_core.synergy.token_maps import PHASE_B_TRADE_SHARE
+        from steward_core.token_source import evaluate_tokens
+
+        ops = [_mk_op("A"), _mk_op("B"), _mk_op("C")]
+        tokens = evaluate_tokens(PHASE_B_TRADE_SHARE, ops)
+        # exclude_self: count=3 → 3-1=2（每持有者减自身，非全局减1）
+        # 因此 3 持有者各自看到 count=2
+        assert tokens["trade_share_houshao"] == 2.0
+
+
+class TestComputeRoomTokensAllSources:
+    """compute_room_tokens 全量纳入"""
+
+    def test_all_sources_compute(self):
+        from steward_core.token_source import compute_room_tokens
+
+        ops = [_mk_op("A")]
+        room_tokens = compute_room_tokens(ops)
+        # 不传 ctx，depends_on 源返回 0.0
+        # 纯 counting 源应有值
+        assert "rhine_global" in room_tokens
+        # 新纳入列表应有 key 存在
+        assert "trade_eff_total" in room_tokens
+        assert "siye_in_base" in room_tokens
+        assert "trade_share_houshao" in room_tokens
+        assert "wisudell_hedley" in room_tokens

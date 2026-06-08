@@ -567,9 +567,20 @@ def compute_room_tokens(
     from steward_core.synergy.token_maps import (
         PHASE_A_SOURCES, PHASE_B_SOURCES,
         PHASE_B_A_PAIRS, PHASE_B_TRADE_PAIRS, PHASE_B_ALIAS,
+        PHASE_B_EFF_AMPLIFIER, PHASE_B_CONDITIONAL_EFF,
+        PHASE_B_FACILITY_ATTRS, PHASE_B_FACTORY_COUNT,
+        PHASE_B_FACILITY_GROUP, PHASE_B_TRADE_SHARE,
+        PHASE_B_CONTROL_TRADE_LIMIT,
     )
 
-    all_sources = (PHASE_A_SOURCES + PHASE_B_SOURCES
-                   + PHASE_B_A_PAIRS + PHASE_B_TRADE_PAIRS + PHASE_B_ALIAS)
+    all_sources = (
+        PHASE_A_SOURCES + PHASE_B_SOURCES
+        + PHASE_B_A_PAIRS + PHASE_B_TRADE_PAIRS + PHASE_B_ALIAS
+        + PHASE_B_EFF_AMPLIFIER + PHASE_B_CONDITIONAL_EFF
+        + PHASE_B_FACILITY_ATTRS + PHASE_B_FACTORY_COUNT
+        + PHASE_B_FACILITY_GROUP + PHASE_B_TRADE_SHARE
+        + PHASE_B_CONTROL_TRADE_LIMIT
+    )
+    # 注：ctx=None 时 depends_on 源返回 0.0（layout/facility 依赖在无 ctx 时静默降级）
     return evaluate_tokens(all_sources, operators, ctx)
 

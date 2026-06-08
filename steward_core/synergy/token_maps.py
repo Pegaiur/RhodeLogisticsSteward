@@ -176,3 +176,9 @@ PHASE_B_TRADE_SHARE: list[TokenSource] = [
     TokenSource(token="trade_share_jixiang", condition="*", exclude_self=True),
     TokenSource(token="trade_share_jixiang_beta", condition="*", exclude_self=True),
 ]
+
+# 中枢→贸易上限（_CONTROL_TRADE_LIMIT_TABLE）
+# 注：跨设施 pair（维什戴尔 Control + 赫德雷 Trade），需全局 operators 列表
+PHASE_B_CONTROL_TRADE_LIMIT: list[TokenSource] = [
+    TokenSource(token="wisudell_hedley", condition="pair=维什戴尔:赫德雷"),
+]
