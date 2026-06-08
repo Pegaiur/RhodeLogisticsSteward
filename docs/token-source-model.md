@@ -251,7 +251,7 @@ TokenSource 只负责第二层：将"符合条件的干员数"、"房间效率�
 | B8 | `buff_id → token` 级联正确性测试（黑键 perception→silent_resonance、令 yanhuo→wushu_crystal） | `tests/test_token_source.py` | ~30 | 已完成 |
 
 **验收条件**：
-- [ ] 全部 ~75 条 TokenSource 注册完成，无遗漏（对照 `types.py` TABLES 注册器逐项核对）（当前 36/53：11 条可立即完成已注册，18 条阻塞性延期）
+- [ ] 全部 ~75 条 TokenSource 注册完成，无遗漏（对照 `types.py` TABLES 注册器逐项核对）（当前 47/53：B7 收尾纳入 FACILITY_ATTRS/FACTORY_COUNT/FACILITY_GROUP/TRADE_SHARE/CONTROL_TRADE_LIMIT/EFF_AMPLIFIER/CONDITIONAL_EFF 共 11 条；剩余 6 条阻塞性延期；表覆盖率 13/14）
 - [x] `_BUFF_TO_TOKENS` 覆盖 `_OPERATOR_BUFF_PRODUCERS` 的全部 16 条 entries（14 个唯一 buff_id）
 - [x] 条件解析器对所有语法抛出明确错误（未知 key、格式错误等）而非静默失败
 - [ ] TokenSource 输出与 **全部 5 个旧计数函数**（含级联场景）输出对齐（当前 3/5：`synergy_skill_count` / `synergy_global_faction` / `compute_cluster_hunting_bonus` 已对齐，`synergy_facility_count` / `synergy_facility_group` 待 Phase C）
@@ -301,7 +301,7 @@ TokenSource 只负责第二层：将"符合条件的干员数"、"房间效率�
 |:---:|------|---------|:---:|:---:|
 | C1 | **evaluate_room() 接入框架**：在 `evaluate_room()` 顶部添加 token 缓存（单次 `evaluate_tokens()` 调用覆盖该 room 全部计数需求），替代 `synergy_facility_count`（L286-288 房间级 + `greed.py:233` 单 op 回退检查） | `evaluate.py` L217 / L286-288；`solver/greed.py` L233 | 完全（layout 属性聚合依赖 Phase B 已完成的 `depends_on="layout"` 引擎能力） | ~25 |
 | C2 | **制造站计数替换**：替代 `evaluate_room()` 主体内的计数函数——`synergy_pair`（L271 房间组成配对）、`synergy_faction_room`（L281 阵营房间）、`synergy_skill_count`（L282 技能类型计数）、`synergy_automation`（L64 `_resolve_zeroing` 内 自动化计数）。TokenSource 提供计数，消费侧 bonus_per x count 公式保留 | `evaluate.py` L64 / L271 / L281 / L282 | 部分（4 处均保留 bonus_per 计算） | ~45 |
-| C3 | **贸易站/跨房间计数替换**：替代 `synergy_skill_alias`（L272 技能别名映射——完全替代，TokenSource 原生支持别名条件匹配）；替代 `_eval_cross_room_effects()` 内的 `synergy_cross_room_pair`（L181）、`synergy_facility_group`（L198）、`synergy_global_faction`（L206）——提供计数，消费侧保留 | `evaluate.py` L272 / L181 / L198 / L206 | 完全（skill_alias）+ 部分（cross_room_pair / facility_group / global_faction） | ~30 |
+| C3 | **贸易站/跨房间计数替换**：替代 `synergy_skill_alias`（L272 技能别名映射——完全替代，TokenSource 原生支持别名条件匹配，**已完成 a34bb1b**）；替代 `_eval_cross_room_effects()` 内的 `synergy_cross_room_pair`（L181）、`synergy_facility_group`（L198）、`synergy_global_faction`（L206）——提供计数，消费侧保留 | `evaluate.py` L272 / L181 / L198 / L206 | 完全（skill_alias）+ 部分（cross_room_pair / facility_group / global_faction） | ~30 |
 | C4 | **Control 层替换**：替代 `compute_control_global_bonus`（control_linkages.py:270）中 `_CONTROL_CONDITIONAL_TABLE` 的条件计数、`control_per_operator_bonus`（control_linkages.py:331）中 `_eval_per_op` 的 per-op 计数（group_id / nation_id / is_knight）。**消费侧**（线性公式 `count x bonus_per` / `max()` 取最高）保留 | `synergy/control_linkages.py` L270 / L331 / L358 | 部分（3 处均保留消费侧公式） | ~30 |
 | C5 | **不做替换的声明**：爬升 `e(t)`、菲亚梅塔自律、冲突互斥、订单覆盖、裁缝豁免、`compute_buff_pool`（B2 级联）——在接入点加注释标注"非计数层，保留旧路径" | `evaluate.py`（注释）+ `synergy/control_linkages.py`（注释） | — | ~10 |
 | C6 | **回归验证 + 性能基准**：`pytest tests/ -v` 全量通过；`python run_solver.py` 端到端无异常；`_timing.py` 埋点对比 `evaluate_tokens()` 总耗时 vs 旧 8 个计数函数耗时之和，确认无退化 | `solver/slot/_timing.py`（埋点） | — | ~10 |
@@ -310,9 +310,9 @@ TokenSource 只负责第二层：将"符合条件的干员数"、"房间效率�
 - [x] `pytest tests/ -v` **全量测试通过**（零回归）— 2026-06-08 实测 897 passed in 0.83s
 - [ ] `python run_solver.py` 产出 JSON 与 Phase B 完成时的产出 **差异 ≤ 3 条干员**（允许因浮点排序边界导致的微小差异）— **不可验证（需基线对照，延后至 C6 性能基准时一并执行）**
 - [ ] `evaluate_tokens()` 总耗时 ≤ 旧 8 个计数函数耗时之和 x 1.05 — **不可验证（`_timing.py` 无 TokenSource 埋点，延后至 C6）**
-- [x] 所有未替换的旧路径有明确注释标注原因 — evaluate.py L276-281 含 5 项声明，覆盖完整
+- [x] 所有未替换的旧路径有明确注释标注原因 — evaluate.py L276-282 含 6 项声明（爬升、synergy_automation、菲亚梅塔自律、冲突互斥、订单覆盖/裁缝豁免、compute_buff_pool），覆盖完整
 - [ ] `synergy_facility_count`（B7 待办）和 `synergy_facility_group`（B7 待办）输出与旧函数对齐 — **未开始（两个函数均未接入 TokenSource，仍走旧路径，延后至 C2/C3 完成时）**
-- [ ] `synergy_skill_alias` 完全由 TokenSource 替代后，红松骑士团→标准化映射结果一致 — **未开始（`synergy_skill_alias` 仍在 evaluate.py L285 被直接调用，TokenSource 不处理别名映射，延后至 C3 完成时）**
+- [x] `synergy_skill_alias` 完全由 TokenSource 替代后，红松骑士团→标准化映射结果一致 — **已完成（a34bb1b）**。evaluate.py L286-287 从 `room_tokens["haimei_in_room"]` 构造 alias，不再调用 `synergy_skill_alias`。TokenSource 通过 `PHASE_B_ALIAS: TokenSource(token="haimei_in_room", condition="char_id=海沫")` 提供海沫在场信号，消费侧 alias 映射 `{"莱茵科技": ["标准化"], "红松骑士团": ["标准化"]}` 与旧函数返回值完全一致。`char_id=海沫` 为 Phase E 迁移前的占位符，当前经 `_mk_op` 的 `char_id=name` 回退正确匹配
 
 ---
 
