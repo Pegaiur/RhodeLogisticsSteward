@@ -1665,3 +1665,67 @@ class TestIntegrationPerOp:
         ops = [_mk_op("灵知", group_id="karlan"), _mk_op("银灰", group_id="karlan")]
         result = evaluate_tokens([TokenSource(token="t", condition="group_id=karlan")], ops)
         assert result["t"] == 2.0
+
+
+# ─── Phase B7 补充：延期项解锁 ────────────────────────────────────
+
+
+class TestPhaseB7FacilityGroupAlign:
+    """synergy_facility_group 与 TokenSource 集成对齐"""
+
+    def test_facility_group_elite_count(self):
+        from steward_core.synergy.token_maps import PHASE_B_FACILITY_GROUP
+        from steward_core.token_source import evaluate_tokens
+        from steward_core.synergy.facility_group import count_facilities_with_group
+        from steward_core.solver.slot.context import SlotContext, SlotAssignment, WindowState
+        from steward_core.models import RoomConfig, LayoutConfig
+
+        layout = LayoutConfig(rooms=[
+            RoomConfig("Trade", 0, 3, "Money"),
+            RoomConfig("Trade", 1, 3, "Money"),
+            RoomConfig("Office", 0, 3),
+        ])
+        op1 = _mk_op("A", group_id="elite")
+        op2 = _mk_op("B", group_id="elite")
+        ctx = SlotContext(
+            operators=[op1, op2],
+            op_lookup={"A": op1, "B": op2},
+            layout=layout,
+            windows=[WindowState(assignments=[
+                SlotAssignment("t0", "Trade", "Money", "A", 0),
+                SlotAssignment("t1", "Trade", "Money", "B", 1),
+            ])],
+        )
+
+        tokens = evaluate_tokens(PHASE_B_FACILITY_GROUP, [], ctx)
+        assert tokens["elite_facilities"] == 1.0  # 2 elite → 1 设施类型 (Trade)
+
+        # 旧函数对齐
+        assignments = ctx.build_all_assignments(window_idx=0)
+        old_count = count_facilities_with_group(assignments, "elite")
+        assert old_count == 1
+
+
+class TestPhaseB7FacilityCountAlign:
+    """synergy_facility_count 纯计数部分与 TokenSource 对齐"""
+
+    def test_factory_count_tokens(self):
+        from steward_core.synergy.token_maps import PHASE_B_FACTORY_COUNT
+        from steward_core.token_source import evaluate_tokens
+        from steward_core.models import RoomConfig, LayoutConfig
+        from steward_core.solver.slot.context import SlotContext
+
+        layout = LayoutConfig(rooms=[
+            RoomConfig("Trade", 0, 3, "Money"),
+            RoomConfig("Mfg", 0, 3, "CombatRecord"),
+            RoomConfig("Mfg", 1, 3, "PureGold"),
+            RoomConfig("Power", 0, 3),
+            RoomConfig("Power", 1, 3),
+        ])
+        ctx = SlotContext(operators=[], op_lookup={}, layout=layout)
+        tokens = evaluate_tokens(PHASE_B_FACTORY_COUNT, [], ctx)
+
+        # synergy_facility_count 内部对应值
+        assert tokens["trade_rooms"] == 1.0
+        assert tokens["mfg_rooms"] == 2.0
+        assert tokens["power_rooms"] == 2.0

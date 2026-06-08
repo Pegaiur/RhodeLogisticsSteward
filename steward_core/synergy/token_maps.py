@@ -153,3 +153,26 @@ PHASE_B_EFF_AMPLIFIER: list[TokenSource] = [
 PHASE_B_CONDITIONAL_EFF: list[TokenSource] = [
     TokenSource(token="siye_in_base", condition="char_id=伺夜", scope="global"),
 ]
+
+
+# ─── Phase B7 解锁：attribute_sum + distinct + exclude_self ──────────
+
+# 设施数量联动 — dorm_levels / meeting_level / train_level / mfg_recipe_types
+# 依赖 _evaluate_layout 的 aggregate="attribute_sum" + distinct 模式
+PHASE_B_FACILITY_ATTRS: list[TokenSource] = [
+    TokenSource(token="dorm_levels", depends_on="layout", target_room="Dormitory",
+                aggregate="attribute_sum", attr="level"),
+    TokenSource(token="meeting_level", depends_on="layout", target_room="Reception",
+                aggregate="attribute_sum", attr="level"),
+    TokenSource(token="train_level", depends_on="layout", target_room="Training",
+                aggregate="attribute_sum", attr="level"),
+    TokenSource(token="mfg_recipe_types", depends_on="layout", target_room="Mfg",
+                aggregate="distinct", attr="product"),
+]
+
+# 贸易分享 - exclude_self 由消费侧/direct engine 处理
+PHASE_B_TRADE_SHARE: list[TokenSource] = [
+    TokenSource(token="trade_share_houshao", condition="*", exclude_self=True),
+    TokenSource(token="trade_share_jixiang", condition="*", exclude_self=True),
+    TokenSource(token="trade_share_jixiang_beta", condition="*", exclude_self=True),
+]

@@ -208,13 +208,27 @@ def _evaluate_context_dependent(
 
 
 def _evaluate_layout(source: TokenSource, ctx: "SlotContext | None") -> float:
-    """布局依赖：统计目标设施类型的房间数"""
+    """布局依赖：根据 aggregate 模式查询 ctx.layout
+
+    支持模式：
+    - count（默认）：统计 target_room 类型的房间数
+    - attribute_sum + attr="level"：对 target_room 类型房间的 level 属性求和
+    - distinct + attr="product"：统计 target_room 类型房间的 product 去重数
+    """
     if ctx is None or ctx.layout is None:
         return 0.0
 
     room_type = source.target_room or ""
-    count = sum(1 for r in ctx.layout.rooms if r.room_type == room_type)
-    result = float(count)
+    matching = [r for r in ctx.layout.rooms if r.room_type == room_type]
+
+    if source.aggregate == "attribute_sum" and source.attr:
+        result = float(sum(getattr(r, source.attr, 0) for r in matching))
+    elif source.aggregate == "distinct" and source.attr:
+        values = {getattr(r, source.attr) for r in matching if getattr(r, source.attr) is not None}
+        result = float(len(values))
+    else:
+        result = float(len(matching))
+
     if source.cap is not None:
         result = min(result, source.cap)
     return result
@@ -295,6 +309,8 @@ def _evaluate_count(
     count = sum(1 for op in operators if matcher(op))
     if source.cap is not None:
         count = min(count, source.cap)
+    if source.exclude_self:
+        count = max(0, count - 1)
     return float(count)
 
 
