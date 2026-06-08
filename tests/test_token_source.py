@@ -779,6 +779,88 @@ class TestFacilityDependency:
         assert result["sui_facilities"] == 1.0  # 只有 Trade 0 含 sui
 
 
+# ─── B7 补充：可立即完成的注册测试 ──────────────────────────────
+
+
+class TestPhaseBAPairs:
+    """A 层配对 + 阵营额外"""
+
+    def test_alanna_wenmi_pair(self):
+        from steward_core.synergy.token_maps import PHASE_B_A_PAIRS
+        from steward_core.token_source import evaluate_tokens
+
+        ops = [_mk_op("阿兰娜"), _mk_op("温米")]
+        result = evaluate_tokens(PHASE_B_A_PAIRS, ops)
+        assert result["alanna_wenmi"] == 1.0
+
+    def test_morgan_siege_pair(self):
+        from steward_core.synergy.token_maps import PHASE_B_A_PAIRS
+        from steward_core.token_source import evaluate_tokens
+
+        ops = [_mk_op("摩根")]
+        result = evaluate_tokens(PHASE_B_A_PAIRS, ops)
+        assert result["morgan_siege"] == 0.0  # 推进之王不在
+
+
+class TestPhaseBTradePairs:
+    """贸易配对"""
+
+    def test_texas_lappland_pair(self):
+        from steward_core.synergy.token_maps import PHASE_B_TRADE_PAIRS
+        from steward_core.token_source import evaluate_tokens
+
+        ops = [_mk_op("德克萨斯"), _mk_op("拉普兰德")]
+        result = evaluate_tokens(PHASE_B_TRADE_PAIRS, ops)
+        assert result["texas_lappland"] == 1.0
+
+
+class TestPhaseBEffAmplifier:
+    """贸易效率放大"""
+
+    def test_trade_eff_total(self):
+        from steward_core.synergy.token_maps import PHASE_B_EFF_AMPLIFIER
+        from steward_core.token_source import evaluate_tokens
+
+        ops = [_mk_op("A", skills=[_mk_trade_skill(30.0)]), _mk_op("B", skills=[_mk_trade_skill(20.0)])]
+        result = evaluate_tokens(PHASE_B_EFF_AMPLIFIER, ops)
+        assert result["trade_eff_total"] == pytest.approx(50.0)
+
+
+class TestPhaseBConditionalEff:
+    """贸易条件效率"""
+
+    def test_siye_in_base(self):
+        from steward_core.synergy.token_maps import PHASE_B_CONDITIONAL_EFF
+        from steward_core.token_source import evaluate_tokens
+
+        ops = [_mk_op("伺夜"), _mk_op("其他")]
+        result = evaluate_tokens(PHASE_B_CONDITIONAL_EFF, ops)
+        assert result["siye_in_base"] == 1.0
+
+
+class TestPhaseBEliteFacilities:
+    """设施 group elite"""
+
+    def test_elite_facility_count(self):
+        from steward_core.synergy.token_maps import PHASE_B_FACILITY_GROUP
+        from steward_core.token_source import evaluate_tokens
+        from steward_core.solver.slot.context import SlotContext, SlotAssignment, WindowState
+        from steward_core.models import RoomConfig, LayoutConfig
+
+        layout = LayoutConfig(rooms=[RoomConfig("Trade", 0, 3, "Money")])
+        op = _mk_op("德克萨斯", group_id="elite")
+        ctx = SlotContext(
+            operators=[op],
+            op_lookup={"德克萨斯": op},
+            layout=layout,
+            windows=[WindowState(assignments=[
+                SlotAssignment("trade_0_0", "Trade", "Money", "德克萨斯", 0),
+            ])],
+        )
+        result = evaluate_tokens(PHASE_B_FACILITY_GROUP, [], ctx)
+        assert result["elite_facilities"] == 1.0
+
+
 # ─── Phase B6: layout/facility 注册测试 ───────────────────────────
 
 

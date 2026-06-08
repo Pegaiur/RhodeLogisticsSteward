@@ -113,4 +113,34 @@ PHASE_B_FACTORY_COUNT: list[TokenSource] = [
 # 注：当前按 facility_type 分组（非按房间），与 SlotContext 接口一致
 PHASE_B_FACILITY_GROUP: list[TokenSource] = [
     TokenSource(token="sui_facilities", depends_on="facility", condition="group_id=sui"),
+    TokenSource(token="elite_facilities", depends_on="facility", condition="group_id=elite"),
+]
+
+
+# ─── B7 补充：可立即完成的剩余注册（用当前引擎能力）───────────────
+
+# A 层配对（_A_PAIR_TABLE）+ 同房阵营额外（_A_ROOM_FACTION_EXTRA）
+PHASE_B_A_PAIRS: list[TokenSource] = [
+    TokenSource(token="alanna_wenmi", condition="pair=阿兰娜:温米"),
+    TokenSource(token="christine_jiujiu", condition="pair=Miss.Christine:酒神"),
+    TokenSource(token="nuchao_ursus", condition="pair=怒潮凛冬:乌萨斯学生自治团"),
+    TokenSource(token="morgan_siege", condition="pair=摩根:推进之王"),
+]
+
+# 贸易配对（_TRADE_PAIR_TABLE）
+PHASE_B_TRADE_PAIRS: list[TokenSource] = [
+    TokenSource(token="texas_lappland", condition="pair=德克萨斯:拉普兰德"),
+    TokenSource(token="lemuel_exusiai", condition="pair=蕾缪安:能天使"),
+]
+
+# 贸易效率放大（_TRADE_EFF_AMPLIFIER_TABLE）
+# 雪雉：房间总效率 / 5 * 5%（alpha cap=25, beta cap=35）
+PHASE_B_EFF_AMPLIFIER: list[TokenSource] = [
+    TokenSource(token="trade_eff_total", aggregate="efficiency_sum", target_room="Trade"),
+]
+
+# 贸易条件效率（_TRADE_CONDITIONAL_EFF_TABLE）
+# 贝洛内家族经营：伺夜在 base 则 +5%/+10%
+PHASE_B_CONDITIONAL_EFF: list[TokenSource] = [
+    TokenSource(token="siye_in_base", condition="char_id=伺夜", scope="global"),
 ]
