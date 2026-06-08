@@ -726,6 +726,70 @@ class TestBuffToTokens:
         assert "perception" in tokens
         assert "silent_resonance" in tokens
 
+
+# ─── Phase B6: 级联正确性测试 ───────────────────────────────────
+
+
+class TestBuffCascade:
+    """黑键 perception→silent_resonance + 令 yanhuo→wushu_crystal 级联"""
+
+    def test_perception_to_silent_resonance(self):
+        """perception 作为上游 token → silent_resonance passthrough 接收"""
+        from steward_core.token_source import TokenSource, evaluate_tokens
+
+        ops = [_mk_op("A"), _mk_op("B"), _mk_op("C")]
+        sources = [
+            TokenSource(token="perception", condition="*"),
+            TokenSource(
+                token="silent_resonance",
+                depends_on="perception",
+                aggregate="passthrough",
+            ),
+        ]
+        result = evaluate_tokens(sources, ops)
+        assert result["perception"] == 3.0
+        assert result["silent_resonance"] == 3.0
+
+    def test_yanhuo_to_wushu_crystal(self):
+        """yanhuo → wushu_crystal 级联（令的衍生物）"""
+        from steward_core.token_source import TokenSource, evaluate_tokens
+
+        ops = [_mk_op("A"), _mk_op("B")]
+        sources = [
+            TokenSource(token="yanhuo", condition="*"),
+            TokenSource(
+                token="wushu_crystal",
+                depends_on="yanhuo",
+                aggregate="passthrough",
+            ),
+        ]
+        result = evaluate_tokens(sources, ops)
+        assert result["yanhuo"] == 2.0
+        assert result["wushu_crystal"] == 2.0
+
+    def test_cascade_chain_three_levels(self):
+        """perception → silent_resonance → downstream 三级链"""
+        from steward_core.token_source import TokenSource, evaluate_tokens
+
+        ops = [_mk_op("X")]
+        sources = [
+            TokenSource(token="perception", condition="*"),
+            TokenSource(
+                token="silent_resonance",
+                depends_on="perception",
+                aggregate="passthrough",
+            ),
+            TokenSource(
+                token="downstream",
+                depends_on="silent_resonance",
+                aggregate="passthrough",
+            ),
+        ]
+        result = evaluate_tokens(sources, ops)
+        assert result["perception"] == 1.0
+        assert result["silent_resonance"] == 1.0
+        assert result["downstream"] == 1.0
+
     def test_all_tokens_known_dimensions(self):
         """所有产出 token 属于已知维度"""
         from steward_core.token_source import _BUFF_TO_TOKENS
