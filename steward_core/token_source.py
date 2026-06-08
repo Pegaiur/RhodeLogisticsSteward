@@ -517,3 +517,28 @@ PHASE_B_SOURCES: list[TokenSource] = (
     + PHASE_B_CLUSTER
 )
 
+
+# ─── buff_id → Token 映射表 ──────────────────────────────────────────────
+
+# 每个 buff_id 可能生产多个 token（如黑键同时生产 perception + silent_resonance）
+# 替代 _OPERATOR_BUFF_PRODUCERS 的 dimension + cascade 字段组合
+_BUFF_TO_TOKENS: dict[str, list[str]] = {
+    # ── 中枢源 ──
+    "control_costToBD[000]": ["yanhuo", "perception"],
+    "control_mp_cost&bd_up[000]": ["yanhuo"],
+    "control_mp_cost&bd1[000]": ["yanhuo"],
+    "control_mp_cost&bd2[000]": ["perception"],
+    # ── 代理源 ──
+    "manu_prod_spd_bd_n1[000]": ["perception"],
+    "trade_ord_spd_bd_n1[000]": ["perception", "silent_resonance"],
+    "trade_ord_spd_bd_n2[000]": ["yanhuo"],
+    "dorm_rec_bd_n1_n2[000]": ["perception"],
+    "dorm_rec_bd_n1_n3[000]": ["perception"],
+    "hire_spd_bd_n1[000]": ["perception"],
+    "hire_spd_bd_n1_n1[200]": ["yanhuo"],
+    "dorm_rec_bd_dungeon[000]": ["monster_cuisine"],
+    # ── 无声共鸣源 ──
+    "dorm_bd_num[000]": ["silent_resonance"],
+    "hire_spd_bd_n1_n1[300]": ["silent_resonance"],
+}
+

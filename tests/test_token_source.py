@@ -706,6 +706,35 @@ class TestPhaseBCluster:
         result = evaluate_tokens(PHASE_B_CLUSTER, ops)
         assert result["abyssal_mfg"] == 2.0
 
+
+# ─── Phase B2: buff_id → Token 映射 ────────────────────────────────
+
+
+class TestBuffToTokens:
+    """_BUFF_TO_TOKENS 映射表"""
+
+    def test_covers_all_14_producer_entries(self):
+        from steward_core.token_source import _BUFF_TO_TOKENS
+
+        assert len(_BUFF_TO_TOKENS) == 14
+
+    def test_black_key_cascade(self):
+        """黑键 trade_ord_spd_bd_n1[000] 同时产出 perception + silent_resonance"""
+        from steward_core.token_source import _BUFF_TO_TOKENS
+
+        tokens = _BUFF_TO_TOKENS["trade_ord_spd_bd_n1[000]"]
+        assert "perception" in tokens
+        assert "silent_resonance" in tokens
+
+    def test_all_tokens_known_dimensions(self):
+        """所有产出 token 属于已知维度"""
+        from steward_core.token_source import _BUFF_TO_TOKENS
+
+        known = {"yanhuo", "perception", "monster_cuisine", "silent_resonance"}
+        for buff_id, tokens in _BUFF_TO_TOKENS.items():
+            for t in tokens:
+                assert t in known, f"{buff_id} 产出未知 token: {t}"
+
     def test_laterano_trade_counts_nation(self):
         """nation_id=laterano → 计数"""
         from steward_core.token_source import TokenSource, evaluate_tokens
