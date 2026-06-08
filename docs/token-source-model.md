@@ -225,11 +225,11 @@ TokenSource 只负责第二层：将"符合条件的干员数"、"房间效率�
 | A6 | 集成测试：TokenSource 输出与旧函数（`synergy_faction_room` / `_eval_per_op`）的 **全量干员池** 输出逐条对齐 | `tests/test_token_source.py` | ~30 |
 
 **验收条件**：
-- [ ] `evaluate_tokens()` 是纯函数，零副作用
-- [ ] 拓扑排序：`depends_on` 引用的 token 一定先于依赖方计算
-- [ ] 循环依赖检测（`a depends_on b, b depends_on a`）抛出明确异常
-- [ ] 10 条注册的输出与旧函数输出在 `pytest tests/ -v -k token_source` 下**逐条一致**（允许浮点误差 ±1e-6）
-- [ ] 不会破坏现有 783 测试（`pytest tests/ -v` 全绿）
+- [x] `evaluate_tokens()` 是纯函数，零副作用
+- [x] 拓扑排序：`depends_on` 引用的 token 一定先于依赖方计算
+- [x] 循环依赖检测（`a depends_on b, b depends_on a`）抛出明确异常
+- [x] 11 条注册的输出与旧函数输出在 `pytest tests/ -v -k token_source` 下**逐条一致**（允许浮点误差 ±1e-6）
+- [x] 不会破坏现有 783 测试（`pytest tests/ -v` 全绿，实际 857 passed）
 
 ---
 
