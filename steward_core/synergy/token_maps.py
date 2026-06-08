@@ -58,6 +58,12 @@ PHASE_B_CROSS_PAIRS: list[TokenSource] = [
     TokenSource(token="beiluo_siye", condition="pair=贝洛内:伺夜"),
 ]
 
+# 技能别名使能者（C3）
+# 海沫在场时激活 skill_class 别名映射
+PHASE_B_ALIAS: list[TokenSource] = [
+    TokenSource(token="haimei_in_room", condition="char_id=海沫"),
+]
+
 # C 层集群狩猎
 # 歌蕾蒂娅 每 Mfg 站内深海猎人提供 +10%/人
 PHASE_B_CLUSTER: list[TokenSource] = [

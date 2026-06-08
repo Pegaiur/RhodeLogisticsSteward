@@ -550,9 +550,10 @@ def compute_room_tokens(
     # 惰性导入：打破 token_source ↔ token_maps 循环引用
     from steward_core.synergy.token_maps import (
         PHASE_A_SOURCES, PHASE_B_SOURCES,
-        PHASE_B_A_PAIRS, PHASE_B_TRADE_PAIRS,
+        PHASE_B_A_PAIRS, PHASE_B_TRADE_PAIRS, PHASE_B_ALIAS,
     )
 
-    all_sources = PHASE_A_SOURCES + PHASE_B_SOURCES + PHASE_B_A_PAIRS + PHASE_B_TRADE_PAIRS
+    all_sources = (PHASE_A_SOURCES + PHASE_B_SOURCES
+                   + PHASE_B_A_PAIRS + PHASE_B_TRADE_PAIRS + PHASE_B_ALIAS)
     return evaluate_tokens(all_sources, operators, ctx)
 

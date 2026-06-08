@@ -12,7 +12,7 @@ from steward_core.models import Operator, LayoutConfig
 from steward_core.token_source import compute_room_tokens
 from steward_core.efficiency_fn import constant_efficiency, integrate_segments, stepped_efficiency
 from steward_core.synergy import (
-    synergy_pair, synergy_skill_count, synergy_skill_alias, synergy_automation,
+    synergy_pair, synergy_skill_count, synergy_automation,
     synergy_facility_count, synergy_buff_pool_consumer,
     operator_ramp_segments,
     synergy_capacity_to_eff, synergy_efficiency_amplifier,
@@ -275,6 +275,7 @@ def evaluate_room(
 
     # ── 不替换声明（C5）：以下路径保留旧函数，非计数层 ──
     # - 爬升 e(t)：operator_ramp_segments 是时间函数，非计数
+    # - synergy_automation：per-op buff_id 扫描 + 归零集合语义，不适合纯计数 token 化
     # - 菲亚梅塔自律：非计数，经 contribution.py 独立计算
     # - 冲突互斥：resolve_efficiency_conflicts 是消费侧逻辑
     # - 订单覆盖/裁缝豁免：trade_linkages 内部机制，非计数
@@ -282,7 +283,8 @@ def evaluate_room(
 
     # ── 二、房间组成型联动 ──
     total = integrate_segments(synergy_pair(operators, room_type, product, T, room_tokens=room_tokens), T)
-    alias = synergy_skill_alias(operators)
+    # alias 从 TokenSource 预计算值构造（替代 synergy_skill_alias 的 operator 遍历）
+    alias = {"莱茵科技": ["标准化"], "红松骑士团": ["标准化"]} if room_tokens.get("haimei_in_room", 0) > 0 else {}
 
     order_ctx = None
     if room_type == "Trade" and layout is not None:
