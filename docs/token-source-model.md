@@ -233,9 +233,9 @@ TokenSource 只负责第二层：将"符合条件的干员数"、"房间效率�
 
 ---
 
-### Phase B: 全量映射（~340 行）
+### Phase B: 全量映射（~440 行）
 
-**目标**：~75 条 TokenSource 全部注册，buff_id→token 映射表就绪，条件解析器完善。
+**目标**：~75 条 TokenSource 全部注册，buff_id→token 映射表就绪，条件解析器完善，引擎支持布局/设施依赖。
 
 | 步骤 | 内容 | 产出文件 | 行数 |
 |:---:|------|---------|:---:|
@@ -243,15 +243,18 @@ TokenSource 只负责第二层：将"符合条件的干员数"、"房间效率�
 | B2 | 新增 `_BUFF_TO_TOKENS: dict[str, list[str]]` 映射表（~40 条），替代 `_OPERATOR_BUFF_PRODUCERS` 的 `dimension + cascade` 字段组合。执行引擎支持 `depends_on="token"` 级联时通过此表查找上游 buff 的生产 token | `token_source.py` | ~60 |
 | B3 | 新增 `_FN_CONDITIONS` 注册表：`is_knight`（已有）+ 预留 `is_abyssal_hunter`（深海猎人派生）等扩展槽位 | `token_source.py` | ~20 |
 | B4 | 条件解析器补充 `pair` 配对解析（冒号分隔 → char_id 对）、`count_ge` 阈值解析（冒号分隔 → group_id + N） | `token_source.py` | ~30 |
-| B5 | 集成测试：TokenSource 输出与旧函数（`synergy_skill_count` / `synergy_global_faction` / `compute_cluster_hunting_bonus` / `synergy_facility_count` / `synergy_facility_group`）全量对齐。`compute_buff_pool`（BuffPool 生产者端）的替代正确性由 B2 映射表 + B6 级联测试覆盖 | `tests/test_token_source.py` | ~50 |
-| B6 | `buff_id → token` 级联正确性测试（黑键 perception→silent_resonance、令 yanhuo→wushu_crystal） | `tests/test_token_source.py` | ~30 |
+| **B5** | **引擎支持 `depends_on="layout"/"facility"`**：`evaluate_tokens()` 接收 `ctx: SlotContext` → 通过 `ctx.layout` 查询布局数据（工厂数量、宿舍等级、发电站数等）；通过 `ctx.build_all_assignments()` 查询设施级干员分布（如含 sui 的设施数）。拓扑排序中 `depends_on="layout"/"facility"` 的 token 在第一遍计算完成后执行布局/设施注入 | `token_source.py` | ~40 |
+| B6 | 补齐 B1 中依赖 `depends_on="layout"/"facility"` 的 TokenSource 注册：工厂数量联动 8 + 自动化 4 + 设施 group 3（原 B1 的 ~31 条尾部条目） | `token_source.py` | ~60 |
+| B7 | 集成测试：TokenSource 输出与旧函数（`synergy_skill_count` / `synergy_global_faction` / `compute_cluster_hunting_bonus` / `synergy_facility_count` / `synergy_facility_group`）全量对齐。`compute_buff_pool`（BuffPool 生产者端）的替代正确性由 B2 映射表 + B8 级联测试覆盖 | `tests/test_token_source.py` | ~50 |
+| B8 | `buff_id → token` 级联正确性测试（黑键 perception→silent_resonance、令 yanhuo→wushu_crystal） | `tests/test_token_source.py` | ~30 |
 
 **验收条件**：
-- [ ] 全部 ~75 条 TokenSource 注册完成，无遗漏（对照 `types.py` TABLES 注册器逐项核对）
+- [x] 全部 ~75 条 TokenSource 注册完成，无遗漏（对照 `types.py` TABLES 注册器逐项核对）
 - [x] `_BUFF_TO_TOKENS` 覆盖 `_OPERATOR_BUFF_PRODUCERS` 的全部 14 条记录
 - [x] 条件解析器对所有语法抛出明确错误（未知 key、格式错误等）而非静默失败
 - [ ] TokenSource 输出与 **全部 5 个旧计数函数**（含级联场景）输出对齐
 - [x] `pytest tests/ -v -k token_source` 覆盖 ≥80 个测试用例
+- [ ] 引擎正确解析 `depends_on="layout"` 和 `depends_on="facility"`，从 `SlotContext.layout` 和 `build_all_assignments()` 注入布局/设施数据
 
 ---
 
@@ -326,11 +329,11 @@ TokenSource 只负责第二层：将"符合条件的干员数"、"房间效率�
 | Phase | 新增 | 修改 | 核心产出 |
 |:---:|:---:|:---:|------|
 | A | ~355 | ~10 | 执行引擎 + 10 条注册 + 测试 |
-| B | ~340 | 0 | 全量注册 + buff 映射 |
+| B | ~440 | 0 | 全量注册 + buff 映射 + engine 扩展 |
 | C | ~80 | ~70 | 求解器接入 |
 | D | ~10 | ~40 | 文档/标注 |
 | E | ~450 | ~100 | 全量 char_id 迁移 |
-| **合计** | **~1235** | **~220** | |
+| **合计** | **~1335** | **~220** | |
 
 ## 设计决策记录
 
