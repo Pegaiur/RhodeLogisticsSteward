@@ -33,6 +33,29 @@ def _mk_mfg_skill(buff_id: str = "manu_prod_spd[001]") -> Skill:
     )
 
 
+def _mk_trade_skill(eff_all: float = 0.0) -> Skill:
+    """创建 Trade 技能，可指定效率值"""
+    return Skill(
+        buff_id="trade_ord_spd[001]",
+        buff_name="测试贸易技能",
+        skill_icon="trade_ord_spd[001]",
+        room_type="Trade",
+        efficient=EfficiencyMap(raw={"all": eff_all} if eff_all else {"all": 0.0}),
+    )
+
+
+def _mk_mfg_skill_with_eff(eff_all: float = 25.0, capacity: int = 0) -> Skill:
+    """创建 Mfg 技能，可指定效率和容量"""
+    return Skill(
+        buff_id="manu_prod_spd[001]",
+        buff_name="测试制造技能",
+        skill_icon="manu_prod_spd[001]",
+        room_type="Mfg",
+        efficient=EfficiencyMap(raw={"all": eff_all}),
+        capacity_bonus=capacity,
+    )
+
+
 # ─── Phase A1: TokenSource dataclass + 拓扑排序执行引擎 ────────────────
 
 
@@ -520,6 +543,148 @@ class TestPhaseASources:
         ops = [_mk_op("摩根", group_id="glasgow"), _mk_op("戴菲恩", group_id="glasgow")]
         result = evaluate_tokens([TokenSource(token="t", condition="group_id=glasgow")], ops)
         assert result["t"] == 2.0
+
+
+# ─── Phase A5: 聚合模式单元测试 ─────────────────────────────────────
+
+
+class TestAggregateEfficiencySum:
+    """aggregate='efficiency_sum' — 效率值聚合除以 unit"""
+
+    def test_efficiency_sum_trade(self):
+        """3 名干员的 Trade 效率 ÷ unit=3 → (30+60+0)/3 = 30"""
+        from steward_core.token_source import TokenSource, evaluate_tokens
+
+        ops = [
+            _mk_op("A", skills=[_mk_trade_skill(30.0)]),
+            _mk_op("B", skills=[_mk_trade_skill(60.0)]),
+            _mk_op("C", skills=[_mk_trade_skill(0.0)]),
+        ]
+        sources = [TokenSource(
+            token="trade_eff_avg", condition="*",
+            aggregate="efficiency_sum", aggregate_unit=3.0,
+            target_room="Trade",
+        )]
+        result = evaluate_tokens(sources, ops)
+        assert result["trade_eff_avg"] == pytest.approx(30.0)
+
+    def test_efficiency_sum_empty(self):
+        """无技能干员 → 0"""
+        from steward_core.token_source import TokenSource, evaluate_tokens
+
+        ops = [_mk_op("A"), _mk_op("B")]
+        sources = [TokenSource(
+            token="t", condition="*",
+            aggregate="efficiency_sum", aggregate_unit=1.0,
+            target_room="Trade",
+        )]
+        result = evaluate_tokens(sources, ops)
+        assert result["t"] == 0.0
+
+    def test_efficiency_sum_with_unit(self):
+        """aggregate_unit 放大效果"""
+        from steward_core.token_source import TokenSource, evaluate_tokens
+
+        ops = [_mk_op("A", skills=[_mk_trade_skill(100.0)])]
+        sources = [TokenSource(
+            token="t", condition="*",
+            aggregate="efficiency_sum", aggregate_unit=10.0,
+            target_room="Trade",
+        )]
+        result = evaluate_tokens(sources, ops)
+        assert result["t"] == pytest.approx(10.0)  # 100/10
+
+
+class TestAggregateMaxEfficiency:
+    """aggregate='max_efficiency' — 最高效率值"""
+
+    def test_max_efficiency(self):
+        """3 名干员中最高 Trade 效率"""
+        from steward_core.token_source import TokenSource, evaluate_tokens
+
+        ops = [
+            _mk_op("A", skills=[_mk_trade_skill(30.0)]),
+            _mk_op("B", skills=[_mk_trade_skill(90.0)]),
+            _mk_op("C", skills=[_mk_trade_skill(45.0)]),
+        ]
+        sources = [TokenSource(
+            token="max_eff", condition="*",
+            aggregate="max_efficiency", target_room="Trade",
+        )]
+        result = evaluate_tokens(sources, ops)
+        assert result["max_eff"] == 90.0
+
+    def test_max_efficiency_empty(self):
+        """无技能干员 → 0"""
+        from steward_core.token_source import TokenSource, evaluate_tokens
+
+        ops = [_mk_op("A")]
+        sources = [TokenSource(
+            token="t", condition="*",
+            aggregate="max_efficiency", target_room="Trade",
+        )]
+        result = evaluate_tokens(sources, ops)
+        assert result["t"] == 0.0
+
+
+class TestAggregateAttributeSum:
+    """aggregate='attribute_sum' — 属性值聚合"""
+
+    def test_attribute_sum_capacity(self):
+        """capacity_bonus 总和"""
+        from steward_core.token_source import TokenSource, evaluate_tokens
+
+        ops = [
+            _mk_op("A", skills=[_mk_mfg_skill_with_eff(capacity=2)]),
+            _mk_op("B", skills=[_mk_mfg_skill_with_eff(capacity=4)]),
+            _mk_op("C", skills=[_mk_mfg_skill_with_eff(capacity=0)]),
+        ]
+        sources = [TokenSource(
+            token="total_cap", condition="*",
+            aggregate="attribute_sum", target_room="Mfg",
+            attr="capacity_bonus",
+        )]
+        result = evaluate_tokens(sources, ops)
+        assert result["total_cap"] == 6.0
+
+
+class TestAggregateDistinct:
+    """aggregate='distinct' — 去重计数"""
+
+    def test_distinct_skill_icons(self):
+        """按 skill_icon 去重计数"""
+        from steward_core.token_source import TokenSource, evaluate_tokens
+        from steward_core.models import Skill, EfficiencyMap
+
+        s1 = Skill("b1", "s1", "icon_A", "Mfg", EfficiencyMap(raw={"all": 10.0}))
+        s2 = Skill("b2", "s2", "icon_A", "Mfg", EfficiencyMap(raw={"all": 20.0}))
+        s3 = Skill("b3", "s3", "icon_B", "Mfg", EfficiencyMap(raw={"all": 30.0}))
+
+        ops = [
+            _mk_op("A", skills=[s1]),
+            _mk_op("B", skills=[s2]),
+            _mk_op("C", skills=[s3]),
+        ]
+        sources = [TokenSource(
+            token="unique_icons", condition="*",
+            aggregate="distinct", target_room="Mfg",
+            attr="skill_icon",
+        )]
+        result = evaluate_tokens(sources, ops)
+        assert result["unique_icons"] == 2.0  # icon_A, icon_B
+
+    def test_distinct_empty(self):
+        """无技能 → 0"""
+        from steward_core.token_source import TokenSource, evaluate_tokens
+
+        ops = [_mk_op("A")]
+        sources = [TokenSource(
+            token="t", condition="*",
+            aggregate="distinct", target_room="Mfg",
+            attr="skill_icon",
+        )]
+        result = evaluate_tokens(sources, ops)
+        assert result["t"] == 0.0
 
     def test_laterano_trade_counts_nation(self):
         """nation_id=laterano → 计数"""

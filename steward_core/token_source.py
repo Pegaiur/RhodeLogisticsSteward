@@ -167,6 +167,16 @@ def _evaluate_single(
     if aggregate == "count":
         return _evaluate_count(source, operators, tokens, ctx)
 
+    # ── 效率/属性类 aggregate ──
+    if aggregate == "efficiency_sum":
+        return _evaluate_efficiency_sum(source, operators)
+    if aggregate == "max_efficiency":
+        return _evaluate_max_efficiency(source, operators)
+    if aggregate == "attribute_sum":
+        return _evaluate_attribute_sum(source, operators)
+    if aggregate == "distinct":
+        return _evaluate_distinct(source, operators)
+
     # 其他 aggregate 暂未实现
     raise NotImplementedError(f"aggregate '{aggregate}' 尚未实现")
 
@@ -218,6 +228,101 @@ def _evaluate_count(
     if source.cap is not None:
         count = min(count, source.cap)
     return float(count)
+
+
+def _evaluate_efficiency_sum(
+    source: TokenSource,
+    operators: list["Operator"],
+) -> float:
+    """efficiency_sum aggregate：匹配干员的目标房间效率值之和 ÷ unit"""
+    room = source.target_room or "Mfg"
+    matcher = _build_matcher(source.condition)
+    total = 0.0
+    for op in operators:
+        if not matcher(op):
+            continue
+        active = op.active_skills_for(room)
+        if active:
+            total += max(s.efficient.get("all") for s in active)
+    unit = source.aggregate_unit if source.aggregate_unit != 0 else 1.0
+    result = total / unit
+    if source.cap is not None:
+        result = min(result, source.cap)
+    return result
+
+
+def _evaluate_max_efficiency(
+    source: TokenSource,
+    operators: list["Operator"],
+) -> float:
+    """max_efficiency aggregate：匹配干员中的最高效率值"""
+    room = source.target_room or "Mfg"
+    matcher = _build_matcher(source.condition)
+    best = 0.0
+    for op in operators:
+        if not matcher(op):
+            continue
+        active = op.active_skills_for(room)
+        if active:
+            eff = max(s.efficient.get("all") for s in active)
+            if eff > best:
+                best = eff
+    if source.cap is not None:
+        best = min(best, source.cap)
+    return best
+
+
+def _evaluate_attribute_sum(
+    source: TokenSource,
+    operators: list["Operator"],
+) -> float:
+    """attribute_sum aggregate：匹配干员的指定属性值之和"""
+    attr = source.attr
+    if attr is None:
+        return 0.0
+    room = source.target_room
+    matcher = _build_matcher(source.condition)
+    total = 0.0
+    for op in operators:
+        if not matcher(op):
+            continue
+        if room and attr == "capacity_bonus":
+            active = op.active_skills_for(room)
+            if active:
+                total += sum(s.capacity_bonus for s in active)
+        else:
+            total += float(getattr(op, attr, 0))
+    if source.cap is not None:
+        total = min(total, source.cap)
+    return total
+
+
+def _evaluate_distinct(
+    source: TokenSource,
+    operators: list["Operator"],
+) -> float:
+    """distinct aggregate：匹配干员的指定属性去重计数"""
+    attr = source.attr
+    if attr is None:
+        return 0.0
+    room = source.target_room
+    matcher = _build_matcher(source.condition)
+    seen: set[str] = set()
+    for op in operators:
+        if not matcher(op):
+            continue
+        if room and attr == "skill_icon":
+            active = op.active_skills_for(room)
+            for s in active:
+                seen.add(s.skill_icon)
+        else:
+            val = getattr(op, attr, None)
+            if val is not None:
+                seen.add(str(val))
+    result = float(len(seen))
+    if source.cap is not None:
+        result = min(result, source.cap)
+    return result
 
 
 # ─── 条件匹配器构建 ────────────────────────────────────────────────────
