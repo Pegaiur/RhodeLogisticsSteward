@@ -65,6 +65,9 @@ PHASE_B_CLUSTER: list[TokenSource] = [
 ]
 
 # 全量 B 层注册（不含需要 depends_on="layout"/"facility" 的条目）
+# 注：PHASE_B_A_PAIRS / TRADE_PAIRS / EFF_AMPLIFIER / CONDITIONAL_EFF / FACTORY_COUNT
+# / FACILITY_GROUP 均已注册但未纳入本列表——它们按 Phase C 策略单独使用，避免
+# evaluate_room() 首次接入时引入过多 token 增加性能开销。
 PHASE_B_SOURCES: list[TokenSource] = (
     PHASE_B_SKILL_CLASS
     + PHASE_B_GLOBAL_FACTION

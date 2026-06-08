@@ -547,6 +547,7 @@ def compute_room_tokens(
     Returns:
         {token_name: value} 字典
     """
+    # 惰性导入：打破 token_source ↔ token_maps 循环引用
     from steward_core.synergy.token_maps import (
         PHASE_A_SOURCES, PHASE_B_SOURCES,
     )
