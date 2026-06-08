@@ -238,7 +238,7 @@ class TableMeta(NamedTuple):
 # 放在文件末尾以避免循环导入（TABLES 引用的子模块会导入 types 中的 NamedTuple 类，
 # 而此处从子模块导入表数据时，types 中的所有类定义已完成）
 
-from .mfg_linkages import _A_PAIR_TABLE, _A_ROOM_FACTION_TABLE, _A_ROOM_FACTION_EXTRA, _A_SKILL_COUNT_TABLE, _A_AUTOMATION_FALLBACK, _ZEROING_VARIANT_TABLE, _TOKEN_PROD_TABLE  # noqa: E402
+from .mfg_linkages import _A_PAIR_TABLE, _A_ROOM_FACTION_TABLE, _A_ROOM_FACTION_EXTRA, _A_SKILL_COUNT_TABLE, _A_AUTOMATION_FALLBACK, _POWER_BUFF_BONUS, _ZEROING_VARIANT_TABLE, _TOKEN_PROD_TABLE  # noqa: E402
 from .ramping import _RAMPING_SKILL_TABLE  # noqa: E402
 from .facility_linkages import _A_FACILITY_LINK_TABLE  # noqa: E402
 from .buff_pool import _B_BUFF_CONSUMER_TABLE, _OPERATOR_BUFF_PRODUCERS  # noqa: E402
@@ -254,6 +254,7 @@ TABLES: dict[str, TableMeta] = {
     "A·同房阵营额外":    TableMeta(_A_ROOM_FACTION_EXTRA,     ["synergy_faction_room"],       "新增同房阵营额外加成"),
     "A·技能计数":        TableMeta(_A_SKILL_COUNT_TABLE,      ["synergy_skill_count"],        "新增技能计数锚点"),
     "A·自动化回退":      TableMeta(_A_AUTOMATION_FALLBACK,    ["synergy_automation"],         "新增自动化干员或 buff 变更"),
+    "A·电力加成映射":    TableMeta(_POWER_BUFF_BONUS,          ["synergy_automation"],         "新增自动化干员 buff_id→每发电站加成映射"),
     "A·归零变体":        TableMeta(_ZEROING_VARIANT_TABLE,    ["synergy_whisper"],             "新增归零型变体 buff"),
     "A·机械精通":        TableMeta(_TOKEN_PROD_TABLE,         ["synergy_token_prod"],          "新增作业平台联动 buff"),
     "A·爬升型技能":      TableMeta(_RAMPING_SKILL_TABLE,      ["synergy_ramping"],             "新增爬升型技能（manu_prod_spd_addition[*] / meet_spd_hast[*]）"),
