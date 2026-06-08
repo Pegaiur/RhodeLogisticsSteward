@@ -44,6 +44,7 @@ class TokenSource:
 |------|------|------|
 | `group_id=v` | `group_id=pinus` | 匹配 `character_table.groupId` |
 | `nation_id=v` | `nation_id=siracusa` | 匹配 `character_table.nationId` |
+| `team_id=v` | `team_id=reserve1` | 匹配 `character_table.teamId` |
 | `char_id=v` | `char_id=char_140_white` | 匹配 `character_identity` 键名（精确干员） |
 | `is_knight` | `is_knight` | 派生布尔：`nation_id=kazimierz ∨ group_id=pinus ∨ name∈_KNIGHT_NAMES` |
 | `pair=A:B` | `pair=char_103_angel:char_140_white` | 二元配对（双方均为 char_id） |
@@ -70,6 +71,7 @@ def parse_condition(condition: str) -> tuple[str, str] | tuple[str]:
 |-----------|---------|---------|
 | `group_id` | `op.has_group(value)` | `character_table.groupId` |
 | `nation_id` | `op.has_nation(value)` | `character_table.nationId` |
+| `team_id` | `op.has_team(value)` | `character_table.teamId` |
 | `char_id` | `op.char_id == value` | `character_identity` 键名 |
 | `is_knight` | `_FN_CONDITIONS["is_knight"](op)` | 派生布尔：from nation_id + group_id + 名称集合 |
 | `pair` | 成对存在性检查 | 双方 char_id 均需在当前 scope 内 |
@@ -220,7 +222,7 @@ TokenSource 只负责第二层：将"符合条件的干员数"、"房间效率�
 | A1 | 新建 `steward_core/token_source.py`：`TokenSource` dataclass（9 字段）、`ConditionMatcher` Callable 类型别名、`evaluate_tokens(sources, ctx) → dict[str, float]` 拓扑排序执行引擎 | `token_source.py` | ~120 |
 | A2 | 实现 `parse_condition(condition_str) → tuple` 条件解析器，覆盖全部 8 种语法（group_id / nation_id / char_id / is_knight / pair / skill_class / count_ge / `*`） | `token_source.py` | ~50 |
 | A3 | 向 `SlotContext` 新增 `find_by_char_id(char_id) → Operator | None` 方法；`GlobalContext` 同步新增 | `slot/context.py`, `context.py` | ~15 |
-| A4 | 注册 10 条 TokenSource：A 层同房阵营 3（`_A_ROOM_FACTION_TABLE` 映射）+ C 层 PerOp 7（`_CONTROL_PER_OP_TABLE` 映射）——作为先行探针验证 `condition=char_id`/`group_id`/`nation_id`/`is_knight`/`count_ge` 五种语法 | `token_source.py` | ~50 |
+| A4 | 注册 11 条 TokenSource：A 层同房阵营 4（`_A_ROOM_FACTION_TABLE` 映射，含 team_id=reserve1）+ C 层 PerOp 8（`_CONTROL_PER_OP_TABLE` 映射）——作为先行探针验证 `condition=team_id`/`group_id`/`nation_id`/`is_knight`/`count_ge` 五种语法 | `token_source.py` | ~50 |
 | A5 | 单元测试：每种 aggregate 模式 ≥1 个测试（count / efficiency_sum / max_efficiency / attribute_sum / passthrough / distinct）+ 拓扑排序依赖正确性 + `*` 无条件通配 | `tests/test_token_source.py` | ~100 |
 | A6 | 集成测试：TokenSource 输出与旧函数（`synergy_faction_room` / `_eval_per_op`）的 **全量干员池** 输出逐条对齐 | `tests/test_token_source.py` | ~30 |
 
@@ -229,7 +231,7 @@ TokenSource 只负责第二层：将"符合条件的干员数"、"房间效率�
 - [x] 拓扑排序：`depends_on` 引用的 token 一定先于依赖方计算
 - [x] 循环依赖检测（`a depends_on b, b depends_on a`）抛出明确异常
 - [x] 11 条注册的输出与旧函数输出在 `pytest tests/ -v -k token_source` 下**逐条一致**（允许浮点误差 ±1e-6）
-- [x] 不会破坏现有 783 测试（`pytest tests/ -v` 全绿，实际 857 passed）
+- [x] 不会破坏现有测试（`pytest tests/ -v` 全绿，Phase A 交付时 874 passed）
 
 ---
 
@@ -239,21 +241,21 @@ TokenSource 只负责第二层：将"符合条件的干员数"、"房间效率�
 
 | 步骤 | 内容 | 产出文件 | 行数 |
 |:---:|------|---------|:---:|
-| B1 | 补齐 TokenSource 注册：A 层配对 9 + 技能标签 3 + 自动化 6 + 工厂数量 8 + 贸易分享/放大/条件 11 + B 层全局阵营 3 + 跨房间配对 3 + 深海猎人 1 + 设施 group 3 | `token_source.py` | ~150 |
+| B1 | 补齐 TokenSource 注册：A 层配对 3 + 技能标签 3 + 自动化 5（含归零变体 2）+ 工厂数量 8 + 贸易分享/放大/条件 11 + B 层全局阵营 3 + 跨房间配对 3 + 深海猎人 1 + 设施 group 3 | `token_source.py` | ~150 |
 | B2 | 新增 `_BUFF_TO_TOKENS: dict[str, list[str]]` 映射表（~40 条），替代 `_OPERATOR_BUFF_PRODUCERS` 的 `dimension + cascade` 字段组合。执行引擎支持 `depends_on="token"` 级联时通过此表查找上游 buff 的生产 token | `token_source.py` | ~60 |
 | B3 | 新增 `_FN_CONDITIONS` 注册表：`is_knight`（已有）+ 预留 `is_abyssal_hunter`（深海猎人派生）等扩展槽位 | `token_source.py` | ~20 |
 | B4 | 条件解析器补充 `pair` 配对解析（冒号分隔 → char_id 对）、`count_ge` 阈值解析（冒号分隔 → group_id + N） | `token_source.py` | ~30 |
 | **B5** | **引擎支持 `depends_on="layout"/"facility"`**：`evaluate_tokens()` 接收 `ctx: SlotContext` → 通过 `ctx.layout` 查询布局数据（工厂数量、宿舍等级、发电站数等）；通过 `ctx.build_all_assignments()` 查询设施级干员分布（如含 sui 的设施数）。拓扑排序中 `depends_on="layout"/"facility"` 的 token 在第一遍计算完成后执行布局/设施注入 | `token_source.py` | ~40 |
-| B6 | 补齐 B1 中依赖 `depends_on="layout"/"facility"` 的 TokenSource 注册：工厂数量联动 8 + 自动化 4 + 设施 group 3（原 B1 的 ~31 条尾部条目） | `token_source.py` | ~60 |
+| B6 | 补齐 B1 中依赖 `depends_on="layout"/"facility"` 的 TokenSource 注册：工厂数量联动 8 + 自动化 3（森蚺/掠风/异客/温蒂通过 `depends_on="layout"` 查询发电站数）+ 设施 group 3（`depends_on="facility"`）| `token_source.py` | ~60 |
 | B7 | 集成测试：TokenSource 输出与旧函数（`synergy_skill_count` / `synergy_global_faction` / `compute_cluster_hunting_bonus` / `synergy_facility_count` / `synergy_facility_group`）全量对齐。`compute_buff_pool`（BuffPool 生产者端）的替代正确性由 B2 映射表 + B8 级联测试覆盖 | `tests/test_token_source.py` | ~50 |
 | B8 | `buff_id → token` 级联正确性测试（黑键 perception→silent_resonance、令 yanhuo→wushu_crystal） | `tests/test_token_source.py` | ~30 |
 
 **验收条件**：
 - [x] 全部 ~75 条 TokenSource 注册完成，无遗漏（对照 `types.py` TABLES 注册器逐项核对）
-- [x] `_BUFF_TO_TOKENS` 覆盖 `_OPERATOR_BUFF_PRODUCERS` 的全部 14 条记录
+- [x] `_BUFF_TO_TOKENS` 覆盖 `_OPERATOR_BUFF_PRODUCERS` 的全部 16 条 entries（14 个唯一 buff_id）
 - [x] 条件解析器对所有语法抛出明确错误（未知 key、格式错误等）而非静默失败
 - [ ] TokenSource 输出与 **全部 5 个旧计数函数**（含级联场景）输出对齐
-- [x] `pytest tests/ -v -k token_source` 覆盖 ≥80 个测试用例
+- [x] `pytest tests/ -v -k token_source` 覆盖 ≥80 个测试用例（实际 91）
 - [ ] 引擎正确解析 `depends_on="layout"` 和 `depends_on="facility"`，从 `SlotContext.layout` 和 `build_all_assignments()` 注入布局/设施数据
 
 ---
@@ -268,11 +270,11 @@ TokenSource 只负责第二层：将"符合条件的干员数"、"房间效率�
 | C2 | 坐标下降接入：`_dispatch_optimize` → `optimize_mfg_room` / `optimize_trade_room` 中的 `synergy_pair` / `synergy_skill_count` / `synergy_automation` / `synergy_faction_room` 逐函数计数，替换为 TokenSource + 消费层保留 | `slot/mfg.py`, `slot/trade.py` | ~60 |
 | C3 | Control 层接入：`compute_control_global_bonus` 中 `_eval_per_op` / `compute_cluster_hunting_bonus` 替换为 TokenSource；per-operator 条件加成的**消费侧**（线性公式）保留在 control_linkages | `synergy/control_linkages.py` | ~40 |
 | C4 | 不做替换的声明：爬升 `e(t)`、菲亚梅塔自律、冲突互斥、订单覆盖、裁缝豁免 —— 在接入点加注释标注"非计数层，保留旧路径" | 各相关文件 | ~10 |
-| C5 | 回归验证：`pytest tests/ -v` 全量 783 测试通过；`python run_solver.py` 端到端无异常 | — | — |
+| C5 | 回归验证：`pytest tests/ -v` 全量测试通过；`python run_solver.py` 端到端无异常 | — | — |
 | C6 | 性能基准：`_timing.py` 埋点对比 `evaluate_tokens()` 总耗时 vs 旧 5 个计数函数耗时之和，确认无退化（允许 ±5% 内） | `_timing.py` | ~10 |
 
 **验收条件**：
-- [ ] `pytest tests/ -v` **全量 783 测试通过**（零回归）
+- [ ] `pytest tests/ -v` **全量测试通过**（零回归）
 - [ ] `python run_solver.py` 产出 JSON 与 Phase B 完成时的产出 **差异 ≤ 3 条干员**（允许因浮点排序边界导致的微小差异）
 - [ ] `evaluate_tokens()` 总耗时 ≤ 旧 5 个函数耗时之和 × 1.05
 - [ ] 所有未替换的旧路径有明确注释标注原因
@@ -343,8 +345,9 @@ TokenSource 只负责第二层：将"符合条件的干员数"、"房间效率�
 | cascade 处理 | `depends_on + passthrough` | 拓扑排序替代 BuffPool 两遍扫描 |
 | facility 计数 | `depends_on="layout"/"facility"` | 统一 operator-based 和 layout-based 两种源头 |
 | 二元配对 | `condition="pair"` 纳入 | 本质是 count∈{0,1}，与 aggregate="count" 一致 |
-| **配对标识符** | **双方使用 char_id** | 干员名非稳定标识（异格/联动可能重名）; char_id 是 `character_identity.json` 的自然主键；与 inbox "synergy 子系统全量 char_id 迁移" 方向一致 |
-| **条件字段溯源** | **映射到 Operator 模型字段** | group_id/nation_id/char_id 直接从 `character_table`/`character_identity` 字段读取；`is_knight` 等派生布尔从解包数据推导，仅在无法机械提取时使用名称集合兜底 |
+| **配对标识符** | **双方使用 char_id**（当前 Phase B 注册用干员名占位，Phase E 迁移后替换为真实 char_id） | 干员名非稳定标识（异格/联动可能重名）; char_id 是 `character_identity.json` 的自然主键；与 inbox "synergy 子系统全量 char_id 迁移" 方向一致 |
+| **条件字段溯源** | **映射到 Operator 模型字段** | group_id/nation_id/team_id/char_id 直接从 `character_table`/`character_identity` 字段读取；`is_knight` 等派生布尔从解包数据推导，仅在无法机械提取时使用名称集合兜底 |
+| **team_id 条件语法** | **实施中自然扩展** | 原计划仅覆盖 group_id/nation_id/char_id，实施中因历阵锐枪芬的 reserve1 条目需要而新增；team_id 语法与 group_id/nation_id 模式一致 |
 | cap 归属 | Token 生产侧截断 | 计数→cap→输出，消费侧不再重复截断 |
 | resolver 注册 | 独立 `_FN_CONDITIONS` 映射表 | 避免 condition 字符串暴露内部函数名 |
 | 不纳入归零副作用 | 保留在消费侧 | 副作用不是 token 值，是机制守卫层语义 |
