@@ -281,7 +281,7 @@ def evaluate_room(
     # - compute_buff_pool：级联逻辑复杂，B2 映射表已就位但暂不接入
 
     # ── 二、房间组成型联动 ──
-    total = integrate_segments(synergy_pair(operators, room_type, product, T), T)
+    total = integrate_segments(synergy_pair(operators, room_type, product, T, room_tokens=room_tokens), T)
     alias = synergy_skill_alias(operators)
 
     order_ctx = None
@@ -291,7 +291,7 @@ def evaluate_room(
         )
 
     # ── 三、效率加成型联动 ──
-    total += integrate_segments(synergy_faction_room(non_zero_ops, room_type, product, T), T)
+    total += integrate_segments(synergy_faction_room(non_zero_ops, room_type, product, T, room_tokens=room_tokens), T)
     total += integrate_segments(synergy_skill_count(non_zero_ops, room_type, alias, T, room_tokens=room_tokens), T)
     total += integrate_segments(synergy_trade_gold_lines(
         operators, room_type, product, layout, T=T,

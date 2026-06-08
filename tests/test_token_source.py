@@ -707,9 +707,8 @@ class TestPhaseC3EvaluateRoom:
 
         ops = [_mk_op("阿兰娜"), _mk_op("温米")]
         room_tokens = compute_room_tokens(ops)
-        # PHASE_B_A_PAIRS 未在 compute_room_tokens 中，但 pair 计数逻辑
-        # 在 evaluate_room() 中可通过 room_tokens 间接验证
-        assert "alanna_wenmi" not in room_tokens  # 未纳入 PHASE_B_SOURCES
+        # pair token 现在已纳入 compute_room_tokens (Phase C3 扩展)
+        assert room_tokens["alanna_wenmi"] == 1.0
 
     def test_room_tokens_count_matches_faction_room(self):
         """room_tokens 阵营计数与 synergy_faction_room 内部一致"""

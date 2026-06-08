@@ -23,8 +23,13 @@ def synergy_pair(
     room_type: str,
     product: str,
     T: float,
+    room_tokens: dict[str, float] | None = None,
 ) -> list[LinearSegment]:
-    """识别同房间干员配对组合，输出聚合常数段"""
+    """识别同房间干员配对组合，输出聚合常数段
+
+    room_tokens 已接收但当前不使用——配对检查本质是 set membership，
+    不涉及可币化的遍历开消。
+    """
     if room_type != "Mfg":
         return []
 
@@ -413,26 +418,48 @@ def synergy_faction_room(
     room_type: str,
     product: str,
     T: float,
+    room_tokens: dict[str, float] | None = None,
 ) -> list[LinearSegment]:
     """统计同房间内特定阵营/队伍干员数量，为持有者提供效率加成
 
     A2 体系：持有者根据同房间内匹配阵营的干员数量获得加成。
+    room_tokens 非 None 时从 TokenSource 预计算值读取计数。
     """
     names = {op.name for op in operators}
     segments = []
 
-    for holder_name, e in _A_ROOM_FACTION_TABLE.items():
-        if holder_name not in names:
-            continue
-        if e.target_room is not None and room_type != e.target_room:
-            continue
-        if e.target_product is not None and product != e.target_product:
-            continue
-
-        count = sum(1 for op in operators if getattr(op, e.field, None) == e.value)
-        bonus = count * e.bonus_per
-        if bonus > 0:
-            segments.append(LinearSegment(a=bonus, b=0.0, t_start=0.0, dt=T))
+    if room_tokens is not None:
+        # TokenSource 快速路径
+        # FactionEntry field/value → TokenSource token 映射
+        _FACTION_TOKEN_MAP = {
+            ("team_id", "reserve1"): "reserve1_mfg",
+            ("group_id", "glasgow"): "glasgow_trade",
+            ("nation_id", "laterano"): "laterano_trade",
+        }
+        for holder_name, e in _A_ROOM_FACTION_TABLE.items():
+            if holder_name not in names:
+                continue
+            if e.target_room is not None and room_type != e.target_room:
+                continue
+            if e.target_product is not None and product != e.target_product:
+                continue
+            token_name = _FACTION_TOKEN_MAP.get((e.field, e.value))
+            count = int(room_tokens.get(token_name, 0)) if token_name else 0
+            bonus = count * e.bonus_per
+            if bonus > 0:
+                segments.append(LinearSegment(a=bonus, b=0.0, t_start=0.0, dt=T))
+    else:
+        for holder_name, e in _A_ROOM_FACTION_TABLE.items():
+            if holder_name not in names:
+                continue
+            if e.target_room is not None and room_type != e.target_room:
+                continue
+            if e.target_product is not None and product != e.target_product:
+                continue
+            count = sum(1 for op in operators if getattr(op, e.field, None) == e.value)
+            bonus = count * e.bonus_per
+            if bonus > 0:
+                segments.append(LinearSegment(a=bonus, b=0.0, t_start=0.0, dt=T))
 
     for holder_name, e in _A_ROOM_FACTION_EXTRA.items():
         if holder_name not in names:
