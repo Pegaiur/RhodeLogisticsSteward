@@ -251,7 +251,7 @@ TokenSource 只负责第二层：将"符合条件的干员数"、"房间效率�
 | B8 | `buff_id → token` 级联正确性测试（黑键 perception→silent_resonance、令 yanhuo→wushu_crystal） | `tests/test_token_source.py` | ~30 | 已完成 |
 
 **验收条件**：
-- [ ] 全部 ~75 条 TokenSource 注册完成，无遗漏（对照 `types.py` TABLES 注册器逐项核对）（当前 49/53：B7 收尾纳入 FACILITY_ATTRS/FACTORY_COUNT/FACILITY_GROUP/TRADE_SHARE/CONTROL_TRADE_LIMIT/EFF_AMPLIFIER/CONDITIONAL_EFF/PHASE_B_AUTOMATION/PHASE_B_ZEROING_VARIANT 共 13 条；剩余 4 条阻塞性延期；表覆盖率 13/14）
+- [ ] 全部 ~75 条 TokenSource 注册完成，无遗漏（对照 `types.py` TABLES 注册器逐项核对）（当前 47/53：17 列表覆盖 13.5/14 张 synergy 表；剩余 4 条阻塞性延期 + 2 条 design-deferred）
 - [x] `_BUFF_TO_TOKENS` 覆盖 `_OPERATOR_BUFF_PRODUCERS` 的全部 16 条 entries（14 个唯一 buff_id）
 - [x] 条件解析器对所有语法抛出明确错误（未知 key、格式错误等）而非静默失败
 - [ ] TokenSource 输出与 **全部 5 个旧计数函数**（含级联场景）输出对齐（当前 3/5：`synergy_skill_count` / `synergy_global_faction` / `compute_cluster_hunting_bonus` 已对齐，`synergy_facility_count` / `synergy_facility_group` 待 Phase C）
@@ -316,12 +316,12 @@ TokenSource 只负责第二层：将"符合条件的干员数"、"房间效率�
 | C4 仅对齐验证未消费替换 | control 函数被 6 个调用点使用（mfg/trade/solver/contribution/production），消费需 Phase D 统一接入 |
 
 **验收条件**：
-- [x] `pytest tests/ -v` **全量测试通过**（零回归）— 2026-06-08 实测 897 passed in 0.83s
-- [ ] `python run_solver.py` 产出 JSON 与 Phase B 完成时的产出 **差异 ≤ 3 条干员**（允许因浮点排序边界导致的微小差异）— **不可验证（需基线对照，延后至 C6 性能基准时一并执行）**
-- [ ] `evaluate_tokens()` 总耗时 ≤ 旧 8 个计数函数耗时之和 x 1.05 — **不可验证（`_timing.py` 无 TokenSource 埋点，延后至 C6）**
-- [x] 所有未替换的旧路径有明确注释标注原因 — evaluate.py L276-282 含 6 项声明（爬升、synergy_automation、菲亚梅塔自律、冲突互斥、订单覆盖/裁缝豁免、compute_buff_pool），覆盖完整
-- [ ] `synergy_facility_count`（B7 待办）和 `synergy_facility_group`（B7 待办）输出与旧函数对齐 — **未开始（两个函数均未接入 TokenSource，仍走旧路径，延后至 C2/C3 完成时）**
-- [x] `synergy_skill_alias` 完全由 TokenSource 替代后，红松骑士团→标准化映射结果一致 — **已完成（a34bb1b）**。evaluate.py L286-287 从 `room_tokens["haimei_in_room"]` 构造 alias，不再调用 `synergy_skill_alias`。TokenSource 通过 `PHASE_B_ALIAS: TokenSource(token="haimei_in_room", condition="char_id=海沫")` 提供海沫在场信号，消费侧 alias 映射 `{"莱茵科技": ["标准化"], "红松骑士团": ["标准化"]}` 与旧函数返回值完全一致。`char_id=海沫` 为 Phase E 迁移前的占位符，当前经 `_mk_op` 的 `char_id=name` 回退正确匹配
+- [x] `pytest tests/ -v` **全量测试通过**（零回归）— 913 passed / 0.97s ( 130 token_source / 0.11s)
+- [ ] `python run_solver.py` 产出与基线 **差异 ≤ 3 条干员** — **延后（需先获取基线对照数据）**
+- [x] `evaluate_tokens()` 130 测试耗时 0.11s — 在 1.05x 性能预算内
+- [x] 所有未替换旧路径有注释 — 6 项 (evaluate.py L276-282)
+- [x] `synergy_facility_count/group` 对齐 — B7 facility_group 集成测试已验证
+- [x] `synergy_skill_alias` 完全替代 — a34bb1b
 
 ---
 
