@@ -255,7 +255,7 @@ TokenSource 只负责第二层：将"符合条件的干员数"、"房间效率�
 - [x] `_BUFF_TO_TOKENS` 覆盖 `_OPERATOR_BUFF_PRODUCERS` 的全部 16 条 entries（14 个唯一 buff_id）
 - [x] 条件解析器对所有语法抛出明确错误（未知 key、格式错误等）而非静默失败
 - [ ] TokenSource 输出与 **全部 5 个旧计数函数**（含级联场景）输出对齐（当前 3/5：`synergy_skill_count` / `synergy_global_faction` / `compute_cluster_hunting_bonus` 已对齐，`synergy_facility_count` / `synergy_facility_group` 待 Phase C）
-- [x] `pytest tests/ -v -k token_source` 覆盖 ≥80 个测试用例（实际 106）
+- [x] `pytest tests/ -v -k token_source` 覆盖 >=80 个测试用例（实际 128）
 - [x] 引擎正确解析 `depends_on="layout"` 和 `depends_on="facility"`，从 `SlotContext.layout` 和 `build_all_assignments()` 注入布局/设施数据
 
 **B7 完成后待办（延后至 Phase C）**：
@@ -269,7 +269,7 @@ TokenSource 只负责第二层：将"符合条件的干员数"、"房间效率�
 | `compute_cluster_hunting` 完整集成 | 需 control_ops + per-room buff_id 检查上下文 | C |
 | 剩余 ~28 条注册补齐 | 工厂联动/自动化/贸易条件等复杂条目 | C |
 | B8 `buff_id→token` 级联测试 | 已提前完成（提交 47b7212） | ✅ |
-| **阻塞 18 条需引擎能力** | 见下表 | |
+| **阻塞 14 条需引擎能力** | 见下表 | |
 
 **阻塞性延期的引擎能力需求**：
 
@@ -279,11 +279,11 @@ TokenSource 只负责第二层：将"符合条件的干员数"、"房间效率�
 | `depends_on="layout"` + `distinct` 聚合 | 1 | `_evaluate_layout` 需支持 `aggregate="distinct"` + `attr="product"`（mfg_recipe_types 去重） |
 | `exclude_self` 计数排除 | 3 | `_evaluate_count` 需消费 `TokenSource.exclude_self` 字段（贸易分享 3 条） |
 | `scope="workspace"` 跨设施组合 | 2 | 需 Control+Mfg+Trade 三种设施类型的组合 scope（贸易条件效率 2 条） |
-| `_FN_CONDITIONS` 派生函数 | 5 | 自动化/归零变体需 `has_automation`/`has_zeroing_variant` 派生布尔（5 条） |
+| `_FN_CONDITIONS` 派生函数 | 5 | 自动化/归零变体：`is_automation_holder` / `is_zeroing_variant_holder` 已于 B7 解锁（提交 910cc3e）。消费侧 per-op bonus 查表仍需 `per-op` 属性提取（见下行） |
 | `partner_facility` 跨设施 pair | 1 | 中枢→贸易上限（维什戴尔→赫德雷）需跨房间配对 |
 | `per-op` 属性提取 | 5 | 自动化干员 bonus 各不相同（5/5/5/15/10），消费侧需持有者属性查表；与 `_FN_CONDITIONS` 条目重叠（同 5 条自动化/归零变体需要两种能力） |
 
-**注**：7 项引擎能力对应的表列求和为 22，与阻塞条目 18 的差额 4 来自 `per-op` 属性提取 + `_FN_CONDITIONS` 对同一 5 条自动化/归零变体条目的双重需求重叠。
+**注**：7 项引擎能力中 1 项（`_FN_CONDITIONS` 派生函数）已于 B7 解锁。剩余 6 项阻塞 14 条目（含 per-op/_FN_CONDITIONS 重叠 4），对应表列求和 17，与阻塞条目 14 的差额来自重叠。
 
 ---
 
@@ -299,12 +299,21 @@ TokenSource 只负责第二层：将"符合条件的干员数"、"房间效率�
 
 | 步骤 | 内容 | 产出文件 / 函数 / 行号 | 替换策略 | 行数 |
 |:---:|------|---------|:---:|:---:|
-| C1 | **evaluate_room() 接入框架**：在 `evaluate_room()` 顶部添加 token 缓存（单次 `evaluate_tokens()` 调用覆盖该 room 全部计数需求），替代 `synergy_facility_count`（L286-288 房间级 + `greed.py:233` 单 op 回退检查） | `evaluate.py` L217 / L286-288；`solver/greed.py` L233 | 完全（layout 属性聚合依赖 Phase B 已完成的 `depends_on="layout"` 引擎能力） | ~25 |
-| C2 | **制造站计数替换**：替代 `evaluate_room()` 主体内的计数函数——`synergy_pair`（L271 房间组成配对）、`synergy_faction_room`（L281 阵营房间）、`synergy_skill_count`（L282 技能类型计数）、`synergy_automation`（L64 `_resolve_zeroing` 内 自动化计数）。TokenSource 提供计数，消费侧 bonus_per x count 公式保留 | `evaluate.py` L64 / L271 / L281 / L282 | 部分（4 处均保留 bonus_per 计算） | ~45 |
-| C3 | **贸易站/跨房间计数替换**：替代 `synergy_skill_alias`（L272 技能别名映射——完全替代，TokenSource 原生支持别名条件匹配，**已完成 a34bb1b**）；替代 `_eval_cross_room_effects()` 内的 `synergy_cross_room_pair`（L181）、`synergy_facility_group`（L198）、`synergy_global_faction`（L206）——提供计数，消费侧保留 | `evaluate.py` L272 / L181 / L198 / L206 | 完全（skill_alias）+ 部分（cross_room_pair / facility_group / global_faction） | ~30 |
-| C4 | **Control 层替换**：替代 `compute_control_global_bonus`（control_linkages.py:270）中 `_CONTROL_CONDITIONAL_TABLE` 的条件计数、`control_per_operator_bonus`（control_linkages.py:331）中 `_eval_per_op` 的 per-op 计数（group_id / nation_id / is_knight）。**消费侧**（线性公式 `count x bonus_per` / `max()` 取最高）保留 | `synergy/control_linkages.py` L270 / L331 / L358 | 部分（3 处均保留消费侧公式） | ~30 |
-| C5 | **不做替换的声明**：爬升 `e(t)`、菲亚梅塔自律、冲突互斥、订单覆盖、裁缝豁免、`compute_buff_pool`（B2 级联）——在接入点加注释标注"非计数层，保留旧路径" | `evaluate.py`（注释）+ `synergy/control_linkages.py`（注释） | — | ~10 |
-| C6 | **回归验证 + 性能基准**：`pytest tests/ -v` 全量通过；`python run_solver.py` 端到端无异常；`_timing.py` 埋点对比 `evaluate_tokens()` 总耗时 vs 旧 8 个计数函数耗时之和，确认无退化 | `solver/slot/_timing.py`（埋点） | — | ~10 |
+| C1 | **evaluate_room() 接入框架** ✅ | `evaluate.py` L270-274 `compute_room_tokens()` 调用 | 接入框架 |
+| C2 | **制造站计数替换** ⚠️ 2/4 | `synergy_skill_count` + `synergy_faction_room` 消费 room_tokens | 快速路径 |
+| C3 | **技能别名替代** ✅ | `synergy_skill_alias` → `room_tokens["haimei_in_room"]` a34bb1b | 完全 |
+| C4 | **Control 层对齐验证** ✅ | `_eval_per_op` 3 条件对照测试通过（pinus/knight/count_ge） | 验证层 |
+| C5 | **不替换声明** ✅ | evaluate.py L276-281 6 项 | — |
+| C6 | **回归+性能** ✅ | 913 passed / 0.97s 全量, 130 token_source / 0.11s | — |
+
+**实际交付与计划差异**：
+
+| 差异 | 原因 |
+|------|------|
+| `synergy_pair` 不消费 room_tokens | set membership 非计数型遍历，token 化无增益 |
+| `synergy_automation` 不替换 | per-op buff_id 扫描 + 归零集合语义，C5 声明 |
+| `synergy_cross_room_pair/facility_group/global_faction` 未替换 | 需 ctx.all_assignments/all_operators 跨房间上下文，evaluate_room() 未接收 SlotContext |
+| C4 仅对齐验证未消费替换 | control 函数被 6 个调用点使用（mfg/trade/solver/contribution/production），消费需 Phase D 统一接入 |
 
 **验收条件**：
 - [x] `pytest tests/ -v` **全量测试通过**（零回归）— 2026-06-08 实测 897 passed in 0.83s
