@@ -251,7 +251,7 @@ TokenSource 只负责第二层：将"符合条件的干员数"、"房间效率�
 | B8 | `buff_id → token` 级联正确性测试（黑键 perception→silent_resonance、令 yanhuo→wushu_crystal） | `tests/test_token_source.py` | ~30 | 已完成 |
 
 **验收条件**：
-- [ ] 全部 ~75 条 TokenSource 注册完成，无遗漏（对照 `types.py` TABLES 注册器逐项核对）（当前 47/53：B7 收尾纳入 FACILITY_ATTRS/FACTORY_COUNT/FACILITY_GROUP/TRADE_SHARE/CONTROL_TRADE_LIMIT/EFF_AMPLIFIER/CONDITIONAL_EFF 共 11 条；剩余 6 条阻塞性延期；表覆盖率 13/14）
+- [ ] 全部 ~75 条 TokenSource 注册完成，无遗漏（对照 `types.py` TABLES 注册器逐项核对）（当前 49/53：B7 收尾纳入 FACILITY_ATTRS/FACTORY_COUNT/FACILITY_GROUP/TRADE_SHARE/CONTROL_TRADE_LIMIT/EFF_AMPLIFIER/CONDITIONAL_EFF/PHASE_B_AUTOMATION/PHASE_B_ZEROING_VARIANT 共 13 条；剩余 4 条阻塞性延期；表覆盖率 13/14）
 - [x] `_BUFF_TO_TOKENS` 覆盖 `_OPERATOR_BUFF_PRODUCERS` 的全部 16 条 entries（14 个唯一 buff_id）
 - [x] 条件解析器对所有语法抛出明确错误（未知 key、格式错误等）而非静默失败
 - [ ] TokenSource 输出与 **全部 5 个旧计数函数**（含级联场景）输出对齐（当前 3/5：`synergy_skill_count` / `synergy_global_faction` / `compute_cluster_hunting_bonus` 已对齐，`synergy_facility_count` / `synergy_facility_group` 待 Phase C）
