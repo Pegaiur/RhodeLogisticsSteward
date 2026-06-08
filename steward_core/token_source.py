@@ -476,3 +476,44 @@ PHASE_A_SOURCES: list[TokenSource] = [
     TokenSource(token="karlan_trade_penalty", condition="group_id=karlan"),
 ]
 
+
+# ─── Phase B TokenSource 注册列表 ────────────────────────────────────────
+
+# A 层技能标签计数（A3）
+# 水月/多萝西/苍苔 对同房内持有相同 skill_class 的干员计数 +5%/人
+PHASE_B_SKILL_CLASS: list[TokenSource] = [
+    TokenSource(token="standardization_count", condition="skill_class=标准化"),
+    TokenSource(token="rhine_tech_count", condition="skill_class=莱茵科技"),
+    TokenSource(token="metal_craft_count", condition="skill_class=金属工艺"),
+]
+
+# B 层全局阵营计数（B6）
+# 缪尔赛思/杏仁/娜斯提 每名符合条件的全基建干员提供效率加成
+PHASE_B_GLOBAL_FACTION: list[TokenSource] = [
+    TokenSource(token="rhine_global", condition="group_id=rhine", scope="global", cap=5),
+    TokenSource(token="blacksteel_global", condition="group_id=blacksteel", scope="global", cap=3),
+    TokenSource(token="rhine_global_mfg", condition="group_id=rhine", scope="global", cap=5),
+]
+
+# B 层跨房间配对（B7）
+# 烈夏↔古米 / 深巡↔乌尔比安 / 贝洛内↔伺夜 — 跨设施配对
+PHASE_B_CROSS_PAIRS: list[TokenSource] = [
+    TokenSource(token="liexia_gumi", condition="pair=烈夏:古米"),
+    TokenSource(token="shenxun_wuerbian", condition="pair=深巡:乌尔比安"),
+    TokenSource(token="beiluo_siye", condition="pair=贝洛内:伺夜"),
+]
+
+# C 层集群狩猎
+# 歌蕾蒂娅 每 Mfg 站内深海猎人提供 +10%/人
+PHASE_B_CLUSTER: list[TokenSource] = [
+    TokenSource(token="abyssal_mfg", condition="is_abyssal_hunter", scope="facility"),
+]
+
+# 全量 B 层注册（不含需要 depends_on="layout"/"facility" 的条目）
+PHASE_B_SOURCES: list[TokenSource] = (
+    PHASE_B_SKILL_CLASS
+    + PHASE_B_GLOBAL_FACTION
+    + PHASE_B_CROSS_PAIRS
+    + PHASE_B_CLUSTER
+)
+

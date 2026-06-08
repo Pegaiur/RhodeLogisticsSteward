@@ -625,6 +625,87 @@ class TestConditionSkillClass:
         result = evaluate_tokens([TokenSource(token="t", condition="group_id=glasgow")], ops)
         assert result["t"] == 2.0
 
+
+# ─── Phase B1: 新增 TokenSource 注册 ──────────────────────────────
+
+
+class TestPhaseBSkillClass:
+    """A 层技能标签计数"""
+
+    def test_skill_class_all_evaluable(self):
+        from steward_core.token_source import PHASE_B_SKILL_CLASS, evaluate_tokens
+
+        s1 = _mk_mfg_skill(); s1.buff_name = "标准化·α"
+        s2 = _mk_mfg_skill(); s2.buff_name = "莱茵科技·β"
+        s3 = _mk_mfg_skill(); s3.buff_name = "金属工艺·γ"
+        ops = [
+            _mk_op("A", skills=[s1]),
+            _mk_op("B", skills=[s2]),
+            _mk_op("C", skills=[s3]),
+        ]
+        result = evaluate_tokens(PHASE_B_SKILL_CLASS, ops)
+        assert result["standardization_count"] == 1.0
+        assert result["rhine_tech_count"] == 1.0
+        assert result["metal_craft_count"] == 1.0
+
+
+class TestPhaseBGlobalFaction:
+    """B 层全局阵营计数"""
+
+    def test_rhine_global_count(self):
+        from steward_core.token_source import PHASE_B_GLOBAL_FACTION, evaluate_tokens
+
+        ops = [
+            _mk_op("A", group_id="rhine"),
+            _mk_op("B", group_id="rhine"),
+            _mk_op("C", group_id="other"),
+        ]
+        result = evaluate_tokens(PHASE_B_GLOBAL_FACTION, ops)
+        assert result["rhine_global"] == 2.0
+
+    def test_rhine_global_cap(self):
+        from steward_core.token_source import PHASE_B_GLOBAL_FACTION, evaluate_tokens
+
+        ops = [_mk_op("X", group_id="rhine") for _ in range(10)]
+        result = evaluate_tokens(PHASE_B_GLOBAL_FACTION, ops)
+        assert result["rhine_global"] == 5.0  # cap=5
+
+
+class TestPhaseBCrossPairs:
+    """B 层跨房间配对"""
+
+    def test_liexia_gumi_pair(self):
+        from steward_core.token_source import PHASE_B_CROSS_PAIRS, evaluate_tokens
+
+        ops = [
+            _mk_op("烈夏"),
+            _mk_op("古米"),
+        ]
+        result = evaluate_tokens(PHASE_B_CROSS_PAIRS, ops)
+        assert result["liexia_gumi"] == 1.0
+
+    def test_liexia_gumi_missing(self):
+        from steward_core.token_source import PHASE_B_CROSS_PAIRS, evaluate_tokens
+
+        ops = [_mk_op("烈夏")]
+        result = evaluate_tokens(PHASE_B_CROSS_PAIRS, ops)
+        assert result["liexia_gumi"] == 0.0
+
+
+class TestPhaseBCluster:
+    """C 层集群狩猎"""
+
+    def test_abyssal_mfg_count(self):
+        from steward_core.token_source import PHASE_B_CLUSTER, evaluate_tokens
+
+        ops = [
+            _mk_op("A", group_id="abyssal"),
+            _mk_op("B", group_id="abyssal"),
+            _mk_op("C", group_id="other"),
+        ]
+        result = evaluate_tokens(PHASE_B_CLUSTER, ops)
+        assert result["abyssal_mfg"] == 2.0
+
     def test_laterano_trade_counts_nation(self):
         """nation_id=laterano → 计数"""
         from steward_core.token_source import TokenSource, evaluate_tokens
