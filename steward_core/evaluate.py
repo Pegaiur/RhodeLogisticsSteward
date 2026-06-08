@@ -9,6 +9,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from steward_core.models import Operator, LayoutConfig
+from steward_core.token_source import compute_room_tokens
 from steward_core.efficiency_fn import constant_efficiency, integrate_segments, stepped_efficiency
 from steward_core.synergy import (
     synergy_pair, synergy_skill_count, synergy_skill_alias, synergy_automation,
@@ -268,7 +269,6 @@ def evaluate_room(
     )
 
     # ── TokenSource 接入（Phase C1）：预计算全部 token 值 ──
-    from steward_core.token_source import compute_room_tokens
     room_tokens = compute_room_tokens(operators)
     # 注：ctx 传入 None 因 evaluate_room() 参数尚未包含 SlotContext；layout 等
     # 属性在 synergy_facility_count 内部通过参数单独传入，后续 Phase C2-C3 逐步迁移
