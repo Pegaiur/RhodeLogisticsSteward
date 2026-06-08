@@ -239,16 +239,16 @@ TokenSource 只负责第二层：将"符合条件的干员数"、"房间效率�
 
 **目标**：~75 条 TokenSource 全部注册，buff_id→token 映射表就绪，条件解析器完善，引擎支持布局/设施依赖。
 
-| 步骤 | 内容 | 产出文件 | 行数 |
-|:---:|------|---------|:---:|
-| B1 | 补齐 TokenSource 注册：A 层配对 3 + 技能标签 3 + 自动化 5（含归零变体 2）+ 工厂数量 8 + 贸易分享/放大/条件 11 + B 层全局阵营 3 + 跨房间配对 3 + 深海猎人 1 + 设施 group 3 | `token_maps.py` | ~150 |
-| B2 | 新增 `_BUFF_TO_TOKENS: dict[str, list[str]]` 映射表（14 条），替代 `_OPERATOR_BUFF_PRODUCERS` 的 `dimension + cascade` 字段组合。执行引擎支持 `depends_on="token"` 级联时通过此表查找上游 buff 的生产 token | `token_maps.py` / `token_source.py` | ~60 |
-| B3 | 新增 `_FN_CONDITIONS` 注册表：`is_knight`（已有）+ 预留 `is_abyssal_hunter`（深海猎人派生）等扩展槽位 | `token_source.py` | ~20 |
-| B4 | 条件解析器补充 `pair` 配对解析（冒号分隔 → char_id 对）、`count_ge` 阈值解析（冒号分隔 → group_id + N） | `token_source.py` | ~30 |
-| **B5** | **引擎支持 `depends_on="layout"/"facility"`**：`evaluate_tokens()` 接收 `ctx: SlotContext` → 通过 `ctx.layout` 查询布局数据（工厂数量、宿舍等级、发电站数等）；通过 `ctx.build_all_assignments()` 查询设施级干员分布（如含 sui 的设施数）。拓扑排序中 `depends_on="layout"/"facility"` 的 token 在第一遍计算完成后执行布局/设施注入 | `token_source.py` | ~40 |
-| B6 | 补齐 B1 中依赖 `depends_on="layout"/"facility"` 的 TokenSource 注册：工厂数量联动 8 + 自动化 3（森蚺/掠风/异客/温蒂通过 `depends_on="layout"` 查询发电站数）+ 设施 group 3（`depends_on="facility"`）| `token_maps.py` | ~60 |
-| B7 | 集成测试：TokenSource 输出与旧函数（`synergy_skill_count` / `synergy_global_faction` / `compute_cluster_hunting_bonus` / `synergy_facility_count` / `synergy_facility_group`）全量对齐。`compute_buff_pool`（BuffPool 生产者端）的替代正确性由 B2 映射表 + B8 级联测试覆盖 | `tests/test_token_source.py` | ~50 |
-| B8 | `buff_id → token` 级联正确性测试（黑键 perception→silent_resonance、令 yanhuo→wushu_crystal） | `tests/test_token_source.py` | ~30 |
+| 步骤 | 内容 | 产出文件 | 行数 | 状态 |
+|:---:|------|---------|:---:|:---:|
+| B1 | 补齐 TokenSource 注册：A 层配对 3 + 技能标签 3 + 自动化 5（含归零变体 2）+ 工厂数量 8 + 贸易分享/放大/条件 11 + B 层全局阵营 3 + 跨房间配对 3 + 深海猎人 1 + 设施 group 3 | `token_maps.py` | ~150 | 已完成 |
+| B2 | 新增 `_BUFF_TO_TOKENS: dict[str, list[str]]` 映射表（14 条），替代 `_OPERATOR_BUFF_PRODUCERS` 的 `dimension + cascade` 字段组合。执行引擎支持 `depends_on="token"` 级联时通过此表查找上游 buff 的生产 token | `token_maps.py` / `token_source.py` | ~60 | 已完成 |
+| B3 | 新增 `_FN_CONDITIONS` 注册表：`is_knight`（已有）+ 预留 `is_abyssal_hunter`（深海猎人派生）等扩展槽位 | `token_source.py` | ~20 | 已完成 |
+| B4 | 条件解析器补充 `pair` 配对解析（冒号分隔 → char_id 对）、`count_ge` 阈值解析（冒号分隔 → group_id + N） | `token_source.py` | ~30 | 已完成 |
+| **B5** | **引擎支持 `depends_on="layout"/"facility"`**：`evaluate_tokens()` 接收 `ctx: SlotContext` → 通过 `ctx.layout` 查询布局数据（工厂数量、宿舍等级、发电站数等）；通过 `ctx.build_all_assignments()` 查询设施级干员分布（如含 sui 的设施数）。拓扑排序中 `depends_on="layout"/"facility"` 的 token 在第一遍计算完成后执行布局/设施注入 | `token_source.py` | ~40 | 已完成 |
+| B6 | 补齐 B1 中依赖 `depends_on="layout"/"facility"` 的 TokenSource 注册：工厂数量联动 8 + 自动化 3（森蚺/掠风/异客/温蒂通过 `depends_on="layout"` 查询发电站数）+ 设施 group 3（`depends_on="facility"`）| `token_maps.py` | ~60 | 已完成 |
+| B7 | 集成测试：TokenSource 输出与旧函数（`synergy_skill_count` / `synergy_global_faction` / `compute_cluster_hunting_bonus` / `synergy_facility_count` / `synergy_facility_group`）全量对齐。`compute_buff_pool`（BuffPool 生产者端）的替代正确性由 B2 映射表 + B8 级联测试覆盖 | `tests/test_token_source.py` | ~50 | 已完成 |
+| B8 | `buff_id → token` 级联正确性测试（黑键 perception→silent_resonance、令 yanhuo→wushu_crystal） | `tests/test_token_source.py` | ~30 | 待实施 |
 
 **验收条件**：
 - [x] 全部 ~75 条 TokenSource 注册完成，无遗漏（对照 `types.py` TABLES 注册器逐项核对）
