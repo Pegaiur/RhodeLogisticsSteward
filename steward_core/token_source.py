@@ -100,6 +100,8 @@ def evaluate_tokens(
         tokens[token_name] = value
 
     # 第二遍：layout/facility 依赖（在常规 token 之后计算）
+    # 注：layout/facility 源在第一遍按默认 aggregate="count" 被计算，第二遍用
+    # _evaluate_context_dependent 覆写。第一遍结果是占位值，最终以第二遍为准。
     for s in sources:
         if s.depends_on in ("layout", "facility"):
             tokens[s.token] = _evaluate_context_dependent(s, operators, ctx)
@@ -219,7 +221,12 @@ def _evaluate_layout(source: TokenSource, ctx: "SlotContext | None") -> float:
 
 
 def _evaluate_facility(source: TokenSource, ctx: "SlotContext | None") -> float:
-    """设施依赖：统计含匹配干员的设施数"""
+    """设施依赖：统计含匹配干员的设施类型数
+
+    注：build_all_assignments() 以 facility_type 分组（如所有 Trade 站合并为 "Trade" 键），
+    因此统计的是"设施类型数"而非"房间数"。此语义与 _FACILITY_GROUP_TABLE 的
+    count_facilities_with_group 一致，但与游戏"各房间独立计数"机制有差异。
+    """
     if ctx is None:
         return 0.0
 

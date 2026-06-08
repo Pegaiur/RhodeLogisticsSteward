@@ -649,9 +649,25 @@ class TestLayoutDependency:
         result = evaluate_tokens(sources, [], ctx)
         assert result["trade_rooms"] == 2.0
 
+    def test_layout_ctx_none_returns_zero(self):
+        from steward_core.token_source import TokenSource, evaluate_tokens
+
+        sources = [TokenSource(token="trade_rooms", depends_on="layout", target_room="Trade")]
+        result = evaluate_tokens(sources, [], None)
+        assert result["trade_rooms"] == 0.0
+
 
 class TestFacilityDependency:
     """TokenSource depends_on='facility' — 从 ctx.build_all_assignments() 查询"""
+
+    def test_facility_ctx_none_returns_zero(self):
+        from steward_core.token_source import TokenSource, evaluate_tokens
+
+        sources = [TokenSource(
+            token="sui_facilities", depends_on="facility", condition="group_id=sui",
+        )]
+        result = evaluate_tokens(sources, [], None)
+        assert result["sui_facilities"] == 0.0
 
     def test_facility_sui_count(self):
         from steward_core.token_source import TokenSource, evaluate_tokens
@@ -707,6 +723,7 @@ class TestPhaseBFactoryCount:
         result = evaluate_tokens(PHASE_B_FACTORY_COUNT, [], ctx)
         assert result["trade_rooms"] == 2.0
         assert result["mfg_rooms"] == 1.0
+        assert result["power_rooms"] == 0.0
 
 
 class TestPhaseBFacilityGroup:
