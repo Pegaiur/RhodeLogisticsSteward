@@ -449,6 +449,13 @@ class TestBuildMatcher:
         with pytest.raises(NotImplementedError, match="直接处理"):
             _build_matcher("count_ge:karlan=3")
 
+    def test_team_id(self):
+        from steward_core.token_source import _build_matcher
+
+        m = _build_matcher("team_id=reserve1")
+        assert m(_mk_op("芬", team_id="reserve1"))
+        assert not m(_mk_op("其他", team_id="other"))
+
 
 # ─── Phase A3: SlotContext.find_by_char_id ──────────────────────
 
@@ -629,16 +636,8 @@ class TestPhaseASources:
         result = evaluate_tokens([TokenSource(token="t", condition="group_id=karlan")], ops)
         assert result["t"] == 1.0
 
-    def test_team_id_match(self):
-        """team_id 条件语法独立测试"""
-        from steward_core.token_source import _build_matcher
 
-        m = _build_matcher("team_id=reserve1")
-        assert m(_mk_op("芬", team_id="reserve1"))
-        assert not m(_mk_op("其他", team_id="other"))
-
-
-# ─── A5 补充测试：cap 截断 + attr=None 边界 ────────────────────────────
+# ─── A5: cap 截断 + attr=None 边界 ────────────────────────────────
 
 
 class TestAggregateCap:
