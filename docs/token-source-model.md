@@ -281,7 +281,9 @@ TokenSource 只负责第二层：将"符合条件的干员数"、"房间效率�
 | `scope="workspace"` 跨设施组合 | 2 | 需 Control+Mfg+Trade 三种设施类型的组合 scope（贸易条件效率 2 条） |
 | `_FN_CONDITIONS` 派生函数 | 5 | 自动化/归零变体需 `has_automation`/`has_zeroing_variant` 派生布尔（5 条） |
 | `partner_facility` 跨设施 pair | 1 | 中枢→贸易上限（维什戴尔→赫德雷）需跨房间配对 |
-| `per-op` 属性提取 | 5 | 自动化干员 bonus 各不相同（5/5/5/15/10），消费侧需持有者属性查表 |
+| `per-op` 属性提取 | 5 | 自动化干员 bonus 各不相同（5/5/5/15/10），消费侧需持有者属性查表；与 `_FN_CONDITIONS` 条目重叠（同 5 条自动化/归零变体需要两种能力） |
+
+**注**：7 项引擎能力对应的表列求和为 22，与阻塞条目 18 的差额 4 来自 `per-op` 属性提取 + `_FN_CONDITIONS` 对同一 5 条自动化/归零变体条目的双重需求重叠。
 
 ---
 
@@ -289,20 +291,28 @@ TokenSource 只负责第二层：将"符合条件的干员数"、"房间效率�
 
 **目标**：TokenSource 替代求解器中的旧计数函数，回归测试全绿，性能不低于旧方式。
 
-| 步骤 | 内容 | 产出文件 | 行数 |
-|:---:|------|---------|:---:|
-| C1 | `warm_start` 接入：替代 `compute_consumer_driven_D0` 中的逐函数计数调用和 `_estimate_per_op_pool_value` 中的 `_count_pool_matching` 遍历——两处均替换为单次 `evaluate_tokens()` 调用 | `slot/rooms.py`, `slot/partials.py` | ~30 |
-| C2 | 坐标下降接入：`_dispatch_optimize` → `optimize_mfg_room` / `optimize_trade_room` 中的 `synergy_pair` / `synergy_skill_count` / `synergy_automation` / `synergy_faction_room` 逐函数计数，替换为 TokenSource + 消费层保留 | `slot/mfg.py`, `slot/trade.py` | ~60 |
-| C3 | Control 层接入：`compute_control_global_bonus` 中 `_eval_per_op` / `compute_cluster_hunting_bonus` 替换为 TokenSource；per-operator 条件加成的**消费侧**（线性公式）保留在 control_linkages | `synergy/control_linkages.py` | ~40 |
-| C4 | 不做替换的声明：爬升 `e(t)`、菲亚梅塔自律、冲突互斥、订单覆盖、裁缝豁免 —— 在接入点加注释标注"非计数层，保留旧路径" | 各相关文件 | ~10 |
-| C5 | 回归验证：`pytest tests/ -v` 全量测试通过；`python run_solver.py` 端到端无异常 | — | — |
-| C6 | 性能基准：`_timing.py` 埋点对比 `evaluate_tokens()` 总耗时 vs 旧 5 个计数函数耗时之和，确认无退化（允许 ±5% 内） | `_timing.py` | ~10 |
+**架构事实**（修订依据）：
+- 实际求解器架构中 `evaluate_room()`（`evaluate.py:217`）是窄腰——所有房间级效率评估均流经此函数，旧计数函数均在 `evaluate_room()` 或其 helper（`_resolve_zeroing`、`_eval_cross_room_effects`）中被调用。
+- 原计划引用的 5 个函数/文件中有 4 个不存在：`compute_consumer_driven_D0`（实际为 `compute_consumer_D`，`_cold_start.py:38`）、`_count_pool_matching`、`_dispatch_optimize`、`_estimate_per_op_pool_value`、`slot/rooms.py` 均不存在。
+- `compute_buff_pool` 当前不替换（B2 映射表已就位但级联逻辑复杂，延后至 Phase C 后续迭代）。
+- 8 个可替代计数点按优先级排序：`synergy_facility_count`（greed.py:233）→ `synergy_skill_count`（evaluate.py:282）→ `synergy_pair`（evaluate.py:271）→ `synergy_faction_room`（evaluate.py:281）→ `synergy_automation`（evaluate.py:64）→ `synergy_facility_group`（evaluate.py:198）→ `synergy_global_faction`（evaluate.py:206）→ `synergy_cross_room_pair`（evaluate.py:181）。其中 2 个可完全替代（`synergy_skill_alias` evaluate.py:272 + `synergy_facility_count` greed.py:233 单 op 检查），6 个需部分替代（计数 + 保留消费侧 bonus_per 计算）。
+
+| 步骤 | 内容 | 产出文件 / 函数 / 行号 | 替换策略 | 行数 |
+|:---:|------|---------|:---:|:---:|
+| C1 | **evaluate_room() 接入框架**：在 `evaluate_room()` 顶部添加 token 缓存（单次 `evaluate_tokens()` 调用覆盖该 room 全部计数需求），替代 `synergy_facility_count`（L286-288 房间级 + `greed.py:233` 单 op 回退检查） | `evaluate.py` L217 / L286-288；`solver/greed.py` L233 | 完全（layout 属性聚合依赖 Phase B 已完成的 `depends_on="layout"` 引擎能力） | ~25 |
+| C2 | **制造站计数替换**：替代 `evaluate_room()` 主体内的计数函数——`synergy_pair`（L271 房间组成配对）、`synergy_faction_room`（L281 阵营房间）、`synergy_skill_count`（L282 技能类型计数）、`synergy_automation`（L64 `_resolve_zeroing` 内 自动化计数）。TokenSource 提供计数，消费侧 bonus_per x count 公式保留 | `evaluate.py` L64 / L271 / L281 / L282 | 部分（4 处均保留 bonus_per 计算） | ~45 |
+| C3 | **贸易站/跨房间计数替换**：替代 `synergy_skill_alias`（L272 技能别名映射——完全替代，TokenSource 原生支持别名条件匹配）；替代 `_eval_cross_room_effects()` 内的 `synergy_cross_room_pair`（L181）、`synergy_facility_group`（L198）、`synergy_global_faction`（L206）——提供计数，消费侧保留 | `evaluate.py` L272 / L181 / L198 / L206 | 完全（skill_alias）+ 部分（cross_room_pair / facility_group / global_faction） | ~30 |
+| C4 | **Control 层替换**：替代 `compute_control_global_bonus`（control_linkages.py:270）中 `_CONTROL_CONDITIONAL_TABLE` 的条件计数、`control_per_operator_bonus`（control_linkages.py:331）中 `_eval_per_op` 的 per-op 计数（group_id / nation_id / is_knight）。**消费侧**（线性公式 `count x bonus_per` / `max()` 取最高）保留 | `synergy/control_linkages.py` L270 / L331 / L358 | 部分（3 处均保留消费侧公式） | ~30 |
+| C5 | **不做替换的声明**：爬升 `e(t)`、菲亚梅塔自律、冲突互斥、订单覆盖、裁缝豁免、`compute_buff_pool`（B2 级联）——在接入点加注释标注"非计数层，保留旧路径" | `evaluate.py`（注释）+ `synergy/control_linkages.py`（注释） | — | ~10 |
+| C6 | **回归验证 + 性能基准**：`pytest tests/ -v` 全量通过；`python run_solver.py` 端到端无异常；`_timing.py` 埋点对比 `evaluate_tokens()` 总耗时 vs 旧 8 个计数函数耗时之和，确认无退化 | `solver/slot/_timing.py`（埋点） | — | ~10 |
 
 **验收条件**：
 - [ ] `pytest tests/ -v` **全量测试通过**（零回归）
 - [ ] `python run_solver.py` 产出 JSON 与 Phase B 完成时的产出 **差异 ≤ 3 条干员**（允许因浮点排序边界导致的微小差异）
-- [ ] `evaluate_tokens()` 总耗时 ≤ 旧 5 个函数耗时之和 × 1.05
+- [ ] `evaluate_tokens()` 总耗时 ≤ 旧 8 个计数函数耗时之和 x 1.05
 - [ ] 所有未替换的旧路径有明确注释标注原因
+- [ ] `synergy_facility_count`（B7 待办）和 `synergy_facility_group`（B7 待办）输出与旧函数对齐
+- [ ] `synergy_skill_alias` 完全由 TokenSource 替代后，红松骑士团→标准化映射结果一致
 
 ---
 
