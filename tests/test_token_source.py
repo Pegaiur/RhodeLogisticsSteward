@@ -1820,3 +1820,58 @@ class TestComputeRoomTokensAllSources:
         assert "siye_in_base" in room_tokens
         assert "trade_share_houshao" in room_tokens
         assert "wisudell_hedley" in room_tokens
+
+
+# ─── Phase B7 解锁：自动化 + 归零变体 ──────────────────────────────
+
+
+class TestAutomationZeroingConditions:
+    """is_automation_holder + is_zeroing_variant_holder 派生布尔"""
+
+    def test_is_automation_holder_buff_match(self):
+        from steward_core.token_source import _build_matcher
+
+        s = _mk_mfg_skill("manu_prod_spd&power[000]")
+        op = _mk_op("A", skills=[s])
+        matcher = _build_matcher("is_automation_holder")
+        assert matcher(op) is True
+
+    def test_is_automation_holder_name_fallback(self):
+        from steward_core.token_source import _build_matcher
+
+        op = _mk_op("森蚺")
+        matcher = _build_matcher("is_automation_holder")
+        assert matcher(op) is True
+
+    def test_is_not_automation_holder(self):
+        from steward_core.token_source import _build_matcher
+
+        op = _mk_op("A")
+        matcher = _build_matcher("is_automation_holder")
+        assert matcher(op) is False
+
+    def test_is_zeroing_variant_holder_match(self):
+        from steward_core.token_source import _build_matcher
+
+        s = _mk_mfg_skill("manu_prod_spd&manu[000]")
+        op = _mk_op("A", skills=[s])
+        matcher = _build_matcher("is_zeroing_variant_holder")
+        assert matcher(op) is True
+
+    def test_automation_count_token(self):
+        from steward_core.synergy.token_maps import PHASE_B_AUTOMATION
+        from steward_core.token_source import evaluate_tokens
+
+        s = _mk_mfg_skill("manu_prod_spd&power[000]")
+        ops = [_mk_op("A", skills=[s]), _mk_op("B", skills=[s]), _mk_op("C")]
+        tokens = evaluate_tokens(PHASE_B_AUTOMATION, ops)
+        assert tokens["automation_count"] == 2.0
+
+    def test_zeroing_variant_count_token(self):
+        from steward_core.synergy.token_maps import PHASE_B_ZEROING_VARIANT
+        from steward_core.token_source import evaluate_tokens
+
+        s = _mk_mfg_skill("manu_prod_spd&manu[100]")
+        ops = [_mk_op("A", skills=[s])]
+        tokens = evaluate_tokens(PHASE_B_ZEROING_VARIANT, ops)
+        assert tokens["zeroing_variant_count"] == 1.0

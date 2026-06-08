@@ -182,3 +182,17 @@ PHASE_B_TRADE_SHARE: list[TokenSource] = [
 PHASE_B_CONTROL_TRADE_LIMIT: list[TokenSource] = [
     TokenSource(token="wisudell_hedley", condition="pair=维什戴尔:赫德雷"),
 ]
+
+
+# ─── Phase B7 解锁：自动化 + 归零变体 ─────────────────────────────
+
+# 自动化持有者计数（_POWER_BUFF_BONUS + _A_AUTOMATION_FALLBACK）
+# TokenSource 计数 room 内自动化干员数，per-op bonus 值由消费侧查表
+PHASE_B_AUTOMATION: list[TokenSource] = [
+    TokenSource(token="automation_count", condition="is_automation_holder"),
+]
+
+# 归零变体持有者计数（_ZEROING_VARIANT_TABLE）
+PHASE_B_ZEROING_VARIANT: list[TokenSource] = [
+    TokenSource(token="zeroing_variant_count", condition="is_zeroing_variant_holder"),
+]

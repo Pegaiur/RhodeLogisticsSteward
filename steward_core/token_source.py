@@ -431,6 +431,16 @@ from steward_core.synergy.helpers import _is_knight
 _FN_CONDITIONS["is_knight"] = lambda op: _is_knight(op)
 _FN_CONDITIONS["is_abyssal_hunter"] = lambda op: op.has_group("abyssal")
 
+# ── Phase B7 解锁：自动化 + 归零变体派生布尔 ──
+from steward_core.synergy.mfg_linkages import _POWER_BUFF_BONUS, _A_AUTOMATION_FALLBACK, _ZEROING_VARIANT_TABLE
+_FN_CONDITIONS["is_automation_holder"] = lambda op: (
+    any(sk.buff_id in _POWER_BUFF_BONUS for sk in op.skills)
+    or op.name in _A_AUTOMATION_FALLBACK
+)
+_FN_CONDITIONS["is_zeroing_variant_holder"] = lambda op: (
+    any(sk.buff_id in _ZEROING_VARIANT_TABLE for sk in op.skills) if _ZEROING_VARIANT_TABLE else False
+)
+
 
 def _parse_condition(condition: str) -> tuple[str, str] | tuple[str]:
     """解析 condition 字符串
@@ -571,6 +581,7 @@ def compute_room_tokens(
         PHASE_B_FACILITY_ATTRS, PHASE_B_FACTORY_COUNT,
         PHASE_B_FACILITY_GROUP, PHASE_B_TRADE_SHARE,
         PHASE_B_CONTROL_TRADE_LIMIT,
+        PHASE_B_AUTOMATION, PHASE_B_ZEROING_VARIANT,
     )
 
     all_sources = (
@@ -580,6 +591,7 @@ def compute_room_tokens(
         + PHASE_B_FACILITY_ATTRS + PHASE_B_FACTORY_COUNT
         + PHASE_B_FACILITY_GROUP + PHASE_B_TRADE_SHARE
         + PHASE_B_CONTROL_TRADE_LIMIT
+        + PHASE_B_AUTOMATION + PHASE_B_ZEROING_VARIANT
     )
     # 注：ctx=None 时 depends_on 源返回 0.0（layout/facility 依赖在无 ctx 时静默降级）
     return evaluate_tokens(all_sources, operators, ctx)
