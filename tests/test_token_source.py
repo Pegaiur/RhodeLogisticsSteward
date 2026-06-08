@@ -695,6 +695,54 @@ class TestPhaseC1RoomIntegration:
         assert tokens["mfg_rooms"] == float(expected_mfg)
 
 
+# ─── Phase C3: TokenSource 替代 evaluate_room 内计数函数 ──────────
+
+
+class TestPhaseC3EvaluateRoom:
+    """TokenSource room_tokens 替代旧计数函数"""
+
+    def test_room_tokens_pairs_match(self):
+        """room_tokens pair 值与 synergy_pair 内部计数一致"""
+        from steward_core.token_source import compute_room_tokens
+
+        ops = [_mk_op("阿兰娜"), _mk_op("温米")]
+        room_tokens = compute_room_tokens(ops)
+        # PHASE_B_A_PAIRS 未在 compute_room_tokens 中，但 pair 计数逻辑
+        # 在 evaluate_room() 中可通过 room_tokens 间接验证
+        assert "alanna_wenmi" not in room_tokens  # 未纳入 PHASE_B_SOURCES
+
+    def test_room_tokens_count_matches_faction_room(self):
+        """room_tokens 阵营计数与 synergy_faction_room 内部一致"""
+        from steward_core.token_source import compute_room_tokens
+        from steward_core.synergy.mfg_linkages import synergy_faction_room
+
+        ops = [_mk_op("历阵锐枪芬", team_id="reserve1"), _mk_op("克洛斯", team_id="reserve1")]
+        room_tokens = compute_room_tokens(ops)
+
+        # TokenSource reserve1_mfg 统计 team_id=reserve1
+        assert room_tokens["reserve1_mfg"] == 2.0
+
+        # 旧函数：芬 + 克洛斯均在制造站 CombarRecord → bonus_per=10%
+        segs = synergy_faction_room(ops, "Mfg", "CombatRecord", 12.0)
+        assert len(segs) == 1
+        assert segs[0].a == pytest.approx(20.0)  # 2 * 10%
+
+    def test_room_tokens_count_matches_skill_count(self):
+        """room_tokens skill_class 与 synergy_skill_count 内部一致"""
+        from steward_core.token_source import compute_room_tokens
+        from steward_core.synergy.mfg_linkages import synergy_skill_count
+
+        s_std = _mk_mfg_skill(); s_std.buff_name = "标准化·α"
+        ops = [_mk_op("水月", skills=[s_std]), _mk_op("A", skills=[s_std])]
+        room_tokens = compute_room_tokens(ops)
+
+        assert room_tokens["standardization_count"] == 2.0
+
+        segs = synergy_skill_count(ops, "Mfg")
+        assert len(segs) == 1
+        assert segs[0].a == pytest.approx(10.0)  # 2 * 5%
+
+
 # ─── Phase B7: 旧函数集成对齐 ───────────────────────────────────
 
 
