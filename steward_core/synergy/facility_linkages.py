@@ -23,11 +23,13 @@ def synergy_facility_count(
     layout: LayoutConfig,
     dorm_levels: int | None = None,
     T: float = 12.0,
+    room_tokens: dict[str, float] | None = None,
 ) -> list[LinearSegment]:
     """根据全基建设施数量/等级为当前房间提供联动加成
 
     dorm_levels 为 None 时从 layout.rooms 中 Dormitory 房间的 level 求和计算。
     显式传入则使用传入值（主要用于测试注入）。
+    room_tokens 非 None 时从 TokenSource 预计算值读取布局计数。
 
     Returns:
         联动加成段列表，每个非零加成对应一个常数段
@@ -35,22 +37,33 @@ def synergy_facility_count(
     names = {op.name for op in operators}
     segments = []
 
-    if dorm_levels is None:
-        dorm_levels = sum(
-            r.level for r in layout.rooms if r.room_type == "Dormitory"
+    if room_tokens is not None:
+        dorm_levels = int(room_tokens.get("dorm_levels", 0))
+        trade_count = int(room_tokens.get("trade_rooms", 0))
+        meeting_level = int(room_tokens.get("meeting_level", 0))
+        mfg_recipe_types = int(room_tokens.get("mfg_recipe_types", 0))
+        train_level = int(room_tokens.get("train_level", 0))
+        mfg_count = int(room_tokens.get("mfg_rooms", 0))
+        power_count = int(room_tokens.get("power_rooms", 0))
+    else:
+        if dorm_levels is None:
+            dorm_levels = sum(
+                r.level for r in layout.rooms if r.room_type == "Dormitory"
+            )
+        trade_count = sum(1 for r in layout.rooms if r.room_type == "Trade")
+        meeting_level = sum(
+            r.level for r in layout.rooms if r.room_type == "Reception"
         )
-    trade_count = sum(1 for r in layout.rooms if r.room_type == "Trade")
-    meeting_level = sum(
-        r.level for r in layout.rooms if r.room_type == "Reception"
-    )
-    mfg_products = {
-        r.product for r in layout.rooms
-        if r.room_type == "Mfg" and r.product is not None
-    }
-    mfg_recipe_types = len(mfg_products)
-    train_level = sum(
-        r.level for r in layout.rooms if r.room_type == "Training"
-    )
+        mfg_products = {
+             r.product for r in layout.rooms
+             if r.room_type == "Mfg" and r.product is not None
+        }
+        mfg_recipe_types = len(mfg_products)
+        train_level = sum(
+            r.level for r in layout.rooms if r.room_type == "Training"
+        )
+        mfg_count = sum(1 for r in layout.rooms if r.room_type == "Mfg")
+        power_count = sum(1 for r in layout.rooms if r.room_type == "Power")
 
     for name in names:
         if name not in _A_FACILITY_LINK_TABLE:

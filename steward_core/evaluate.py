@@ -136,6 +136,7 @@ def _eval_cross_room_effects(
     product: str,
     T: float,
     *,
+    room_tokens: dict[str, float] | None = None,
     buff_pool,
     all_assignments: dict[str, list[Operator]] | None,
     all_operators: list[Operator] | None,
@@ -204,7 +205,7 @@ def _eval_cross_room_effects(
 
     if all_operators is not None:
         total += integrate_segments(
-            synergy_global_faction(non_zero_ops, room_type, product, all_operators, T), T,
+            synergy_global_faction(non_zero_ops, room_type, product, all_operators, T, room_tokens=room_tokens), T,
         )
 
     if buff_pool is not None:
@@ -270,8 +271,22 @@ def evaluate_room(
 
     # ── TokenSource 接入（Phase C1）：预计算全部 token 值 ──
     room_tokens = compute_room_tokens(operators)
-    # 注：ctx 传入 None 因 evaluate_room() 参数尚未包含 SlotContext；layout 等
-    # 属性在 synergy_facility_count 内部通过参数单独传入，后续 Phase C2-C3 逐步迁移
+    # 补充 layout 依赖 token（ctx=None 时 depends_on="layout" 源返回 0.0，
+    # 此处用 evaluate_room 已有的 layout 参数直接计算）
+    if layout is not None:
+        from steward_core.models import RoomConfig
+        dorm_rooms = [r for r in layout.rooms if r.room_type == "Dormitory"]
+        reception_rooms = [r for r in layout.rooms if r.room_type == "Reception"]
+        training_rooms = [r for r in layout.rooms if r.room_type == "Training"]
+        mfg_rooms_list = [r for r in layout.rooms if r.room_type == "Mfg"]
+        room_tokens["dorm_levels"] = float(sum(r.level for r in dorm_rooms))
+        room_tokens["meeting_level"] = float(sum(r.level for r in reception_rooms))
+        room_tokens["train_level"] = float(sum(r.level for r in training_rooms))
+        room_tokens["trade_rooms"] = float(sum(1 for r in layout.rooms if r.room_type == "Trade"))
+        room_tokens["mfg_rooms"] = float(len(mfg_rooms_list))
+        room_tokens["power_rooms"] = float(sum(1 for r in layout.rooms if r.room_type == "Power"))
+        mfg_products = {r.product for r in mfg_rooms_list if r.product is not None}
+        room_tokens["mfg_recipe_types"] = float(len(mfg_products))
 
     # ── 不替换声明（C5）：以下路径保留旧函数，非计数层 ──
     # - 爬升 e(t)：operator_ramp_segments 是时间函数，非计数
@@ -302,7 +317,7 @@ def evaluate_room(
         non_zero_ops, room_type, product, layout, T=T,
     ), T)
 
-    total += integrate_segments(synergy_trade_pair(non_zero_ops, room_type, T), T)
+    total += integrate_segments(synergy_trade_pair(non_zero_ops, room_type, T, room_tokens=room_tokens), T)
     total += integrate_segments(synergy_trade_share(non_zero_ops, room_type, T), T)
     if order_ctx is not None:
         total += integrate_segments(
@@ -358,6 +373,7 @@ def evaluate_room(
     # ── 七、B 层跨房间效果 ──
     total += _eval_cross_room_effects(
         operators, non_zero_ops, room_type, product, T,
+        room_tokens=room_tokens,
         buff_pool=buff_pool, all_assignments=all_assignments,
         all_operators=all_operators,
     )

@@ -72,10 +72,34 @@ def synergy_global_faction(
     product: str,
     all_operators: list[Operator],
     T: float,
+    room_tokens: dict[str, float] | None = None,
 ) -> list[LinearSegment]:
-    """B6: 统计全基建范围内特定阵营的干员数量，为持有者提供效率加成"""
+    """B6: 统计全基建范围内特定阵营的干员数量"""
     names = {op.name for op in operators}
     segments = []
+
+    if room_tokens is not None:
+        _GLOBAL_TOKEN_MAP = {
+            ("nation_id", "rhine"): ("rhine_global", "rhine_global_mfg"),
+            ("nation_id", "blacksteel"): ("blacksteel_global", None),
+        }
+        for holder_name, e in _B_GLOBAL_FACTION_TABLE.items():
+            if holder_name not in names:
+                continue
+            if room_type != e.target_room:
+                continue
+            if e.target_product is not None and product != e.target_product:
+                continue
+            token_pair = _GLOBAL_TOKEN_MAP.get((e.field, e.value))
+            if token_pair is None:
+                continue
+            token_name = token_pair[1] if e.target_product else token_pair[0]
+            count = int(room_tokens.get(token_name, 0))
+            count = min(count, e.cap)
+            bonus = count * e.bonus_per
+            if bonus > 0:
+                segments.append(LinearSegment(a=bonus, b=0.0, t_start=0.0, dt=T))
+        return segments
 
     for holder_name, e in _B_GLOBAL_FACTION_TABLE.items():
         if holder_name not in names:

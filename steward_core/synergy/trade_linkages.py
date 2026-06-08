@@ -359,16 +359,21 @@ def synergy_trade_pair(
     operators: list[Operator],
     room_type: str,
     T: float,
+    room_tokens: dict[str, float] | None = None,
 ) -> list[LinearSegment]:
-    """贸易配对表驱动联动
-
-    遍历 _TRADE_PAIR_TABLE，holder 侧通过 buff_id 检测，
-    target 侧通过 name 集合检测。
-    """
+    """贸易配对表驱动联动"""
     if room_type != "Trade":
         return []
     names = {op.name for op in operators}
     segments: list[LinearSegment] = []
+
+    if room_tokens is not None:
+        # TokenSource: 使用 pair token 值直接判断
+        if room_tokens.get("texas_lappland", 0) > 0:
+            segments.append(LinearSegment(a=30.0, b=0.0, t_start=0.0, dt=T))
+        if room_tokens.get("lemuel_exusiai", 0) > 0:
+            segments.append(LinearSegment(a=15.0, b=0.0, t_start=0.0, dt=T))
+        return segments
 
     for buff_id, entry in _TRADE_PAIR_TABLE.items():
         if entry.target not in names:
@@ -423,13 +428,18 @@ def synergy_trade_share(
     operators: list[Operator],
     room_type: str,
     T: float,
+    room_tokens: dict[str, float] | None = None,
 ) -> list[LinearSegment]:
-    """贸易站 per-operator 分享效率：火哨代为说项、吉星勤俭经营
-
-    遍历 _TRADE_SHARE_TABLE，持有者自身不计入计数。
-    """
+    """贸易站 per-operator 分享效率"""
     if room_type != "Trade":
         return []
+
+    if room_tokens is not None:
+        # TokenSource: room_tokens 已接收但暂不消费
+        # 原因：多持有者场景需按每人(3-1)*25=50 累加两次→100，
+        # trade_share token 仅提供排除自身的单次计数
+        pass
+
     bonus = 0.0
     for op in operators:
         for sk in op.active_skills_for("Trade"):
