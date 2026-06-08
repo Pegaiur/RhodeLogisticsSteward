@@ -368,11 +368,14 @@ def synergy_trade_pair(
     segments: list[LinearSegment] = []
 
     if room_tokens is not None:
-        # TokenSource: 使用 pair token 值直接判断
-        if room_tokens.get("texas_lappland", 0) > 0:
-            segments.append(LinearSegment(a=30.0, b=0.0, t_start=0.0, dt=T))
-        if room_tokens.get("lemuel_exusiai", 0) > 0:
-            segments.append(LinearSegment(a=15.0, b=0.0, t_start=0.0, dt=T))
+        # TokenSource: 从 pair token + 表查询 bonus 值
+        for buff_id, entry in _TRADE_PAIR_TABLE.items():
+            token_name = {
+                "trade_ord_spd&cost_P[000]": "texas_lappland",
+                "trade_ord_spd&multiPar[100]": "lemuel_exusiai",
+            }.get(buff_id)
+            if token_name and room_tokens.get(token_name, 0) > 0:
+                segments.append(LinearSegment(a=entry.bonus, b=0.0, t_start=0.0, dt=T))
         return segments
 
     for buff_id, entry in _TRADE_PAIR_TABLE.items():

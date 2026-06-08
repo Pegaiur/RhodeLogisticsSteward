@@ -47,6 +47,7 @@ PHASE_B_GLOBAL_FACTION: list[TokenSource] = [
     TokenSource(token="rhine_global", condition="group_id=rhine", scope="global", cap=5),
     TokenSource(token="blacksteel_global", condition="group_id=blacksteel", scope="global", cap=3),
     TokenSource(token="rhine_global_mfg", condition="group_id=rhine", scope="global", cap=5),
+    TokenSource(token="blacksteel_global_mfg", condition="group_id=blacksteel", scope="global", cap=3),
 ]
 
 # B 层跨房间配对（B7）

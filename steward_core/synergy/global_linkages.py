@@ -80,8 +80,8 @@ def synergy_global_faction(
 
     if room_tokens is not None:
         _GLOBAL_TOKEN_MAP = {
-            ("nation_id", "rhine"): ("rhine_global", "rhine_global_mfg"),
-            ("nation_id", "blacksteel"): ("blacksteel_global", None),
+            ("group_id", "rhine"): ("rhine_global", "rhine_global_mfg"),
+            ("group_id", "blacksteel"): ("blacksteel_global", "blacksteel_global_mfg"),
         }
         for holder_name, e in _B_GLOBAL_FACTION_TABLE.items():
             if holder_name not in names:
@@ -95,6 +95,8 @@ def synergy_global_faction(
                 continue
             token_name = token_pair[1] if e.target_product else token_pair[0]
             count = int(room_tokens.get(token_name, 0))
+            if e.exclude_self:
+                count = max(0, count - 1)
             count = min(count, e.cap)
             bonus = count * e.bonus_per
             if bonus > 0:

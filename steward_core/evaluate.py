@@ -274,7 +274,6 @@ def evaluate_room(
     # 补充 layout 依赖 token（ctx=None 时 depends_on="layout" 源返回 0.0，
     # 此处用 evaluate_room 已有的 layout 参数直接计算）
     if layout is not None:
-        from steward_core.models import RoomConfig
         dorm_rooms = [r for r in layout.rooms if r.room_type == "Dormitory"]
         reception_rooms = [r for r in layout.rooms if r.room_type == "Reception"]
         training_rooms = [r for r in layout.rooms if r.room_type == "Training"]
