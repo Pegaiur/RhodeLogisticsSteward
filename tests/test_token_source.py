@@ -1828,27 +1828,28 @@ class TestComputeRoomTokensAllSources:
 class TestAutomationZeroingConditions:
     """is_automation_holder + is_zeroing_variant_holder 派生布尔"""
 
-    def test_is_automation_holder_buff_match(self):
+    def test_is_automation_lv5_buff_match(self):
         from steward_core.token_source import _build_matcher
 
         s = _mk_mfg_skill("manu_prod_spd&power[000]")
         op = _mk_op("A", skills=[s])
-        matcher = _build_matcher("is_automation_holder")
+        matcher = _build_matcher("is_automation_lv5")
         assert matcher(op) is True
 
-    def test_is_automation_holder_name_fallback(self):
+    def test_is_automation_lv15_name_fallback(self):
         from steward_core.token_source import _build_matcher
 
-        op = _mk_op("森蚺")
-        matcher = _build_matcher("is_automation_holder")
+        op = _mk_op("温蒂")
+        matcher = _build_matcher("is_automation_lv15")
         assert matcher(op) is True
 
-    def test_is_not_automation_holder(self):
+    def test_is_not_automation(self):
         from steward_core.token_source import _build_matcher
 
         op = _mk_op("A")
-        matcher = _build_matcher("is_automation_holder")
-        assert matcher(op) is False
+        for lv in ("is_automation_lv5", "is_automation_lv10", "is_automation_lv15"):
+            matcher = _build_matcher(lv)
+            assert matcher(op) is False
 
     def test_is_zeroing_variant_holder_match(self):
         from steward_core.token_source import _build_matcher
@@ -1858,14 +1859,17 @@ class TestAutomationZeroingConditions:
         matcher = _build_matcher("is_zeroing_variant_holder")
         assert matcher(op) is True
 
-    def test_automation_count_token(self):
+    def test_automation_level_tokens(self):
         from steward_core.synergy.token_maps import PHASE_B_AUTOMATION
         from steward_core.token_source import evaluate_tokens
 
-        s = _mk_mfg_skill("manu_prod_spd&power[000]")
-        ops = [_mk_op("A", skills=[s]), _mk_op("B", skills=[s]), _mk_op("C")]
+        s5 = _mk_mfg_skill("manu_prod_spd&power[000]")
+        s15 = _mk_mfg_skill("manu_prod_spd&power[020]")
+        ops = [_mk_op("A", skills=[s5]), _mk_op("B", skills=[s5]), _mk_op("C", skills=[s15])]
         tokens = evaluate_tokens(PHASE_B_AUTOMATION, ops)
-        assert tokens["automation_count"] == 2.0
+        assert tokens["automation_lv5"] == 2.0
+        assert tokens["automation_lv15"] == 1.0
+        assert tokens["automation_lv10"] == 0.0
 
     def test_zeroing_variant_count_token(self):
         from steward_core.synergy.token_maps import PHASE_B_ZEROING_VARIANT

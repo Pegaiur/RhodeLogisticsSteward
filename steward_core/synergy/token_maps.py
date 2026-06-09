@@ -190,10 +190,11 @@ PHASE_B_CONTROL_TRADE_LIMIT: list[TokenSource] = [
 
 # ─── Phase B7 解锁：自动化 + 归零变体 ─────────────────────────────
 
-# 自动化持有者计数（_POWER_BUFF_BONUS + _A_AUTOMATION_FALLBACK）
-# TokenSource 计数 room 内自动化干员数，per-op bonus 值由消费侧查表
+# 自动化持有者按 bonus 级别计数（三级注册，消费侧做加权和）
 PHASE_B_AUTOMATION: list[TokenSource] = [
-    TokenSource(token="automation_count", condition="is_automation_holder"),
+    TokenSource(token="automation_lv5", condition="is_automation_lv5"),
+    TokenSource(token="automation_lv10", condition="is_automation_lv10"),
+    TokenSource(token="automation_lv15", condition="is_automation_lv15"),
 ]
 
 # 归零变体持有者计数（_ZEROING_VARIANT_TABLE）

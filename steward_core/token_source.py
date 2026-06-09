@@ -462,11 +462,10 @@ _FN_CONDITIONS["is_abyssal_hunter"] = lambda op: op.has_group("abyssal")
 # ── Phase B7 解锁：自动化 + 归零变体派生布尔 ──
 # TODO(Phase D): 将 _POWER_BUFF_BONUS / _ZEROING_VARIANT_TABLE / _A_AUTOMATION_FALLBACK
 # 提升到 synergy/types.py，消除 token_source → mfg_linkages 反向依赖
-from steward_core.synergy.mfg_linkages import _POWER_BUFF_BONUS, _A_AUTOMATION_FALLBACK, _ZEROING_VARIANT_TABLE
-_FN_CONDITIONS["is_automation_holder"] = lambda op: (
-    any(sk.buff_id in _POWER_BUFF_BONUS for sk in op.skills)
-    or op.name in _A_AUTOMATION_FALLBACK
-)
+from steward_core.synergy.mfg_linkages import _automation_bonus, _ZEROING_VARIANT_TABLE
+_FN_CONDITIONS["is_automation_lv5"] = lambda op: _automation_bonus(op) == 5.0
+_FN_CONDITIONS["is_automation_lv10"] = lambda op: _automation_bonus(op) == 10.0
+_FN_CONDITIONS["is_automation_lv15"] = lambda op: _automation_bonus(op) == 15.0
 _FN_CONDITIONS["is_zeroing_variant_holder"] = lambda op: (
     any(sk.buff_id in _ZEROING_VARIANT_TABLE for sk in op.skills if sk.room_type == "Mfg") if _ZEROING_VARIANT_TABLE else False
 )

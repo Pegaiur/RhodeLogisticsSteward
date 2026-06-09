@@ -8,7 +8,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from steward_core.models import Operator, LayoutConfig
+from steward_core.models import Operator, LayoutConfig, LinearSegment
 from steward_core.token_source import compute_room_tokens
 from steward_core.efficiency_fn import constant_efficiency, integrate_segments, stepped_efficiency
 from steward_core.synergy import (
@@ -50,6 +50,7 @@ def _resolve_zeroing(
     product: str,
     power_count: int,
     T: float,
+    room_tokens: dict[str, float] | None = None,
 ) -> tuple[list, list, list, set[str], list[Operator]]:
     """归零解析：计算所有归零来源并确定 zero_set
 
@@ -62,7 +63,18 @@ def _resolve_zeroing(
     auto_segs: list = []
     zero_set: set[str] = set()
     if "automation" not in disabled_mechs:
-        auto_segs, zero_set = synergy_automation(operators, room_type, power_count, T)
+        if room_tokens is not None:
+            lv5 = int(room_tokens.get("automation_lv5", 0))
+            lv10 = int(room_tokens.get("automation_lv10", 0))
+            lv15 = int(room_tokens.get("automation_lv15", 0))
+            total = lv5 + lv10 + lv15
+            if total > 0:
+                bonus = power_count * (5.0 * lv5 + 10.0 * lv10 + 15.0 * lv15)
+                auto_segs = [LinearSegment(a=bonus, b=0.0, t_start=0.0, dt=T)]
+                from steward_core.synergy.mfg_linkages import _automation_bonus
+                zero_set = {op.name for op in operators if _automation_bonus(op) <= 0}
+        else:
+            auto_segs, zero_set = synergy_automation(operators, room_type, power_count, T)
 
     whisper_segs: list = []
     if "whisper" not in disabled_mechs:
@@ -264,11 +276,6 @@ def evaluate_room(
                 warmup_map[op.name] = w
             mood_map[op.name] = mood_ctx.mood_of(op.name)
 
-    # ── 一、归零解析 ──
-    auto_segs, whisper_segs, zero_segs, zero_set, non_zero_ops = _resolve_zeroing(
-        operators, room_type, product, power_count, T,
-    )
-
     # ── TokenSource 接入（Phase C1）：预计算全部 token 值 ──
     room_tokens = compute_room_tokens(operators)
     # 补充 layout 依赖 token（ctx=None 时 depends_on="layout" 源返回 0.0，
@@ -299,9 +306,13 @@ def evaluate_room(
         global_tokens = evaluate_tokens(global_sources, all_operators)
         room_tokens.update(global_tokens)
 
+    # ── 一、归零解析 ──
+    auto_segs, whisper_segs, zero_segs, zero_set, non_zero_ops = _resolve_zeroing(
+        operators, room_type, product, power_count, T, room_tokens=room_tokens,
+    )
+
     # ── 不替换声明（C5）：以下路径保留旧函数，非计数层 ──
     # - 爬升 e(t)：operator_ramp_segments 是时间函数，非计数
-    # - synergy_automation：per-op buff_id 扫描 + 归零集合语义，不适合纯计数 token 化
     # - 菲亚梅塔自律：非计数，经 contribution.py 独立计算
     # - 冲突互斥：resolve_efficiency_conflicts 是消费侧逻辑
     # - 订单覆盖/裁缝豁免：trade_linkages 内部机制，非计数
