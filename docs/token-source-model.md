@@ -304,7 +304,7 @@ TokenSource 只负责第二层：将"符合条件的干员数"、"房间效率�
 | C3 | **技能别名替代** ✅ | `synergy_skill_alias` → `room_tokens["haimei_in_room"]` a34bb1b | 完全 |
 | C4 | **Control 层对齐验证** ✅ | `_eval_per_op` 3 条件对照测试通过（pinus/knight/count_ge） | 验证层 |
 | C5 | **不替换声明** ✅ | evaluate.py L316-320 5 项（爬升/菲亚梅塔/冲突/订单覆盖+裁缝/buff_pool） | — |
-| C6 | **回归+性能** ✅ | 913 passed / 0.88s 全量, 130 token_source / 0.11s | — |
+| C6 | **回归+性能** ✅ | 916 passed / 0.89s 全量, 130 token_source / 0.11s | — |
 
 **实际交付与最终状态**：
 
@@ -334,7 +334,7 @@ TokenSource 消费函数（共 6 个）：
 | cross_room_pair / conditional_eff 不变 | ✅ | name-based set membership，TokenSource 不适合 |
 
 **验收条件**：
-- [x] `pytest tests/ -v` **全量测试通过**（零回归）— 913 passed / 0.97s ( 130 token_source / 0.11s)
+- [x] `pytest tests/ -v` **全量测试通过**（零回归）— 916 passed / 0.89s (130 token_source / 0.11s)
 - [x] `python run_solver.py` 端到端通过（332s，415 干员，14 窗口），产出无异常 — 差异比较需 Phase B 基线产出（延后）
 - [x] `evaluate_tokens()` 130 测试耗时 0.11s — 在 1.05x 性能预算内
 - [x] 所有未替换旧路径有注释 — evaluate.py L316-320 5 项（synergy_automation 已由 3 级 token 完全替代并从 C5 移除）
