@@ -336,7 +336,7 @@ def evaluate_room(
         operators, room_type, product, layout, T=T,
     ), T)
     total += integrate_segments(synergy_facility_count(
-        non_zero_ops, room_type, product, layout, T=T,
+        non_zero_ops, room_type, product, layout, T=T, room_tokens=room_tokens,
     ), T)
 
     total += integrate_segments(synergy_trade_pair(non_zero_ops, room_type, T, room_tokens=room_tokens), T)
