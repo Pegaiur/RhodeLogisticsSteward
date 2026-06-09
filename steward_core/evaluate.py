@@ -68,7 +68,7 @@ def _resolve_zeroing(
             lv10 = int(room_tokens.get("automation_lv10", 0))
             lv15 = int(room_tokens.get("automation_lv15", 0))
             total = lv5 + lv10 + lv15
-            if total > 0:
+            if room_type == "Mfg" and total > 0:
                 bonus = power_count * (5.0 * lv5 + 10.0 * lv10 + 15.0 * lv15)
                 auto_segs = [LinearSegment(a=bonus, b=0.0, t_start=0.0, dt=T)]
                 from steward_core.synergy.mfg_linkages import _automation_bonus
