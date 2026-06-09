@@ -265,3 +265,75 @@ class TestEffectivePowerCount:
         lancet = _mk_op("Lancet-2")
         count = compute_effective_power_count([lancet, chengxi], 3, [senran])
         assert count == 6  # 3 + 1(格雷伊) + 2(森蚺)
+
+
+# ─── room_tokens 快速路径测试 ────────────────────────────────────
+
+
+class TestFacilityCountRoomTokens:
+    """synergy_facility_count room_tokens 快速路径与旧路径等价"""
+
+    @staticmethod
+    def _mk_full_layout() -> LayoutConfig:
+        return LayoutConfig(rooms=[
+            RoomConfig("Trade", 0, 3, "Money"),
+            RoomConfig("Trade", 1, 3, "赤金"),
+            RoomConfig("Mfg", 0, 3, "CombatRecord"),
+            RoomConfig("Mfg", 1, 3, "PureGold"),
+            RoomConfig("Mfg", 2, 3, "BaseMaterial"),
+            RoomConfig("Power", 0, 3),
+            RoomConfig("Power", 1, 3),
+            RoomConfig("Dormitory", 0, 5, level=3),
+            RoomConfig("Dormitory", 1, 5, level=2),
+            RoomConfig("Reception", 0, 3, level=3),
+            RoomConfig("Training", 0, 3, level=2),
+        ])
+
+    @staticmethod
+    def _compute_room_tokens(layout: LayoutConfig) -> dict[str, float]:
+        return {
+            "dorm_levels": float(sum(r.level for r in layout.rooms if r.room_type == "Dormitory")),
+            "trade_rooms": float(sum(1 for r in layout.rooms if r.room_type == "Trade")),
+            "meeting_level": float(sum(r.level for r in layout.rooms if r.room_type == "Reception")),
+            "mfg_recipe_types": float(len({r.product for r in layout.rooms if r.room_type == "Mfg" and r.product is not None})),
+            "train_level": float(sum(r.level for r in layout.rooms if r.room_type == "Training")),
+            "mfg_rooms": float(sum(1 for r in layout.rooms if r.room_type == "Mfg")),
+            "power_rooms": float(sum(1 for r in layout.rooms if r.room_type == "Power")),
+        }
+
+    def test_token_path_equals_layout_path(self):
+        """room_tokens 快速路径与 layout 遍历路径结果一致"""
+        from steward_core.synergy.facility_linkages import synergy_facility_count
+
+        layout = self._mk_full_layout()
+        op = _mk_op("伺夜")
+        room_tokens = self._compute_room_tokens(layout)
+
+        segs_old = synergy_facility_count([op], "Trade", "Money", layout, T=12.0)
+        segs_new = synergy_facility_count([op], "Trade", "Money", layout, T=12.0, room_tokens=room_tokens)
+
+        assert len(segs_old) == len(segs_new)
+        for a, b in zip(segs_old, segs_new):
+            assert a.a == pytest.approx(b.a, rel=0.001)
+            assert a.b == pytest.approx(b.b, rel=0.001)
+
+    def test_token_path_uses_tokens_not_layout(self):
+        """room_tokens 路径不依赖 layout.rooms——假 layout 不影响结果"""
+        from steward_core.synergy.facility_linkages import synergy_facility_count
+
+        layout_real = self._mk_full_layout()
+        layout_fake = LayoutConfig(rooms=[RoomConfig("Dormitory", 0, 5, level=99)])
+        op = _mk_op("伺夜")
+        room_tokens = self._compute_room_tokens(layout_real)
+
+        segs = synergy_facility_count([op], "Trade", "Money", layout_fake, T=12.0, room_tokens=room_tokens)
+        assert len(segs) > 0
+
+    def test_room_tokens_none_falls_back(self):
+        """room_tokens=None 走旧 layout 路径"""
+        from steward_core.synergy.facility_linkages import synergy_facility_count
+
+        layout = self._mk_full_layout()
+        op = _mk_op("伺夜")
+        segs = synergy_facility_count([op], "Trade", "Money", layout, T=12.0)
+        assert len(segs) > 0

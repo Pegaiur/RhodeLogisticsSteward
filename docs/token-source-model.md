@@ -303,25 +303,44 @@ TokenSource 只负责第二层：将"符合条件的干员数"、"房间效率�
 | C2 | **制造站计数替换** ⚠️ 2/4 | `synergy_skill_count` + `synergy_faction_room` 消费 room_tokens | 快速路径 |
 | C3 | **技能别名替代** ✅ | `synergy_skill_alias` → `room_tokens["haimei_in_room"]` a34bb1b | 完全 |
 | C4 | **Control 层对齐验证** ✅ | `_eval_per_op` 3 条件对照测试通过（pinus/knight/count_ge） | 验证层 |
-| C5 | **不替换声明** ✅ | evaluate.py L276-281 6 项 | — |
-| C6 | **回归+性能** ✅ | 913 passed / 0.97s 全量, 130 token_source / 0.11s | — |
+| C5 | **不替换声明** ✅ | evaluate.py L316-320 5 项（爬升/菲亚梅塔/冲突/订单覆盖+裁缝/buff_pool） | — |
+| C6 | **回归+性能** ✅ | 913 passed / 0.88s 全量, 130 token_source / 0.11s | — |
 
-**实际交付与计划差异**：
+**实际交付与最终状态**：
 
-| 差异 | 原因 |
-|------|------|
-| `synergy_pair` 不消费 room_tokens | set membership 非计数型遍历，token 化无增益 |
-| `synergy_automation` 不替换 | per-op buff_id 扫描 + 归零集合语义，C5 声明 |
-| `synergy_cross_room_pair/facility_group/global_faction` 未替换 | 需 ctx.all_assignments/all_operators 跨房间上下文，evaluate_room() 未接收 SlotContext |
-| C4 仅对齐验证未消费替换 | control 函数被 6 个调用点使用（mfg/trade/solver/contribution/production），消费需 Phase D 统一接入 |
+```
+TokenSource 消费函数（共 6 个）：
+  evaluate_room 内：synergy_skill_count, synergy_faction_room,
+    synergy_trade_pair, synergy_facility_count, synergy_global_faction
+  _resolve_zeroing 内：synergy_automation（3 级 token 完全替代）
+
+仍并行（原因明确）：
+  synergy_pair           — set membership 非计数
+  synergy_trade_share    — 多持有者累加
+  synergy_cross_room_pair   }  _PRECOMPUTED_CACHE 已等价优化
+  synergy_trade_conditional_eff }  name-based set membership
+  synergy_facility_group  }   _facility_group_counts 已等价优化
+
+非计数（不应替代）：whisper, zeroing_variant, buff_pool, gold_lines,
+  order_limit, capacity, amplifier, token_prod, jie_order 等 10 个
+```
+
+**审查决策（Point 2-4）**：
+
+| 方案点 | 决策 | 理由 |
+|------|:---:|------|
+| facility_group_counts 注入 room_tokens | ❌ | _PRECOMPUTED_CACHE 封闭数据流已最优 |
+| facility_group room_tokens 快速路径 | ❌ | _facility_group_counts kwarg 已等价 |
+| cross_room_pair / conditional_eff 不变 | ✅ | name-based set membership，TokenSource 不适合 |
 
 **验收条件**：
 - [x] `pytest tests/ -v` **全量测试通过**（零回归）— 913 passed / 0.97s ( 130 token_source / 0.11s)
 - [x] `python run_solver.py` 端到端通过（332s，415 干员，14 窗口），产出无异常 — 差异比较需 Phase B 基线产出（延后）
 - [x] `evaluate_tokens()` 130 测试耗时 0.11s — 在 1.05x 性能预算内
-- [x] 所有未替换旧路径有注释 — 6 项 (evaluate.py L276-282)
-- [x] `synergy_facility_count/group` 对齐 — B7 facility_group 集成测试已验证
+- [x] 所有未替换旧路径有注释 — evaluate.py L316-320 5 项（synergy_automation 已由 3 级 token 完全替代并从 C5 移除）
+- [x] `synergy_facility_count/group` 对齐 — B7 集成测试 + facility_count room_tokens 激活 f5ccb74
 - [x] `synergy_skill_alias` 完全替代 — a34bb1b
+- [x] `synergy_automation` 完全替代 — 6ce2839，3 级 token（lv5/lv10/lv15）消费侧加权和
 
 ---
 
